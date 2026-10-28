@@ -23,11 +23,19 @@ func (s *Service) Initialize(ctx context.Context, username, displayName, loginPa
 			return err
 		}
 	}
-	loginHash, err := hashPassword(loginPassword)
-	if err != nil {
+	var loginHash, managementHash string
+	err := s.passwordWork(ctx, "", func() error {
+		var err error
+		loginHash, err = s.hash(loginPassword)
+		if err != nil {
+			return err
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		managementHash, err = s.hash(managementPassword)
 		return err
-	}
-	managementHash, err := hashPassword(managementPassword)
+	})
 	if err != nil {
 		return err
 	}
@@ -89,7 +97,12 @@ func (s *Service) ResetPassword(ctx context.Context, kind, password string) erro
 	if err = core.Text("new_password", password, s.Config.Limits.PasswordMin, s.Config.Limits.PasswordMax); err != nil {
 		return err
 	}
-	hash, err := hashPassword(password)
+	var hash string
+	err = s.passwordWork(ctx, "", func() error {
+		var err error
+		hash, err = s.hash(password)
+		return err
+	})
 	if err != nil {
 		return err
 	}
@@ -143,15 +156,24 @@ func (s *Service) ChangePassword(ctx context.Context, p Principal, kind, oldPass
 	if err = core.Text("old_password", oldPassword, 1, s.Config.Limits.PasswordMax); err != nil {
 		return err
 	}
-	hash, version, err := s.credential(ctx, kind)
-	if err != nil {
+	var version int64
+	var replacement string
+	err = s.passwordWork(ctx, kind, func() error {
+		hash, current, err := s.credential(ctx, kind)
+		if err != nil {
+			return err
+		}
+		version = current
+		if !s.verify(hash, oldPassword) {
+			s.failedAttempt(kind)
+			return core.Fail(422, "INVALID_CREDENTIALS")
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		replacement, err = s.hash(newPassword)
 		return err
-	}
-	if !s.verify(hash, oldPassword) {
-		s.failedAttempt(kind)
-		return core.Fail(422, "INVALID_CREDENTIALS")
-	}
-	replacement, err := hashPassword(newPassword)
+	})
 	if err != nil {
 		return err
 	}
@@ -188,13 +210,21 @@ func (s *Service) VerifyManagement(ctx context.Context, password string) (int64,
 	if err := core.Text("password", password, 1, s.Config.Limits.PasswordMax); err != nil {
 		return 0, err
 	}
-	hash, version, err := s.credential(ctx, "management")
+	var version int64
+	err := s.passwordWork(ctx, "management", func() error {
+		hash, current, err := s.credential(ctx, "management")
+		if err != nil {
+			return err
+		}
+		version = current
+		if !s.verify(hash, password) {
+			s.failedAttempt("management")
+			return core.Fail(422, "INVALID_CREDENTIALS")
+		}
+		return nil
+	})
 	if err != nil {
 		return 0, err
-	}
-	if !s.verify(hash, password) {
-		s.failedAttempt("management")
-		return 0, core.Fail(422, "INVALID_CREDENTIALS")
 	}
 	return version, nil
 }

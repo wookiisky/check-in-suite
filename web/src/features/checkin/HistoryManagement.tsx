@@ -6,11 +6,13 @@ import { RecordList } from './RecordList';
 import { getPending } from './submission';
 import { CREATE_DRAFT_KEY, getDraft } from './drafts';
 import { checkinError } from './format';
+import { useBusinessToday } from '../reports/useBusinessToday';
 import content from './content.json';
 
 /** 纠正始终是删除和补录两个动作，删除成功后不会隐式补偿。 */
 export function HistoryManagement({ client, session }: CheckinProps) {
-  const [date, setDate] = useState(session.today);
+  const today = useBusinessToday(client, session);
+  const [date, setDate] = useState(today);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskID, setTaskID] = useState('');
   const [draftText, setDraftText] = useState('');
@@ -65,7 +67,7 @@ export function HistoryManagement({ client, session }: CheckinProps) {
     {error !== null && <div role="alert" className="checkin-error"><p>{checkinError(error)}</p><button className="secondary" onClick={() => refresh((value) => value + 1)}>{content.reload}</button></div>}
     {pending && <div className="checkin-warning"><p>{content.pendingBanner}</p><button onClick={() => setCreating(pending.task)}>{content.recover}</button></div>}
     {!pending && draft && <div className="checkin-warning"><p>{content.draftAvailable}</p><button onClick={() => setCreating(draft.task)}>{content.continueDraft}</button></div>}
-    <section className="checkin-panel checkin-stack"><h2>{content.manageRecords}</h2><label>{content.date}<input type="date" value={date} max={session.today} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
+    <section className="checkin-panel checkin-stack"><h2>{content.manageRecords}</h2><label>{content.date}<input type="date" value={date} max={today} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
       {loading ? <p role="status">{content.loading}</p> : error === null && <RecordList records={records} management onSelect={setSelected} />}
       {cursor && <><p className="checkin-hint">{content.morePending}</p><button className="secondary" disabled={loading} onClick={() => void more()}>{content.more}</button></>}
     </section>
@@ -73,6 +75,6 @@ export function HistoryManagement({ client, session }: CheckinProps) {
       {tasks.length === 0 ? <p>{content.noEnabledTasks}</p> : <><label>{content.chooseTask}<select value={chosenTask?.id ?? ''} onChange={(event) => setTaskID(event.target.value)}>{tasks.map((task) => <option key={task.id} value={task.id}>{task.name}</option>)}</select></label><button disabled={loading || !chosenTask || pending !== null || draft !== null} onClick={() => { if (chosenTask) setCreating(chosenTask); }}>{content.backfillNew}</button></>}
     </section>
     {creating && <CheckinComposer client={client} session={session} task={creating} date={date} initialText={draftText} management={pending ? pending.path.startsWith('/management') : draft ? draft.management : true} onClose={() => setCreating(null)} onSaved={(notice) => { setDraftText(''); saved(notice); }} />}
-    {selected && <RecordDialog client={client} session={session} record={selected} today={session.today} management onClose={() => setSelected(null)} onSaved={saved} onCorrect={correct} />}
+    {selected && <RecordDialog client={client} session={session} record={selected} today={today} management onClose={() => setSelected(null)} onSaved={saved} onCorrect={correct} />}
   </div>;
 }

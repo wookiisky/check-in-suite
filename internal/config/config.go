@@ -87,6 +87,9 @@ func (cfg Config) validate() error {
 			return fmt.Errorf("%s is required", name)
 		}
 	}
+	if err := cfg.validateStoragePaths(); err != nil {
+		return err
+	}
 	_, port, err := net.SplitHostPort(cfg.ListenAddress)
 	if err != nil {
 		return fmt.Errorf("listen_address must be host:port: %w", err)

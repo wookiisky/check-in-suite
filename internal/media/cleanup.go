@@ -6,8 +6,11 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/wookiisky/check-in-suite/internal/core"
 )
 
@@ -95,14 +98,14 @@ func (s *Service) cleanOrphans(ctx context.Context, directory string, cutoff tim
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		if entry.IsDir() {
+		if !ownedUploadName(entry.Name()) {
 			continue
 		}
 		info, err := entry.Info()
 		if err != nil {
 			return err
 		}
-		if info.ModTime().After(cutoff) {
+		if !info.Mode().IsRegular() || info.ModTime().After(cutoff) {
 			continue
 		}
 		path := filepath.Join(directory, entry.Name())
@@ -125,6 +128,20 @@ func (s *Service) cleanOrphans(ctx context.Context, directory string, cutoff tim
 		}
 	}
 	return nil
+}
+
+// ownedUploadName restricts orphan deletion to names created by temporary and process.
+func ownedUploadName(name string) bool {
+	if suffix, ok := strings.CutPrefix(name, ".upload-"); ok {
+		number, err := strconv.ParseUint(suffix, 10, 32)
+		return err == nil && strconv.FormatUint(number, 10) == suffix
+	}
+	stem, ok := strings.CutSuffix(name, ".media")
+	if !ok {
+		return false
+	}
+	id, err := uuid.Parse(stem)
+	return err == nil && id.String() == stem
 }
 
 // RunCleanup owns one bounded periodic loop; the caller waits for it before closing SQLite.

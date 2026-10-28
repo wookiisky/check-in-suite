@@ -216,11 +216,12 @@ func (s *Service) Delete(ctx context.Context, p account.Principal, management bo
 	if err != nil {
 		return result, err
 	}
-	if err := recordAccess(record, management, version, now); err != nil {
-		return result, err
-	}
+	// Recover a committed deletion across midnight; date checks constrain new changes only.
 	if record.Deleted {
 		result.Wallet, err = wallet.Get(ctx, tx)
+		return result, err
+	}
+	if err := recordAccess(record, management, version, now); err != nil {
 		return result, err
 	}
 	if err := media.Replace(ctx, tx, media.References{PhotoID: record.PhotoMediaID, AudioID: record.AudioMediaID}, media.References{}, now, s.Config.MediaOrphanTTL); err != nil {

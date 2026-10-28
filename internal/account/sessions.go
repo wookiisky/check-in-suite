@@ -41,18 +41,24 @@ func (s *Service) Login(ctx context.Context, username, password string) (string,
 	}
 	var hash, expectedUsername string
 	var version int64
-	err := s.DB.QueryRowContext(ctx, "SELECT username,login_password_hash,credential_version FROM accounts WHERE id=1").Scan(&expectedUsername, &hash, &version)
-	if errors.Is(err, sql.ErrNoRows) {
-		s.failedAttempt("login")
-		return "", Session{}, core.Fail(401, "INVALID_CREDENTIALS")
-	}
+	err := s.passwordWork(ctx, "login", func() error {
+		err := s.DB.QueryRowContext(ctx, "SELECT username,login_password_hash,credential_version FROM accounts WHERE id=1").Scan(&expectedUsername, &hash, &version)
+		if errors.Is(err, sql.ErrNoRows) {
+			s.failedAttempt("login")
+			return core.Fail(401, "INVALID_CREDENTIALS")
+		}
+		if err != nil {
+			return err
+		}
+		valid := s.verify(hash, password)
+		if !valid || username != expectedUsername {
+			s.failedAttempt("login")
+			return core.Fail(401, "INVALID_CREDENTIALS")
+		}
+		return nil
+	})
 	if err != nil {
 		return "", Session{}, err
-	}
-	valid := s.verify(hash, password)
-	if !valid || username != expectedUsername {
-		s.failedAttempt("login")
-		return "", Session{}, core.Fail(401, "INVALID_CREDENTIALS")
 	}
 	token, err := randomToken()
 	if err != nil {

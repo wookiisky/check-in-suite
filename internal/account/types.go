@@ -52,12 +52,14 @@ type Session struct {
 
 // Service binds account operations to the one database and an injectable business clock.
 type Service struct {
-	DB       *sql.DB                   // Application-owned SQLite connection pool.
-	Config   config.Config             // Validated runtime configuration.
-	Now      func() time.Time          // Clock read once after acquiring each write transaction.
-	verify   func(string, string) bool // Password verifier, replaceable only by same-package tests.
-	mu       sync.Mutex                // Protects the small fixed set of authentication rate buckets.
-	attempts map[string]attemptWindow  // Fixed login and management failure windows.
+	DB       *sql.DB                      // Application-owned SQLite connection pool.
+	Config   config.Config                // Validated runtime configuration.
+	Now      func() time.Time             // Clock read once after acquiring each write transaction.
+	verify   func(string, string) bool    // Password verifier, replaceable only by same-package tests.
+	hash     func(string) (string, error) // Password derivation, sharing the verification work limit.
+	work     chan struct{}                // One expensive password calculation per application service.
+	mu       sync.Mutex                   // Protects the small fixed set of authentication rate buckets.
+	attempts map[string]attemptWindow     // Fixed login and management failure windows.
 }
 
 // attemptWindow tracks authentication failures without storing supplied passwords or names.
@@ -68,5 +70,5 @@ type attemptWindow struct {
 
 // New constructs an account service with production hashing and a real clock.
 func New(db *sql.DB, cfg config.Config) *Service {
-	return &Service{DB: db, Config: cfg, Now: time.Now, verify: verifyPassword, attempts: map[string]attemptWindow{}}
+	return &Service{DB: db, Config: cfg, Now: time.Now, verify: verifyPassword, hash: hashPassword, work: make(chan struct{}, 1), attempts: map[string]attemptWindow{}}
 }

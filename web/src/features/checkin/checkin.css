@@ -30,6 +30,9 @@
 .checkin-stack textarea { resize: vertical; }
 .checkin-stack input:focus-visible, .checkin-stack textarea:focus-visible, .checkin-stack select:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .checkin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.checkin-config-values { margin: 0; overflow-wrap: anywhere; }
+.checkin-config-values dt { font-weight: 700; }
+.checkin-config-values dd { margin: 0 0 12px; }
 .checkin-checks { display: flex; flex-wrap: wrap; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
 .checkin-checks legend { padding: 0 8px; }
 .checkin-checks label, .checkin-toggle { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px; }

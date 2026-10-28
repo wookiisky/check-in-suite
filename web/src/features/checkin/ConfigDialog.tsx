@@ -34,6 +34,7 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
   const [name, setName] = useState(item?.name ?? '');
   const [sortOrder, setSortOrder] = useState(category?.sort_order ?? 0);
   const [categoryID, setCategoryID] = useState(task?.category_id ?? '');
+  const [categoryOptions, setCategoryOptions] = useState(categories);
   const [icon, setIcon] = useState(task?.icon_key ?? '');
   const [assets, setAssets] = useState<components['schemas']['Asset'][]>([]);
   const [coins, setCoins] = useState(task?.coin_reward ?? 0);
@@ -42,6 +43,8 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
   const [weekdays, setWeekdays] = useState(task?.weekdays ?? [1, 2, 3, 4, 5, 6, 7]);
   const [enabled, setEnabled] = useState(task?.enabled ?? true);
   const [version, setVersion] = useState(item?.version ?? 1);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [latest, setLatest] = useState<Task | Category | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [unknown, setUnknown] = useState(false);
@@ -49,6 +52,9 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
   const [discard, setDiscard] = useState(false);
   const path = `/management/${kind === 'task' ? 'tasks' : 'categories'}`;
   const title = kind === 'task' ? item ? content.editTask : content.newTask : item ? content.editCategory : content.newCategory;
+  const invalidDraft = [...name.trim()].length > session.limits.name_max || (kind === 'task' && (weekdays.length === 0 || !icon));
+  const latestTask = latest && 'weekdays' in latest ? latest : null;
+  const latestCategory = latest && 'sort_order' in latest ? latest : null;
 
   useEffect(() => {
     if (kind !== 'task') return;
@@ -62,42 +68,61 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
   }, [client, kind]);
 
   // 每次保存只在明确的新命令开始时生成幂等键。
-  async function save() {
-    if (busy) return;
+  async function save(confirmedVersion?: number) {
+    if (busy || invalidDraft || (needsConfirmation && (!latest || confirmedVersion !== latest.version))) return;
     setBusy(true); setError(null);
     const draft = kind === 'task' ? { name, category_id: categoryID || null, icon_key: icon, coin_reward: coins, diamond_reward: diamonds, daily_limit: dailyLimit, weekdays, enabled } : { name, sort_order: sortOrder };
     const command = pendingConfiguration.get(client) ?? { path, key: crypto.randomUUID(), body: draft };
     if (!item) pendingConfiguration.set(client, command);
     try {
-      if (item) await client.request(`${path}/${item.id}`, { method: 'PATCH', body: { ...draft, expected_version: version } });
+      if (item) await client.request(`${path}/${item.id}`, { method: 'PATCH', body: { ...draft, expected_version: confirmedVersion ?? version } });
       else await client.request(command.path, { method: 'POST', body: command.body, idempotencyKey: command.key });
       if (!item) pendingConfiguration.delete(client);
       onSaved(); onClose();
     } catch (failure) {
       setError(failure);
+      if (failure instanceof ApiFailure && failure.detail.code === 'VERSION_CONFLICT') {
+        setNeedsConfirmation(true); setLatest(null);
+      }
       const unresolved = !item && !isDefiniteFailure(failure);
       setUnknown(unresolved);
       if (!item && !unresolved) pendingConfiguration.delete(client);
     } finally { setBusy(false); }
   }
 
-  // 冲突后只更新所确认版本，不丢弃用户的待保存字段。
+  // 读取最新字段供核对；用户尚未选择前不能把新版本套在旧草稿上。
   async function confirmVersion() {
-    setBusy(true); setError(null);
+    if (busy) return;
+    setBusy(true); setError(null); setLatest(null);
     try {
-      const response = await client.request<{ items: (Task | Category)[] }>(`/${kind === 'task' ? 'tasks' : 'categories'}?include_inactive=true`);
+      const [response, currentCategories] = await Promise.all([
+        client.request<{ items: (Task | Category)[] }>(`/${kind === 'task' ? 'tasks' : 'categories'}?include_inactive=true`),
+        kind === 'task' ? client.request<{ items: Category[] }>('/categories') : Promise.resolve({ items: categoryOptions }),
+      ]);
       const found = response.items.find((entry) => entry.id === item?.id);
       if (!found) throw new ApiFailure(404, { code: 'NOT_FOUND', field_errors: {}, request_id: '' });
-      setVersion(found.version);
+      setCategoryOptions(currentCategories.items); setLatest(found);
     } catch (failure) { setError(failure); }
     finally { setBusy(false); }
+  }
+
+  // 明确采用最新配置后再替换草稿，后续编辑以刚看到的版本为基准。
+  function useLatest() {
+    if (!latest || busy) return;
+    setName(latest.name); setVersion(latest.version);
+    if ('weekdays' in latest) {
+      setCategoryID(latest.category_id ?? ''); setIcon(latest.icon_key);
+      setCoins(latest.coin_reward); setDiamonds(latest.diamond_reward);
+      setDailyLimit(latest.daily_limit); setWeekdays(latest.weekdays); setEnabled(latest.enabled);
+    } else setSortOrder(latest.sort_order);
+    setNeedsConfirmation(false); setLatest(null); setError(null); setDirty(false);
   }
 
   return <Modal title={title} closeDisabled={busy} onClose={() => { if (dirty && !unknown) setDiscard(true); else onClose(); }}>
     {discard ? <div className="checkin-stack"><p>{content.discardQuestion}</p><button onClick={() => setDiscard(false)}>{content.keepEditing}</button><button className="secondary" onClick={onClose}>{content.discard}</button></div> : <form className="checkin-stack" onChange={() => setDirty(true)} onSubmit={(event) => { event.preventDefault(); void save(); }}>
       <label>{content.name}<input required value={name} disabled={unknown} onChange={(event) => setName(event.target.value)} /></label><FieldError error={error} field="name" />
       {kind === 'category' ? <label>{content.sortOrder}<input type="number" step="1" value={sortOrder} disabled={unknown} onChange={(event) => setSortOrder(Number(event.target.value))} /></label> : <>
-        <div className="checkin-form-grid"><label>{content.category}<select value={categoryID} disabled={unknown} onChange={(event) => setCategoryID(event.target.value)}><option value="">{content.uncategorized}</option>{categories.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
+        <div className="checkin-form-grid"><label>{content.category}<select value={categoryID} disabled={unknown} onChange={(event) => setCategoryID(event.target.value)}><option value="">{content.uncategorized}</option>{categoryID && !categoryOptions.some((entry) => entry.id === categoryID) && <option value={categoryID}>{content.unavailableCategory}</option>}{categoryOptions.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
           <label>{content.icon}<select required value={icon} disabled={unknown} onChange={(event) => setIcon(event.target.value)}>{assets.map((asset) => <option key={asset.key} value={asset.key}>{asset.name}</option>)}</select></label>
           <label>{content.coins}<input type="number" min="0" max={session.limits.reward_max} step="1" value={coins} disabled={unknown} onChange={(event) => setCoins(Number(event.target.value))} /></label>
           <label>{content.diamonds}<input type="number" min="0" max={session.limits.reward_max} step="1" value={diamonds} disabled={unknown} onChange={(event) => setDiamonds(Number(event.target.value))} /></label>
@@ -107,8 +132,27 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
         <label className="checkin-toggle"><input type="checkbox" checked={enabled} disabled={unknown} onChange={(event) => setEnabled(event.target.checked)} />{content.enabled}</label>
       </>}
       {unknown && <p role="status">{content.configUnknown}</p>}{error !== null && <p role="alert" className="checkin-error">{checkinError(error)}</p>}
-      {error instanceof ApiFailure && error.detail.code === 'VERSION_CONFLICT' && <button type="button" className="secondary" disabled={busy} onClick={() => void confirmVersion()}>{content.confirmLatest}</button>}
-      <button type="submit" disabled={busy || [...name.trim()].length > session.limits.name_max || (kind === 'task' && (weekdays.length === 0 || !icon))}>{busy ? content.saving : unknown ? content.retryConfig : content.save}</button>
+      {needsConfirmation && <p role="status">{content.configurationConflictHelp}</p>}
+      {needsConfirmation && !latest && <button type="button" className="secondary" disabled={busy} onClick={() => void confirmVersion()}>{content.confirmLatest}</button>}
+      {latest && <section aria-label={content.latestConfiguration} className="checkin-warning checkin-stack">
+        <h3>{content.latestConfiguration}</h3>
+        <dl className="checkin-config-values">
+          <dt>{content.name}</dt><dd>{latest.name}</dd>
+          {latestCategory && <><dt>{content.sortOrder}</dt><dd>{latestCategory.sort_order}</dd></>}
+          {latestTask && <>
+            <dt>{content.category}</dt><dd>{latestTask.category_id === null ? content.uncategorized : categoryOptions.find((entry) => entry.id === latestTask.category_id)?.name ?? content.unavailableCategory}</dd>
+            <dt>{content.icon}</dt><dd>{assets.find((asset) => asset.key === latestTask.icon_key)?.name ?? content.unavailableIcon}</dd>
+            <dt>{content.coins}</dt><dd>{latestTask.coin_reward}</dd>
+            <dt>{content.diamonds}</dt><dd>{latestTask.diamond_reward}</dd>
+            <dt>{content.dailyLimit}</dt><dd>{latestTask.daily_limit}</dd>
+            <dt>{content.weekdaysLabel}</dt><dd>{latestTask.weekdays.map((day) => content.weekdays[day - 1]).join(content.weekdaySeparator)}</dd>
+            <dt>{content.configurationStatus}</dt><dd>{latestTask.enabled ? content.enabledStatus : content.disabled}</dd>
+          </>}
+        </dl>
+        <button type="button" className="secondary" disabled={busy} onClick={useLatest}>{content.useLatestConfiguration}</button>
+        <button type="button" disabled={busy || invalidDraft} onClick={(event) => { if (event.currentTarget.form?.reportValidity()) void save(latest.version); }}>{content.overwriteConfiguration}</button>
+      </section>}
+      <button type="submit" disabled={busy || needsConfirmation || invalidDraft}>{busy ? content.saving : unknown ? content.retryConfig : content.save}</button>
     </form>}
   </Modal>;
 }
