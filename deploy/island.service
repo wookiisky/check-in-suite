@@ -1,0 +1,22 @@
+[Unit]
+Description=Little Growth Island
+After=network.target
+
+[Service]
+Type=exec
+User=island
+Group=island
+WorkingDirectory=/srv/island
+ExecStart=/srv/island/current/island serve -config /srv/island/config/app.yaml
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=120s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/island/data
+
+[Install]
+WantedBy=multi-user.target

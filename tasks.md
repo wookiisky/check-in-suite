@@ -285,25 +285,25 @@
 
 ## 7. 阶段 5：交付验收与运行恢复
 
-- [ ] **T5.1 验收全页面布局与可访问性**
+- [x] **T5.1 验收全页面布局与可访问性**
   - 依据：[产品 §2、11、12](docs/product.md)；[技术 §9.4、12.3](docs/tech.md)。依赖：阶段 1–4、D08、D10。
   - 交付：桌面及 390 × 844 模拟布局报告；覆盖登录、营地、日周月、统计、商店、装扮、奖励、四组管理页和所有弹窗。
   - 验证：主要字 22–24 px、标题 32–40 px、其他可见字至少 18 px、操作目标至少 56 × 56 px；手机月历按决定验收；无页面横溢、安全区与输入表单、弹窗滚动、焦点回归、标签、键盘及减少动效。
   - 通过：手机不缩字，允许缩放；实际 10 饰品布局完整，任何月历尺寸例外可追溯，注明浏览器和模拟尺寸验证范围。
 
-- [ ] **T5.2 验收协议、类型与全业务回归**
+- [x] **T5.2 验收协议、类型与全业务回归**
   - 依据：[产品 §12](docs/product.md)；[技术 §7、12](docs/tech.md)。依赖：阶段 1–4。
   - 交付：Go 测试／竞态／静态检查、前端类型／组件／构建、端到端及 OpenAPI 一致性报告。
   - 验证：实际 HTTP JSON 中的整数、空值、日期、未知字段、错误结构和分页；实际 multipart 体积；产品验收表逐项覆盖，原型用例迁移后在正式边界重新验证。
   - 通过：正式命令全部通过且可复现；不支持竞态检测的平台在支持平台运行并注明，生成类型与实际服务响应一致。
 
-- [ ] **T5.3 验收故障、竞争与运行诊断**
+- [x] **T5.3 验收故障、竞争与运行诊断**
   - 依据：[产品 §5、7、13](docs/product.md)；[技术 §4.1、5.5、6、8、11.6、12.2](docs/tech.md)。依赖：T5.2。
   - 交付：数据库忙、磁盘不足、提交失败、上传／探测中断、响应丢失及进程重启报告；结构化日志和容量／一致性检查。
   - 验证：使用真实锁竞争和受限文件系统，检查最终数据库及文件状态；覆盖锁定与解锁、改密码与兑现、删除与购买、媒体关联与清理竞争；核对钱包、所有权与引用。
   - 通过：无部分经济事实，重试有界且保留正确请求；日志含请求／实体 ID、耗时和中文事件名，不记录密码、Cookie、照片录音或完整家庭文字。
 
-- [ ] **T5.4 建立发布与迁移流程**
+- [x] **T5.4 建立发布与迁移流程**
   - 依据：[产品 §13](docs/product.md)；[技术 §11.1–11.3、13.1](docs/tech.md)。依赖：T5.1–T5.3、D01、D10。
   - 交付：可识别版本的 Go 与前端构建产物、HTTPS 配置、非特权运行用户、持久化目录、`ffprobe` 检查、迁移／素材安装及回退说明。
   - 验证：临时部署环境从空安装启动；生产不依赖 Node.js；静态资源和 API 同源；数据库／媒体不在公开目录、容器临时层或共享网络盘；已有资产标识不能覆写。
@@ -312,14 +312,14 @@
 - **T5.5 已取消：停服备份**
   - 用户于 2026-10-29 明确不做备份。本任务不开发、不验收、不勾选为已完成。
 
-- [ ] **T5.6 运行手册与最终交付结论**
+- [x] **T5.6 运行手册与最终交付结论**
   - 依据：[产品 §12、13](docs/product.md)；[技术 §11、12、15](docs/tech.md)。依赖：T5.1–T5.4。
   - 范围变更：原“从备份恢复”演练按用户要求取消；保留运行手册和最终验收交付。
   - 交付：初始化、密码找回、升级、清理、故障排查步骤，以及实际完成、取消项、未验证项和发布边界。
   - 验证：重启后实际数据保留；执行 `integrity_check`、`foreign_key_check`，核对钱包与流水、媒体引用、订单和装备；移除旧发布目录后历史素材仍可用。
   - 通过：文档命令与实际服务一致，明确不包含备份能力和真机验证；生产入口未指定时仅交付本地验证过的部署模板。
 
-**阶段出口：**T5.1–T5.4、调整后的 T5.6 完成，产品 §12 与技术 §12 的本轮验收要求有证据；T5.5 与原备份恢复演练记为取消。实际发布仍需具体部署入口和发布决定。
+**阶段出口：**T5.1–T5.4、调整后的 T5.6 实施及本机验证已完成，产品 §12 与技术 §12 的本轮验收要求有证据；T5.5 与原备份恢复演练记为取消。已验证早期带 `dirty` 标识的发布产物，不能将该报告当作最终干净提交包的验证；最终包以随后实际生成的 `release.json` 和对应冒烟报告为准。未执行生产HTTPS、systemd或实际上线，不做真机和备份。
 
 ## 8. 覆盖索引与验收证据
 
@@ -379,7 +379,13 @@
 | T3.3–T3.5 十饰品、持久素材与兑现 | 本批浏览器及真实素材目录 | 实际加载10个饰品SVG，拒绝第11件；刷新、删除商品后检查装备；连续两笔奖励各自输入密码兑现 | 十件均完整显示并加载，刷新及删除商品后保留；已解锁管理也不能跳过每次兑现密码；原有真实目录测试证明移除旧发布目录后素材仍可读 | .local/previews/wardrobe-*.png；web/e2e/shop-flow.spec.ts；internal/assets/*_test.go；internal/shop/*_test.go | 自动化浏览器与持久化目录验收，不声明真机验证 |
 | T4.1–T4.4、T4.9 媒体与打卡集成 | 本批阶段4前端；真实HTTP、SQLite、文件目录及浏览器 | 打卡专项29项（原28项加独立草稿回归）、媒体11项、App8项测试；此前完整E2E 14项通过（29.2秒） | 照片/录音上传、替换、移除、私有读取、附件草稿与结果恢复通过；新增回归证明新建草稿A和记录编辑草稿B独立保存，处理其一不删除另一份；后台/关闭释放和跨日/请求竞争按实际用例验证 | web/src/features/checkin/及media/测试；.local/stage4-complete-e2e.log；后端媒体证据见services-go.log | 最终`npm run verify`全部通过：原型18项、Go全包race/vet、前端16文件95项测试、OpenAPI/类型/构建、14项E2E（26.1秒）；日志.local/evidence/final-verification.log；不做真机验证 |
 | T4.2 真实60秒浏览器录音 | Chromium真实MediaRecorder，假麦克风输入，实际Go服务 | 运行媒体自动停止验证脚本，采集、解码并通过HTTP上传 | audio/webm;codecs=opus，959473字节；单调经过60147.3ms，解码60000ms，后端201且duration_ms=60000；状态requesting→recording→stopping→idle | .local/media-proof/before-budget.json；web/src/features/media/verify-media-auto-stop.mjs | 证明浏览器实际编码与服务端接受60秒录音，不证明iPhone硬件或真机兼容性 |
-| T4.6–T4.8 查询、留言与声音 | 本批阶段4；Chromium与390 px WebKit | reports/family共14项组件测试；完整14项E2E | 日周月、统计、留言新增删除、声音独立偏好、录音联动及减少动效通过；正文辅助字至少18px、操作目标至少56px、390px布局无横向溢出 | web/src/features/reports/与family/测试；web/e2e/reports-family-flow.spec.ts、accessibility-layout.spec.ts；.local/stage4-complete-e2e.log | 阶段4完成；阶段5全量协议、故障与部署交付仍等待最终检查，不提前勾选 |
+| T4.6–T4.8 查询、留言与声音 | 本批阶段4；Chromium与390 px WebKit | reports/family共14项组件测试；完整14项E2E | 日周月、统计、留言新增删除、声音独立偏好、录音联动及减少动效通过；正文辅助字至少18px、操作目标至少56px、390px布局无横向溢出 | web/src/features/reports/与family/测试；web/e2e/reports-family-flow.spec.ts、accessibility-layout.spec.ts；.local/stage4-complete-e2e.log | 本行为阶段4验收快照；阶段5最终检查结果见后续证据 |
+| T5.1 全页面布局与可访问性 | 2026-10-29；Chromium与390×844 WebKit；最终工作区 | 完整14项E2E及布局检查；组件焦点/键盘/减少动效用例 | 登录、营地、日周月、统计、商店、装扮、奖励、管理与弹窗通过；18px辅助文字、56px操作目标、无页面横溢及十饰品展示符合本轮边界 | web/e2e/accessibility-layout.spec.ts及业务E2E；.local/previews/；.local/evidence/final-verification.log | 自动化浏览器与模拟布局；按用户决定不做真机 |
+| T5.2 全业务回归与协议 | 2026-10-29；Go1.27.0、Node24.20.0、darwin/arm64 | `npm run verify` | 全通过：原型18项；Go全包race/vet；前端16文件95项；OpenAPI生成一致性、独立类型检查、前后端构建；14项E2E（26.1秒） | .local/evidence/final-verification.log；实际HTTP/JSON/multipart测试与组件/E2E源文件 | 结果对应本次最终工作区；最终发布包身份另由release.json与包冒烟报告证明 |
+| T5.3 真实磁盘不足与Commit失败 | macOS受限文件系统；真实SQLite与媒体文件；2026-10-29本地时间 | `scripts/verify-storage-faults.py`创建受限卷；实际填满后发HTTP写请求；另一场景在记录/钱包/流水/收据SQL成功后填满卷再Commit | 实际ENOSPC和SQLite磁盘满发生；HTTP返回可重试503；Commit实际失败且四类事实全部回滚；释放空间后原键恢复仅一记录一奖励；失败上传无可读引用 | .local/evidence/storage-faults-20261028T181316Z.log；internal/checkin/storage_faults_test.go | 不是Mock磁盘失败；脚本退出后已卸载受限卷，不涉及备份恢复 |
+| T5.3 并发、中断和运行日志 | 后端`6487d16`及日志改进`83fad79`，最终全包检查 | 真实独立连接竞争、媒体目录中断/重启、浏览器丢响应测试；request_logging_test及全包race/vet | 授权、购买/删除、装备上限、媒体引用与清理一致；请求日志含ID/路由/耗时/中文事件，不记录密码、Cookie或完整家庭文字；请求取消与实际失败可区分 | internal/account、checkin、shop、media测试；internal/httpapi/request_logging_test.go；.local/evidence/final-verification.log | 已验证本轮故障路径，不承诺数据目录或硬盘丢失后的恢复 |
+| T5.4 发布流程首次实际冒烟 | 早期`89af83103e18650026ffdaa673c284893ab3c231-dirty`产物；darwin/arm64 | 校验release文件及二进制版本；空库拒启动→CLI迁移/初始化→真实浏览器加载打包SPA→带真实PNG/AAC打卡→双币购买→Range/私有访问→SIGTERM重启→只读一致性检查 | 全通过；重启保留记录/订单/媒体；integrity_check正常、无外键违规、钱包与流水差值0；生产运行不需要Node | .local/release-smoke-MOdte3/report.json；scripts/release.mjs；deploy/模板 | 报告明确为早期dirty构建，不能代表最终干净提交产物；最终包随后单独生成及重验 |
+| T5.4、T5.6 部署与运行交付 | 本轮已审查的脚本、模板、README与运行手册 | 核对版本与迁移命令、CLI找回、持久目录、历史素材、HTTPS/systemd模板、清理和故障排查步骤 | 运行手册与实际CLI/本地冒烟一致；追加迁移、schema不兼容拒启动、历史素材不可覆写；不假定可直接回退不兼容数据库 | docs/operations.md、README.md、deploy/app.production.example.yaml、deploy/Caddyfile、deploy/island.service；发布冒烟报告 | 生产HTTPS、Linux systemd未在本macOS执行；未实际上线；不做真机、备份或从备份恢复；最终产物身份待实际release.json和新冒烟报告 |
 
 后续每批实施按实际证据追加记录。阶段 0 的接口定义属于已批准的实施契约，不表示业务端点已经实现；实现完成状态仅以对应任务的测试和验收记录为准。
 

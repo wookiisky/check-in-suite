@@ -6,6 +6,8 @@
 
 正式实现按 [开发计划](tasks.md) 分阶段交付，实际验收证据记录在计划末尾。账户使用真实服务端会话，原型数据不会导入正式数据库。设计依据见 [技术方案](docs/tech.md)。本轮按确认范围不开发备份、不做真机验证。
 
+正式功能包括今日打卡、历史补录、双币钱包、商店与装扮、奖励兑现、照片与录音、日周月记录、统计及家庭留言。用户文案来自配置资源；业务日期固定为台北时间。普通页面只能编辑今天，历史纠正在管理页面执行；删除回收原奖励，允许负余额且保留已经购买的物品。
+
 开发工具基线：
 
 | 工具 | 版本或要求 |
@@ -74,12 +76,35 @@ npm run verify
 | `npm run test:e2e` | 桌面 Chromium 与 iPhone 14 尺寸的 WebKit 联通检查 |
 | `npm run build` | 类型检查后构建 `web/dist/` 与 `.local/bin/island` |
 | `npm run api:generate` | 从 `api/openapi.yaml` 生成前端类型 |
+| `npm run release` | 生成带提交号、版本和文件校验值的独立发布目录 |
 
 Playwright 自动启动独立测试服务，使用 18080 / 15173 端口、临时数据库和专用测试账户，正常退出时清理临时文件；不会复用日常开发服务。本轮验证桌面 Chromium 与 390 px WebKit 模拟环境，不声明 iPhone 真机兼容性。
 
 接口类型由 [openapi-typescript](https://openapi-ts.dev/cli) 生成，不直接编辑 `web/src/api/schema.d.ts`。新增或修改接口后运行 `npm run api:generate`，并补充实际 HTTP 响应测试。OpenAPI 描述完整业务契约，接口定义不代表对应功能已经验收。
 
 Go 服务可从 `static_directory` 提供前端构建产物，私有素材安装到 `assets_directory` 后经登录访问。生产 HTTPS 与部署模板在交付阶段验证，具体生产入口另行指定。
+
+## 部署与维护
+
+[运行手册](docs/operations.md) 包含构建、单实例部署、初始化、密码找回、停服迁移、媒体清理、容量及数据库一致性检查。发布产物只需要 Go 二进制、前端静态文件和 `ffprobe`，运行时不需要 Node.js。
+
+```sh
+npm run release
+# 在输出的发布目录内查看构建版本：
+./island version
+```
+
+`deploy/` 提供 Caddy、systemd 和生产配置示例；主机地址、域名、证书与服务用户须按实际环境填写。数据库、媒体和历史素材使用独立持久化目录，不能放在前端公开目录中。已有素材标识不可覆写，迁移文件只追加；本轮不提供备份或从备份恢复。
+
+媒体默认接收 JPEG/PNG 照片，单张 10 MiB、2000 万像素；处理后最长边 2560 px。录音最大 10 MiB、60 秒，服务端验证真实解码时长。桌面 Chromium 自动化录音与真实媒体文件测试不能代表 iPhone 真机兼容性。
+
+需要复现较慢的专项验证时，可分别运行：
+
+```sh
+node web/src/features/media/verify-media-auto-stop.mjs
+# macOS：仅在脚本自行创建的 64 MiB 临时卷上验证空间不足与提交失败。
+python3 scripts/verify-storage-faults.py
+```
 
 ## 静态原型预览
 
@@ -118,7 +143,7 @@ npm start
 
 原型不包含服务端、真实附件上传、跨设备同步或公开部署。
 
-## 本轮界面调整
+## 静态原型界面基线
 
 - 全应用改为便于稍远距离阅读的大字布局：主要文字 22–24 像素，标题 32–40 像素，辅助文字至少 18 像素，按钮目标至少 56 × 56 像素。手机保持字体大小，月历、统计、商店、管理页面及弹窗同步调整。
 - 今日可打卡卡片仅保留大图标、名称、金币和钻石奖励，整卡点击；达到每日次数上限后移除，删除记录释放次数后重新出现，多次任务未达到上限时继续保留。完成记录仍在上方展示。
@@ -126,7 +151,7 @@ npm start
 - 日视图只展示单日记录，通过前一天、后一天和今天切换，不放周日期条。周视图在桌面以周一至周日七列直接展示记录，在手机以七天纵向分组展示，空日期也保留，无需逐日点击。
 - 桌面周记录区可跨页面宽度，下方今日任务与角色区保持左右布局。图标、金币和钻石使用彩色实心卡通 SVG，并精简欢迎语、宣传内容及重复说明。
 
-## 检查
+## 静态原型检查
 
 需要支持 `node:test` 的 Node.js，当前环境使用 Node.js 24：
 
@@ -137,18 +162,22 @@ npm run check
 
 领域测试覆盖日期边界、每日次数、历史奖励快照、编辑不重复发奖、删除回收与负余额、统计归并、双币购买、库存及装扮去重。
 
-浏览器已验证打卡失败重试、日历历史只读、姓名修改、任务新增、管理密码错误与解锁、商店双币兑换与换装、登录以及桌面与手机布局。真实录音兼容性、服务端权限、并发库存与持久存储尚未实现，也未作为本阶段验证结论。
+原型浏览器检查涵盖打卡失败重试、日历历史只读、姓名修改、任务新增、管理密码错误与解锁、商店双币兑换与换装、登录以及桌面与手机布局。原型自身没有真实服务端；正式实现的权限、并发、持久存储和媒体验证见开发计划中的证据，不能用原型检查替代。
 
 ## 文件组织
 
 正式工程与设计原型分别组织，根目录的 `npm start`、`npm test` 和 `npm run check` 继续操作原型。
 
-- `cmd/island/`：Go 服务与迁移命令入口。
-- `internal/config/`、`internal/storage/`、`internal/httpapi/`：配置、SQLite 和健康检查。
+- `cmd/island/`：Go 服务、迁移、初始化、密码找回与版本命令。
+- `internal/config/`、`internal/core/`、`internal/storage/`：配置、业务值规则和 SQLite。
+- `internal/account/`、`internal/checkin/`、`internal/shop/`：账户、打卡查询和商店业务。
+- `internal/wallet/`、`internal/idempotency/`：同事务账务和成功命令收据。
+- `internal/media/`、`internal/assets/`、`internal/message/`：私有附件、持久版本素材和家庭留言。
+- `internal/httpapi/`：HTTP 协议、鉴权、请求保护及路由适配。
 - `migrations/`：随 Go 程序嵌入的编号 SQL 迁移。
 - `config/app.example.yaml`：可直接运行的本地开发配置。
 - `api/openapi.yaml`：已实现的接口契约。
-- `web/`：React / TypeScript 工程、组件测试及浏览器测试。
+- `web/`：按功能划分的 React / TypeScript 页面、组件测试及浏览器测试。
 - `scripts/e2e-api.mjs`、`playwright.config.ts`：独立测试服务与浏览器测试配置。
 
 - `docs/product.md`：产品描述与交互规则。

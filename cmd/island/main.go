@@ -46,6 +46,12 @@ func run(ctx context.Context, args []string) error {
 
 // runWithIO separates interactive input from command dispatch for real database tests.
 func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Writer) error {
+	if len(args) > 0 && args[0] == "version" {
+		if len(args) != 1 {
+			return errors.New(content.Text("unexpected_arguments"))
+		}
+		return printVersion(output)
+	}
 	if len(args) == 0 || (args[0] != "serve" && args[0] != "migrate" && args[0] != "init" && args[0] != "reset-password") {
 		return errors.New(content.Text("usage"))
 	}

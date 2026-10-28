@@ -27,6 +27,7 @@
     "build:api": "go build -o .local/bin/island ./cmd/island",
     "build:web": "npm run build --workspace @island/web",
     "build": "npm run typecheck && npm run build:web && npm run build:api",
+    "release": "node scripts/release.mjs",
     "verify": "npm test && npm run check && npm run check:go && npm run test:race && npm run test:web && npm run build && npm run test:e2e"
   },
   "devDependencies": {
