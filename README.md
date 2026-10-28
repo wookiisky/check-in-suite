@@ -4,7 +4,7 @@
 
 ## 正式工程开发环境
 
-当前已建立配置、SQLite 连接与迁移、健康检查和前端连接状态页。登录、打卡、商店和真实媒体上传将在后续阶段实现，原型数据不会导入正式数据库。设计依据见 [技术方案](docs/tech.md)。
+正式实现按 [开发计划](tasks.md) 分阶段交付，实际验收证据记录在计划末尾。账户使用真实服务端会话，原型数据不会导入正式数据库。设计依据见 [技术方案](docs/tech.md)。本轮按确认范围不开发备份、不做真机验证。
 
 开发工具基线：
 
@@ -22,14 +22,24 @@
 npm ci
 go mod download
 npm run db:migrate
+go run ./cmd/island init -config config/app.example.yaml
 npm run dev
 ```
 
-打开 <http://127.0.0.1:5173>。Go 服务监听 `127.0.0.1:8080`，Vite 将 `/api/v1` 与 `/health` 代理到它；状态页通过真实 `/health/ready` 请求显示连接结果。按 Ctrl+C 停止开发服务。
+打开 <http://127.0.0.1:5173>，使用初始化时设置的账户登录。Go 服务监听 `127.0.0.1:8080`，Vite 将 `/api/v1` 与 `/health` 代理到它。按 Ctrl+C 停止开发服务。
+
+`init` 交互读取用户名、姓名和两种密码（分别确认），终端输入密码时不回显；已有账户时拒绝再次初始化。正式安装只有一个账户、零余额和默认角色，没有示例任务、成绩或订单。密码为 10–128 个 Unicode 码点。忘记密码时在服务器本机执行：
+
+```sh
+go run ./cmd/island reset-password -kind login -config config/app.example.yaml
+go run ./cmd/island reset-password -kind management -config config/app.example.yaml
+```
+
+命令读取新密码和确认值，不通过参数传递密码。重置任一密码都会撤销全部会话。网页管理页仍可用对应旧密码修改密码；离开管理页即锁定，再次进入必须重新输入管理密码。
 
 默认使用 `config/app.example.yaml`，数据库和私有目录位于项目根目录的 `.local/`，不进入 Git。配置中的相对路径以**启动命令的工作目录**为基准，因此这些命令均须从项目根目录执行。SQLite 必须位于本机磁盘，不能放入同步盘或共享网络盘。
 
-迁移通过维护命令显式执行，服务启动时只检查版本，不自动修改结构。初始迁移仅建立迁移记录表；再次执行不会重复应用，已应用迁移的内容改变会报错。后续结构变更应增加新的编号 SQL 文件。
+迁移通过维护命令显式执行，服务启动时只检查版本，不自动修改结构。迁移建立账户、会话与业务表；再次执行不会重复应用，已应用迁移的内容改变会报错。后续结构变更只能增加新的编号 SQL 文件。
 
 需要调整端口或路径时，复制示例为已忽略的本地配置：
 
@@ -41,7 +51,7 @@ go run ./cmd/island serve -config config/app.local.yaml
 ISLAND_API_TARGET=http://127.0.0.1:8080 npm run dev:web
 ```
 
-最后一条命令中的地址应与本地配置的 Go 监听地址一致。业务时区固定为 `Asia/Taipei`，不受开发机器时区影响。
+最后一条命令中的地址应与本地配置的 Go 监听地址一致。`public_origin` 必须与浏览器访问的来源一致，默认 `http://127.0.0.1:5173`；更换访问地址或端口时同时修改，否则写请求会被拒绝。业务时区固定为 `Asia/Taipei`，不受开发机器时区影响。
 
 ## 正式工程检查与构建
 
@@ -65,11 +75,11 @@ npm run verify
 | `npm run build` | 类型检查后构建 `web/dist/` 与 `.local/bin/island` |
 | `npm run api:generate` | 从 `api/openapi.yaml` 生成前端类型 |
 
-Playwright 自动启动独立测试服务，使用 18080 / 15173 端口及临时数据库，正常退出时清理临时文件；不会复用日常开发服务。WebKit 设备模拟不能代替 iPhone 真机 Safari 的拍照、录音和权限验收。
+Playwright 自动启动独立测试服务，使用 18080 / 15173 端口、临时数据库和专用测试账户，正常退出时清理临时文件；不会复用日常开发服务。本轮验证桌面 Chromium 与 390 px WebKit 模拟环境，不声明 iPhone 真机兼容性。
 
-接口类型由 [openapi-typescript](https://openapi-ts.dev/cli) 生成，不直接编辑 `web/src/api/schema.d.ts`。新增或修改接口后运行 `npm run api:generate`，并补充实际 HTTP 响应测试。当前 OpenAPI 只描述两个健康检查端点。
+接口类型由 [openapi-typescript](https://openapi-ts.dev/cli) 生成，不直接编辑 `web/src/api/schema.d.ts`。新增或修改接口后运行 `npm run api:generate`，并补充实际 HTTP 响应测试。OpenAPI 描述完整业务契约，接口定义不代表对应功能已经验收。
 
-本次构建产物用于工程验证。生产静态资源托管、HTTPS、账户初始化及备份恢复仍需在对应实施阶段完成。
+Go 服务可从 `static_directory` 提供前端构建产物，私有素材安装到 `assets_directory` 后经登录访问。生产 HTTPS 与部署模板在交付阶段验证，具体生产入口另行指定。
 
 ## 静态原型预览
 

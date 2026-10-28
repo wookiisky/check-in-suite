@@ -1,0 +1,230 @@
+[
+  {
+    "key": "coin-v1",
+    "name": "金币",
+    "kind": "icon",
+    "url": "/api/v1/assets/coin-v1"
+  },
+  {
+    "key": "gem-v1",
+    "name": "钻石",
+    "kind": "icon",
+    "url": "/api/v1/assets/gem-v1"
+  },
+  {
+    "key": "book-v1",
+    "name": "读书",
+    "kind": "icon",
+    "url": "/api/v1/assets/book-v1"
+  },
+  {
+    "key": "run-v1",
+    "name": "运动",
+    "kind": "icon",
+    "url": "/api/v1/assets/run-v1"
+  },
+  {
+    "key": "brush-v1",
+    "name": "画画",
+    "kind": "icon",
+    "url": "/api/v1/assets/brush-v1"
+  },
+  {
+    "key": "sun-v1",
+    "name": "阳光",
+    "kind": "icon",
+    "url": "/api/v1/assets/sun-v1"
+  },
+  {
+    "key": "tidy-v1",
+    "name": "整理",
+    "kind": "icon",
+    "url": "/api/v1/assets/tidy-v1"
+  },
+  {
+    "key": "music-v1",
+    "name": "音乐",
+    "kind": "icon",
+    "url": "/api/v1/assets/music-v1"
+  },
+  {
+    "key": "star-v1",
+    "name": "星星",
+    "kind": "icon",
+    "url": "/api/v1/assets/star-v1"
+  },
+  {
+    "key": "crown-v1",
+    "name": "皇冠",
+    "kind": "icon",
+    "url": "/api/v1/assets/crown-v1"
+  },
+  {
+    "key": "hat-v1",
+    "name": "探险帽",
+    "kind": "icon",
+    "url": "/api/v1/assets/hat-v1"
+  },
+  {
+    "key": "gift-v1",
+    "name": "礼物",
+    "kind": "icon",
+    "url": "/api/v1/assets/gift-v1"
+  },
+  {
+    "key": "play-v1",
+    "name": "播放",
+    "kind": "icon",
+    "url": "/api/v1/assets/play-v1"
+  },
+  {
+    "key": "leaf-v1",
+    "name": "树叶",
+    "kind": "icon",
+    "url": "/api/v1/assets/leaf-v1"
+  },
+  {
+    "key": "home-v1",
+    "name": "营地",
+    "kind": "icon",
+    "url": "/api/v1/assets/home-v1"
+  },
+  {
+    "key": "calendar-v1",
+    "name": "月历",
+    "kind": "icon",
+    "url": "/api/v1/assets/calendar-v1"
+  },
+  {
+    "key": "chart-v1",
+    "name": "统计",
+    "kind": "icon",
+    "url": "/api/v1/assets/chart-v1"
+  },
+  {
+    "key": "shop-v1",
+    "name": "商店",
+    "kind": "icon",
+    "url": "/api/v1/assets/shop-v1"
+  },
+  {
+    "key": "settings-v1",
+    "name": "配置",
+    "kind": "icon",
+    "url": "/api/v1/assets/settings-v1"
+  },
+  {
+    "key": "lock-v1",
+    "name": "锁定",
+    "kind": "icon",
+    "url": "/api/v1/assets/lock-v1"
+  },
+  {
+    "key": "camera-v1",
+    "name": "照片",
+    "kind": "icon",
+    "url": "/api/v1/assets/camera-v1"
+  },
+  {
+    "key": "mic-v1",
+    "name": "录音",
+    "kind": "icon",
+    "url": "/api/v1/assets/mic-v1"
+  },
+  {
+    "key": "message-v1",
+    "name": "留言",
+    "kind": "icon",
+    "url": "/api/v1/assets/message-v1"
+  },
+  {
+    "key": "user-v1",
+    "name": "姓名",
+    "kind": "icon",
+    "url": "/api/v1/assets/user-v1"
+  },
+  {
+    "key": "accessory-book-v1",
+    "name": "读书饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-book-v1"
+  },
+  {
+    "key": "accessory-run-v1",
+    "name": "运动饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-run-v1"
+  },
+  {
+    "key": "accessory-brush-v1",
+    "name": "画画饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-brush-v1"
+  },
+  {
+    "key": "accessory-sun-v1",
+    "name": "阳光饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-sun-v1"
+  },
+  {
+    "key": "accessory-tidy-v1",
+    "name": "整理饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-tidy-v1"
+  },
+  {
+    "key": "accessory-music-v1",
+    "name": "音乐饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-music-v1"
+  },
+  {
+    "key": "accessory-star-v1",
+    "name": "星星饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-star-v1"
+  },
+  {
+    "key": "accessory-crown-v1",
+    "name": "皇冠饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-crown-v1"
+  },
+  {
+    "key": "accessory-hat-v1",
+    "name": "探险帽饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-hat-v1"
+  },
+  {
+    "key": "accessory-leaf-v1",
+    "name": "树叶饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-leaf-v1"
+  },
+  {
+    "key": "fox-v1",
+    "name": "小狐狸",
+    "kind": "avatar",
+    "url": "/api/v1/assets/fox-v1"
+  },
+  {
+    "key": "bunny-v1",
+    "name": "小兔子",
+    "kind": "avatar",
+    "url": "/api/v1/assets/bunny-v1"
+  },
+  {
+    "key": "title-crown-v1",
+    "name": "皇冠",
+    "kind": "title",
+    "url": "/api/v1/assets/title-crown-v1"
+  },
+  {
+    "key": "reward-gift-v1",
+    "name": "礼物",
+    "kind": "reward",
+    "url": "/api/v1/assets/reward-gift-v1"
+  }
+]

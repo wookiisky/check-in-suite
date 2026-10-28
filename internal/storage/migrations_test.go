@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"testing"
@@ -31,7 +32,11 @@ func TestMigrate(t *testing.T) {
 		}
 	}
 	var count int
-	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil || count != 1 {
+	all, err := loadMigrations(migrations.Files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil || count != len(all) {
 		t.Fatalf("migration count = %d: %v", count, err)
 	}
 	if _, err := db.ExecContext(ctx, "UPDATE schema_migrations SET checksum = 'changed'"); err != nil {
@@ -56,14 +61,19 @@ func TestMigrationRollback(t *testing.T) {
 	if err := Migrate(ctx, db, migrations.Files); err != nil {
 		t.Fatal(err)
 	}
-	initial, err := fs.ReadFile(migrations.Files, "001_schema_migrations.sql")
+	names, err := fs.Glob(migrations.Files, "*.sql")
 	if err != nil {
 		t.Fatal(err)
 	}
-	files := fstest.MapFS{
-		"001_schema_migrations.sql": {Data: initial},
-		"002_failure.sql":           {Data: []byte("CREATE TABLE transient (id INTEGER) STRICT; THIS IS INVALID;")},
+	files := fstest.MapFS{}
+	for _, name := range names {
+		source, err := fs.ReadFile(migrations.Files, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		files[name] = &fstest.MapFile{Data: source}
 	}
+	files[fmt.Sprintf("%03d_failure.sql", len(names)+1)] = &fstest.MapFile{Data: []byte("CREATE TABLE transient (id INTEGER) STRICT; THIS IS INVALID;")}
 	if err := CheckSchema(ctx, db, files); err == nil {
 		t.Fatal("pending migration accepted")
 	}
@@ -77,7 +87,7 @@ func TestMigrationRollback(t *testing.T) {
 	if err := CheckSchema(ctx, db, migrations.Files); err != nil {
 		t.Fatalf("previous schema damaged: %v", err)
 	}
-	if _, err := db.ExecContext(ctx, "INSERT INTO schema_migrations VALUES (2, '002_future.sql', 'future', 0)"); err != nil {
+	if _, err := db.ExecContext(ctx, "INSERT INTO schema_migrations VALUES (?, ?, 'future', 0)", len(names)+1, fmt.Sprintf("%03d_future.sql", len(names)+1)); err != nil {
 		t.Fatal(err)
 	}
 	if err := CheckSchema(ctx, db, migrations.Files); err == nil {

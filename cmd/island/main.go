@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"net/http"
@@ -14,7 +15,10 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/config"
+	"github.com/wookiisky/check-in-suite/internal/content"
 	"github.com/wookiisky/check-in-suite/internal/httpapi"
 	"github.com/wookiisky/check-in-suite/internal/storage"
 	"github.com/wookiisky/check-in-suite/migrations"
@@ -33,16 +37,26 @@ func main() {
 
 // run prepares explicit configuration and dispatches only implemented subcommands.
 func run(ctx context.Context, args []string) error {
-	if len(args) == 0 || (args[0] != "serve" && args[0] != "migrate") {
-		return errors.New("usage: island <serve|migrate> [-config config/app.example.yaml]")
+	return runWithIO(ctx, args, os.Stdin, os.Stdout)
+}
+
+// runWithIO separates interactive input from command dispatch for real database tests.
+func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Writer) error {
+	if len(args) == 0 || (args[0] != "serve" && args[0] != "migrate" && args[0] != "init" && args[0] != "reset-password") {
+		return errors.New(content.Text("usage"))
 	}
 	flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
 	configuration := flags.String("config", "config/app.example.yaml", "configuration file")
+	kind := ""
+	if args[0] == "reset-password" {
+		flags.StringVar(&kind, "kind", "", "credential type")
+	}
 	if err := flags.Parse(args[1:]); err != nil {
-		return err
+		return errors.New(content.Text("usage"))
 	}
 	if flags.NArg() != 0 {
-		return errors.New("unexpected positional arguments")
+		return errors.New(content.Text("unexpected_arguments"))
 	}
 	cfg, err := config.Load(*configuration)
 	if err != nil {
@@ -68,6 +82,10 @@ func run(ctx context.Context, args []string) error {
 	if err := storage.CheckSchema(startupContext, db, migrations.Files); err != nil {
 		return err
 	}
+	accounts := account.New(db, cfg)
+	if args[0] == "init" || args[0] == "reset-password" {
+		return maintain(ctx, args[0], kind, accounts, input, output)
+	}
 	for _, directory := range []string{cfg.MediaDirectory, cfg.TempDirectory} {
 		if err := os.MkdirAll(directory, 0700); err != nil {
 			return fmt.Errorf("create private directory: %w", err)
@@ -77,7 +95,13 @@ func run(ctx context.Context, args []string) error {
 	if err := ready.Check(startupContext); err != nil {
 		return err
 	}
-	return serve(ctx, cfg, httpapi.NewHandler(ready, cfg.HTTPTimeout))
+	application := httpapi.NewApplication(ready, cfg, accounts)
+	artwork := assets.New(cfg.AssetsDirectory)
+	if err := artwork.Install(); err != nil {
+		return err
+	}
+	application.RegisterAssets(artwork)
+	return serve(ctx, cfg, application)
 }
 
 // serve binds before reporting readiness and drains requests before closing the database.

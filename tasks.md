@@ -89,7 +89,7 @@
 
 ## 3. 阶段 1：工程、存储与账户
 
-- [ ] **T1.1 初始化正式工程与检查入口**
+- [x] **T1.1 初始化正式工程与检查入口**
   - 依据：[产品 §1、2](docs/product.md)；[技术 §2、12.4、13.1](docs/tech.md)。依赖：T0.3、T0.4。
   - 交付：`cmd/island/`、`internal/`、`web/` 工程及锁文件；Go 测试、Vitest、组件测试和 Playwright 入口；明确开发代理、生产静态资源与同源 API。
   - 验证：最小服务及页面能启动；Go 编译、静态检查和测试可运行；前端严格类型检查与生产构建分别运行；新环境按锁文件可复现安装。
@@ -101,31 +101,31 @@
   - 验证：台北午夜、跨月跨年及周一起点；设备时区不改变日期；整数越界回滚；Unicode 码点计数；非法配置或缺失时区数据启动失败。
   - 通过：用户文案外化，金额无浮点数，时区不可被运行环境悄悄替换；不为资源中的具体措辞编写测试。
 
-- [ ] **T1.3 建立 SQLite 连接、迁移与事务入口**
+- [x] **T1.3 建立 SQLite 连接、迁移与事务入口**
   - 依据：[产品 §10、13](docs/product.md)；[技术 §4、11.3、12.2](docs/tech.md)。依赖：T1.1、T0.3。
   - 交付：单连接池、连接级参数、WAL、编号 SQL、校验值记录与维护迁移命令。按技术 §4 建立约束和索引；后续新增迁移只能追加。
   - 验证：空库初始化、重复迁移、脚本校验值变化和失败回滚；重连后参数有效；同文件独立连接验证 `IMMEDIATE` 写锁、忙错误及只读快照。确认锁定驱动版本的 `ReadOnly` 不使用 `IMMEDIATE`。
   - 通过：迁移失败不记成功，schema 不匹配拒绝启动；事务内仅使用传入 `*sql.Tx`，查询及时关闭，无单连接自我等待。
 
-- [ ] **T1.4 实现账户初始化和密码恢复命令**
+- [x] **T1.4 实现账户初始化和密码恢复命令**
   - 依据：[产品 §3、13](docs/product.md)；[技术 §6.3、13.1](docs/tech.md)。依赖：T1.2、T1.3、D01、D02、D03。
   - 交付：交互式初始化与指定密码重置命令，独立盐的密码哈希，唯一账户、零钱包和默认形象。
   - 验证：重复初始化拒绝；密码不出现在参数、日志或仓库；重置更新凭据版本并撤销全部会话；重启后数据保持。
   - 通过：空安装无示例成绩与订单；忘记密码有实际可操作的恢复路径。
 
-- [ ] **T1.5 实现登录、退出与请求保护**
+- [x] **T1.5 实现登录、退出与请求保护**
   - 依据：[产品 §3、9](docs/product.md)；[技术 §6.1、7、12.2](docs/tech.md)。依赖：T1.4、D03。
   - 交付：真实登录、会话查询和注销；不透明 Cookie、令牌哈希、过期和凭据版本检查、来源与 CSRF 校验、失败限速。
   - 验证：正常／错误密码、过期、注销、伪造来源、缺少 CSRF、限速恢复；密码校验与重置竞争时旧校验不能建立新会话；检查实际 Cookie 属性与 HTTP 错误结构。
   - 通过：密码校验在事务外，写入前事务内复核凭据；退出后旧会话不能读写，生产 Cookie 属性符合方案。
 
-- [ ] **T1.6 实现管理授权、资料与密码维护**
+- [x] **T1.6 实现管理授权、资料与密码维护**
   - 依据：[产品 §3、9](docs/product.md)；[技术 §3.2、6.2、6.3](docs/tech.md)。依赖：T1.5、D03。
   - 交付：解锁／锁定、姓名编辑和两种密码修改；资料版本、凭据版本和管理版本各司其职；普通管理写操作在事务内复核授权。
   - 验证：管理过期、先锁定后迟到解锁、退出登录与在途写入竞争；姓名版本冲突；修改任一密码后所有会话失效；锁定响应失败时界面隐藏管理内容并显示未确认状态。
   - 通过：客户端权限字段不能授权；改密码校验对应旧密码；用户名只读，姓名修改传播到当前相关展示。
 
-- [ ] **T1.7 实现前端页面骨架与请求模块**
+- [x] **T1.7 实现前端页面骨架与请求模块**
   - 依据：[产品 §2、3、11](docs/product.md)；[技术 §7、9.1、9.4](docs/tech.md)。依赖：T1.1、T1.5、T1.6。
   - 交付：页面导航、登录与管理入口、账户表单、生成的 TS 接口类型、fetch 与结构化错误处理；少量共用表单和弹窗组件。
   - 验证：真实服务登录与退出、401／403 清理、可见字段错误、键盘操作和焦点回归；`tsc` 与生产构建分别通过。
@@ -359,6 +359,13 @@
 | 基线工程盘点 | `d5d1ded`；Go 1.27.0、Node 24.20.0、npm 11.19.0、darwin/arm64 | `go test ./...`、`go vet ./...`、`go test -race ./...`、`npm run test:web`、`npm run typecheck`、`npm run test:e2e`、`npm run build` | 全通过；前端 5 个组件测试、4 个浏览器健康检查 | 本轮 baseline_audit agent 实际输出；现有测试源文件 | 仅证明工程骨架；生产构建由主 agent 补测通过；未验证业务功能 |
 | T0.1、T0.2 | 2026-10-29；本轮用户决定与基线盘点 | 对照产品 §12、技术 §15、任务覆盖索引，逐项核对 D01–D12 与执行范围 | 已记录全部推荐值确认、CLI/网页账户边界、退出管理重新验证、取消备份和真机验收；阶段依赖已调整 | 本文 §1、§2、§7；产品与技术文档同步 | 生产主机及正式素材对外发布授权未指定，不阻塞本地开发 |
 | T0.3、T0.4 | 2026-10-29；Node 24.20.0、openapi-typescript 7.13.0 | `npx openapi-typescript api/openapi.yaml -o /tmp/island-schema-check.d.ts`；本地文档链接与组件引用检查；`git diff --check` | 类型可生成，178 个组件引用无缺失，本地文档链接无缺失；接口、实体约束与验证边界已记录 | `api/openapi.yaml`；本文 §8.4、§8.5 | 接口实现与实际响应一致性由对应业务任务验证，不能把类型生成当业务通过 |
+| T1.1 | 本轮阶段 1；Go 1.27.0、Node 24.20.0；独立空目录安装 | 复制根及web/package.json和package-lock.json后执行 `npm ci --no-audit --no-fund`、`npm ls --depth=0`；`npm run typecheck`、`npm run build:web`及基线全构建 | 锁文件安装156个包并核对依赖通过；工程入口、同源代理、生产静态托管、独立类型和构建可用 | 主 agent 临时安装输出；README、package.json、application_test.go、web/e2e/environment.spec.ts | 正式业务页面与发布验证在后续任务完成 |
+| T1.2（最后一项随T2.1提交） | 本轮阶段 1；真实时区及配置测试 | `go test ./internal/core ./internal/config`；前端日期12用例及Honolulu/Kiritimati时区运行 | 台北午夜/跨年、非法日期、Unicode、安全整数上下界、非法配置通过；shiftDate/weekStart/monthStart/monthEnd覆盖跨月、跨年、闰年、周一起点，设备时区不影响日期 | internal/core/values_test.go、internal/config/config_test.go、web/src/api/dates.test.ts | 整数越界后的业务事务回滚测试已由checkin_backend实际运行通过，但代码和证据随T2.1提交前本项保持未勾 |
+| T1.3–T1.6 | 本轮阶段 1；真实文件 SQLite，独立连接竞争 | `go test`、`go vet`、`go test -race`，目标为 `./internal/account ./internal/core ./internal/config ./internal/storage ./cmd/island ./internal/httpapi` | 全通过；迁移校验/回滚/重连、只读快照与IMMEDIATE竞争；CLI初始化和重置；真实Cookie/Origin/CSRF/限速；凭据重置与旧登录、锁定与迟到解锁、注销与写入竞争均通过 | internal/storage/*_test.go、internal/account/*_test.go、internal/httpapi/application_test.go、cmd/island/maintenance_test.go | T1.2已满足本组所用配置/账户校验依赖，其余日期及钱包边界单独保留 |
+| T1.5 Cookie契约补证 | 本轮阶段 1；真实HTTP序列化 | SameSite=Lax目标测试先失败，再修复实现后通过 | Cookie回到技术§6.1约定的Lax，同时保留HttpOnly、Secure与Origin/CSRF校验 | internal/httpapi/application_test.go | 无额外范围变更 |
+| T1.7 | 本轮阶段 1；Chromium、390 px WebKit | 原10项组件/API测试；姓名冲突修复后账户7测试通过；`npm run typecheck`、`npm run build:web`；`npm run test:e2e` 6项 | 全通过；真实登录、锁定后重进、姓名保存、退出及焦点回归；锁定失败隐藏管理内容并重试；姓名冲突保留草稿并重新确认；390 px大字与操作目标通过 | web/src/IslandApp.test.tsx、web/src/api/client.test.ts、web/e2e/environment.spec.ts；.local/previews/账户与登录截图 | 仅账户骨架验收，业务页面由后续阶段覆盖；不进行真机验证 |
+
+| 账户交付快照全检查 | 2026-10-29；暂存区源码导出到独立临时目录 | `npm ci --no-audit --no-fund`、`npm run verify` | 全通过：原型检查、Go vet/race、前端组件、类型检查、前后端构建、6项浏览器测试；不依赖其他agent未提交代码 | `.local/evidence/stage1-verification.log`；对应测试源文件 | T1.2钱包事务回滚随下一批业务代码提交 |
 
 后续每批实施按实际证据追加记录。阶段 0 的接口定义属于已批准的实施契约，不表示业务端点已经实现；实现完成状态仅以对应任务的测试和验收记录为准。
 

@@ -1,48 +1,98 @@
-import { useEffect, useState } from 'react';
-import { readReadiness } from './api/health';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ApiClient, ApiFailure } from './api/client';
+import type { Account, Session } from './api/types';
+import { FormFeedback } from './components/FormFeedback';
+import { LoginForm } from './features/account/LoginForm';
+import { ManagementPanel } from './features/account/ManagementPanel';
+import { UnlockDialog } from './features/account/UnlockDialog';
 import content from './content/zh-CN.json';
 
-type ConnectionState = 'loading' | 'ready' | 'error';
+type Page = 'camp' | 'calendar' | 'stats' | 'shop';
 
-// 最小工程页面通过真实服务状态证明开发链路可用。
+// 应用仅保存当前会话与页面状态，业务草稿归各功能组件所有。
 export function IslandApp() {
-  const [connection, setConnection] = useState<ConnectionState>('loading');
-  const [attempt, setAttempt] = useState(0);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [error, setError] = useState<unknown>(null);
+  const [notice, setNotice] = useState('');
+  const [page, setPage] = useState<Page>('camp');
+  const [unlocking, setUnlocking] = useState(false);
+  const [management, setManagement] = useState(false);
+  const [lockPending, setLockPending] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const serverOffset = useRef(0);
+  const client = useMemo(() => new ApiClient((status) => {
+    setManagement(false); setUnlocking(false); setExpiresAt(null);
+    if (status === 401) { setSession(null); setNotice(content.account.sessionExpired); }
+    else setNotice(content.account.managementExpired);
+  }), []);
 
+  // 页面进入时读取会话；取消请求后不接受迟到响应。
   useEffect(() => {
     const controller = new AbortController();
-    setConnection('loading');
-    readReadiness(controller.signal)
-      .then(() => {
-        if (!controller.signal.aborted) setConnection('ready');
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setConnection('error');
-      });
-
-    // 卸载和 StrictMode 重挂载均释放请求，旧响应不再更新界面。
+    setLoading(true); setError(null);
+    client.request<Session>('/session', { signal: controller.signal }).then((value) => {
+      if (controller.signal.aborted) return;
+      client.setCsrfToken(value.csrf_token); serverOffset.current = Date.parse(value.server_now) - Date.now();
+      setSession(value); setNotice('');
+    }).catch((reason: unknown) => {
+      if (controller.signal.aborted) return;
+      if (reason instanceof ApiFailure && reason.status === 401) setNotice('');
+      else setError(reason);
+    }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [attempt]);
+  }, [client, loadAttempt]);
 
-  return (
-    <main className="island-shell">
-      <header className="island-brand">{content.appName}</header>
-      <section className="island-card" aria-labelledby="welcome-heading">
-        <p className="island-stage">{content.stage}</p>
-        <h1 id="welcome-heading">{content.heading}</h1>
-        <p className="island-description">{content.description}</p>
-        <div className="island-connection">
-          <h2>{content.connectionLabel}</h2>
-          <p role="status" aria-live="polite" className={`connection-${connection}`}>
-            {content.connection[connection]}
-          </p>
-          {connection === 'error' && (
-            <button type="button" onClick={() => setAttempt((current) => current + 1)}>
-              {content.retry}
-            </button>
-          )}
-        </div>
-      </section>
+  // 到期只关闭当前管理页面，服务器仍是权限判断依据。
+  useEffect(() => {
+    if (!management || !expiresAt) return;
+    const timer = window.setTimeout(() => {
+      setManagement(false); setExpiresAt(null); setNotice(content.account.managementExpired);
+    }, Math.max(0, Date.parse(expiresAt) - Date.now() - serverOffset.current));
+    return () => window.clearTimeout(timer);
+  }, [management, expiresAt]);
+
+  function acceptSession(value: Session) {
+    client.setCsrfToken(value.csrf_token); serverOffset.current = Date.parse(value.server_now) - Date.now();
+    setSession(value); setNotice(''); setManagement(false); setLockPending(false); setPage('camp');
+  }
+  function acceptAccount(account: Account) { setSession((value) => value ? { ...value, account } : null); }
+  async function lock() {
+    setManagement(false); setUnlocking(false); setExpiresAt(null); setLockPending(true);
+    try { await client.request<void>('/management/lock', { method: 'POST' }); setLockPending(false); }
+    catch (reason) { if (reason instanceof ApiFailure && reason.status === 401) setLockPending(false); }
+  }
+  function navigate(next: Page) { setPage(next); if (management) void lock(); }
+  async function logout() {
+    setBusy(true); setError(null); setManagement(false); setUnlocking(false);
+    try {
+      await client.request<void>('/auth/logout', { method: 'POST' });
+      setSession(null); client.setCsrfToken(''); setNotice(''); setLockPending(false);
+    } catch (reason) { setError(reason); setNotice(content.account.logoutUnconfirmed); }
+    finally { setBusy(false); }
+  }
+  function passwordChanged() {
+    setSession(null); setManagement(false); setExpiresAt(null); client.setCsrfToken(''); setNotice(content.account.passwordChanged);
+  }
+
+  return <div className="application">
+    <header className="site-header"><div className="header-inner">
+      <a className="brand" href="#" onClick={(event) => { event.preventDefault(); navigate('camp'); }}><svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg><strong>{content.appName}</strong></a>
+      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'calendar', 'stats', 'shop'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}>{content.navigation[item]}</button>)}</nav><div className="account-tools"><span className="name-chip">{session.account.display_name}</span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button></div></>}
+    </div></header>
+    <main className="app-shell">
+      {notice && <p className="notice" role="status">{notice}</p>}
+      {loading ? <p role="status">{content.common.loading}</p> : error && !session ? <section className="panel"><FormFeedback error={error} /><button onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{content.common.retry}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <>
+        <FormFeedback error={error} />
+        {lockPending && <div className="notice" role="alert"><p>{content.account.lockUnconfirmed}</p><button type="button" onClick={() => void lock()}>{content.account.retryLock}</button></div>}
+        {management ? <><div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div><ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} /></> : <>
+          <section className="panel camp-introduction"><h1>{content.navigation[page]}</h1><p>{content.account.campEmpty}</p></section>
+          <div className="management-entry"><button className="secondary" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button></div>
+        </>}
+        {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setExpiresAt(expiry); setNotice(''); }} />}
+      </>}
     </main>
-  );
+  </div>;
 }

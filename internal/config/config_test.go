@@ -24,6 +24,13 @@ func TestLoad(t *testing.T) {
 		{"request shorter than lock", strings.ReplaceAll(valid, "10s", "4s"), true},
 		{"invalid address", strings.ReplaceAll(valid, "127.0.0.1:8080", "localhost"), true},
 		{"multiple documents", valid + "---\n" + valid, true},
+		{"origin path", valid + "public_origin: https://island.example/path\n", true},
+		{"empty static root", valid + "static_directory: ''\n", true},
+		{"empty artwork root", valid + "assets_directory: ' '\n", true},
+		{"authorization exceeds login", valid + "session_ttl: 10m\nmanagement_ttl: 30m\n", true},
+		{"cleanup can race upload", valid + "media_orphan_ttl: 60s\nupload_timeout: 90s\n", true},
+		{"unsafe integer", valid + "limits:\n  reward_max: 9007199254740992\n", true},
+		{"recording contract", valid + "limits:\n  audio_seconds_max: 61\n", true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "app.yaml")

@@ -12,8 +12,10 @@ const configPath = join(directory, 'app.yaml');
 try {
   const config = {
     listen_address: '127.0.0.1:18080',
+    public_origin: 'http://127.0.0.1:15173',
     database_path: join(directory, 'island.db'),
     media_directory: join(directory, 'media'),
+    assets_directory: join(directory, 'assets'),
     temp_directory: join(directory, 'tmp'),
     sqlite_busy_timeout: '5s',
     http_timeout: '10s',
@@ -24,6 +26,12 @@ try {
     .map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join('\n') + '\n');
   execFileSync('go', ['build', '-o', binary, './cmd/island'], { stdio: 'inherit' });
   execFileSync(binary, ['migrate', '-config', configPath], { stdio: 'inherit' });
+  // 仅在临时测试库建立账户；密码经标准输入传递，不进入命令参数。
+  execFileSync(binary, ['init', '-config', configPath], {
+    input: ['island-e2e', '测试小朋友', 'Island-Test-2026', 'Island-Test-2026',
+      'Manage-Test-2026', 'Manage-Test-2026', ''].join('\n'),
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
   const server = spawn(binary, ['serve', '-config', configPath], { stdio: 'inherit' });
   // Playwright 会向进程组发送信号；转发也支持手动停止此脚本。
   const stop = () => server.kill('SIGTERM');

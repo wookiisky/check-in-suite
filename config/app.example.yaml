@@ -8,3 +8,30 @@ sqlite_busy_timeout: 5s
 http_timeout: 10s
 ffprobe_path: ffprobe
 media_probe_timeout: 3s
+
+# Browser origin must match this value exactly, including the development port.
+public_origin: http://127.0.0.1:5173
+static_directory: web/dist
+assets_directory: .local/assets
+session_ttl: 168h
+management_ttl: 30m
+upload_timeout: 90s
+media_orphan_ttl: 24h
+media_cleanup_interval: 1h
+limits:
+  password_min: 10
+  password_max: 128
+  name_max: 40
+  text_max: 2000
+  message_max: 500
+  reward_max: 1000000
+  price_max: 1000000
+  stock_max: 1000000
+  daily_limit_max: 1000
+  list_days_max: 31
+  stats_days_max: 366
+  photo_bytes_max: 10485760
+  photo_pixels_max: 20000000
+  photo_edge_max: 2560
+  audio_bytes_max: 10485760
+  audio_seconds_max: 60

@@ -1,0 +1,22 @@
+{
+  "usage": "用法：island <serve|migrate|init|reset-password> [-config 配置路径]；重置密码还需 -kind login 或 management。",
+  "unexpected_arguments": "不接受额外参数；密码必须通过交互输入。",
+  "username_prompt": "用户名：",
+  "display_name_prompt": "姓名或昵称：",
+  "login_password_prompt": "登录密码：",
+  "management_password_prompt": "管理密码：",
+  "confirm_password_prompt": "再次输入密码：",
+  "new_password_prompt": "新密码：",
+  "password_mismatch": "两次输入的密码不一致。",
+  "invalid_password_kind": "请选择 login 或 management 密码。",
+  "input_failed": "无法读取完整输入。",
+  "account_initialized": "账户初始化完成。",
+  "password_reset": "密码已重置，所有登录会话已撤销。",
+  "INVALID_REQUEST": "输入不符合要求，请检查用户名、姓名和密码。",
+  "ACCOUNT_EXISTS": "账户已经存在，不能重复初始化。",
+  "ACCOUNT_NOT_FOUND": "账户尚未初始化。",
+  "ACCOUNT_NOT_INITIALIZED": "账户尚未初始化。",
+  "PASSWORD_INVALID": "密码不符合长度要求。",
+  "PASSWORD_MISMATCH": "两次输入的密码不一致。",
+  "INTERNAL_ERROR": "操作失败，请检查服务日志。"
+}
