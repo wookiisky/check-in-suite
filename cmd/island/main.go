@@ -17,9 +17,13 @@ import (
 
 	"github.com/wookiisky/check-in-suite/internal/account"
 	"github.com/wookiisky/check-in-suite/internal/assets"
+	"github.com/wookiisky/check-in-suite/internal/checkin"
 	"github.com/wookiisky/check-in-suite/internal/config"
 	"github.com/wookiisky/check-in-suite/internal/content"
 	"github.com/wookiisky/check-in-suite/internal/httpapi"
+	"github.com/wookiisky/check-in-suite/internal/media"
+	"github.com/wookiisky/check-in-suite/internal/message"
+	"github.com/wookiisky/check-in-suite/internal/shop"
 	"github.com/wookiisky/check-in-suite/internal/storage"
 	"github.com/wookiisky/check-in-suite/migrations"
 )
@@ -101,6 +105,20 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 		return err
 	}
 	application.RegisterAssets(artwork)
+	checkins := checkin.New(db, accounts, cfg)
+	application.RegisterCheckins(checkins)
+	application.RegisterShop(shop.New(db, cfg, accounts))
+	application.RegisterQueries(checkins)
+	application.RegisterMessages(message.New(db, cfg))
+	attachments := media.New(db, accounts, cfg)
+	application.RegisterMedia(attachments)
+	cleanupContext, stopCleanup := context.WithCancel(ctx)
+	cleanupDone := make(chan struct{})
+	go func() {
+		defer close(cleanupDone)
+		attachments.RunCleanup(cleanupContext)
+	}()
+	defer func() { stopCleanup(); <-cleanupDone }()
 	return serve(ctx, cfg, application)
 }
 
@@ -114,8 +132,8 @@ func serve(ctx context.Context, cfg config.Config, handler http.Handler) error {
 		Addr:              cfg.ListenAddress,
 		Handler:           handler,
 		ReadHeaderTimeout: cfg.HTTPTimeout,
-		ReadTimeout:       cfg.HTTPTimeout,
-		WriteTimeout:      cfg.HTTPTimeout,
+		ReadTimeout:       max(cfg.HTTPTimeout, cfg.UploadTimeout),
+		WriteTimeout:      max(cfg.HTTPTimeout, cfg.UploadTimeout),
 		IdleTimeout:       cfg.HTTPTimeout,
 	}
 	finished := make(chan error, 1)
@@ -128,7 +146,7 @@ func serve(ctx context.Context, cfg config.Config, handler http.Handler) error {
 		}
 		return err
 	case <-ctx.Done():
-		shutdownContext, cancel := context.WithTimeout(context.Background(), cfg.HTTPTimeout)
+		shutdownContext, cancel := context.WithTimeout(context.Background(), max(cfg.HTTPTimeout, cfg.UploadTimeout))
 		defer cancel()
 		if err := server.Shutdown(shutdownContext); err != nil {
 			server.Close()

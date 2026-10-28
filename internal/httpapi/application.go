@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"bufio"
+	"context"
 	"crypto/subtle"
 	"database/sql"
 	"encoding/json"
@@ -57,6 +58,20 @@ func NewApplication(ready *Readiness, cfg config.Config, accounts *account.Servi
 
 // ServeHTTP gives every response an independently generated request identity.
 func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	budget := app.Config.HTTPTimeout
+	if r.Method == http.MethodPost && r.URL.Path == "/api/v1/media" {
+		budget = app.Config.UploadTimeout
+	}
+	if budget > 0 {
+		deadline := time.Now().Add(budget)
+		ctx, cancel := context.WithDeadline(r.Context(), deadline)
+		defer cancel()
+		r = r.WithContext(ctx)
+		// Socket deadlines also interrupt stalled bodies; recorder-based tests have no socket.
+		controller := http.NewResponseController(w)
+		_ = controller.SetReadDeadline(deadline)
+		_ = controller.SetWriteDeadline(deadline)
+	}
 	requestID := uuid.NewString()
 	w.Header().Set("X-Request-ID", requestID)
 	w.Header().Set("X-Content-Type-Options", "nosniff")

@@ -95,7 +95,7 @@
   - 验证：最小服务及页面能启动；Go 编译、静态检查和测试可运行；前端严格类型检查与生产构建分别运行；新环境按锁文件可复现安装。
   - 通过：正式检查命令写入 README，原型三个命令保持原含义；不建立无复用的通用仓储或组件框架。
 
-- [ ] **T1.2 实现配置、日期、数值和文案基础**
+- [x] **T1.2 实现配置、日期、数值和文案基础**
   - 依据：[产品 §1、5、8、9、11](docs/product.md)；[技术 §2.3、3、7.1、11.2](docs/tech.md)。依赖：T1.1、D05。
   - 交付：配置装载、可注入业务时钟、固定 `Asia/Taipei`、整数运算边界、类型常量、中文文案资源和错误码映射。
   - 验证：台北午夜、跨月跨年及周一起点；设备时区不改变日期；整数越界回滚；Unicode 码点计数；非法配置或缺失时区数据启动失败。
@@ -135,7 +135,7 @@
 
 ## 4. 阶段 2：打卡与钱包闭环
 
-- [ ] **T2.1 实现钱包、流水和幂等事务规则**
+- [x] **T2.1 实现钱包、流水和幂等事务规则**
   - 依据：[产品 §5、7、10](docs/product.md)；[技术 §4.3、4.4、5.5](docs/tech.md)。依赖：阶段 1。
   - 交付：业务服务调用的钱包更新与不可变流水、请求摘要及幂等结果存储；经济操作结果与业务同事务提交，不提供手动改余额 API。
   - 验证：唯一约束、零金额事件、越界回滚、相同键相同／不同请求；权限先于重放，成功结果先于日期或价格重校验；钱包两种余额均等于流水求和。
@@ -251,7 +251,7 @@
   - 验证：未登录拒绝；有效 `attached` 可读；未过期且未撤回 `ready` 可预览；已撤回、过期、`deleting/deleted` 拒绝。取消接口不能删除已关联附件或绕过历史编辑权限。
   - 通过：上传路径不公开，客户端不可指定文件路径；解除引用立即不可读取或再次关联，不能等物理清理才撤销访问。
 
-- [ ] **T4.5 实现媒体清理与中断恢复**
+- [x] **T4.5 实现媒体清理与中断恢复**
   - 依据：[产品 §13](docs/product.md)；[技术 §8.3、8.4、11](docs/tech.md)。依赖：T4.4、D11。
   - 交付：短事务标记 `deleting`、事务外删文件、成功标记 `deleted`、失败重试；孤儿扫描与在途文件保护。
   - 验证：真实目录和 SQLite 竞争关联／清理；文件已落盘未登记、已标记未删除、删文件失败后重启；孤儿保留期大于最大上传／探测时限，删除前再次核对数据库。
@@ -360,12 +360,17 @@
 | T0.1、T0.2 | 2026-10-29；本轮用户决定与基线盘点 | 对照产品 §12、技术 §15、任务覆盖索引，逐项核对 D01–D12 与执行范围 | 已记录全部推荐值确认、CLI/网页账户边界、退出管理重新验证、取消备份和真机验收；阶段依赖已调整 | 本文 §1、§2、§7；产品与技术文档同步 | 生产主机及正式素材对外发布授权未指定，不阻塞本地开发 |
 | T0.3、T0.4 | 2026-10-29；Node 24.20.0、openapi-typescript 7.13.0 | `npx openapi-typescript api/openapi.yaml -o /tmp/island-schema-check.d.ts`；本地文档链接与组件引用检查；`git diff --check` | 类型可生成，178 个组件引用无缺失，本地文档链接无缺失；接口、实体约束与验证边界已记录 | `api/openapi.yaml`；本文 §8.4、§8.5 | 接口实现与实际响应一致性由对应业务任务验证，不能把类型生成当业务通过 |
 | T1.1 | 本轮阶段 1；Go 1.27.0、Node 24.20.0；独立空目录安装 | 复制根及web/package.json和package-lock.json后执行 `npm ci --no-audit --no-fund`、`npm ls --depth=0`；`npm run typecheck`、`npm run build:web`及基线全构建 | 锁文件安装156个包并核对依赖通过；工程入口、同源代理、生产静态托管、独立类型和构建可用 | 主 agent 临时安装输出；README、package.json、application_test.go、web/e2e/environment.spec.ts | 正式业务页面与发布验证在后续任务完成 |
-| T1.2（最后一项随T2.1提交） | 本轮阶段 1；真实时区及配置测试 | `go test ./internal/core ./internal/config`；前端日期12用例及Honolulu/Kiritimati时区运行 | 台北午夜/跨年、非法日期、Unicode、安全整数上下界、非法配置通过；shiftDate/weekStart/monthStart/monthEnd覆盖跨月、跨年、闰年、周一起点，设备时区不影响日期 | internal/core/values_test.go、internal/config/config_test.go、web/src/api/dates.test.ts | 整数越界后的业务事务回滚测试已由checkin_backend实际运行通过，但代码和证据随T2.1提交前本项保持未勾 |
+| T1.2 | 阶段1基础及本批业务服务；真实SQLite | core/config目标测试、前端日期12用例、Honolulu/Kiritimati时区运行；`TestIntegerOverflowAndZeroEvents`；本批全包竞态检查 | 日期、Unicode、配置与安全整数边界通过；记录插入后余额越界会整体回滚，无记录、流水或部分钱包修改 | internal/core/values_test.go、internal/config/config_test.go、web/src/api/dates.test.ts、internal/checkin/consistency_test.go | 业务回滚代码与本批T2.1一起提交，本项完成 |
 | T1.3–T1.6 | 本轮阶段 1；真实文件 SQLite，独立连接竞争 | `go test`、`go vet`、`go test -race`，目标为 `./internal/account ./internal/core ./internal/config ./internal/storage ./cmd/island ./internal/httpapi` | 全通过；迁移校验/回滚/重连、只读快照与IMMEDIATE竞争；CLI初始化和重置；真实Cookie/Origin/CSRF/限速；凭据重置与旧登录、锁定与迟到解锁、注销与写入竞争均通过 | internal/storage/*_test.go、internal/account/*_test.go、internal/httpapi/application_test.go、cmd/island/maintenance_test.go | T1.2已满足本组所用配置/账户校验依赖，其余日期及钱包边界单独保留 |
 | T1.5 Cookie契约补证 | 本轮阶段 1；真实HTTP序列化 | SameSite=Lax目标测试先失败，再修复实现后通过 | Cookie回到技术§6.1约定的Lax，同时保留HttpOnly、Secure与Origin/CSRF校验 | internal/httpapi/application_test.go | 无额外范围变更 |
 | T1.7 | 本轮阶段 1；Chromium、390 px WebKit | 原10项组件/API测试；姓名冲突修复后账户7测试通过；`npm run typecheck`、`npm run build:web`；`npm run test:e2e` 6项 | 全通过；真实登录、锁定后重进、姓名保存、退出及焦点回归；锁定失败隐藏管理内容并重试；姓名冲突保留草稿并重新确认；390 px大字与操作目标通过 | web/src/IslandApp.test.tsx、web/src/api/client.test.ts、web/e2e/environment.spec.ts；.local/previews/账户与登录截图 | 仅账户骨架验收，业务页面由后续阶段覆盖；不进行真机验证 |
-
-| 账户交付快照全检查 | 2026-10-29；暂存区源码导出到独立临时目录 | `npm ci --no-audit --no-fund`、`npm run verify` | 全通过：原型检查、Go vet/race、前端组件、类型检查、前后端构建、6项浏览器测试；不依赖其他agent未提交代码 | `.local/evidence/stage1-verification.log`；对应测试源文件 | T1.2钱包事务回滚随下一批业务代码提交 |
+| 账户交付快照全检查 | 2026-10-29；暂存区源码导出到独立临时目录 | `npm ci --no-audit --no-fund`、`npm run verify` | 全通过：原型检查、Go vet/race、前端组件、类型检查、前后端构建、6项浏览器测试；不依赖其他agent未提交代码 | `.local/evidence/stage1-verification.log`；对应测试源文件 | 该快照不含业务服务；T1.2回滚现已在下一批验证 |
+| T2.1 钱包、流水和幂等 | 本批业务服务；同文件独立SQLite连接 | `go test -race ./...`、`go vet ./...`；记录与订单幂等、零金额、溢出、回滚、权限先于重放测试 | 全包通过；失败不产生部分经济事实，流水不可变且事件唯一，经济重放不重复发奖或扣款；限制变更后的成功重放按原事实恢复 | .local/evidence/services-go.log；internal/checkin/consistency_test.go、replay_limits_test.go、internal/shop/shop_concurrency_test.go | 本项完成；业务页面结果未知恢复由T2.7/T2.8验收 |
+| T2.2–T2.6、T2.8 后端部分 | 本批业务服务；真实HTTP及SQLite | 后端目标test/race/vet；主agent全包race/vet；阶段2审查问题先失败测试再修复并复核 | 类别任务版本/删除、普通今日与管理补录、内容编辑、负余额、日期权限、最后名额并发、HTTP缺失与null字段检查通过；营地快照一致 | internal/checkin/*_test.go、internal/httpapi/checkins*_test.go；.local/evidence/services-go.log | 包含页面的任务保持未勾，等待前端及端到端验收 |
+| T3.1–T3.6 后端部分 | 本批业务服务；真实文件与HTTP | 商店目标test/race/vet；主agent全包race/vet | 双币/库存/免费与负余额、永久所有权、价格和钱包版本、十饰品并发、删除与购买竞争、兑现密码重置竞争通过；素材读取与历史保留通过 | internal/shop/*_test.go、internal/httpapi/shop_routes_test.go、internal/assets/*_test.go；.local/evidence/services-go.log | 购买/装扮/兑现页面及十饰品视觉验收待前端；任务保持未勾 |
+| T4.1–T4.4 后端部分 | 本批业务服务；真实图片、音频及文件目录 | 媒体目标test/race/vet；主agent全包race/vet；真实Chromium录音fixture与60秒容器边界测试 | EXIF方向、字节/像素/格式校验、音频容器和时长探测、私有读取/Range、引用替换、上传中凭据撤销通过；review问题已修复 | internal/media/*_test.go、internal/media/testdata/README.md、internal/httpapi/media_test.go；.local/evidence/services-go.log | 浏览器采集、草稿和完整附件页面待集成；不做真机验证，任务保持未勾 |
+| T4.5 媒体清理与中断恢复 | 本批业务服务；独立SQLite连接和真实目录 | `TestAttachmentWinsCleanup`、`TestFailedDeletionRecovers`、`TestRegistrationFailureLeavesOnlyRecoverableOrphan`等；全包race/vet | 关联与清理竞争、文件删除失败重试、未登记孤儿、重启清理和上传在途保护通过；review复核通过，不清理历史素材目录 | internal/media/recovery_test.go、cleanup.go；.local/evidence/services-go.log | 本纯后端任务完成；附件页面的端到端交付仍在T4.3/T4.4 |
+| T4.6–T4.8 后端查询与留言部分 | 本批业务服务；真实SQLite与HTTP | 查询、留言目标test/race/vet；主agent全包race/vet | 月历含空日、范围和图标摘要、统计稳定任务归组/删除过滤/同一快照、留言分页/幂等并发/回滚通过 | internal/checkin/calendar_stats_test.go、internal/message/service_test.go、internal/httpapi/queries_messages_test.go；.local/evidence/services-go.log | 查询图表、留言、声音偏好页面待集成，任务保持未勾 |
 
 后续每批实施按实际证据追加记录。阶段 0 的接口定义属于已批准的实施契约，不表示业务端点已经实现；实现完成状态仅以对应任务的测试和验收记录为准。
 
