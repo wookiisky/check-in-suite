@@ -11,7 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 检查服务进程是否存活 */
+        /** 检查服务进程 */
         get: operations["getLiveness"];
         put?: never;
         post?: never;
@@ -28,11 +28,640 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 检查数据库、迁移版本和媒体探测依赖是否可用 */
+        /** 检查数据库、迁移和媒体依赖 */
         get: operations["getReadiness"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 登录并建立不透明 Cookie 会话
+         * @description 校验 Origin；失败限速。密码校验在事务外，建立会话前复核凭据版本。
+         */
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤销当前会话及管理授权 */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取账户、授权、日期和生效限制 */
+        get: operations["getSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 以管理密码进入管理界面 */
+        post: operations["unlockManagement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 退出管理并撤销授权
+         * @description 每次退出管理均调用；再次进入必须重新提交管理密码。失败时客户端隐藏管理内容并保留未确认锁定状态。
+         */
+        post: operations["lockManagement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 修改姓名 */
+        patch: operations["updateProfile"];
+        trace?: never;
+    };
+    "/api/v1/account/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 仅更新指定偏好字段 */
+        patch: operations["updatePreferences"];
+        trace?: never;
+    };
+    "/api/v1/account/login-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 修改密码并撤销全部会话 */
+        post: operations["changeLoginPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/management-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 修改密码并撤销全部会话 */
+        post: operations["changeManagementPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/camp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 一致快照读取今日任务、余额与装备 */
+        get: operations["getCamp"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 按所属日期稳定分页读取有效记录
+         * @description 范围包含两端，最多31天；游标包含business_date、created_at、id。next_cursor非空表示尚未加载全部。
+         */
+        get: operations["listCheckins"];
+        put?: never;
+        /** 新增今日打卡并原子发奖 */
+        post: operations["createCheckin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkins/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 删除今日记录并回收原奖励 */
+        delete: operations["deleteCheckin"];
+        options?: never;
+        head?: never;
+        /** 编辑今日记录内容 */
+        patch: operations["updateCheckin"];
+        trace?: never;
+    };
+    "/api/v1/management/checkins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 按当前任务配置补录今天或历史 */
+        post: operations["backfillCheckin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/checkins/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 删除今日或历史记录并回收奖励 */
+        delete: operations["manageDeleteCheckin"];
+        options?: never;
+        head?: never;
+        /** 编辑今日或历史记录内容 */
+        patch: operations["manageUpdateCheckin"];
+        trace?: never;
+    };
+    "/api/v1/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取每月有效记录摘要 */
+        get: operations["getCalendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 按稳定任务标识统计有效次数
+         * @description 含两端，最多366天，结束日期不能晚于服务端今天。
+         */
+        get: operations["getStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取配置列表 */
+        get: operations["listCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 新建配置 */
+        post: operations["createCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 删除配置并保留历史关联 */
+        delete: operations["deleteCategory"];
+        options?: never;
+        head?: never;
+        /** 编辑配置并检查版本 */
+        patch: operations["updateCategory"];
+        trace?: never;
+    };
+    "/api/v1/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取配置列表 */
+        get: operations["listTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 新建配置 */
+        post: operations["createTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 删除配置并保留历史关联 */
+        delete: operations["deleteTask"];
+        options?: never;
+        head?: never;
+        /** 编辑配置并检查版本 */
+        patch: operations["updateTask"];
+        trace?: never;
+    };
+    "/api/v1/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取配置列表 */
+        get: operations["listProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 新建配置 */
+        post: operations["createProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 删除配置并保留历史关联 */
+        delete: operations["deleteProduct"];
+        options?: never;
+        head?: never;
+        /** 编辑配置并检查版本 */
+        patch: operations["updateProduct"];
+        trace?: never;
+    };
+    "/api/v1/purchases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取装扮或待兑现及已兑现奖励 */
+        get: operations["listPurchases"];
+        put?: never;
+        /** 原子扣除双币并生成订单 */
+        post: operations["createPurchase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/equipment/{slot}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 设置称号或形象槽位 */
+        put: operations["setEquipmentSlot"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/equipment/accessories/{purchase_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 装备或卸下单个已拥有饰品
+         * @description 最多装备10个不同饰品；重复装备/卸下成功，其他饰品不变。
+         */
+        put: operations["putAccessory"];
+        post?: never;
+        /**
+         * 装备或卸下单个已拥有饰品
+         * @description 最多装备10个不同饰品；重复装备/卸下成功，其他饰品不变。
+         */
+        delete: operations["deleteAccessory"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchases/{id}/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 本次输入管理密码兑现奖励
+         * @description 每次均验证管理密码，即使当前已解锁。兑现不顺带解锁管理页，不再次扣款或库存。
+         */
+        post: operations["redeemPurchase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取已部署受控素材目录 */
+        get: operations["listAssets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assets/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 鉴权读取版本化素材 */
+        get: operations["readAsset"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 上传并校验一张照片或一段录音 */
+        post: operations["uploadMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 鉴权读取可访问媒体 */
+        get: operations["readMedia"];
+        put?: never;
+        post?: never;
+        /**
+         * 撤回未关联的媒体
+         * @description 不能删除已关联媒体；解除引用须走记录编辑或删除接口。
+         */
+        delete: operations["cancelMedia"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页读取家庭留言 */
+        get: operations["listMessages"];
+        put?: never;
+        /** 新增家庭留言 */
+        post: operations["createMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messages/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 删除家庭留言 */
+        delete: operations["deleteMessage"];
         options?: never;
         head?: never;
         patch?: never;
@@ -46,9 +675,396 @@ export interface components {
             /** @enum {string} */
             status: "ok" | "unavailable";
         };
+        ApiError: {
+            code: string;
+            field_errors: {
+                [key: string]: string;
+            };
+            request_id: string;
+            current_version?: number;
+        };
+        Preferences: {
+            music_enabled: boolean;
+            effects_enabled: boolean;
+            reduce_motion: boolean;
+        };
+        PreferencesUpdate: {
+            music_enabled?: boolean;
+            effects_enabled?: boolean;
+            reduce_motion?: boolean;
+        };
+        Account: {
+            id: number;
+            username: string;
+            display_name: string;
+            version: number;
+            preferences: components["schemas"]["Preferences"];
+        };
+        Limits: {
+            password_min: number;
+            password_max: number;
+            name_max: number;
+            text_max: number;
+            message_max: number;
+            reward_max: number;
+            price_max: number;
+            stock_max: number;
+            daily_limit_max: number;
+            list_days_max: number;
+            stats_days_max: number;
+            photo_bytes_max: number;
+            photo_pixels_max: number;
+            photo_edge_max: number;
+            audio_bytes_max: number;
+            audio_seconds_max: number;
+        };
+        SessionResponse: {
+            account: components["schemas"]["Account"];
+            csrf_token: string;
+            management_expires_at: string | null;
+            /** Format: date-time */
+            server_now: string;
+            /** Format: date */
+            today: string;
+            /** @enum {string} */
+            timezone: "Asia/Taipei";
+            limits: components["schemas"]["Limits"];
+        };
+        LoginRequest: {
+            username: string;
+            password: string;
+        };
+        PasswordRequest: {
+            password: string;
+        };
+        ManagementAuthorization: {
+            /** Format: date-time */
+            management_expires_at: string;
+        };
+        ProfileUpdate: {
+            display_name: string;
+            expected_version: number;
+        };
+        PasswordChange: {
+            old_password: string;
+            new_password: string;
+            confirm_password: string;
+        };
+        VersionRequest: {
+            expected_version: number;
+        };
+        Wallet: {
+            coins: number;
+            diamonds: number;
+            version: number;
+        };
+        Category: {
+            id: string;
+            name: string;
+            sort_order: number;
+            version: number;
+        };
+        CategoryCreate: {
+            name: string;
+            sort_order?: number;
+        };
+        CategoryUpdate: {
+            name: string;
+            sort_order?: number;
+            expected_version: number;
+        };
+        CategoryList: {
+            items: components["schemas"]["Category"][];
+        };
+        Task: {
+            id: string;
+            category_id: string | null;
+            name: string;
+            icon_key: string;
+            coin_reward: number;
+            diamond_reward: number;
+            daily_limit: number;
+            weekdays: number[];
+            enabled: boolean;
+            version: number;
+        };
+        TaskCreate: {
+            category_id: string | null;
+            name: string;
+            icon_key: string;
+            coin_reward: number;
+            diamond_reward: number;
+            daily_limit: number;
+            weekdays: number[];
+            enabled: boolean;
+        };
+        TaskUpdate: {
+            category_id: string | null;
+            name: string;
+            icon_key: string;
+            coin_reward: number;
+            diamond_reward: number;
+            daily_limit: number;
+            weekdays: number[];
+            enabled: boolean;
+            expected_version: number;
+        };
+        AvailableTask: {
+            id: string;
+            category_id: string | null;
+            name: string;
+            icon_key: string;
+            coin_reward: number;
+            diamond_reward: number;
+            daily_limit: number;
+            weekdays: number[];
+            enabled: boolean;
+            version: number;
+            remaining: number;
+        };
+        TaskList: {
+            items: components["schemas"]["Task"][];
+        };
+        Checkin: {
+            id: string;
+            task_id: string;
+            /** Format: date */
+            business_date: string;
+            task_name_snapshot: string;
+            task_icon_snapshot: string;
+            coin_reward_snapshot: number;
+            diamond_reward_snapshot: number;
+            text: string;
+            photo_media_id: string | null;
+            audio_media_id: string | null;
+            /** @enum {string} */
+            source: "today" | "backfill";
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            deleted: boolean;
+            /** @description 普通入口：服务端今天且未删除为true；管理入口另行检查授权。 */
+            can_edit: boolean;
+            /** @description 普通入口：服务端今天且未删除为true；历史或已删除为false。 */
+            can_delete: boolean;
+        };
+        CheckinCreate: {
+            task_id: string;
+            expected_task_version: number;
+            /** Format: date */
+            expected_today: string;
+            text?: string;
+            photo_media_id?: string | null;
+            audio_media_id?: string | null;
+        };
+        CheckinBackfill: {
+            task_id: string;
+            expected_task_version: number;
+            /** Format: date */
+            business_date: string;
+            text?: string;
+            photo_media_id?: string | null;
+            audio_media_id?: string | null;
+        };
+        CheckinUpdate: {
+            text: string;
+            photo_media_id: string | null;
+            audio_media_id: string | null;
+            expected_version: number;
+        };
+        /** @description 经济收据来自原成功事务；重放时 checkin 为当前内容和版本。已删除记录返回 deleted=true，不恢复记录或奖励。客户端随后重新读取营地和记录。 */
+        CheckinResult: {
+            checkin: components["schemas"]["Checkin"];
+            wallet: components["schemas"]["Wallet"];
+            task_remaining: number;
+            /** Format: date */
+            today: string;
+        };
+        CheckinDeleteResult: {
+            deleted: boolean;
+            wallet: components["schemas"]["Wallet"];
+        };
+        CheckinList: {
+            items: components["schemas"]["Checkin"][];
+            next_cursor: string | null;
+        };
+        Product: {
+            id: string;
+            /** @enum {string} */
+            type: "title" | "avatar" | "accessory" | "reward";
+            name: string;
+            asset_key: string;
+            description: string;
+            coin_price: number;
+            diamond_price: number;
+            stock: number | null;
+            enabled: boolean;
+            version: number;
+            /** @description 当前是否已拥有该永久商品；reward始终为false。 */
+            owned: boolean;
+        };
+        ProductCreate: {
+            /** @enum {string} */
+            type: "title" | "avatar" | "accessory" | "reward";
+            name: string;
+            asset_key: string;
+            description: string;
+            coin_price: number;
+            diamond_price: number;
+            stock: number | null;
+            enabled: boolean;
+        };
+        ProductUpdate: {
+            /** @enum {string} */
+            type: "title" | "avatar" | "accessory" | "reward";
+            name: string;
+            asset_key: string;
+            description: string;
+            coin_price: number;
+            diamond_price: number;
+            stock: number | null;
+            enabled: boolean;
+            expected_version: number;
+        };
+        ProductList: {
+            items: components["schemas"]["Product"][];
+        };
+        Purchase: {
+            id: string;
+            product_id: string;
+            /** @enum {string} */
+            type_snapshot: "title" | "avatar" | "accessory" | "reward";
+            name_snapshot: string;
+            asset_key_snapshot: string;
+            description_snapshot: string;
+            coin_price: number;
+            diamond_price: number;
+            /** @enum {string} */
+            status: "owned" | "pending" | "redeemed";
+            redeemed_at: string | null;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        PurchaseCreate: {
+            product_id: string;
+            expected_product_version: number;
+            expected_wallet_version: number;
+        };
+        PurchaseResult: {
+            purchase: components["schemas"]["Purchase"];
+            wallet: components["schemas"]["Wallet"];
+        };
+        PurchaseList: {
+            items: components["schemas"]["Purchase"][];
+            next_cursor: string | null;
+        };
+        Equipment: {
+            title: components["schemas"]["Purchase"] | null;
+            avatar: components["schemas"]["Purchase"] | null;
+            accessories: components["schemas"]["Purchase"][];
+        };
+        SlotUpdate: {
+            purchase_id: string | null;
+        };
+        AccessoryResult: {
+            purchase_id: string;
+            equipped: boolean;
+        };
+        CampResponse: {
+            /** Format: date */
+            today: string;
+            /** Format: date-time */
+            server_now: string;
+            /** @enum {string} */
+            timezone: "Asia/Taipei";
+            tasks: components["schemas"]["AvailableTask"][];
+            categories: components["schemas"]["Category"][];
+            wallet: components["schemas"]["Wallet"];
+            account: components["schemas"]["Account"];
+            has_scheduled_tasks: boolean;
+            equipment: components["schemas"]["Equipment"];
+        };
+        Asset: {
+            key: string;
+            name: string;
+            /** @enum {string} */
+            kind: "icon" | "avatar" | "accessory" | "title" | "reward";
+            url: string;
+        };
+        AssetList: {
+            items: components["schemas"]["Asset"][];
+        };
+        Media: {
+            id: string;
+            /** @enum {string} */
+            kind: "photo" | "audio";
+            mime_type: string;
+            size_bytes: number;
+            duration_ms: number | null;
+            width: number | null;
+            height: number | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        CalendarDay: {
+            /** Format: date */
+            date: string;
+            count: number;
+            icons: string[];
+            more_count: number;
+        };
+        CalendarResponse: {
+            month: string;
+            days: components["schemas"]["CalendarDay"][];
+        };
+        StatsItem: {
+            task_id: string;
+            name: string;
+            icon_key: string;
+            count: number;
+        };
+        StatsResponse: {
+            /** Format: date */
+            start_date: string;
+            /** Format: date */
+            end_date: string;
+            total_count: number;
+            active_days: number;
+            items: components["schemas"]["StatsItem"][];
+        };
+        Message: {
+            id: string;
+            text: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        MessageCreate: {
+            text: string;
+        };
+        MessageList: {
+            items: components["schemas"]["Message"][];
+            next_cursor: string | null;
+        };
     };
-    responses: never;
-    parameters: never;
+    responses: {
+        /** @description 结构化错误：400输入；401未登录；403授权或CSRF；404不存在；409版本/幂等/业务冲突；422日期或媒体；429限速；503忙或存储不可用。 */
+        Error: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ApiError"];
+            };
+        };
+    };
+    parameters: {
+        CSRF: string;
+        /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
+        IdempotencyKey: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -64,7 +1080,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 服务进程存活 */
+            /** @description 成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -73,6 +1089,7 @@ export interface operations {
                     "application/json": components["schemas"]["HealthResponse"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     getReadiness: {
@@ -84,7 +1101,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 服务依赖可用 */
+            /** @description 成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -93,7 +1110,7 @@ export interface operations {
                     "application/json": components["schemas"]["HealthResponse"];
                 };
             };
-            /** @description 服务依赖不可用 */
+            /** @description 依赖不可用 */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -102,6 +1119,1238 @@ export interface operations {
                     "application/json": components["schemas"]["HealthResponse"];
                 };
             };
+            default: components["responses"]["Error"];
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            /** @description INVALID_CREDENTIALS；用户名或登录密码错误。 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    unlockManagement: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagementAuthorization"];
+                };
+            };
+            /** @description 密码错误或字段校验失败；保留登录和表单，允许就地重试。 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    lockManagement: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateProfile: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Account"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updatePreferences: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferencesUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preferences"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeLoginPassword: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 密码错误或字段校验失败；保留登录和表单，允许就地重试。 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeManagementPassword: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 密码错误或字段校验失败；保留登录和表单，允许就地重试。 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCamp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampResponse"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listCheckins: {
+        parameters: {
+            query: {
+                start_date: string;
+                end_date: string;
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createCheckin: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckinCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteCheckin: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinDeleteResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateCheckin: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckinUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Checkin"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    backfillCheckin: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckinBackfill"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    manageDeleteCheckin: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinDeleteResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    manageUpdateCheckin: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckinUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Checkin"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCalendar: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarResponse"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getStats: {
+        parameters: {
+            query: {
+                start_date: string;
+                end_date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatsResponse"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listCategories: {
+        parameters: {
+            query?: {
+                /** @description true要求当前会话已解锁管理 */
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createCategory: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteCategory: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateCategory: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listTasks: {
+        parameters: {
+            query?: {
+                /** @description true要求当前会话已解锁管理 */
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listProducts: {
+        parameters: {
+            query?: {
+                /** @description true要求当前会话已解锁管理 */
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listPurchases: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+                type?: "title" | "avatar" | "accessory" | "reward";
+                status?: "owned" | "pending" | "redeemed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createPurchase: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setEquipmentSlot: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                slot: "title" | "avatar";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlotUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Equipment"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putAccessory: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                purchase_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessoryResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteAccessory: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                purchase_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessoryResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    redeemPurchase: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Purchase"];
+                };
+            };
+            /** @description 密码错误或字段校验失败；保留登录和表单，允许就地重试。 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listAssets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    readAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 版本化SVG素材 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    uploadMedia: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    kind: "photo" | "audio";
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Media"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    readMedia: {
+        parameters: {
+            query?: never;
+            header?: {
+                Range?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 完整媒体，正确MIME、私有缓存、nosniff */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description 音频字节范围，带Content-Range */
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    cancelMedia: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listMessages: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createMessage: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteMessage: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
         };
     };
 }
