@@ -221,3 +221,16 @@ describe('审查发现的恢复路径', () => {
     expect(request.mock.calls.filter((call) => call[1]?.method === 'DELETE')[1]?.[1]).toMatchObject({ body: { expected_version: 2 } });
   });
 });
+
+it('未知编辑关闭并跨日后，普通只读详情仍提供原结果核对入口', async () => {
+  const { rememberEdit } = await import('./media-submission');
+  const { emptyMediaDraft } = await import('../media/media-draft');
+  const request = vi.fn();
+  const client = { request };
+  rememberEdit(client, recordFixture.id, { path: `/checkins/${recordFixture.id}`, record: recordFixture, body: { expected_version: recordFixture.version, text: '未知修改', photo_media_id: null, audio_media_id: null }, draftText: '未知修改', draftMedia: emptyMediaDraft() });
+  render(<RecordDialog client={client} session={session} record={{ ...recordFixture, can_edit: false, can_delete: false }} today="2026-10-30" onClose={vi.fn()} onSaved={vi.fn()} />);
+  expect(screen.queryByRole('button', { name: content.edit })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: content.recover }));
+  expect(screen.getByLabelText(content.text)).toHaveValue('未知修改');
+  expect(screen.getByRole('button', { name: content.recover })).toBeEnabled();
+});

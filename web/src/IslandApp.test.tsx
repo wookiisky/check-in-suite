@@ -15,6 +15,7 @@ function installServer(loggedIn = false, managementExpiry: string | null = null)
     if (path.endsWith('/session')) return active ? Response.json({ ...testSession, management_expires_at: managementExpiry }) : Response.json({ code: 'SESSION_REQUIRED', field_errors: {}, request_id: 'r1' }, { status: 401 });
     if (path.endsWith('/camp')) return Response.json(campFixture);
     if (path.includes('/checkins?')) return Response.json({ items: [], next_cursor: null });
+    if (path.includes('/messages')) return Response.json({ items: [], next_cursor: null });
     if (path.includes('/products')) return Response.json({ items: [] });
     if (path.includes('/categories') || path.includes('/tasks')) return Response.json({ items: [] });
     if (path.endsWith('/auth/login')) { active = true; return Response.json(testSession); }

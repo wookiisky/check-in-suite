@@ -1,0 +1,10 @@
+.media-editor { display: grid; gap: 1rem; min-width: 0; }
+.media-section { display: grid; gap: .8rem; min-width: 0; margin: 0; padding: 1rem; border: 2px solid var(--border, #d7dfca); border-radius: 18px; }
+.media-section legend { padding: 0 .35rem; font-size: 22px; font-weight: 700; }
+.media-actions { display: flex; gap: .65rem; flex-wrap: wrap; }
+.media-actions button, .media-section > button { min-height: 56px; min-width: 56px; }
+.media-hint { margin: 0; font-size: 18px; line-height: 1.6; color: var(--muted, #64735a); }
+.media-photo { display: block; width: 100%; max-height: 320px; object-fit: contain; border-radius: 12px; }
+.media-section audio { width: 100%; min-width: 0; }
+.media-error { margin: 0; color: var(--error, #a52e2e); font-size: 18px; line-height: 1.6; }
+@media (max-width: 520px) { .media-section { padding: .75rem; } .media-actions > button { flex: 1 1 8rem; } }

@@ -62,7 +62,9 @@ export class ApiClient {
       let detail: ApiError;
       try { detail = await response.json(); }
       catch { detail = { code: 'INVALID_RESPONSE', field_errors: {}, request_id: '' }; }
-      if (requestToken === this.csrfToken && ((response.status === 401 && path !== '/auth/login') || response.status === 403)) {
+      // 跨日只读是本次业务限制，不撤销已解锁的管理状态。
+      const authorizationDenied = response.status === 403 && detail.code !== 'HISTORY_READ_ONLY';
+      if (requestToken === this.csrfToken && ((response.status === 401 && path !== '/auth/login') || authorizationDenied)) {
         if (response.status === 401) this.csrfToken = '';
         this.onAuthorizationFailure(response.status);
       }

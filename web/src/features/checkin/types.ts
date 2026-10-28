@@ -23,7 +23,7 @@ export interface CreateCheckin {
 }
 
 /** 功能只依赖请求方法，便于以协议行为测试组件。 */
-export type CheckinClient = Pick<ApiClient, 'request'>;
+export type CheckinClient = Pick<ApiClient, 'request'> & Partial<Pick<ApiClient, 'now' | 'recordServerTime'>>;
 
 /** 营地与管理功能从上层取得同一登录会话。 */
 export interface CheckinProps {

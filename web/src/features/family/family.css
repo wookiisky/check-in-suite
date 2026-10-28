@@ -1,0 +1,12 @@
+.family-panel,.family-sound-panel { display:grid; gap:20px; }
+.family-form { display:grid; gap:12px; }
+.family-form>button { justify-self:start; }
+.family-messages { list-style:none; padding:0; margin:0; display:grid; gap:20px; }
+.family-messages li { display:grid; gap:12px; padding-top:20px; border-top:2px solid var(--line); }
+.family-messages p,.family-message-text { white-space:pre-wrap; overflow-wrap:anywhere; }
+.family-messages time { font-size:18px; color:var(--muted); }
+.family-messages button { justify-self:start; }
+.family-preferences { display:grid; gap:12px; }
+.family-preferences label { display:flex; gap:16px; align-items:center; min-height:56px; cursor:pointer; }
+.family-preferences input { width:56px; height:56px; flex:0 0 56px; accent-color:var(--forest); }
+[data-reduce-motion=true] *,[data-reduce-motion=true] *::before,[data-reduce-motion=true] *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }

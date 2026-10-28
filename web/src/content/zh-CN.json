@@ -87,6 +87,12 @@
     "INTERNAL_ERROR": "暂时无法完成操作，请重试。",
     "FORBIDDEN": "当前没有操作权限。",
     "INVALID_LENGTH": "填写的长度不符合要求。",
-    "INVALID_TEXT": "请使用有效的文字内容。"
+    "INVALID_TEXT": "请使用有效的文字内容。",
+    "NOT_FOUND": "内容已经不存在，请重新加载。",
+    "INVALID_MEDIA": "附件内容无效，请重新选择照片或录音。",
+    "MEDIA_UNAVAILABLE": "附件已经不可用，请重新选择。",
+    "MEDIA_TOO_LARGE": "附件超过允许的大小，请选择较小的文件。",
+    "MEDIA_ATTACHED": "附件正在被记录使用，不能直接移除。",
+    "INVALID_RANGE": "请选择有效的日期范围。"
   }
 }

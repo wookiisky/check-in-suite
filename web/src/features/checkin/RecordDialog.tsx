@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { ApiFailure } from '../../api/client';
 import { readCurrentRecord } from './records';
+import { getPendingEdit } from './media-submission';
+import { getDraft } from './drafts';
 import { Modal } from '../../components/Modal';
 import type { Session } from '../../api/types';
 import type { Checkin, CheckinClient, Task } from './types';
@@ -23,6 +25,8 @@ interface RecordDialogProps {
 /** 详情与普通编辑不展示奖励，只有删除确认显示回收金额。 */
 export function RecordDialog({ client, session, record: initialRecord, today, management = false, onClose, onSaved, onCorrect }: RecordDialogProps) {
   const [record, setRecord] = useState(initialRecord);
+  const pendingEdit = getPendingEdit(client, record.id);
+  const draft = getDraft(client, record.id);
   const [mode, setMode] = useState<'detail' | 'edit' | 'delete' | 'correct'>('detail');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
@@ -63,7 +67,7 @@ export function RecordDialog({ client, session, record: initialRecord, today, ma
         {record.photo_media_id && <img className="checkin-photo" src={`/api/v1/media/${record.photo_media_id}`} alt={content.attachmentPhoto} />}
         {record.audio_media_id && <audio aria-label={content.attachmentAudio} controls src={`/api/v1/media/${record.audio_media_id}`} />}
         {management && <p className="checkin-rewards"><span>{content.coins} {record.coin_reward_snapshot}</span><span>{content.diamonds} {record.diamond_reward_snapshot}</span></p>}
-        {editable ? <div className="checkin-actions"><button onClick={() => setMode('edit')}>{content.edit}</button>{deletable && <button className="secondary" onClick={() => setMode('delete')}>{content.delete}</button>}{management && onCorrect && <button className="secondary" onClick={() => setMode('correct')}>{content.correctRecord}</button>}</div> : <p className="checkin-hint">{content.historyReadOnly}</p>}
+        {editable ? <div className="checkin-actions"><button onClick={() => setMode('edit')}>{content.edit}</button>{deletable && <button className="secondary" onClick={() => setMode('delete')}>{content.delete}</button>}{management && onCorrect && <button className="secondary" onClick={() => setMode('correct')}>{content.correctRecord}</button>}</div> : <><p className="checkin-hint">{content.historyReadOnly}</p>{(pendingEdit || draft) && <button onClick={() => setMode('edit')}>{pendingEdit ? content.recover : content.continueDraft}</button>}</>}
       </> : <>
         <p>{mode === 'correct' ? content.correctWarning : content.deleteWarning}</p>
         <p className="checkin-rewards"><span>{content.coins} −{record.coin_reward_snapshot}</span><span>{content.diamonds} −{record.diamond_reward_snapshot}</span></p>

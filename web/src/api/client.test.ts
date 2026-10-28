@@ -22,6 +22,21 @@ describe('请求模块', () => {
     expect(invalidate).toHaveBeenCalledWith(status);
   });
 
+  it.each([
+    ['HISTORY_READ_ONLY', false],
+    ['MANAGEMENT_REQUIRED', true],
+    ['CSRF_INVALID', true],
+  ])('403 %s 保留业务错误并按实际授权含义处理', async (code, clearsAuthorization) => {
+    const detail = { code, field_errors: {}, request_id: 'business-request' };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(detail, { status: 403 })));
+    const invalidate = vi.fn();
+    await expect(new ApiClient(invalidate).request('/checkins/record', {
+      method: 'PATCH', body: { text: '保留的草稿', expected_version: 1 },
+    })).rejects.toMatchObject({ status: 403, detail });
+    if (clearsAuthorization) expect(invalidate).toHaveBeenCalledWith(403);
+    else expect(invalidate).not.toHaveBeenCalled();
+  });
+
   it('上传表单交给浏览器产生multipart边界，不强行设置JSON类型', async () => {
     const request = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ id: 'media' }));
     vi.stubGlobal('fetch', request);

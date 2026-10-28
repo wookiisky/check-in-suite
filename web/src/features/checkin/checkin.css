@@ -4,7 +4,6 @@
 .checkin-section-heading, .checkin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .checkin-section-heading { justify-content: space-between; margin-bottom: 18px; }
 .checkin-panel h2 { margin-bottom: 16px; }
-.checkin-camp-columns { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 24px; align-items: start; }
 .checkin-wallet { background: #eef2d9; }
 .checkin-wallet strong { font-size: 32px; }
 .checkin-task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 16px; margin-top: 20px; }
@@ -38,9 +37,37 @@
 .checkin-config-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
 .checkin-tabs { display: flex; flex-wrap: wrap; gap: 12px; }
 .checkin-tabs button[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--forest); }
-@media (max-width: 700px) { .checkin-camp-columns, .checkin-form-grid { grid-template-columns: 1fr; } .checkin-panel { padding: 18px; } .checkin-actions > button { flex-grow: 1; } }
+@media (max-width: 700px) { .checkin-form-grid { grid-template-columns: 1fr; } .checkin-panel { padding: 18px; } .checkin-actions > button { flex-grow: 1; } }
 @media (prefers-reduced-motion: reduce) { .checkin-workspace *, .checkin-stack * { animation: none !important; transition: none !important; } }
 
 .checkin-celebrate { animation: checkin-appear 240ms ease-out; }
 @keyframes checkin-appear { from { opacity: .5; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .checkin-celebrate { animation: none; } }
+
+/* DOM顺序固定为记录、任务、侧栏，切换视图不会卸载留言草稿。 */
+.checkin-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+.checkin-day-layout { grid-template-rows: min-content 1fr; }
+.checkin-records-panel, .checkin-tasks-panel { grid-column: 1; }
+.checkin-sidebar { grid-column: 2; grid-row: 1 / span 2; display: grid; gap: 24px; min-width: 0; }
+.checkin-week-layout .checkin-records-panel { grid-column: 1 / -1; }
+.checkin-week-layout .checkin-tasks-panel { grid-row: 2; }
+.checkin-week-layout .checkin-sidebar { grid-row: 2; }
+.checkin-date-heading { margin-bottom: 16px; }
+.checkin-week-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-top: 22px; }
+.checkin-week-day { min-width: 0; border: 1px solid var(--line); border-radius: 16px; padding: 10px; }
+.checkin-week-day h3 { font-size: 22px; margin: 0; }
+.checkin-week-day time { display: block; font-size: 18px; font-weight: 400; overflow-wrap: anywhere; }
+.checkin-week-day.is-today { border: 2px solid var(--forest); background: #f0f5e5; }
+.checkin-today-label { font-size: 18px; color: var(--forest-dark); font-weight: 700; }
+.checkin-week-grid .checkin-record { flex-direction: column; align-items: flex-start; padding: 10px; }
+.checkin-week-grid .checkin-empty { font-size: 18px; }
+@media (max-width: 900px) {
+  .checkin-week-grid { grid-template-columns: 1fr; }
+  .checkin-week-grid .checkin-record { flex-direction: row; align-items: center; padding: 14px; }
+  .checkin-week-day { padding: 16px; }
+}
+@media (max-width: 700px) {
+  .checkin-layout { grid-template-columns: 1fr; grid-template-rows: none; }
+  .checkin-records-panel, .checkin-tasks-panel, .checkin-sidebar,
+  .checkin-week-layout .checkin-records-panel, .checkin-week-layout .checkin-tasks-panel, .checkin-week-layout .checkin-sidebar { grid-column: 1; grid-row: auto; }
+}

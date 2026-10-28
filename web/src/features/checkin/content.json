@@ -103,17 +103,26 @@
     "IDEMPOTENCY_CONFLICT": "这次提交与原请求不一致，请先核对原结果。",
     "CATEGORY_NOT_EMPTY": "类别下还有项目，请先移动或删除项目。",
     "INVALID_REQUEST": "请检查表单内容。",
-    "NOT_FOUND": "记录或项目已经不存在。"
-  },
-  "icons": {
-    "book": "阅读",
-    "star": "星星",
-    "run": "运动",
-    "brush": "绘画",
-    "sun": "太阳",
-    "tidy": "整理",
-    "music": "音乐"
+    "NOT_FOUND": "记录或项目已经不存在。",
+    "INVALID_MEDIA": "附件无法关联或已经过期，请检查附件后重新提交。",
+    "MEDIA_UNAVAILABLE": "附件已经不可用，请重新选择。",
+    "MEDIA_TOO_LARGE": "附件超过允许的大小，请选择较小的文件。"
   },
   "weekdayRequired": "至少选择一天。",
-  "retryConfig": "核对原配置提交"
+  "retryConfig": "核对原配置提交",
+  "unknownEditResult": "内容修改结果尚未确认。请先核对原修改，选中的新内容会保留。",
+  "editResolved": "原内容修改已经成功，后续修改还未保存。",
+  "latestRecordContent": "服务端当前文字",
+  "mediaRenewed": "原提交未成功，附件已失效；本地文件已保留，再次确认会重新上传。",
+  "textTooLong": "文字超过上限，请缩短后再保存。",
+  "dayView": "日视图",
+  "weekView": "周视图",
+  "viewLabel": "记录视图",
+  "previousWeek": "前一周",
+  "nextWeek": "后一周",
+  "thisWeek": "本周",
+  "historyNeedsManagement": "这条记录已属于历史日期，草稿已保留；请进入管理界面重新确认修改。",
+  "draftAvailable": "还有一份未完成的打卡草稿。",
+  "continueDraft": "继续编辑草稿",
+  "draftManagement": "补录草稿已保留，请进入管理界面继续编辑。"
 }

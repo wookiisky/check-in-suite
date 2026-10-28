@@ -91,7 +91,7 @@ test('真实商店购买恢复、十件装扮与逐次密码兑现', async ({ pa
   const art = await page.locator('.shop-character img').evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0));
   expect(art).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.screenshot({ path: `.local/previews/wardrobe-${testInfo.project.name}.png`, fullPage: false });
+  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.locator('.shop-character').screenshot({ path: `.local/previews/wardrobe-${testInfo.project.name}.png` });
 
   // 每次兑现打开空密码表单；购买及兑现都不自动获得管理授权。
   for (let index = 0; index < 2; index++) {

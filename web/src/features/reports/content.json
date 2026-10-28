@@ -1,0 +1,3 @@
+{
+  "calendar": "月历", "stats": "打卡统计", "previousMonth": "上个月", "nextMonth": "下个月", "thisMonth": "本月", "today": "今天", "empty": "还没有打卡记录", "loading": "正在加载", "retry": "重新加载", "count": "次打卡", "moreIcons": "其他图标", "weekOf": "这一周从", "dateDetail": "当天记录", "loadMore": "加载更多记录", "incomplete": "还有记录尚未加载", "readOnly": "历史记录只能查看，今天的任务仍在营地", "future": "未来日期暂时没有记录", "range": "统计范围", "week": "本周", "month": "本月", "last7": "近 7 天", "last30": "近 30 天", "custom": "自定义", "start": "开始日期", "end": "结束日期", "apply": "查看统计", "total": "总打卡次数", "activeDays": "有打卡的天数", "times": "次", "days": "天", "rangeOrder": "开始日期不能晚于结束日期", "rangeFuture": "结束日期不能晚于今天", "rangeTooLong": "所选范围超过允许的天数", "rangeRequired": "请填写有效的开始和结束日期", "weekdays": ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+}

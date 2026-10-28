@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ApiClient, ApiFailure } from './api/client';
-import type { Account, Session } from './api/types';
+import type { Account, Preferences, Session } from './api/types';
 import { FormFeedback } from './components/FormFeedback';
 import { LoginForm } from './features/account/LoginForm';
 import { ManagementPanel } from './features/account/ManagementPanel';
@@ -9,6 +9,11 @@ import { CampPage } from './features/checkin/CampPage';
 import { CheckinManagement } from './features/checkin/CheckinManagement';
 import { ShopPage } from './features/shop/ShopPage';
 import { ProductManagement } from './features/shop/ProductManagement';
+import { CalendarPage } from './features/reports/CalendarPage';
+import { StatsPage } from './features/reports/StatsPage';
+import { CharacterPanel } from './features/shop/CharacterPanel';
+import { FamilyPanel } from './features/family/FamilyPanel';
+import { SoundPreferences } from './features/family/SoundPreferences';
 import content from './content/zh-CN.json';
 
 type Page = 'camp' | 'calendar' | 'stats' | 'shop';
@@ -65,6 +70,7 @@ export function IslandApp() {
     setSession(value); setNotice(''); setManagement(false); setLockPending(false); setPage('camp');
   }
   function acceptAccount(account: Account) { setSession((value) => value ? { ...value, account } : null); }
+  function acceptPreferences(preferences: Preferences) { setSession((value) => value ? { ...value, account: { ...value.account, preferences } } : null); }
   async function lock() {
     setManagement(false); setUnlocking(false); setExpiresAt(null); setLockPending(true);
     try { await client.request<void>('/management/lock', { method: 'POST' }); setLockPending(false); }
@@ -93,10 +99,30 @@ export function IslandApp() {
       {loading ? <p role="status">{content.common.loading}</p> : error && !session ? <section className="panel"><FormFeedback error={error} /><button onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{content.common.retry}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <>
         <FormFeedback error={error} />
         {lockPending && <div className="notice" role="alert"><p>{content.account.lockUnconfirmed}</p><button type="button" onClick={() => void lock()}>{content.account.retryLock}</button></div>}
-        {management ? <><div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div><nav className="management-sections" aria-label={content.navigation.management}>{(['account', 'tasks', 'records', 'products'] as const).map((section) => <button key={section} className="secondary" aria-pressed={managementSection === section} onClick={() => setManagementSection(section)}>{content.navigation[section]}</button>)}</nav>{managementSection === 'account' ? <ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} /> : managementSection === 'products' ? <ProductManagement client={client} session={session} /> : <CheckinManagement key={managementSection} client={client} session={session} section={managementSection === 'tasks' ? 'configuration' : 'records'} />}</> : <>
-          {page !== 'shop' && <h1 className="page-heading">{content.navigation[page]}</h1>}{page === 'camp' ? <CampPage client={client} session={session} /> : page === 'shop' ? <ShopPage client={client} session={session} /> : <section className="panel"><p>{content.account.campEmpty}</p></section>}
+        {management ? <>
+          <div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div>
+          <nav className="management-sections" aria-label={content.navigation.management}>
+            {(['account', 'tasks', 'records', 'products'] as const).map((section) =>
+              <button key={section} className="secondary" aria-pressed={managementSection === section} onClick={() => setManagementSection(section)}>{content.navigation[section]}</button>
+            )}
+          </nav>
+          {managementSection === 'account' && <ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} />}
+          {managementSection === 'products' && <ProductManagement client={client} session={session} />}
+          {(managementSection === 'tasks' || managementSection === 'records') && <CheckinManagement key={managementSection} client={client} session={session} section={managementSection === 'tasks' ? 'configuration' : 'records'} />}
+        </> : <>
+          {page === 'camp' && <>
+            <h1 className="page-heading">{content.navigation.camp}</h1>
+            <CampPage client={client} session={session} renderSidebar={(camp) => <>
+              <CharacterPanel equipment={camp.equipment} displayName={camp.account.display_name} />
+              <FamilyPanel client={client} session={session} />
+            </>} />
+          </>}
+          {page === 'shop' && <ShopPage client={client} session={session} />}
+          {page === 'calendar' && <CalendarPage client={client} session={session} />}
+          {page === 'stats' && <StatsPage client={client} session={session} />}
           <div className="management-entry"><button className="secondary" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button></div>
         </>}
+        <SoundPreferences client={client} session={session} onPreferencesChange={acceptPreferences} />
         {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setManagementSection('account'); setExpiresAt(expiry); setNotice(''); }} />}
       </>}
     </main>

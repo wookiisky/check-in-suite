@@ -227,25 +227,25 @@
 
 ## 6. 阶段 4：媒体、查询展示与家庭互动
 
-- [ ] **T4.1 实现照片处理与上传**
+- [x] **T4.1 实现照片处理与上传**
   - 依据：[产品 §5、13](docs/product.md)；[技术 §8.1、8.3](docs/tech.md)。依赖：阶段 2、D04。
   - 交付：拍照／选图入口、流式限额上传、实际解码、EXIF 旋转／镜像、缩放重编码和媒体登记；限制由会话接口提供。
   - 验证：实际超限字节、伪造 MIME、坏图、像素上限、EXIF 各方向；处理后宽高、方向和元数据；文件落盘而数据库登记失败时不返回成功。
   - 通过：照片在选择预览与服务端结果中方向一致，媒体先校验后关联；密码散列和图片处理不占用业务事务。
 
-- [ ] **T4.2 实现真实录音及设备兼容验证**
+- [x] **T4.2 实现真实录音及浏览器格式验证**
   - 依据：[产品 §5、8、13](docs/product.md)；[技术 §8.1–8.3、12.3](docs/tech.md)。依赖：T1.7、D01、D04。
   - 交付：录音状态、单调计时、60 秒停止、试听／暂停／重录／移除、格式探测及受控 `ffprobe` 校验。
   - 验证：浏览器自动化覆盖麦克风许可、拒绝、设备不可用、页面隐藏及关闭释放；真实编码样本验证超时长和坏音频；限制子进程时长、输出和并发。不执行真机、来电或跨设备互播。
   - 通过：记录实际测试浏览器与格式集合，不宣称真机兼容性。转码只有证据显示必要且范围重新确认后实施。
 
-- [ ] **T4.3 接入记录附件与编辑草稿**
+- [x] **T4.3 接入记录附件与编辑草稿**
   - 依据：[产品 §5、9](docs/product.md)；[技术 §5.1、5.2、5.5、8.3、9.1](docs/tech.md)。依赖：T4.1、T4.2、T2.7、D11。
   - 交付：新增／编辑先上传再提交媒体 ID；部分上传失败只重试失败部分；每条记录一图一音，文字和其他附件保留。
   - 验证：取消、替换失败、重复引用、媒体类型不符、过期媒体；只改文字可保留当前附件；结果未知时不撤回原请求媒体，过期后仍先原键恢复，再按明确失败处理重新上传。
   - 通过：上传本身不发奖或占次数；编辑不改变奖励；未知结果的附件变化在原成功记录上编辑，不新建第二条记录。
 
-- [ ] **T4.4 实现私有媒体读取和撤回**
+- [x] **T4.4 实现私有媒体读取和撤回**
   - 依据：[产品 §5、13](docs/product.md)；[技术 §8.3、8.4](docs/tech.md)。依赖：T4.3、D11。
   - 交付：鉴权读取、音频 Range、正确 MIME、私有缓存及 `nosniff`；取消未关联上传，编辑替换／删除解除引用。
   - 验证：未登录拒绝；有效 `attached` 可读；未过期且未撤回 `ready` 可预览；已撤回、过期、`deleting/deleted` 拒绝。取消接口不能删除已关联附件或绕过历史编辑权限。
@@ -257,31 +257,31 @@
   - 验证：真实目录和 SQLite 竞争关联／清理；文件已落盘未登记、已标记未删除、删文件失败后重启；孤儿保留期大于最大上传／探测时限，删除前再次核对数据库。
   - 通过：已关联及在途文件不误删，无失效引用；清理不长占唯一连接，不处理 `data/assets/`。
 
-- [ ] **T4.6 实现日周列表与月历**
+- [x] **T4.6 实现日周列表与月历**
   - 依据：[产品 §4、6、11、12](docs/product.md)；[技术 §7.1、9.2、9.4、10.2](docs/tech.md)。依赖：阶段 2、D06、D08；附件展示验收依赖 T4.4。
   - 交付：按所属日期查询、稳定游标分页、日视图切换、桌面七列／手机七天纵向分组、月摘要与日期详情；手机月历使用已确认布局。
   - 验证：空日、跨月、未来只读、删除过滤、同时间记录分页边界和超过一页的数据；历史浏览不改变今日任务，记录详情附件可用。
   - 通过：页面标示尚未加载完状态，不把第一页当完整结果；普通记录及编辑隐藏币值，管理记录保留；月历图标有摘要上限。
 
-- [ ] **T4.7 实现统计查询与图表**
+- [x] **T4.7 实现统计查询与图表**
   - 依据：[产品 §6、12](docs/product.md)；[技术 §9.2、10.3、12.2](docs/tech.md)。依赖：阶段 2、D06。
   - 交付：本周、本月、近 7／30 天及自定义范围；按稳定项目 ID 统计、总次数和有效天数；横向条形图与数值明细。
   - 验证：含两端、周一起点、结束不晚于今天、反向／超限范围、同日多次、删除、改名、停用／软删除、补录日期归属；并发写入时明细与摘要同一快照。
   - 通过：排序及分组稳定，不按金币或名称归组；空数据返回零与空列表，姓名正确，不伪造示例成绩。
 
-- [ ] **T4.8 实现留言、声音和偏好**
+- [x] **T4.8 实现留言、声音和偏好**
   - 依据：[产品 §8、11](docs/product.md)；[技术 §3.2、7.2、8.2、9.1](docs/tech.md)。依赖：T2.1、T1.7、D05、D10；录音联动依赖 T4.2。
   - 交付：留言新增／分页／删除、音乐／音效独立控制、减少动效、指定偏好字段更新；录音暂停音乐并按用户设置恢复。
   - 验证：空白和超限留言、幂等新增、删除确认；其他区域刷新保留输入；音乐默认关闭且需用户操作；录音失败／关闭／卸载释放音轨和对象 URL；不同偏好字段不覆盖、不递增资料版本。
   - 通过：无公共留言能力；系统减少动态效果及关闭声音时仍有静态反馈，后台恢复不擅自开启音乐。
 
-- [ ] **T4.9 集成页面刷新、跨日和请求竞争**
+- [x] **T4.9 集成页面刷新、跨日和请求竞争**
   - 依据：[产品 §4、5、8、13](docs/product.md)；[技术 §5.5、7.1、9.1、9.3](docs/tech.md)。依赖：T3.6、T4.3、T4.6–T4.8。
   - 交付：页面进入／筛选、写成功和跨日的明确加载路径；请求序号或取消机制；服务端时间差与午夜检查。
   - 验证：快速切换筛选、迟到响应、写成功后读取失败、后台恢复未跨日／已跨日、设备时区差异；断网、401、403 和版本冲突下保留允许保留的草稿。
   - 通过：旧响应不覆盖新筛选；未跨日恢复可见、窗口聚焦和联网恢复不自动刷新；不引入轮询、广播或全局同步调度；跨日刷新权限但不静默改变提交日期。
 
-**阶段出口：**T4.1–T4.9 完成；真实媒体、历史查询、统计及家庭互动可演示，自动化浏览器与真实媒体样本测试有记录。
+**阶段出口：**T4.1–T4.9 已完成；真实媒体、日周月、统计及家庭互动通过集成验收。Chromium 假麦克风采集的真实60秒音频经HTTP上传成功，完整14项E2E通过；这些结果不构成真机验证。
 
 ## 7. 阶段 5：交付验收与运行恢复
 
@@ -368,15 +368,18 @@
 | T2.1 钱包、流水和幂等 | 本批业务服务；同文件独立SQLite连接 | `go test -race ./...`、`go vet ./...`；记录与订单幂等、零金额、溢出、回滚、权限先于重放测试 | 全包通过；失败不产生部分经济事实，流水不可变且事件唯一，经济重放不重复发奖或扣款；限制变更后的成功重放按原事实恢复 | .local/evidence/services-go.log；internal/checkin/consistency_test.go、replay_limits_test.go、internal/shop/shop_concurrency_test.go | 本项完成；业务页面结果未知恢复由T2.7/T2.8验收 |
 | T2.2–T2.6、T2.8 后端部分 | 本批业务服务；真实HTTP及SQLite | 后端目标test/race/vet；主agent全包race/vet；阶段2审查问题先失败测试再修复并复核 | 类别任务版本/删除、普通今日与管理补录、内容编辑、负余额、日期权限、最后名额并发、HTTP缺失与null字段检查通过；营地快照一致 | internal/checkin/*_test.go、internal/httpapi/checkins*_test.go；.local/evidence/services-go.log | 本行为后端批次快照；页面与端到端验收见后续阶段2证据 |
 | T3.1–T3.6 后端部分 | 本批业务服务；真实文件与HTTP | 商店目标test/race/vet；主agent全包race/vet | 双币/库存/免费与负余额、永久所有权、价格和钱包版本、十饰品并发、删除与购买竞争、兑现密码重置竞争通过；素材读取与历史保留通过 | internal/shop/*_test.go、internal/httpapi/shop_routes_test.go、internal/assets/*_test.go；.local/evidence/services-go.log | 本行为后端批次快照；页面及十饰品视觉验收见后续阶段3证据 |
-| T4.1–T4.4 后端部分 | 本批业务服务；真实图片、音频及文件目录 | 媒体目标test/race/vet；主agent全包race/vet；真实Chromium录音fixture与60秒容器边界测试 | EXIF方向、字节/像素/格式校验、音频容器和时长探测、私有读取/Range、引用替换、上传中凭据撤销通过；review问题已修复 | internal/media/*_test.go、internal/media/testdata/README.md、internal/httpapi/media_test.go；.local/evidence/services-go.log | 浏览器采集、草稿和完整附件页面待集成；不做真机验证，任务保持未勾 |
+| T4.1–T4.4 后端部分 | 本批业务服务；真实图片、音频及文件目录 | 媒体目标test/race/vet；主agent全包race/vet；真实Chromium录音fixture与60秒容器边界测试 | EXIF方向、字节/像素/格式校验、音频容器和时长探测、私有读取/Range、引用替换、上传中凭据撤销通过；review问题已修复 | internal/media/*_test.go、internal/media/testdata/README.md、internal/httpapi/media_test.go；.local/evidence/services-go.log | 本行为后端批次快照；完整附件页面与浏览器采集见后续阶段4证据，不做真机验证 |
 | T4.5 媒体清理与中断恢复 | 本批业务服务；独立SQLite连接和真实目录 | `TestAttachmentWinsCleanup`、`TestFailedDeletionRecovers`、`TestRegistrationFailureLeavesOnlyRecoverableOrphan`等；全包race/vet | 关联与清理竞争、文件删除失败重试、未登记孤儿、重启清理和上传在途保护通过；review复核通过，不清理历史素材目录 | internal/media/recovery_test.go、cleanup.go；.local/evidence/services-go.log | 本纯后端任务完成；附件页面的端到端交付仍在T4.3/T4.4 |
-| T4.6–T4.8 后端查询与留言部分 | 本批业务服务；真实SQLite与HTTP | 查询、留言目标test/race/vet；主agent全包race/vet | 月历含空日、范围和图标摘要、统计稳定任务归组/删除过滤/同一快照、留言分页/幂等并发/回滚通过 | internal/checkin/calendar_stats_test.go、internal/message/service_test.go、internal/httpapi/queries_messages_test.go；.local/evidence/services-go.log | 查询图表、留言、声音偏好页面待集成，任务保持未勾 |
+| T4.6–T4.8 后端查询与留言部分 | 本批业务服务；真实SQLite与HTTP | 查询、留言目标test/race/vet；主agent全包race/vet | 月历含空日、范围和图标摘要、统计稳定任务归组/删除过滤/同一快照、留言分页/幂等并发/回滚通过 | internal/checkin/calendar_stats_test.go、internal/message/service_test.go、internal/httpapi/queries_messages_test.go；.local/evidence/services-go.log | 本行为后端批次快照；查询图表、留言和声音页面验收见后续阶段4证据 |
 | T2.2–T2.6 前端闭环 | 后端`6487d16`；本批阶段2前端；Chromium与390 px WebKit | 打卡专项16项测试、App集成8项组件测试；`npm run typecheck`；真实服务E2E共8项（6账户、2业务闭环） | 全通过；类别/任务配置、今日营地、空文字打卡、内容编辑、删除回收、历史补录和未来拒绝，普通详情隐藏奖励、删除确认显示原奖励 | web/src/features/checkin/*.test.tsx、submission.test.ts、web/src/IslandApp.test.tsx、web/e2e/checkin-flow.spec.ts | 本批纯文字/无附件闭环；阶段3/4前端尚未计完成 |
 | T2.7、T2.8 结果恢复与页面验收 | 后端`6487d16`；真实HTTP、SQLite和浏览器 | E2E在`route.fetch()`实际提交后`route.abort()`丢弃响应；修改草稿后使用原幂等键恢复并编辑；核对服务端记录和钱包 | 原键两次请求仅一条记录，编辑不再次发奖；历史普通编辑禁止，未来补录拒绝；390 px控件宽高至少56且无横溢 | web/e2e/checkin-flow.spec.ts；.local/previews/camp-*；后端并发证据见services-go.log | 结果未知恢复已在真实边界验证；附件变更恢复仍由阶段4覆盖 |
 | 阶段2审查修复 | 本批前端；TDD与独立review | 先新增失败用例再修复超长新草稿阻止原命令恢复、记录/配置删除版本冲突无法恢复两项P2 | 合法原命令可继续核对，超长编辑仍被拒；删除冲突显式加载最新版本并由用户重新确认，不自动重复删除；16项专项测试通过 | web/src/features/checkin/checkin-components.test.tsx；本轮review与修复agent结果 | 无新增产品范围；测试通过后收尾 |
 | T3.1–T3.6 商店完整闭环 | 后端`6487d16`；本批阶段3前端；Chromium与390 px WebKit | 商店13项组件测试、App8项测试、`npm run typecheck`；完整E2E 10项通过（14.9秒，原8项加两引擎商店闭环） | 商品配置与可售/已拥有状态、双币购买、库存、永久所有权、换装及奖励兑现均通过；后端race/vet及真实竞争证据沿用已提交服务批次 | .local/stage3-e2e.log；web/e2e/shop-flow.spec.ts；web/src/features/shop/测试文件；.local/evidence/services-go.log | 本批完成商店范围；阶段4媒体与查询页面不提前计完成 |
 | T3.2、T3.6 有价购买结果未知恢复 | 本批前端真实ApiClient及真实HTTP/SQLite | 3金币+2钻石购买后丢弃响应；原幂等键核对；截断201响应、关闭并重开弹窗的P1回归先失败再修复 | 仅一个订单、仅扣一次双币，购买不自动装备；原请求恢复成功后读取最新钱包，不以截断响应生成新键重复购买 | 商店组件13项中的ApiClient回归；web/e2e/shop-flow.spec.ts；.local/stage3-e2e.log | review问题已修复并验证，无剩余同类阻塞 |
 | T3.3–T3.5 十饰品、持久素材与兑现 | 本批浏览器及真实素材目录 | 实际加载10个饰品SVG，拒绝第11件；刷新、删除商品后检查装备；连续两笔奖励各自输入密码兑现 | 十件均完整显示并加载，刷新及删除商品后保留；已解锁管理也不能跳过每次兑现密码；原有真实目录测试证明移除旧发布目录后素材仍可读 | .local/previews/wardrobe-*.png；web/e2e/shop-flow.spec.ts；internal/assets/*_test.go；internal/shop/*_test.go | 自动化浏览器与持久化目录验收，不声明真机验证 |
+| T4.1–T4.4、T4.9 媒体与打卡集成 | 本批阶段4前端；真实HTTP、SQLite、文件目录及浏览器 | 打卡专项29项（原28项加独立草稿回归）、媒体11项、App8项测试；此前完整E2E 14项通过（29.2秒） | 照片/录音上传、替换、移除、私有读取、附件草稿与结果恢复通过；新增回归证明新建草稿A和记录编辑草稿B独立保存，处理其一不删除另一份；后台/关闭释放和跨日/请求竞争按实际用例验证 | web/src/features/checkin/及media/测试；.local/stage4-complete-e2e.log；后端媒体证据见services-go.log | 最终`npm run verify`全部通过：原型18项、Go全包race/vet、前端16文件95项测试、OpenAPI/类型/构建、14项E2E（26.1秒）；日志.local/evidence/final-verification.log；不做真机验证 |
+| T4.2 真实60秒浏览器录音 | Chromium真实MediaRecorder，假麦克风输入，实际Go服务 | 运行媒体自动停止验证脚本，采集、解码并通过HTTP上传 | audio/webm;codecs=opus，959473字节；单调经过60147.3ms，解码60000ms，后端201且duration_ms=60000；状态requesting→recording→stopping→idle | .local/media-proof/before-budget.json；web/src/features/media/verify-media-auto-stop.mjs | 证明浏览器实际编码与服务端接受60秒录音，不证明iPhone硬件或真机兼容性 |
+| T4.6–T4.8 查询、留言与声音 | 本批阶段4；Chromium与390 px WebKit | reports/family共14项组件测试；完整14项E2E | 日周月、统计、留言新增删除、声音独立偏好、录音联动及减少动效通过；正文辅助字至少18px、操作目标至少56px、390px布局无横向溢出 | web/src/features/reports/与family/测试；web/e2e/reports-family-flow.spec.ts、accessibility-layout.spec.ts；.local/stage4-complete-e2e.log | 阶段4完成；阶段5全量协议、故障与部署交付仍等待最终检查，不提前勾选 |
 
 后续每批实施按实际证据追加记录。阶段 0 的接口定义属于已批准的实施契约，不表示业务端点已经实现；实现完成状态仅以对应任务的测试和验收记录为准。
 
