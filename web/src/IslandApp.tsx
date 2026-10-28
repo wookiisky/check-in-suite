@@ -7,10 +7,12 @@ import { ManagementPanel } from './features/account/ManagementPanel';
 import { UnlockDialog } from './features/account/UnlockDialog';
 import { CampPage } from './features/checkin/CampPage';
 import { CheckinManagement } from './features/checkin/CheckinManagement';
+import { ShopPage } from './features/shop/ShopPage';
+import { ProductManagement } from './features/shop/ProductManagement';
 import content from './content/zh-CN.json';
 
 type Page = 'camp' | 'calendar' | 'stats' | 'shop';
-type ManagementSection = 'account' | 'tasks' | 'records';
+type ManagementSection = 'account' | 'tasks' | 'records' | 'products';
 
 // 应用仅保存当前会话与页面状态，业务草稿归各功能组件所有。
 export function IslandApp() {
@@ -91,8 +93,8 @@ export function IslandApp() {
       {loading ? <p role="status">{content.common.loading}</p> : error && !session ? <section className="panel"><FormFeedback error={error} /><button onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{content.common.retry}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <>
         <FormFeedback error={error} />
         {lockPending && <div className="notice" role="alert"><p>{content.account.lockUnconfirmed}</p><button type="button" onClick={() => void lock()}>{content.account.retryLock}</button></div>}
-        {management ? <><div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div><nav className="management-sections" aria-label={content.navigation.management}>{(['account', 'tasks', 'records'] as const).map((section) => <button key={section} className="secondary" aria-pressed={managementSection === section} onClick={() => setManagementSection(section)}>{content.navigation[section]}</button>)}</nav>{managementSection === 'account' ? <ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} /> : <CheckinManagement key={managementSection} client={client} session={session} section={managementSection === 'tasks' ? 'configuration' : 'records'} />}</> : <>
-          <h1 className="page-heading">{content.navigation[page]}</h1>{page === 'camp' ? <CampPage client={client} session={session} /> : <section className="panel"><p>{content.account.campEmpty}</p></section>}
+        {management ? <><div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div><nav className="management-sections" aria-label={content.navigation.management}>{(['account', 'tasks', 'records', 'products'] as const).map((section) => <button key={section} className="secondary" aria-pressed={managementSection === section} onClick={() => setManagementSection(section)}>{content.navigation[section]}</button>)}</nav>{managementSection === 'account' ? <ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} /> : managementSection === 'products' ? <ProductManagement client={client} session={session} /> : <CheckinManagement key={managementSection} client={client} session={session} section={managementSection === 'tasks' ? 'configuration' : 'records'} />}</> : <>
+          {page !== 'shop' && <h1 className="page-heading">{content.navigation[page]}</h1>}{page === 'camp' ? <CampPage client={client} session={session} /> : page === 'shop' ? <ShopPage client={client} session={session} /> : <section className="panel"><p>{content.account.campEmpty}</p></section>}
           <div className="management-entry"><button className="secondary" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button></div>
         </>}
         {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setManagementSection('account'); setExpiresAt(expiry); setNotice(''); }} />}

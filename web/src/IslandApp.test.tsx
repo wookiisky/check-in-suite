@@ -5,6 +5,7 @@ import content from './content/zh-CN.json';
 import { testSession } from './test/account-fixtures';
 import { campFixture } from './features/checkin/test-fixtures';
 import checkinContent from './features/checkin/content.json';
+import shopContent from './features/shop/content.json';
 
 // 测试响应按真实账户协议组织，不复用演示账户。
 function installServer(loggedIn = false, managementExpiry: string | null = null) {
@@ -14,6 +15,7 @@ function installServer(loggedIn = false, managementExpiry: string | null = null)
     if (path.endsWith('/session')) return active ? Response.json({ ...testSession, management_expires_at: managementExpiry }) : Response.json({ code: 'SESSION_REQUIRED', field_errors: {}, request_id: 'r1' }, { status: 401 });
     if (path.endsWith('/camp')) return Response.json(campFixture);
     if (path.includes('/checkins?')) return Response.json({ items: [], next_cursor: null });
+    if (path.includes('/products')) return Response.json({ items: [] });
     if (path.includes('/categories') || path.includes('/tasks')) return Response.json({ items: [] });
     if (path.endsWith('/auth/login')) { active = true; return Response.json(testSession); }
     if (path.endsWith('/management/unlock')) return Response.json({ management_expires_at: '2026-10-29T04:30:00Z' });
@@ -141,6 +143,11 @@ describe('账户页面与管理授权', () => {
     expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(0);
     fireEvent.click(screen.getByRole('button', { name: content.navigation.records }));
     await screen.findByRole('heading', { name: checkinContent.manageRecords });
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.products }));
+    await screen.findByRole('button', { name: shopContent.addProduct });
+    expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(0);
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
+    await screen.findByRole('button', { name: shopContent.wardrobe });
     fireEvent.click(screen.getByRole('button', { name: content.navigation.camp }));
     await screen.findByRole('heading', { name: checkinContent.todayTasks });
     await waitFor(() => expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(1));

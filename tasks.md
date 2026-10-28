@@ -187,43 +187,43 @@
 
 ## 5. 阶段 3：商店、装扮与兑现
 
-- [ ] **T3.1 实现商品配置与可售列表**
+- [x] **T3.1 实现商品配置与可售列表**
   - 依据：[产品 §7、9](docs/product.md)；[技术 §4.2、4.4、7.2](docs/tech.md)。依赖：阶段 2、D05、D09。
   - 交付：商品管理 API／页面、可售列表和素材选择；商品类型、双币价格、有限／无限库存、停用及软删除。
   - 验证：价格和库存边界、版本冲突、售罄；有订单后禁止改类型，下架／删除后保留订单；`include_inactive` 只允许管理读取。
   - 通过：商品类型和库存语义明确；新价格只影响新订单，素材选择符合确认范围。
 
-- [ ] **T3.2 实现原子购买与购买确认**
+- [x] **T3.2 实现原子购买与购买确认**
   - 依据：[产品 §7](docs/product.md)；[技术 §5.3、5.5、7.2](docs/tech.md)。依赖：T3.1、T2.1、T2.7。
   - 交付：商品／钱包版本确认、扣双币、扣库存、订单快照和永久所有权，购买前显示预计余额。
   - 验证：只有一种币足够、负余额购买免费商品、零价格流水、最后一件库存、永久商品并发购买、请求重放、价格／钱包变化和提交失败。
   - 通过：任一失败均不部分扣款或扣库存；永久商品至多一单，文本奖励可多单；确认变化后重新提交，未知结果先恢复原订单。
 
-- [ ] **T3.3 实现装备和饰品数量规则**
+- [x] **T3.3 实现装备和饰品数量规则**
   - 依据：[产品 §7](docs/product.md)；[技术 §3.2、5.3、7.2](docs/tech.md)。依赖：T3.2。
   - 交付：称号／形象单槽位设置、单个饰品装备／卸下、我的装扮；不传整份账户，不递增资料版本。
   - 验证：非法所有权和类型拒绝；0–10 个饰品、重复装备／卸下；已有 9 个时独立连接并发装备两个，只有一个新增；不同槽位和饰品互不覆盖，同一目标后提交生效。
   - 通过：购买不自动装备、不二次收费；满额仍可合法购买，卸下不影响其他饰品；姓名资料版本检查不受换装干扰。
 
-- [ ] **T3.4 实现持久化素材与主页换装展示**
+- [x] **T3.4 实现持久化素材与主页换装展示**
   - 依据：[产品 §7、11](docs/product.md)；[技术 §4.4、5.3、9.2、11.3](docs/tech.md)。依赖：T3.3、D09、D10。
   - 交付：受控素材目录及 `GET /assets`，不可覆写的版本化素材安装到 `data/assets/`；营地返回并展示订单快照引用的实际素材。
   - 验证：称号／形象切换、默认形象、10 个饰品的桌面和手机叠放；刷新恢复；删除商品和移除旧发布目录后仍可装备与展示。
   - 通过：不能仅显示物品名称代替换装效果；全部饰品可见且不遮挡主操作；历史素材不随版本清理或媒体清理删除。
 
-- [ ] **T3.5 实现奖励列表与单次密码兑现**
+- [x] **T3.5 实现奖励列表与单次密码兑现**
   - 依据：[产品 §7、3](docs/product.md)；[技术 §5.4、6.1、7.2](docs/tech.md)。依赖：T3.2、T1.6。
   - 交付：待兑现／已兑现分页列表、本次密码确认和条件状态转换。
   - 验证：每次确认都要求管理密码，管理页面已解锁也不跳过；重复兑现返回现状；错误密码、会话失效及改密码与兑现竞争拒绝旧校验结果。
   - 通过：只发生一次兑现状态转换，不再扣款／库存；兑现验证不顺便解锁管理页，商品删除不移除待兑现奖励。
 
-- [ ] **T3.6 验收商店与打卡的经济一致性**
+- [x] **T3.6 验收商店与打卡的经济一致性**
   - 依据：[产品 §5、7、12](docs/product.md)；[技术 §4.4、12.2](docs/tech.md)。依赖：T3.1–T3.5。
   - 交付：购买、换装、兑现端到端报告及竞争测试结果。
   - 验证：删除记录与购买竞争，按事务先后判断余额；永久订单、库存、流水和钱包一致；回收至负余额后所有权和装备保留。
   - 通过：购买和打卡共同使用同一账务事实；无重复扣款、负库存、越限装备或丢失历史所有权。
 
-**阶段出口：**T3.1–T3.6 完成；真实页面完成购买、装备、刷新和兑现，素材持久性与经济一致性通过验证。
+**阶段出口：**T3.1–T3.6 已完成；真实页面完成有价购买、结果恢复、装备、刷新和逐次密码兑现，素材持久性、十饰品展示与经济一致性通过验证。
 
 ## 6. 阶段 4：媒体、查询展示与家庭互动
 
@@ -367,13 +367,16 @@
 | 账户交付快照全检查 | 2026-10-29；暂存区源码导出到独立临时目录 | `npm ci --no-audit --no-fund`、`npm run verify` | 全通过：原型检查、Go vet/race、前端组件、类型检查、前后端构建、6项浏览器测试；不依赖其他agent未提交代码 | `.local/evidence/stage1-verification.log`；对应测试源文件 | 该快照不含业务服务；T1.2回滚现已在下一批验证 |
 | T2.1 钱包、流水和幂等 | 本批业务服务；同文件独立SQLite连接 | `go test -race ./...`、`go vet ./...`；记录与订单幂等、零金额、溢出、回滚、权限先于重放测试 | 全包通过；失败不产生部分经济事实，流水不可变且事件唯一，经济重放不重复发奖或扣款；限制变更后的成功重放按原事实恢复 | .local/evidence/services-go.log；internal/checkin/consistency_test.go、replay_limits_test.go、internal/shop/shop_concurrency_test.go | 本项完成；业务页面结果未知恢复由T2.7/T2.8验收 |
 | T2.2–T2.6、T2.8 后端部分 | 本批业务服务；真实HTTP及SQLite | 后端目标test/race/vet；主agent全包race/vet；阶段2审查问题先失败测试再修复并复核 | 类别任务版本/删除、普通今日与管理补录、内容编辑、负余额、日期权限、最后名额并发、HTTP缺失与null字段检查通过；营地快照一致 | internal/checkin/*_test.go、internal/httpapi/checkins*_test.go；.local/evidence/services-go.log | 本行为后端批次快照；页面与端到端验收见后续阶段2证据 |
-| T3.1–T3.6 后端部分 | 本批业务服务；真实文件与HTTP | 商店目标test/race/vet；主agent全包race/vet | 双币/库存/免费与负余额、永久所有权、价格和钱包版本、十饰品并发、删除与购买竞争、兑现密码重置竞争通过；素材读取与历史保留通过 | internal/shop/*_test.go、internal/httpapi/shop_routes_test.go、internal/assets/*_test.go；.local/evidence/services-go.log | 购买/装扮/兑现页面及十饰品视觉验收待前端；任务保持未勾 |
+| T3.1–T3.6 后端部分 | 本批业务服务；真实文件与HTTP | 商店目标test/race/vet；主agent全包race/vet | 双币/库存/免费与负余额、永久所有权、价格和钱包版本、十饰品并发、删除与购买竞争、兑现密码重置竞争通过；素材读取与历史保留通过 | internal/shop/*_test.go、internal/httpapi/shop_routes_test.go、internal/assets/*_test.go；.local/evidence/services-go.log | 本行为后端批次快照；页面及十饰品视觉验收见后续阶段3证据 |
 | T4.1–T4.4 后端部分 | 本批业务服务；真实图片、音频及文件目录 | 媒体目标test/race/vet；主agent全包race/vet；真实Chromium录音fixture与60秒容器边界测试 | EXIF方向、字节/像素/格式校验、音频容器和时长探测、私有读取/Range、引用替换、上传中凭据撤销通过；review问题已修复 | internal/media/*_test.go、internal/media/testdata/README.md、internal/httpapi/media_test.go；.local/evidence/services-go.log | 浏览器采集、草稿和完整附件页面待集成；不做真机验证，任务保持未勾 |
 | T4.5 媒体清理与中断恢复 | 本批业务服务；独立SQLite连接和真实目录 | `TestAttachmentWinsCleanup`、`TestFailedDeletionRecovers`、`TestRegistrationFailureLeavesOnlyRecoverableOrphan`等；全包race/vet | 关联与清理竞争、文件删除失败重试、未登记孤儿、重启清理和上传在途保护通过；review复核通过，不清理历史素材目录 | internal/media/recovery_test.go、cleanup.go；.local/evidence/services-go.log | 本纯后端任务完成；附件页面的端到端交付仍在T4.3/T4.4 |
 | T4.6–T4.8 后端查询与留言部分 | 本批业务服务；真实SQLite与HTTP | 查询、留言目标test/race/vet；主agent全包race/vet | 月历含空日、范围和图标摘要、统计稳定任务归组/删除过滤/同一快照、留言分页/幂等并发/回滚通过 | internal/checkin/calendar_stats_test.go、internal/message/service_test.go、internal/httpapi/queries_messages_test.go；.local/evidence/services-go.log | 查询图表、留言、声音偏好页面待集成，任务保持未勾 |
 | T2.2–T2.6 前端闭环 | 后端`6487d16`；本批阶段2前端；Chromium与390 px WebKit | 打卡专项16项测试、App集成8项组件测试；`npm run typecheck`；真实服务E2E共8项（6账户、2业务闭环） | 全通过；类别/任务配置、今日营地、空文字打卡、内容编辑、删除回收、历史补录和未来拒绝，普通详情隐藏奖励、删除确认显示原奖励 | web/src/features/checkin/*.test.tsx、submission.test.ts、web/src/IslandApp.test.tsx、web/e2e/checkin-flow.spec.ts | 本批纯文字/无附件闭环；阶段3/4前端尚未计完成 |
 | T2.7、T2.8 结果恢复与页面验收 | 后端`6487d16`；真实HTTP、SQLite和浏览器 | E2E在`route.fetch()`实际提交后`route.abort()`丢弃响应；修改草稿后使用原幂等键恢复并编辑；核对服务端记录和钱包 | 原键两次请求仅一条记录，编辑不再次发奖；历史普通编辑禁止，未来补录拒绝；390 px控件宽高至少56且无横溢 | web/e2e/checkin-flow.spec.ts；.local/previews/camp-*；后端并发证据见services-go.log | 结果未知恢复已在真实边界验证；附件变更恢复仍由阶段4覆盖 |
 | 阶段2审查修复 | 本批前端；TDD与独立review | 先新增失败用例再修复超长新草稿阻止原命令恢复、记录/配置删除版本冲突无法恢复两项P2 | 合法原命令可继续核对，超长编辑仍被拒；删除冲突显式加载最新版本并由用户重新确认，不自动重复删除；16项专项测试通过 | web/src/features/checkin/checkin-components.test.tsx；本轮review与修复agent结果 | 无新增产品范围；测试通过后收尾 |
+| T3.1–T3.6 商店完整闭环 | 后端`6487d16`；本批阶段3前端；Chromium与390 px WebKit | 商店13项组件测试、App8项测试、`npm run typecheck`；完整E2E 10项通过（14.9秒，原8项加两引擎商店闭环） | 商品配置与可售/已拥有状态、双币购买、库存、永久所有权、换装及奖励兑现均通过；后端race/vet及真实竞争证据沿用已提交服务批次 | .local/stage3-e2e.log；web/e2e/shop-flow.spec.ts；web/src/features/shop/测试文件；.local/evidence/services-go.log | 本批完成商店范围；阶段4媒体与查询页面不提前计完成 |
+| T3.2、T3.6 有价购买结果未知恢复 | 本批前端真实ApiClient及真实HTTP/SQLite | 3金币+2钻石购买后丢弃响应；原幂等键核对；截断201响应、关闭并重开弹窗的P1回归先失败再修复 | 仅一个订单、仅扣一次双币，购买不自动装备；原请求恢复成功后读取最新钱包，不以截断响应生成新键重复购买 | 商店组件13项中的ApiClient回归；web/e2e/shop-flow.spec.ts；.local/stage3-e2e.log | review问题已修复并验证，无剩余同类阻塞 |
+| T3.3–T3.5 十饰品、持久素材与兑现 | 本批浏览器及真实素材目录 | 实际加载10个饰品SVG，拒绝第11件；刷新、删除商品后检查装备；连续两笔奖励各自输入密码兑现 | 十件均完整显示并加载，刷新及删除商品后保留；已解锁管理也不能跳过每次兑现密码；原有真实目录测试证明移除旧发布目录后素材仍可读 | .local/previews/wardrobe-*.png；web/e2e/shop-flow.spec.ts；internal/assets/*_test.go；internal/shop/*_test.go | 自动化浏览器与持久化目录验收，不声明真机验证 |
 
 后续每批实施按实际证据追加记录。阶段 0 的接口定义属于已批准的实施契约，不表示业务端点已经实现；实现完成状态仅以对应任务的测试和验收记录为准。
 
