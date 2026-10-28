@@ -7,13 +7,16 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
 	"github.com/wookiisky/check-in-suite/internal/config"
+	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/storage"
 	"github.com/wookiisky/check-in-suite/migrations"
 )
@@ -190,6 +193,35 @@ func TestPasswordHTTP(t *testing.T) {
 	}
 }
 
+// TestSuccessfulAuthenticationDoesNotConsumeFailureBudget exercises more than twenty real successful password checks.
+func TestSuccessfulAuthenticationDoesNotConsumeFailureBudget(t *testing.T) {
+	app := accountApplication(t)
+	for i := 0; i < 11; i++ {
+		login := apiRequest(app, "POST", "/api/v1/auth/login", `{"username":"family","password":"login-password"}`, nil, "")
+		if login.Code != 200 {
+			t.Fatalf("login %d: %d %s", i+1, login.Code, login.Body)
+		}
+		var session struct {
+			CSRF string `json:"csrf_token"`
+		} // Session-bound request token.
+		if err := json.Unmarshal(login.Body.Bytes(), &session); err != nil {
+			t.Fatal(err)
+		}
+		cookie := login.Result().Cookies()[0]
+		unlock := apiRequest(app, "POST", "/api/v1/management/unlock", `{"password":"manage-password"}`, cookie, session.CSRF)
+		if unlock.Code != 200 {
+			t.Fatalf("unlock %d: %d %s", i+1, unlock.Code, unlock.Body)
+		}
+		logout := apiRequest(app, "POST", "/api/v1/auth/logout", "", cookie, session.CSRF)
+		if logout.Code != 204 {
+			t.Fatalf("logout: %d %s", logout.Code, logout.Body)
+		}
+	}
+	if len(app.attempts) != 0 {
+		t.Fatalf("successful passwords created failure windows: %v", app.attempts)
+	}
+}
+
 // TestSourceRateLimitRecovery verifies bounded work and fixed-window recovery.
 func TestSourceRateLimitRecovery(t *testing.T) {
 	app := &App{Now: time.Now, attempts: make(map[string]sourceAttempts)}
@@ -200,6 +232,7 @@ func TestSourceRateLimitRecovery(t *testing.T) {
 		if !app.allowPasswordAttempt(request) {
 			t.Fatal("source limited before threshold")
 		}
+		app.recordPasswordFailure(request, core.Fail(401, "INVALID_CREDENTIALS"))
 	}
 	if app.allowPasswordAttempt(request) {
 		t.Fatal("source threshold not enforced")
@@ -207,6 +240,90 @@ func TestSourceRateLimitRecovery(t *testing.T) {
 	now = now.Add(time.Minute)
 	if !app.allowPasswordAttempt(request) {
 		t.Fatal("source remained permanently locked")
+	}
+}
+
+// TestSourceFailureCounting ignores noncredential errors and bounds concurrent source buckets.
+func TestSourceFailureCounting(t *testing.T) {
+	app := &App{Now: time.Now, attempts: make(map[string]sourceAttempts)}
+	request := httptest.NewRequest("POST", "/api/v1/auth/login", nil)
+	for _, failure := range []error{nil, core.Invalid("password", "REQUIRED"), core.Fail(409, "MANAGEMENT_CHANGED"), core.VersionConflict(2)} {
+		app.recordPasswordFailure(request, failure)
+	}
+	if len(app.attempts) != 0 {
+		t.Fatal("noncredential failures consumed the failure budget")
+	}
+	var concurrent sync.WaitGroup
+	for i := 0; i < 40; i++ {
+		concurrent.Add(1)
+		go func() {
+			defer concurrent.Done()
+			app.recordPasswordFailure(request, core.Fail(422, "INVALID_CREDENTIALS"))
+			app.allowPasswordAttempt(request)
+		}()
+	}
+	concurrent.Wait()
+	if app.allowPasswordAttempt(request) || app.attempts[passwordSource(request)].Count != 20 {
+		t.Fatal("concurrent failures did not enforce the bounded threshold")
+	}
+	for i := 0; i < 1025; i++ {
+		request := httptest.NewRequest("POST", "/api/v1/auth/login", nil)
+		request.RemoteAddr = "peer-" + strconv.Itoa(i)
+		app.recordPasswordFailure(request, core.Fail(401, "INVALID_CREDENTIALS"))
+	}
+	if len(app.attempts) != 1024 {
+		t.Fatalf("source map size=%d", len(app.attempts))
+	}
+}
+
+// TestAuthenticationRoutesCountOnlyInvalidCredentials covers all three password endpoint families.
+func TestAuthenticationRoutesCountOnlyInvalidCredentials(t *testing.T) {
+	app := accountApplication(t)
+	login := apiRequest(app, "POST", "/api/v1/auth/login", `{"username":"family","password":"login-password"}`, nil, "")
+	if login.Code != 200 {
+		t.Fatalf("login: %d %s", login.Code, login.Body)
+	}
+	var session struct {
+		CSRF string `json:"csrf_token"`
+	} // Token from the actual login response.
+	if err := json.Unmarshal(login.Body.Bytes(), &session); err != nil {
+		t.Fatal(err)
+	}
+	cookie := login.Result().Cookies()[0]
+	for _, test := range []struct {
+		path   string // Password verification route.
+		body   string // Incorrect credentials with otherwise valid input.
+		status int    // Expected localized-authentication failure response.
+	}{
+		{"/auth/login", `{"username":"family","password":"wrong-password"}`, 401},
+		{"/management/unlock", `{"password":"wrong-password"}`, 422},
+	} {
+		response := apiRequest(app, "POST", "/api/v1"+test.path, test.body, cookie, session.CSRF)
+		if response.Code != test.status {
+			t.Fatalf("%s: %d %s", test.path, response.Code, response.Body)
+		}
+	}
+	unlock := apiRequest(app, "POST", "/api/v1/management/unlock", `{"password":"manage-password"}`, cookie, session.CSRF)
+	if unlock.Code != 200 {
+		t.Fatalf("unlock: %d %s", unlock.Code, unlock.Body)
+	}
+	change := apiRequest(app, "POST", "/api/v1/account/login-password", `{"old_password":"wrong-password","new_password":"replacement-password","confirm_password":"replacement-password"}`, cookie, session.CSRF)
+	if change.Code != 422 {
+		t.Fatalf("password: %d %s", change.Code, change.Body)
+	}
+	for i := 0; i < 25; i++ {
+		response := apiRequest(app, "POST", "/api/v1/management/unlock", `{"password":null}`, cookie, session.CSRF)
+		if response.Code != 400 {
+			t.Fatalf("invalid field: %d %s", response.Code, response.Body)
+		}
+	}
+	if len(app.attempts) != 1 {
+		t.Fatalf("unexpected sources: %v", app.attempts)
+	}
+	for _, window := range app.attempts {
+		if window.Count != 3 {
+			t.Fatalf("failure count=%d want=3", window.Count)
+		}
 	}
 }
 

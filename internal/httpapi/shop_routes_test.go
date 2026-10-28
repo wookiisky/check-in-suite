@@ -81,9 +81,22 @@ func TestShopHTTP(t *testing.T) {
 	if response.Code != 422 {
 		t.Fatalf("bad redemption password must preserve session: %d %s", response.Code, response.Body)
 	}
+	if len(app.attempts) != 1 {
+		t.Fatalf("failed redemption did not create one source failure window: %v", app.attempts)
+	}
+	for _, window := range app.attempts {
+		if window.Count != 1 {
+			t.Fatalf("redemption failures=%d want=1", window.Count)
+		}
+	}
 	response = request("POST", "/api/v1/purchases/"+first.Purchase.ID+"/redeem", `{"password":"manage-password"}`, "")
 	if response.Code != 200 || !strings.Contains(response.Body.String(), `"status":"redeemed"`) {
 		t.Fatalf("redeem: %d %s", response.Code, response.Body)
+	}
+	for _, window := range app.attempts {
+		if window.Count != 1 {
+			t.Fatalf("successful redemption consumed failure budget: %d", window.Count)
+		}
 	}
 	response = request("PUT", "/api/v1/equipment/avatar", `{}`, "")
 	if response.Code != 400 {

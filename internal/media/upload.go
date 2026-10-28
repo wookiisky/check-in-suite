@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -209,6 +210,7 @@ func (s *Service) process(ctx context.Context, p account.Principal, kind, rawPat
 		return Media{}, err
 	}
 	result.CreatedAt = now.UTC().Format(time.RFC3339Nano)
+	slog.InfoContext(ctx, "媒体上传成功", "request_id", core.RequestID(ctx), "media_id", result.ID)
 	return result, nil
 }
 

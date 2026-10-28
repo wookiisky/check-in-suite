@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/wookiisky/check-in-suite/internal/core"
 )
 
 // cleanupFile identifies bytes already reserved for deletion in a completed short transaction.
@@ -68,7 +70,9 @@ func (s *Service) Cleanup(ctx context.Context) error {
 		}
 		if _, err := s.DB.ExecContext(ctx, "UPDATE media_files SET state='deleted' WHERE id=? AND state='deleting'", file.ID); err != nil {
 			failures = append(failures, err)
+			continue
 		}
+		slog.InfoContext(ctx, "媒体清理成功", "request_id", core.RequestID(ctx), "media_id", file.ID)
 	}
 	for _, directory := range []string{s.Config.MediaDirectory, s.Config.TempDirectory} {
 		if err := s.cleanOrphans(ctx, directory, cutoff); err != nil {

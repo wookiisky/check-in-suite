@@ -38,11 +38,39 @@ type App struct {
 	attempts map[string]sourceAttempts // Attempts keyed only by direct peer address.
 }
 
-// sourceAttempts bounds password work from one source during a fixed interval.
+// sourceAttempts bounds failed authentication from one source during a fixed interval.
 type sourceAttempts struct {
-	Count int       // Requests admitted in this interval.
+	Count int       // Failed credentials in this interval.
 	Until time.Time // Time at which this interval expires.
 }
+
+// responseStatus records the final HTTP status while retaining the original response-controller boundary.
+type responseStatus struct {
+	http.ResponseWriter     // Original writer still owns headers, transport and media bytes.
+	status              int // First final status; zero means no response has been written yet.
+}
+
+// WriteHeader captures only the final response, allowing informational headers to pass through.
+func (w *responseStatus) WriteHeader(status int) {
+	if w.status != 0 {
+		return
+	}
+	if status >= 200 || status == http.StatusSwitchingProtocols {
+		w.status = status
+	}
+	w.ResponseWriter.WriteHeader(status)
+}
+
+// Write records Go's implicit successful status before forwarding the actual response bytes.
+func (w *responseStatus) Write(data []byte) (int, error) {
+	if w.status == 0 {
+		w.WriteHeader(http.StatusOK)
+	}
+	return w.ResponseWriter.Write(data)
+}
+
+// Unwrap lets ResponseController reach socket deadlines and flushing on the original writer.
+func (w *responseStatus) Unwrap() http.ResponseWriter { return w.ResponseWriter }
 
 // NewApplication registers account routes alongside existing health endpoints.
 func NewApplication(ready *Readiness, cfg config.Config, accounts *account.Service) *App {
@@ -58,6 +86,11 @@ func NewApplication(ready *Readiness, cfg config.Config, accounts *account.Servi
 
 // ServeHTTP gives every response an independently generated request identity.
 func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	requestID := uuid.NewString()
+	r = r.WithContext(core.WithRequestID(r.Context(), requestID))
+	response := &responseStatus{ResponseWriter: w}
+	w = response
 	budget := app.Config.HTTPTimeout
 	if r.Method == http.MethodPost && r.URL.Path == "/api/v1/media" {
 		budget = app.Config.UploadTimeout
@@ -72,15 +105,17 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = controller.SetReadDeadline(deadline)
 		_ = controller.SetWriteDeadline(deadline)
 	}
-	requestID := uuid.NewString()
 	w.Header().Set("X-Request-ID", requestID)
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	if strings.HasPrefix(r.URL.Path, "/api/") {
 		w.Header().Set("Cache-Control", "no-store")
 	}
-	start := time.Now()
 	app.Mux.ServeHTTP(w, r)
-	slog.DebugContext(r.Context(), "请求处理完成", "request_id", requestID, "method", r.Method, "duration_ms", time.Since(start).Milliseconds())
+	status := response.status
+	if status == 0 {
+		status = http.StatusOK
+	}
+	slog.InfoContext(r.Context(), "请求处理完成", "request_id", requestID, "method", r.Method, "route", r.Pattern, "status", status, "duration_ms", time.Since(start).Milliseconds(), "canceled", r.Context().Err() != nil)
 }
 
 // Authenticate reads only the opaque cookie; credentials never come from URL parameters.
@@ -184,7 +219,12 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error) {
 				status, code = 503, "STORAGE_UNAVAILABLE"
 			}
 		}
-		slog.ErrorContext(r.Context(), "请求处理失败", "request_id", w.Header().Get("X-Request-ID"), "error", err)
+		if r.Context().Err() != nil && (errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, sql.ErrTxDone)) {
+			// A canceled request can make database/sql roll back before a service calls Commit.
+			slog.DebugContext(r.Context(), "请求已取消", "request_id", w.Header().Get("X-Request-ID"), "error", err)
+		} else {
+			slog.ErrorContext(r.Context(), "请求处理失败", "request_id", w.Header().Get("X-Request-ID"), "error", err)
+		}
 	}
 	if status == 429 {
 		w.Header().Set("Retry-After", "60")
@@ -197,12 +237,28 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error) {
 	}{code, fields, w.Header().Get("X-Request-ID"), version})
 }
 
-// allowPasswordAttempt limits direct source requests without trusting proxy input.
+// allowPasswordAttempt checks prior failures without charging successful or malformed requests.
 func (app *App) allowPasswordAttempt(r *http.Request) bool {
-	peer, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		peer = r.RemoteAddr
+	peer := passwordSource(r)
+	now := app.Now()
+	app.mu.Lock()
+	defer app.mu.Unlock()
+	for key, window := range app.attempts {
+		if !now.Before(window.Until) {
+			delete(app.attempts, key)
+		}
 	}
+	window, exists := app.attempts[peer]
+	return (exists && window.Count < 20) || (!exists && len(app.attempts) < 1024)
+}
+
+// recordPasswordFailure counts credential failures only, preserving the fixed-size source window.
+func (app *App) recordPasswordFailure(r *http.Request, failure error) {
+	var credentialError *core.Error
+	if !errors.As(failure, &credentialError) || credentialError.Code != "INVALID_CREDENTIALS" {
+		return
+	}
+	peer := passwordSource(r)
 	now := app.Now()
 	app.mu.Lock()
 	defer app.mu.Unlock()
@@ -214,16 +270,23 @@ func (app *App) allowPasswordAttempt(r *http.Request) bool {
 	window, exists := app.attempts[peer]
 	if !exists {
 		if len(app.attempts) >= 1024 {
-			return false
+			return
 		}
 		window.Until = now.Add(time.Minute)
 	}
-	if window.Count >= 20 {
-		return false
+	if window.Count < 20 {
+		window.Count++
 	}
-	window.Count++
 	app.attempts[peer] = window
-	return true
+}
+
+// passwordSource uses the direct peer only; forwarded headers cannot create fresh failure buckets.
+func passwordSource(r *http.Request) string {
+	peer, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return peer
 }
 
 // static serves only the configured build directory and its SPA entry point.

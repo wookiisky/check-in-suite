@@ -51,6 +51,7 @@ func (app *App) login(w http.ResponseWriter, r *http.Request) {
 	}
 	token, session, err := app.Accounts.Login(r.Context(), input.Username, input.Password)
 	if err != nil {
+		app.recordPasswordFailure(r, err)
 		WriteError(w, r, err)
 		return
 	}
@@ -108,6 +109,7 @@ func (app *App) unlock(w http.ResponseWriter, r *http.Request) {
 	}
 	expires, err := app.Accounts.Unlock(r.Context(), principal, input.Password)
 	if err != nil {
+		app.recordPasswordFailure(r, err)
 		WriteError(w, r, err)
 		return
 	}
@@ -161,7 +163,7 @@ func (app *App) preferences(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var input account.PreferencesPatch
-	if err := DecodeJSON(w, r, &input); err != nil {
+	if err := decodeRequiredJSON(w, r, &input, nil); err != nil {
 		WriteError(w, r, err)
 		return
 	}
@@ -195,6 +197,7 @@ func (app *App) password(kind string) http.HandlerFunc {
 			return
 		}
 		if err := app.Accounts.ChangePassword(r.Context(), principal, kind, input.Old, input.New, input.Confirm); err != nil {
+			app.recordPasswordFailure(r, err)
 			WriteError(w, r, err)
 			return
 		}

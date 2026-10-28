@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"slices"
 	"time"
 
@@ -150,7 +151,11 @@ func (s *Service) Create(ctx context.Context, p account.Principal, management bo
 	if err = idempotency.Save(ctx, tx, operation, key, hash, id, 201, original, now); err != nil {
 		return result, err
 	}
-	return result, tx.Commit()
+	if err = tx.Commit(); err != nil {
+		return result, err
+	}
+	slog.InfoContext(ctx, "打卡创建成功", "request_id", core.RequestID(ctx), "checkin_id", id, "task_id", task.ID)
+	return result, nil
 }
 
 // recordAccess applies route-fixed date permission before checking optimistic content versions.
@@ -229,5 +234,9 @@ func (s *Service) Delete(ctx context.Context, p account.Principal, management bo
 	if err != nil {
 		return result, err
 	}
-	return result, tx.Commit()
+	if err = tx.Commit(); err != nil {
+		return result, err
+	}
+	slog.InfoContext(ctx, "打卡删除成功", "request_id", core.RequestID(ctx), "checkin_id", id)
+	return result, nil
 }

@@ -180,6 +180,7 @@ func (app *App) RegisterShop(service *shop.Service) {
 		}
 		result, err := service.Redeem(r.Context(), p, r.PathValue("id"), input.Password)
 		if err != nil {
+			app.recordPasswordFailure(r, err)
 			WriteError(w, r, err)
 			return
 		}

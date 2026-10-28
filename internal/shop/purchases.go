@@ -129,7 +129,7 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 	if err = tx.Commit(); err != nil {
 		return result, err
 	}
-	slog.InfoContext(ctx, "商品购买成功", "purchase_id", id, "product_id", product.ID)
+	slog.InfoContext(ctx, "商品购买成功", "request_id", core.RequestID(ctx), "purchase_id", id, "product_id", product.ID)
 	return PurchaseResult{Purchase: purchase, Wallet: balance}, nil
 }
 
@@ -257,6 +257,6 @@ func (s *Service) Redeem(ctx context.Context, p account.Principal, id, password 
 	if err = tx.Commit(); err != nil {
 		return Purchase{}, err
 	}
-	slog.InfoContext(ctx, "奖励兑现成功", "purchase_id", id)
+	slog.InfoContext(ctx, "奖励兑现成功", "request_id", core.RequestID(ctx), "purchase_id", id)
 	return purchase, nil
 }
