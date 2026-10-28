@@ -47,3 +47,7 @@ a { color:var(--forest); }
 .dialog-header>button { flex-shrink:0; }
 @media (max-width:600px) { .header-inner { padding:16px; gap:16px; } .brand { font-size:24px; } .header-inner nav { margin-left:0; width:100%; } .nav-button { flex:1 1 calc(50% - 8px); padding:12px; } .account-tools { width:100%; justify-content:space-between; } .app-shell { padding:20px max(16px,env(safe-area-inset-right)) max(32px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); } .panel,.island-dialog { padding:20px; } .login-panel { margin:12px auto; } .dialog-header { flex-wrap:wrap; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+
+.management-sections { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+.management-sections [aria-pressed="true"] { background: var(--green, #355d48); color: #fff; }
+.page-heading { margin: 0 0 24px; }

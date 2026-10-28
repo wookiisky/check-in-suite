@@ -2,7 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './web/e2e',
-  fullyParallel: true,
+  // 单账户端到端流程串行运行，避免测试之间互相改动余额和资料。
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
   reporter: 'list',

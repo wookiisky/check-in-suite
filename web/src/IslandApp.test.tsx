@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IslandApp } from './IslandApp';
 import content from './content/zh-CN.json';
 import { testSession } from './test/account-fixtures';
+import { campFixture } from './features/checkin/test-fixtures';
+import checkinContent from './features/checkin/content.json';
 
 // 测试响应按真实账户协议组织，不复用演示账户。
 function installServer(loggedIn = false, managementExpiry: string | null = null) {
@@ -10,6 +12,9 @@ function installServer(loggedIn = false, managementExpiry: string | null = null)
   const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input, init) => {
     const path = String(input);
     if (path.endsWith('/session')) return active ? Response.json({ ...testSession, management_expires_at: managementExpiry }) : Response.json({ code: 'SESSION_REQUIRED', field_errors: {}, request_id: 'r1' }, { status: 401 });
+    if (path.endsWith('/camp')) return Response.json(campFixture);
+    if (path.includes('/checkins?')) return Response.json({ items: [], next_cursor: null });
+    if (path.includes('/categories') || path.includes('/tasks')) return Response.json({ items: [] });
     if (path.endsWith('/auth/login')) { active = true; return Response.json(testSession); }
     if (path.endsWith('/management/unlock')) return Response.json({ management_expires_at: '2026-10-29T04:30:00Z' });
     if (path.endsWith('/auth/logout')) { active = false; return new Response(null, { status: 204 }); }
@@ -38,7 +43,7 @@ describe('账户页面与管理授权', () => {
     fireEvent.change(await screen.findByLabelText(content.account.username), { target: { value: 'island-e2e' } });
     fireEvent.change(screen.getByLabelText(content.account.loginPassword), { target: { value: 'Island-Test-2026' } });
     fireEvent.click(screen.getByRole('button', { name: content.account.login }));
-    await screen.findByText(testSession.account.display_name);
+    await screen.findByRole('button', { name: content.account.logout });
     expect(server).toHaveBeenCalledWith('/api/v1/auth/login', expect.objectContaining({ method: 'POST', body: JSON.stringify({ username: 'island-e2e', password: 'Island-Test-2026' }) }));
     fireEvent.click(screen.getByRole('button', { name: content.account.logout }));
     await screen.findByRole('heading', { name: content.account.loginTitle });
@@ -124,6 +129,21 @@ describe('账户页面与管理授权', () => {
     fireEvent.change(screen.getByLabelText(content.account.confirmPassword, { selector: '#login-confirm' }), { target: { value: 'New-Island-2026' } });
     fireEvent.click(screen.getByRole('button', { name: content.account.changeLoginPassword }));
     await screen.findByRole('heading', { name: content.account.loginTitle });
+  });
+
+  it('营地和管理四组导航使用真实模块，组内切换不退出授权，返回营地才锁定', async () => {
+    const server = installServer(true);
+    render(<IslandApp />);
+    await screen.findByRole('heading', { name: checkinContent.todayTasks });
+    await unlock();
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    await screen.findByRole('button', { name: checkinContent.newTask });
+    expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(0);
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.records }));
+    await screen.findByRole('heading', { name: checkinContent.manageRecords });
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.camp }));
+    await screen.findByRole('heading', { name: checkinContent.todayTasks });
+    await waitFor(() => expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(1));
   });
 
   it('关闭管理密码弹窗后焦点返回入口，初次读取卸载后取消请求', async () => {

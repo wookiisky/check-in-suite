@@ -24,6 +24,7 @@ export interface RequestOptions {
 // ApiClient将Cookie和CSRF留在当前会话中，不在持久存储保存凭据。
 export class ApiClient {
   private csrfToken = ''; // 由登录或会话查询提供的防跨站请求令牌。
+  private serverOffsetMs = 0; // 仅收到真实服务端时间时校准，不因页面切换重置。
   private readonly onAuthorizationFailure: (status: number) => void; // 统一清除失效权限的页面内容。
 
   constructor(onAuthorizationFailure: (status: number) => void = () => {}) {
@@ -32,6 +33,12 @@ export class ApiClient {
 
   // 更新令牌时不影响其他页面的编辑草稿。
   setCsrfToken(token: string) { this.csrfToken = token; }
+
+  // 将真实响应中的服务端时间与当前设备时钟对齐。
+  recordServerTime(serverNow: string) { this.serverOffsetMs = Date.parse(serverNow) - Date.now(); }
+
+  // 页面共用持续推进的服务端时间估计，避免重新锚定旧会话。
+  now(): Date { return new Date(Date.now() + this.serverOffsetMs); }
 
   // 读取与写入都返回实际服务JSON，未知写入结果交由业务保留原请求恢复。
   async request<T>(path: string, options: RequestOptions = {}): Promise<T> {

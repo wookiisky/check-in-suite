@@ -31,3 +31,15 @@ describe('请求模块', () => {
     expect(request.mock.calls[0]?.[1]?.body).toBe(form);
   });
 });
+
+it('服务端时间只在真实响应时校准，之后随设备经过的时间推进', () => {
+  vi.useFakeTimers();
+  try {
+    vi.setSystemTime(new Date('2026-10-28T15:00:00Z'));
+    const client = new ApiClient();
+    client.recordServerTime('2026-10-28T15:59:59Z');
+    expect(client.now().toISOString()).toBe('2026-10-28T15:59:59.000Z');
+    vi.advanceTimersByTime(2000);
+    expect(client.now().toISOString()).toBe('2026-10-28T16:00:01.000Z');
+  } finally { vi.useRealTimers(); }
+});

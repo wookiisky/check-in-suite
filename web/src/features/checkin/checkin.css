@@ -1,0 +1,46 @@
+/* 营地和表单沿用全局森林配色；手机保持文字与操作目标大小。 */
+.checkin-workspace, .checkin-stack { display: grid; gap: 18px; min-width: 0; }
+.checkin-panel { padding: clamp(18px, 3vw, 32px); border: 2px solid var(--line); border-radius: 24px; background: var(--paper); min-width: 0; }
+.checkin-section-heading, .checkin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.checkin-section-heading { justify-content: space-between; margin-bottom: 18px; }
+.checkin-panel h2 { margin-bottom: 16px; }
+.checkin-camp-columns { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 24px; align-items: start; }
+.checkin-wallet { background: #eef2d9; }
+.checkin-wallet strong { font-size: 32px; }
+.checkin-task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 16px; margin-top: 20px; }
+.checkin-task { display: grid; justify-items: center; gap: 12px; width: 100%; padding: 22px; background: #fff8df; color: var(--forest-dark); border-color: #d9bd72; }
+.checkin-task:hover { background: #fbefc7; }
+.checkin-icon { width: 56px; height: 56px; flex: 0 0 56px; }
+.checkin-task .checkin-icon { width: 72px; height: 72px; }
+.checkin-rewards { display: flex; flex-wrap: wrap; gap: 10px 18px; font-size: 20px; }
+.checkin-record-list { list-style: none; padding: 0; margin: 18px 0; display: grid; gap: 12px; }
+.checkin-record { display: flex; align-items: center; gap: 18px; width: 100%; text-align: left; min-width: 0; }
+.checkin-record > span { min-width: 0; overflow-wrap: anywhere; }
+.checkin-record-meta { display: inline-block; font-size: 18px; font-weight: 400; margin-right: 12px; color: var(--muted); }
+.checkin-record strong { display: block; }
+.checkin-empty { padding: 24px 0; color: var(--muted); }
+.checkin-hint { color: var(--muted); font-size: 18px; }
+.checkin-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.checkin-error { color: var(--danger); }
+.checkin-warning, .checkin-notice { padding: 18px; border-radius: 16px; background: #fff1cf; color: #664914; border: 1px solid #d4b56b; }
+.checkin-notice { background: #e5f0dc; color: var(--forest-dark); border-color: #b4c99f; }
+.checkin-photo, .checkin-stack audio { max-width: 100%; }
+.checkin-photo { border-radius: 16px; }
+.checkin-stack h3 { margin: 0; font-size: 26px; }
+.checkin-stack input, .checkin-stack textarea, .checkin-stack select { min-height: 56px; width: 100%; min-width: 0; padding: 12px; border: 2px solid var(--line); border-radius: 12px; font: inherit; color: var(--ink); background: var(--paper); }
+.checkin-stack textarea { resize: vertical; }
+.checkin-stack input:focus-visible, .checkin-stack textarea:focus-visible, .checkin-stack select:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.checkin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.checkin-checks { display: flex; flex-wrap: wrap; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.checkin-checks legend { padding: 0 8px; }
+.checkin-checks label, .checkin-toggle { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px; }
+.checkin-checks input, .checkin-toggle input { width: 24px; min-height: 24px; height: 24px; flex: 0 0 24px; }
+.checkin-config-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.checkin-tabs { display: flex; flex-wrap: wrap; gap: 12px; }
+.checkin-tabs button[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--forest); }
+@media (max-width: 700px) { .checkin-camp-columns, .checkin-form-grid { grid-template-columns: 1fr; } .checkin-panel { padding: 18px; } .checkin-actions > button { flex-grow: 1; } }
+@media (prefers-reduced-motion: reduce) { .checkin-workspace *, .checkin-stack * { animation: none !important; transition: none !important; } }
+
+.checkin-celebrate { animation: checkin-appear 240ms ease-out; }
+@keyframes checkin-appear { from { opacity: .5; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .checkin-celebrate { animation: none; } }

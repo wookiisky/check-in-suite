@@ -1,0 +1,114 @@
+import { useEffect, useState } from 'react';
+import type { components } from '../../api/schema';
+import { ApiFailure } from '../../api/client';
+import { Modal } from '../../components/Modal';
+import { FieldError } from '../../components/FormFeedback';
+import type { Session } from '../../api/types';
+import type { Category, CheckinClient, Task } from './types';
+import { checkinError, isDefiniteFailure } from './format';
+import content from './content.json';
+
+/** 配置新增也保留原命令，关闭弹窗后仍可按原键恢复。 */
+interface ConfigCommand {
+  path: string; // 原创建接口。
+  key: string; // 原幂等键。
+  body: unknown; // 原请求快照。
+}
+export const pendingConfiguration = new WeakMap<CheckinClient, ConfigCommand>();
+
+/** 类别和任务只共享结构相同的名称表单，其余字段显式显示。 */
+interface ConfigDialogProps {
+  client: CheckinClient; // 已认证请求客户端。
+  session: Session; // 服务器配置的输入上限。
+  kind: 'category' | 'task'; // 当前编辑实体。
+  item: Category | Task | null; // 空值表示新增。
+  categories: Category[]; // 任务可选择的类别。
+  onClose: () => void; // 关闭并让父页面显示待核对状态。
+  onSaved: () => void; // 写成功后只刷新读取。
+}
+
+/** 配置提交保留草稿，未知新增结果不能换键重建。 */
+export function ConfigDialog({ client, session, kind, item, categories, onClose, onSaved }: ConfigDialogProps) {
+  const task = item && 'weekdays' in item ? item : null;
+  const category = item && 'sort_order' in item ? item : null;
+  const [name, setName] = useState(item?.name ?? '');
+  const [sortOrder, setSortOrder] = useState(category?.sort_order ?? 0);
+  const [categoryID, setCategoryID] = useState(task?.category_id ?? '');
+  const [icon, setIcon] = useState(task?.icon_key ?? '');
+  const [assets, setAssets] = useState<components['schemas']['Asset'][]>([]);
+  const [coins, setCoins] = useState(task?.coin_reward ?? 0);
+  const [diamonds, setDiamonds] = useState(task?.diamond_reward ?? 0);
+  const [dailyLimit, setDailyLimit] = useState(task?.daily_limit ?? 1);
+  const [weekdays, setWeekdays] = useState(task?.weekdays ?? [1, 2, 3, 4, 5, 6, 7]);
+  const [enabled, setEnabled] = useState(task?.enabled ?? true);
+  const [version, setVersion] = useState(item?.version ?? 1);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const [unknown, setUnknown] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [discard, setDiscard] = useState(false);
+  const path = `/management/${kind === 'task' ? 'tasks' : 'categories'}`;
+  const title = kind === 'task' ? item ? content.editTask : content.newTask : item ? content.editCategory : content.newCategory;
+
+  useEffect(() => {
+    if (kind !== 'task') return;
+    let active = true;
+    void client.request<components['schemas']['AssetList']>('/assets').then((result) => {
+      if (!active) return;
+      const icons = result.items.filter((asset) => asset.kind === 'icon');
+      setAssets(icons); setIcon((current) => current || icons[0]?.key || '');
+    }).catch((failure: unknown) => { if (active) setError(failure); });
+    return () => { active = false; };
+  }, [client, kind]);
+
+  // 每次保存只在明确的新命令开始时生成幂等键。
+  async function save() {
+    if (busy) return;
+    setBusy(true); setError(null);
+    const draft = kind === 'task' ? { name, category_id: categoryID || null, icon_key: icon, coin_reward: coins, diamond_reward: diamonds, daily_limit: dailyLimit, weekdays, enabled } : { name, sort_order: sortOrder };
+    const command = pendingConfiguration.get(client) ?? { path, key: crypto.randomUUID(), body: draft };
+    if (!item) pendingConfiguration.set(client, command);
+    try {
+      if (item) await client.request(`${path}/${item.id}`, { method: 'PATCH', body: { ...draft, expected_version: version } });
+      else await client.request(command.path, { method: 'POST', body: command.body, idempotencyKey: command.key });
+      if (!item) pendingConfiguration.delete(client);
+      onSaved(); onClose();
+    } catch (failure) {
+      setError(failure);
+      const unresolved = !item && !isDefiniteFailure(failure);
+      setUnknown(unresolved);
+      if (!item && !unresolved) pendingConfiguration.delete(client);
+    } finally { setBusy(false); }
+  }
+
+  // 冲突后只更新所确认版本，不丢弃用户的待保存字段。
+  async function confirmVersion() {
+    setBusy(true); setError(null);
+    try {
+      const response = await client.request<{ items: (Task | Category)[] }>(`/${kind === 'task' ? 'tasks' : 'categories'}?include_inactive=true`);
+      const found = response.items.find((entry) => entry.id === item?.id);
+      if (!found) throw new ApiFailure(404, { code: 'NOT_FOUND', field_errors: {}, request_id: '' });
+      setVersion(found.version);
+    } catch (failure) { setError(failure); }
+    finally { setBusy(false); }
+  }
+
+  return <Modal title={title} closeDisabled={busy} onClose={() => { if (dirty && !unknown) setDiscard(true); else onClose(); }}>
+    {discard ? <div className="checkin-stack"><p>{content.discardQuestion}</p><button onClick={() => setDiscard(false)}>{content.keepEditing}</button><button className="secondary" onClick={onClose}>{content.discard}</button></div> : <form className="checkin-stack" onChange={() => setDirty(true)} onSubmit={(event) => { event.preventDefault(); void save(); }}>
+      <label>{content.name}<input required value={name} disabled={unknown} onChange={(event) => setName(event.target.value)} /></label><FieldError error={error} field="name" />
+      {kind === 'category' ? <label>{content.sortOrder}<input type="number" step="1" value={sortOrder} disabled={unknown} onChange={(event) => setSortOrder(Number(event.target.value))} /></label> : <>
+        <div className="checkin-form-grid"><label>{content.category}<select value={categoryID} disabled={unknown} onChange={(event) => setCategoryID(event.target.value)}><option value="">{content.uncategorized}</option>{categories.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
+          <label>{content.icon}<select required value={icon} disabled={unknown} onChange={(event) => setIcon(event.target.value)}>{assets.map((asset) => <option key={asset.key} value={asset.key}>{asset.name}</option>)}</select></label>
+          <label>{content.coins}<input type="number" min="0" max={session.limits.reward_max} step="1" value={coins} disabled={unknown} onChange={(event) => setCoins(Number(event.target.value))} /></label>
+          <label>{content.diamonds}<input type="number" min="0" max={session.limits.reward_max} step="1" value={diamonds} disabled={unknown} onChange={(event) => setDiamonds(Number(event.target.value))} /></label>
+          <label>{content.dailyLimit}<input type="number" min="1" max={session.limits.daily_limit_max} step="1" value={dailyLimit} disabled={unknown} onChange={(event) => setDailyLimit(Number(event.target.value))} /></label></div>
+        <fieldset className="checkin-checks" disabled={unknown}><legend>{content.weekdaysLabel}</legend>{content.weekdays.map((label, index) => <label key={label}><input type="checkbox" checked={weekdays.includes(index + 1)} onChange={(event) => setWeekdays((values) => event.target.checked ? [...values, index + 1].sort() : values.filter((value) => value !== index + 1))} />{label}</label>)}</fieldset>
+        {weekdays.length === 0 && <p role="alert">{content.weekdayRequired}</p>}<FieldError error={error} field="weekdays" />
+        <label className="checkin-toggle"><input type="checkbox" checked={enabled} disabled={unknown} onChange={(event) => setEnabled(event.target.checked)} />{content.enabled}</label>
+      </>}
+      {unknown && <p role="status">{content.configUnknown}</p>}{error !== null && <p role="alert" className="checkin-error">{checkinError(error)}</p>}
+      {error instanceof ApiFailure && error.detail.code === 'VERSION_CONFLICT' && <button type="button" className="secondary" disabled={busy} onClick={() => void confirmVersion()}>{content.confirmLatest}</button>}
+      <button type="submit" disabled={busy || [...name.trim()].length > session.limits.name_max || (kind === 'task' && (weekdays.length === 0 || !icon))}>{busy ? content.saving : unknown ? content.retryConfig : content.save}</button>
+    </form>}
+  </Modal>;
+}

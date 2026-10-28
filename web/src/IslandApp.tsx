@@ -5,9 +5,12 @@ import { FormFeedback } from './components/FormFeedback';
 import { LoginForm } from './features/account/LoginForm';
 import { ManagementPanel } from './features/account/ManagementPanel';
 import { UnlockDialog } from './features/account/UnlockDialog';
+import { CampPage } from './features/checkin/CampPage';
+import { CheckinManagement } from './features/checkin/CheckinManagement';
 import content from './content/zh-CN.json';
 
 type Page = 'camp' | 'calendar' | 'stats' | 'shop';
+type ManagementSection = 'account' | 'tasks' | 'records';
 
 // 应用仅保存当前会话与页面状态，业务草稿归各功能组件所有。
 export function IslandApp() {
@@ -19,6 +22,7 @@ export function IslandApp() {
   const [page, setPage] = useState<Page>('camp');
   const [unlocking, setUnlocking] = useState(false);
   const [management, setManagement] = useState(false);
+  const [managementSection, setManagementSection] = useState<ManagementSection>('account');
   const [lockPending, setLockPending] = useState(false);
   const [busy, setBusy] = useState(false);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
@@ -35,7 +39,7 @@ export function IslandApp() {
     setLoading(true); setError(null);
     client.request<Session>('/session', { signal: controller.signal }).then((value) => {
       if (controller.signal.aborted) return;
-      client.setCsrfToken(value.csrf_token); serverOffset.current = Date.parse(value.server_now) - Date.now();
+      client.setCsrfToken(value.csrf_token); client.recordServerTime(value.server_now); serverOffset.current = Date.parse(value.server_now) - Date.now();
       setSession(value); setNotice('');
     }).catch((reason: unknown) => {
       if (controller.signal.aborted) return;
@@ -55,7 +59,7 @@ export function IslandApp() {
   }, [management, expiresAt]);
 
   function acceptSession(value: Session) {
-    client.setCsrfToken(value.csrf_token); serverOffset.current = Date.parse(value.server_now) - Date.now();
+    client.setCsrfToken(value.csrf_token); client.recordServerTime(value.server_now); serverOffset.current = Date.parse(value.server_now) - Date.now();
     setSession(value); setNotice(''); setManagement(false); setLockPending(false); setPage('camp');
   }
   function acceptAccount(account: Account) { setSession((value) => value ? { ...value, account } : null); }
@@ -87,11 +91,11 @@ export function IslandApp() {
       {loading ? <p role="status">{content.common.loading}</p> : error && !session ? <section className="panel"><FormFeedback error={error} /><button onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{content.common.retry}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <>
         <FormFeedback error={error} />
         {lockPending && <div className="notice" role="alert"><p>{content.account.lockUnconfirmed}</p><button type="button" onClick={() => void lock()}>{content.account.retryLock}</button></div>}
-        {management ? <><div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div><ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} /></> : <>
-          <section className="panel camp-introduction"><h1>{content.navigation[page]}</h1><p>{content.account.campEmpty}</p></section>
+        {management ? <><div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div><nav className="management-sections" aria-label={content.navigation.management}>{(['account', 'tasks', 'records'] as const).map((section) => <button key={section} className="secondary" aria-pressed={managementSection === section} onClick={() => setManagementSection(section)}>{content.navigation[section]}</button>)}</nav>{managementSection === 'account' ? <ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} /> : <CheckinManagement key={managementSection} client={client} session={session} section={managementSection === 'tasks' ? 'configuration' : 'records'} />}</> : <>
+          <h1 className="page-heading">{content.navigation[page]}</h1>{page === 'camp' ? <CampPage client={client} session={session} /> : <section className="panel"><p>{content.account.campEmpty}</p></section>}
           <div className="management-entry"><button className="secondary" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button></div>
         </>}
-        {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setExpiresAt(expiry); setNotice(''); }} />}
+        {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setManagementSection('account'); setExpiresAt(expiry); setNotice(''); }} />}
       </>}
     </main>
   </div>;
