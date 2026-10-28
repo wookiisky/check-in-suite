@@ -1,0 +1,13 @@
+{
+  "appName": "小小成长岛",
+  "stage": "开发环境",
+  "heading": "成长岛，准备启程",
+  "description": "工程骨架已建立，接下来将逐步接入每日打卡与成长记录。",
+  "connectionLabel": "服务连接",
+  "connection": {
+    "loading": "正在检查服务连接……",
+    "ready": "服务已就绪",
+    "error": "暂时无法连接服务，请稍后重试。"
+  },
+  "retry": "重新连接"
+}

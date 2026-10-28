@@ -1,3 +1,27 @@
+# 系统文件
 .DS_Store
+
+# 依赖与日志（包含各工作区）
 node_modules/
 *.log
+
+# 构建产物
+/web/dist/
+*.tsbuildinfo
+/island
+/island.exe
+*.test
+*.test.exe
+
+# 本地数据与配置；配置示例保留在版本库
+/.local/
+/config/app.local.yaml
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# 测试报告与覆盖率
+/playwright-report/
+/test-results/
+coverage/

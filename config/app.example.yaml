@@ -1,0 +1,10 @@
+# Run commands from the repository root. Paths below resolve from that directory.
+# Copy to config/app.local.yaml for personal settings (ignored by Git).
+listen_address: 127.0.0.1:8080
+database_path: .local/island.db
+media_directory: .local/media
+temp_directory: .local/tmp
+sqlite_busy_timeout: 5s
+http_timeout: 10s
+ffprobe_path: ffprobe
+media_probe_timeout: 3s

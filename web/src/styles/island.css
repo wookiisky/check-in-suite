@@ -1,0 +1,56 @@
+/* 沿用静态原型的森林色彩、大字与触摸尺寸。 */
+:root {
+  --forest: #345943;
+  --forest-dark: #203e2b;
+  --cream: #f6f4e9;
+  --paper: #fffef8;
+  --ink: #304b38;
+  --muted: #58674d;
+  --line: #d4dec7;
+  --danger: #9a3d31;
+  --focus: #865b19;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 22px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--cream);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+h1, h2, p { margin: 0; overflow-wrap: anywhere; }
+h1 { color: var(--forest-dark); font-size: clamp(32px, 5vw, 40px); line-height: 1.4; }
+h2 { font-size: 24px; }
+
+.island-shell {
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: max(28px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+    max(40px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+}
+.island-brand { margin-bottom: 36px; color: var(--forest); font-size: 24px; font-weight: 750; }
+.island-card { padding: clamp(24px, 5vw, 48px); background: var(--paper); border: 2px solid var(--line); border-radius: 24px; }
+.island-stage { margin-bottom: 12px; color: var(--muted); font-size: 18px; }
+.island-description { margin-top: 20px; color: var(--muted); }
+.island-connection { display: grid; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 2px solid var(--line); }
+.connection-error { color: var(--danger); }
+
+button {
+  justify-self: start;
+  min-width: 56px;
+  min-height: 56px;
+  max-width: 100%;
+  padding: 12px 22px;
+  border: 2px solid var(--forest);
+  border-radius: 16px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--paper);
+  background: var(--forest);
+  cursor: pointer;
+}
+button:hover { background: var(--forest-dark); }
+button:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }

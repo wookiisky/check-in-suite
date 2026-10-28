@@ -1,0 +1,37 @@
+{
+  "name": "little-growth-island",
+  "private": true,
+  "type": "module",
+  "workspaces": ["web"],
+  "engines": {
+    "node": ">=24.20.0 <25",
+    "npm": ">=11 <12"
+  },
+  "packageManager": "npm@11.19.0",
+  "scripts": {
+    "start": "python3 -m http.server 4173 --bind 127.0.0.1 --directory design",
+    "test": "node --test design/tests/*.test.mjs",
+    "check": "node --check design/src/app.mjs && node --check design/src/domain.mjs && node --check design/src/icons.mjs && node --check design/src/seed.mjs && node --check design/src/camp-views.mjs && node --check design/src/ui-format.mjs && node --check design/src/cartoon-icons.mjs",
+    "dev": "concurrently --kill-others --success first --names api,web \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "go run ./cmd/island serve -config config/app.example.yaml",
+    "dev:web": "npm run dev --workspace @island/web --",
+    "db:migrate": "go run ./cmd/island migrate -config config/app.example.yaml",
+    "api:generate": "openapi-typescript api/openapi.yaml -o web/src/api/schema.d.ts",
+    "api:check": "openapi-typescript api/openapi.yaml -o web/src/api/schema.d.ts --check",
+    "typecheck": "npm run api:check && npm run typecheck --workspace @island/web",
+    "test:go": "go test ./...",
+    "test:race": "go test -race ./...",
+    "test:web": "npm run test --workspace @island/web",
+    "test:e2e": "playwright test",
+    "check:go": "go vet ./...",
+    "build:api": "go build -o .local/bin/island ./cmd/island",
+    "build:web": "npm run build --workspace @island/web",
+    "build": "npm run typecheck && npm run build:web && npm run build:api",
+    "verify": "npm test && npm run check && npm run check:go && npm run test:race && npm run test:web && npm run build && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "concurrently": "10.0.6",
+    "openapi-typescript": "7.13.0"
+  }
+}

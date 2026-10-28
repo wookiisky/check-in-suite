@@ -1,0 +1,47 @@
+openapi: 3.1.0
+info:
+  title: 小小成长岛服务接口
+  version: 0.1.0
+  description: 当前仅实现工程健康检查，业务接口在对应功能开发时补充。
+servers:
+  - url: /
+security: []
+paths:
+  /health/live:
+    get:
+      operationId: getLiveness
+      summary: 检查服务进程是否存活
+      responses:
+        '200':
+          description: 服务进程存活
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /health/ready:
+    get:
+      operationId: getReadiness
+      summary: 检查数据库、迁移版本和媒体探测依赖是否可用
+      responses:
+        '200':
+          description: 服务依赖可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: 服务依赖不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok, unavailable]
