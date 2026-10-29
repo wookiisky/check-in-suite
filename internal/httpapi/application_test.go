@@ -43,8 +43,8 @@ func accountApplication(t *testing.T) *App {
 
 // apiRequest runs actual HTTP serialization and cookie/header propagation.
 func apiRequest(app *App, method, path, body string, cookie *http.Cookie, csrf string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
-	req.Header.Set("Origin", app.Config.PublicOrigin)
+	req := httptest.NewRequest(method, "https://island.example"+path, strings.NewReader(body))
+	req.Header.Set("Origin", "https://island.example")
 	req.Header.Set("Content-Type", "application/json")
 	if cookie != nil {
 		req.AddCookie(cookie)
@@ -112,7 +112,7 @@ func TestAccountHTTP(t *testing.T) {
 // TestRequestProtection rejects forged origins and preserves structured errors.
 func TestRequestProtection(t *testing.T) {
 	app := accountApplication(t)
-	request := httptest.NewRequest("POST", "/api/v1/auth/login", strings.NewReader(`{"username":"family","password":"login-password"}`))
+	request := httptest.NewRequest("POST", "https://island.example/api/v1/auth/login", strings.NewReader(`{"username":"family","password":"login-password"}`))
 	request.Header.Set("Origin", "https://elsewhere.example")
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
@@ -144,7 +144,7 @@ func TestDecodeJSONObjects(t *testing.T) {
 		{`{"enabled":true} null`, false}, {`{"unknown":true}`, false},
 	} {
 		t.Run(test.body, func(t *testing.T) {
-			request := httptest.NewRequest("POST", "/", strings.NewReader(test.body))
+			request := httptest.NewRequest("POST", "https://island.example/", strings.NewReader(test.body))
 			request.Header.Set("Content-Type", "application/json")
 			var destination struct {
 				Enabled bool `json:"enabled"`
@@ -227,7 +227,7 @@ func TestSourceRateLimitRecovery(t *testing.T) {
 	app := &App{Now: time.Now, attempts: make(map[string]sourceAttempts)}
 	now := time.Now()
 	app.Now = func() time.Time { return now }
-	request := httptest.NewRequest("POST", "/api/v1/auth/login", nil)
+	request := httptest.NewRequest("POST", "https://island.example/api/v1/auth/login", nil)
 	for i := 0; i < 20; i++ {
 		if !app.allowPasswordAttempt(request) {
 			t.Fatal("source limited before threshold")
@@ -246,7 +246,7 @@ func TestSourceRateLimitRecovery(t *testing.T) {
 // TestSourceFailureCounting ignores noncredential errors and bounds concurrent source buckets.
 func TestSourceFailureCounting(t *testing.T) {
 	app := &App{Now: time.Now, attempts: make(map[string]sourceAttempts)}
-	request := httptest.NewRequest("POST", "/api/v1/auth/login", nil)
+	request := httptest.NewRequest("POST", "https://island.example/api/v1/auth/login", nil)
 	for _, failure := range []error{nil, core.Invalid("password", "REQUIRED"), core.Fail(409, "MANAGEMENT_CHANGED"), core.VersionConflict(2)} {
 		app.recordPasswordFailure(request, failure)
 	}
@@ -267,7 +267,7 @@ func TestSourceFailureCounting(t *testing.T) {
 		t.Fatal("concurrent failures did not enforce the bounded threshold")
 	}
 	for i := 0; i < 1025; i++ {
-		request := httptest.NewRequest("POST", "/api/v1/auth/login", nil)
+		request := httptest.NewRequest("POST", "https://island.example/api/v1/auth/login", nil)
 		request.RemoteAddr = "peer-" + strconv.Itoa(i)
 		app.recordPasswordFailure(request, core.Fail(401, "INVALID_CREDENTIALS"))
 	}
@@ -349,7 +349,7 @@ func TestProductionStaticBoundary(t *testing.T) {
 func TestStorageFailureResponse(t *testing.T) {
 	response := httptest.NewRecorder()
 	response.Header().Set("X-Request-ID", "storage-test")
-	request := httptest.NewRequest("POST", "/api/v1/checkins", nil)
+	request := httptest.NewRequest("POST", "https://island.example/api/v1/checkins", nil)
 	WriteError(response, request, &os.PathError{Op: "write", Path: "/private/family/island.db", Err: syscall.ENOSPC})
 	if response.Code != 503 || !strings.Contains(response.Body.String(), `"code":"STORAGE_UNAVAILABLE"`) || strings.Contains(response.Body.String(), "/private/") {
 		t.Fatalf("storage response: %d %s", response.Code, response.Body)

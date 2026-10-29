@@ -306,9 +306,9 @@ Go 官方建议使用 `sql.Tx` 管理事务，并避免混用事务外 `sql.DB` 
 
 ### 6.1 登录会话
 
-采用服务端不透明会话，不在浏览器 `localStorage` 保存 JWT 或密码。登录成功生成随机会话令牌，数据库只保存哈希；Cookie 设置 `HttpOnly`、`Secure`、`SameSite=Lax`，并限制为当前站点。开发环境 localhost 的例外仅用于本机开发。
+采用服务端不透明会话，不在浏览器 `localStorage` 保存 JWT 或密码。登录成功生成随机会话令牌，数据库只保存哈希；Cookie 设置 `HttpOnly`、`SameSite=Lax`，并限制为当前站点。Secure 根据 TLS 或来自回环对端的单值 HTTPS 转发协议设置，不信任其他客户端的代理头。
 
-所有写请求校验来源和 CSRF token；登录也校验请求来源。前端从当前会话接口取得 CSRF token 并随写请求发送，服务端核对会话绑定值。生产配置允许的站点来源，不接受客户端任意指定。
+所有写请求校验来源和 CSRF token；登录也校验请求来源。前端从当前会话接口取得 CSRF token 并随写请求发送，服务端核对会话绑定值。使用 Go 标准库 `http.CrossOriginProtection` 按 Fetch Metadata 或 Origin 与 Host 自动判断同源，不配置固定站点地址。没有这两类浏览器来源头的请求按非浏览器请求处理，仍须满足对应接口的密码、会话及 CSRF 校验。
 
 密码使用带独立随机盐的 Argon2id 哈希，参数随哈希一起存储，按部署机器测量成本后固定配置；不自制密码散列算法。登录和管理密码分别校验，不要求二者相同。登录失败采用统一身份错误，字段格式错误可以具体提示；失败次数按账户与来源限速，避免永久锁死唯一家庭账户。
 
@@ -597,7 +597,7 @@ ORDER BY checkin_count DESC, c.task_id;
 
 | 配置 | 用途 |
 | --- | --- |
-| `listen_address`、`public_origin` | 监听地址、Cookie 与来源校验 |
+| `listen_address` | 监听地址；来源自动判断，旧 `public_origin` 只兼容读取并忽略 |
 | `database_path`、`media_directory`、`temp_directory` | 持久化与临时文件路径 |
 | `session_ttl`、`management_ttl` | 登录和管理授权期限 |
 | `http_timeout`、`upload_timeout`、`sqlite_busy_timeout` | 请求和锁等待上限，区分普通 JSON 与上传 |

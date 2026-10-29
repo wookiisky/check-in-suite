@@ -68,7 +68,7 @@ export async function deploy(rawOptions, { build = buildRelease, env = process.e
     const remoteDirectory = `${stage}/${name}`;
     await remote(`tar -xzf ${shellQuote(`${stage}/release.tar.gz`)} -C ${shellQuote(stage)} && cd ${shellQuote(remoteDirectory)} && sha256sum -c SHA256SUMS`);
     output(text('uploaded', { directory: remoteDirectory }));
-    const command = `bash ${shellQuote(`${remoteDirectory}/deploy/publish.sh`)} --root ${shellQuote(options.root)} --server-host ${shellQuote(options.host)}`;
+    const command = `bash ${shellQuote(`${remoteDirectory}/deploy/publish.sh`)} --root ${shellQuote(options.root)}`;
     const publishArguments = ['-t', ...connection, command];
     const publishCommand = ['ssh', ...publishArguments].map(shellQuote).join(' ');
     output(text('publish_command', { command: publishCommand }));

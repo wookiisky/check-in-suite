@@ -91,7 +91,7 @@ func TestAudioRangeHTTP(t *testing.T) {
 	if err := json.Unmarshal(response.Body.Bytes(), &uploaded); err != nil {
 		t.Fatal(err)
 	}
-	req := httptest.NewRequest("GET", "/api/v1/media/"+uploaded.ID, nil)
+	req := httptest.NewRequest("GET", "https://island.example/api/v1/media/"+uploaded.ID, nil)
 	req.AddCookie(cookie)
 	req.Header.Set("Range", "bytes=0-15")
 	response = httptest.NewRecorder()
@@ -150,10 +150,10 @@ func multipartFixture(t *testing.T, kind string, file []byte, fileFirst bool) ([
 
 // mediaHTTPRequest omits Content-Length to exercise streamed limits independently of headers.
 func mediaHTTPRequest(app *App, body []byte, contentType string, cookie *http.Cookie, csrf string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest("POST", "/api/v1/media", bytes.NewReader(body))
+	req := httptest.NewRequest("POST", "https://island.example/api/v1/media", bytes.NewReader(body))
 	req.ContentLength = -1
 	req.Header.Set("Content-Type", contentType)
-	req.Header.Set("Origin", app.Config.PublicOrigin)
+	req.Header.Set("Origin", "https://island.example")
 	req.Header.Set("X-CSRF-Token", csrf)
 	req.AddCookie(cookie)
 	response := httptest.NewRecorder()

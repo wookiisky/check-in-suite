@@ -9,18 +9,16 @@ source "$source_directory/deploy/publish.messages.sh"
 root=/srv/island
 mode=''
 seed=''
-origin=''
-server_host=''
 listen=''
 confirm_reset=no
 original_args=("$@")
 while (($#)); do
   case "$1" in
-    --root|--database|--seed|--origin|--listen|--server-host)
+    --root|--database|--seed|--listen)
       (($# >= 2)) || { printf '%s\n' "$P_ARGUMENT" >&2; exit 2; }
       case "$1" in
         --root) root=$2;; --database) mode=$2;; --seed) seed=$2;;
-        --origin) origin=$2;; --listen) listen=$2;; --server-host) server_host=$2;;
+        --listen) listen=$2;;
       esac
       shift 2;;
     --confirm-reset) confirm_reset=yes; shift;;
@@ -31,14 +29,9 @@ done
 [[ "$root" == /* && "$root" != / && "$root" != *[[:cntrl:]]* ]] || { printf '%s\n' "$P_PATH" >&2; exit 2; }
 [[ -z "$mode" || "$mode" == auto || "$mode" == migrate || "$mode" == reset ]] || { printf '%s\n' "$P_ARGUMENT" >&2; exit 2; }
 [[ -z "$seed" || "$seed" == yes || "$seed" == no ]] || { printf '%s\n' "$P_ARGUMENT" >&2; exit 2; }
-# sudo 通常会清除 SSH_CONNECTION，先取出连接使用的服务器地址并通过参数传递。
-if [[ -z "$server_host" && -n "${SSH_CONNECTION:-}" ]]; then
-  read -r -a ssh_connection_fields <<< "$SSH_CONNECTION"
-  server_host=${ssh_connection_fields[2]:-}
-fi
 if [[ $(id -u) != 0 ]]; then
   command -v sudo >/dev/null || { printf '%s\n' "$P_ROOT" >&2; exit 1; }
-  exec sudo bash "$source_directory/deploy/publish.sh" "${original_args[@]}" --server-host "$server_host"
+  exec sudo bash "$source_directory/deploy/publish.sh" "${original_args[@]}"
 fi
 phase=$P_PHASE_PREFLIGHT
 # 保留已完成阶段的真实状态，不在数据库变更后尝试自动启动旧程序。
@@ -95,28 +88,12 @@ if [[ ! -e "$configuration" ]]; then
     IFS= read -r listen || { printf '%s\n' "$P_INPUT" >&2; exit 2; }
     listen=${listen:-0.0.0.0:38100}
   fi
-  if [[ -z "$origin" ]]; then
-    default_origin=''
-    if [[ -n "$server_host" ]]; then
-      # IPv6 地址在 URL 中需要方括号；端口使用实际监听设置，不能使用 SSH 端口。
-      origin_host=$server_host
-      if [[ "$origin_host" == *:* && "$origin_host" != \[*\] ]]; then origin_host="[$origin_host]"; fi
-      default_origin="http://$origin_host:${listen##*:}"
-      printf "$P_ORIGIN_DEFAULT" "$default_origin"
-    else
-      printf '%s' "$P_ORIGIN"
-    fi
-    IFS= read -r origin || { printf '%s\n' "$P_INPUT" >&2; exit 2; }
-    origin=${origin:-$default_origin}
-    [[ -n "$origin" ]] || { printf '%s\n' "$P_INPUT" >&2; exit 2; }
-  fi
   probe=$(command -v ffprobe) || { printf "$P_DEPENDENCY" ffprobe >&2; exit 1; }
   temporary_config=$(mktemp "$root/config/.app.XXXXXXXX")
   # 从生产模板保留时限与业务限制，只替换本次安装的地址和持久路径。
   while IFS= read -r line || [[ -n "$line" ]]; do
     case "$line" in
       listen_address:*) key=listen_address; value=$listen;;
-      public_origin:*) key=public_origin; value=$origin;;
       static_directory:*) key=static_directory; value="$root/current/web";;
       database_path:*) key=database_path; value="$root/data/island.db";;
       media_directory:*) key=media_directory; value="$root/data/media";;
@@ -136,8 +113,8 @@ fi
 cd -- "$root"
 # TSV 由 Go 生成并拒绝控制字符，避免 shell eval 或依赖额外 JSON 工具。
 status=$(runuser -u island -- "$binary" db-status -config "$configuration" -format tsv)
-IFS=$'\t' read -r state database account_exists demo_complete health_url probe media temporary assets public_origin <<< "$status"
-[[ -n "$state" && "$database" == /* && -n "$health_url" && -n "$public_origin" ]]
+IFS=$'\t' read -r state database account_exists demo_complete health_url probe media temporary assets <<< "$status"
+[[ -n "$state" && "$database" == /* && -n "$health_url" ]]
 case "$state" in missing|empty|pending|current|incompatible|newer) ;; *) printf '%s\n' "$P_ARGUMENT" >&2; exit 1;; esac
 runuser -u island -- "$probe" -version >/dev/null
 printf "$P_STATUS" "$state" "$account_exists" "$demo_complete"
@@ -224,5 +201,5 @@ systemctl start island.service
 phase=$P_PHASE_HEALTH
 curl --fail --silent --show-error --retry 10 --retry-delay 1 --retry-connrefused --retry-all-errors --connect-timeout 2 --max-time 5 "$health_url/health/live" >/dev/null
 curl --fail --silent --show-error --retry 10 --retry-delay 1 --retry-connrefused --retry-all-errors --connect-timeout 2 --max-time 5 "$health_url/health/ready" >/dev/null
-printf "$P_SUCCESS" "$destination" "$public_origin"
+printf "$P_SUCCESS" "$destination" "$health_url"
 if [[ "$seed" == yes ]]; then printf '%s\n' "$P_DEMO"; fi

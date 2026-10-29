@@ -70,7 +70,7 @@ export interface paths {
         put?: never;
         /**
          * 登录并建立不透明 Cookie 会话
-         * @description 校验 Origin；失败限速。密码校验在事务外，建立会话前复核凭据版本。
+         * @description 根据 Fetch Metadata 或 Origin 与 Host 自动判断同源；失败限速。密码校验在事务外，建立会话前复核凭据版本。
          */
         post: operations["login"];
         delete?: never;

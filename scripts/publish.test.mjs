@@ -46,7 +46,7 @@ exec /bin/mv "$@"
 set -eu
 echo "island $*" >> "$TEST_LOG"
 if [[ "$1" == db-status ]]; then
-  printf '%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' "\${DB_STATE:-current}" "$TEST_DB" "\${ACCOUNT_EXISTS:-true}" "\${DEMO_COMPLETE:-false}" 'http://127.0.0.1:8080' ffprobe "$TEST_ROOT/data/media" "$TEST_ROOT/data/tmp" "$TEST_ROOT/data/assets" http://localhost:8080
+  printf '%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' "\${DB_STATE:-current}" "$TEST_DB" "\${ACCOUNT_EXISTS:-true}" "\${DEMO_COMPLETE:-false}" 'http://127.0.0.1:8080' ffprobe "$TEST_ROOT/data/media" "$TEST_ROOT/data/tmp" "$TEST_ROOT/data/assets"
 elif [[ "$1" == migrate ]]; then
   [[ "\${FAIL_MIGRATE:-}" != yes ]]
 elif [[ "$1" == version ]]; then
@@ -69,7 +69,7 @@ fi
 
 test('compatible deployment migrates before switching and checking health', async t => {
   const f = await fixture(t, { DB_STATE: 'pending' });
-  const result = f.run(['--database', 'auto', '--seed', 'no', '--server-host', '192.0.2.5']);
+  const result = f.run(['--database', 'auto', '--seed', 'no']);
   assert.equal(result.status, 0, result.stderr + result.stdout);
   assert.equal(await readFile(path.join(f.root, 'config/app.yaml'), 'utf8'), 'existing configuration\n');
   const log = await f.commands();
@@ -115,7 +115,7 @@ test('startup health failure reports failure while keeping new release selected'
 test('first installation generates config and a usable service unit before maintenance', async t => {
   const f = await fixture(t, { UNIT_EXISTS: 'no', ACCOUNT_EXISTS: 'false', DB_STATE: 'missing' });
   await rm(path.join(f.root, 'config/app.yaml'));
-  const result = f.run(['--database', 'auto', '--seed', 'yes', '--origin', 'http://localhost:8080', '--listen', '0.0.0.0:8080']);
+  const result = f.run(['--database', 'auto', '--seed', 'yes', '--listen', '0.0.0.0:8080']);
   assert.equal(result.status, 0, result.stderr + result.stdout);
   const unit = await readFile(path.join(f.root, 'config/island.service'), 'utf8');
   assert.ok(unit.includes(`WorkingDirectory=${f.root}/.\n`), unit);
@@ -143,39 +143,13 @@ test('an existing service for another installation is rejected before stopping',
 });
 
 
-// Exercise prompt input through the actual publisher and inspect the generated configuration.
-test('origin prompt accepts the deploy host default and allows manual replacement', async t => {
-  for (const origin of ['', 'https://family.example.com']) {
-    await t.test(origin ? 'manual origin' : 'accept default', async t => {
-      const f = await fixture(t, { UNIT_EXISTS: 'no', ACCOUNT_EXISTS: 'false', DB_STATE: 'missing', SSH_CONNECTION: '192.0.2.6 54321 10.0.0.10 22' });
-      await rm(path.join(f.root, 'config/app.yaml'));
-      const host = '192.0.2.5';
-      const port = 39123;
-      const expected = origin || `http://${host}:${port}`;
-      const result = f.run(['--database', 'auto', '--seed', 'yes', '--server-host', host, '--listen', `0.0.0.0:${port}`], {}, origin + '\n');
-      assert.equal(result.status, 0, result.stderr + result.stdout);
-      assert.ok(result.stdout.includes(`http://${host}:${port}`), 'default origin was not displayed');
-      const configuration = await readFile(path.join(f.root, 'config/app.yaml'), 'utf8');
-      assert.equal(JSON.parse(configuration.match(/^public_origin: (.+)$/m)[1]), expected);
-    });
-  }
-});
-
-test('standalone SSH publication preserves the IPv6 server address through sudo', async t => {
-  const f = await fixture(t, { UNIT_EXISTS: 'no', ACCOUNT_EXISTS: 'false', DB_STATE: 'missing', SSH_CONNECTION: '2001:db8::2 54321 2001:db8::1 22', EFFECTIVE_UID: '1000' });
+// Standalone publication must work without a public address or SSH connection metadata.
+test('first installation needs no origin or server address, including through sudo', async t => {
+  const f = await fixture(t, { UNIT_EXISTS: 'no', ACCOUNT_EXISTS: 'false', DB_STATE: 'missing', SSH_CONNECTION: '', EFFECTIVE_UID: '1000' });
   await rm(path.join(f.root, 'config/app.yaml'));
-  const result = f.run(['--database', 'auto', '--seed', 'yes', '--listen', '[::]:39001'], {}, '\n');
+  const result = f.run(['--database', 'auto', '--seed', 'yes', '--listen', '[::]:39001']);
   assert.equal(result.status, 0, result.stderr + result.stdout);
   const configuration = await readFile(path.join(f.root, 'config/app.yaml'), 'utf8');
-  assert.equal(JSON.parse(configuration.match(/^public_origin: (.+)$/m)[1]), 'http://[2001:db8::1]:39001');
-});
-
-test('without a server address an empty origin fails before stopping the service', async t => {
-  const f = await fixture(t, { UNIT_EXISTS: 'no', ACCOUNT_EXISTS: 'false', DB_STATE: 'missing', SSH_CONNECTION: '' });
-  await rm(path.join(f.root, 'config/app.yaml'));
-  const result = f.run(['--database', 'auto', '--seed', 'yes', '--listen', '0.0.0.0:39001'], {}, '\n');
-  assert.notEqual(result.status, 0);
-  assert.doesNotMatch(await f.commands(), /systemctl stop|island migrate/);
-  const { access } = await import('node:fs/promises');
-  await assert.rejects(access(path.join(f.root, 'config/app.yaml')), { code: 'ENOENT' });
+  assert.doesNotMatch(configuration, /^public_origin:/m);
+  assert.match(await f.commands(), /systemctl start/);
 });

@@ -12,7 +12,6 @@ const configPath = join(directory, 'app.yaml');
 try {
   const config = {
     listen_address: '127.0.0.1:18080',
-    public_origin: 'http://127.0.0.1:15173',
     database_path: join(directory, 'island.db'),
     media_directory: join(directory, 'media'),
     assets_directory: join(directory, 'assets'),

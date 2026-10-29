@@ -13,7 +13,7 @@ const configPath = join(directory, 'app.yaml');
 const binary = join(directory, 'island');
 let api, vite, browser;
 try {
- const config = { listen_address:'127.0.0.1:18084', public_origin:'http://127.0.0.1:15174', database_path:join(directory,'island.db'), media_directory:join(directory,'media'), temp_directory:join(directory,'tmp'), assets_directory:join(directory,'assets'), sqlite_busy_timeout:'5s', http_timeout:'10s', ffprobe_path:'ffprobe', media_probe_timeout:'3s' };
+ const config = { listen_address:'127.0.0.1:18084', database_path:join(directory,'island.db'), media_directory:join(directory,'media'), temp_directory:join(directory,'tmp'), assets_directory:join(directory,'assets'), sqlite_busy_timeout:'5s', http_timeout:'10s', ffprobe_path:'ffprobe', media_probe_timeout:'3s' };
  await writeFile(configPath, Object.entries(config).map(([key,value]) => `${key}: ${JSON.stringify(value)}`).join('\n')+'\n');
  execFileSync('go',['build','-o',binary,'./cmd/island'],{stdio:'inherit'});
  execFileSync(binary,['migrate','-config',configPath],{stdio:'inherit'});

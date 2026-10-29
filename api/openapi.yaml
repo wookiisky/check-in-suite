@@ -2,7 +2,7 @@ openapi: "3.1.0"
 info:
   title: "成长岛服务接口"
   version: "0.2.0"
-  description: "已批准的首版接口契约；端点实现和验收状态见tasks.md。单账户、同源Cookie认证；写请求校验Origin和CSRF。未知字段拒绝，整数不超过JavaScript安全范围。"
+  description: "已批准的首版接口契约；端点实现和验收状态见tasks.md。单账户、同源Cookie认证；写请求自动判断同源并校验CSRF。未知字段拒绝，整数不超过JavaScript安全范围。"
 servers: [{"url": "/"}]
 security: [{"sessionCookie": []}]
 paths:
@@ -45,7 +45,7 @@ paths:
       summary: "登录并建立不透明 Cookie 会话"
       security: []
       requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/LoginRequest"}}}}
-      description: "校验 Origin；失败限速。密码校验在事务外，建立会话前复核凭据版本。"
+      description: "根据 Fetch Metadata 或 Origin 与 Host 自动判断同源；失败限速。密码校验在事务外，建立会话前复核凭据版本。"
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SessionResponse"}}}}
         default: {"$ref": "#/components/responses/Error"}

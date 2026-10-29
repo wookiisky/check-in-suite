@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -18,7 +17,7 @@ import (
 
 // Config contains explicit startup settings; file paths are relative to the working directory.
 type Config struct {
-	PublicOrigin         string         `yaml:"public_origin"`          // Exact public origin trusted for state-changing browser requests.
+	PublicOrigin         string         `yaml:"public_origin"`          // Deprecated: accepted from old files but ignored; requests determine the site origin.
 	StaticDirectory      string         `yaml:"static_directory"`       // Built SPA files, never private data.
 	AssetsDirectory      string         `yaml:"assets_directory"`       // Persistent versioned artwork directory.
 	SessionTTL           time.Duration  `yaml:"session_ttl"`            // Fixed login session lifetime.
@@ -67,10 +66,6 @@ func Load(path string) (Config, error) {
 
 // validate checks the settings consumed by this development skeleton.
 func (cfg Config) validate() error {
-	origin, err := url.Parse(cfg.PublicOrigin)
-	if err != nil || origin.Host == "" || (origin.Scheme != "http" && origin.Scheme != "https") || origin.User != nil || origin.RawQuery != "" || origin.Fragment != "" || origin.Path != "" {
-		return errors.New("public_origin must be a complete HTTP(S) origin without path")
-	}
 	if cfg.SessionTTL <= 0 || cfg.ManagementTTL <= 0 || cfg.ManagementTTL > cfg.SessionTTL || cfg.UploadTimeout <= 0 || cfg.MediaCleanupInterval <= 0 || cfg.MediaOrphanTTL <= cfg.UploadTimeout+cfg.MediaProbeTimeout {
 		return errors.New("invalid session or media lifetime")
 	}

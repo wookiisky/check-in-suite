@@ -9,8 +9,6 @@ http_timeout: 10s
 ffprobe_path: ffprobe
 media_probe_timeout: 3s
 
-# Browser origin must match this value exactly, including the development port.
-public_origin: http://127.0.0.1:5173
 static_directory: web/dist
 assets_directory: .local/assets
 session_ttl: 168h

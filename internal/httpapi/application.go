@@ -29,13 +29,14 @@ const sessionCookieName = "island_session"
 
 // App connects the shared HTTP boundary to the account and feature services.
 type App struct {
-	DB       *sql.DB                   // Shared single-connection application database.
-	Config   config.Config             // Validated deployment configuration.
-	Accounts *account.Service          // Session and credential authority.
-	Now      func() time.Time          // Clock used by HTTP rate limiting.
-	Mux      *http.ServeMux            // Explicit feature route registry.
-	mu       sync.Mutex                // Protects the short-lived source attempt window.
-	attempts map[string]sourceAttempts // Attempts keyed only by direct peer address.
+	OriginProtection http.CrossOriginProtection // Standard browser cross-origin request protection.
+	DB               *sql.DB                    // Shared single-connection application database.
+	Config           config.Config              // Validated deployment configuration.
+	Accounts         *account.Service           // Session and credential authority.
+	Now              func() time.Time           // Clock used by HTTP rate limiting.
+	Mux              *http.ServeMux             // Explicit feature route registry.
+	mu               sync.Mutex                 // Protects the short-lived source attempt window.
+	attempts         map[string]sourceAttempts  // Attempts keyed only by direct peer address.
 }
 
 // sourceAttempts bounds failed authentication from one source during a fixed interval.
@@ -139,9 +140,9 @@ func (app *App) MutationGuard(r *http.Request, principal account.Principal) erro
 	return nil
 }
 
-// originGuard does not trust forwarded host headers to expand the allowed origin.
+// originGuard checks browser metadata against the current request without a fixed site address.
 func (app *App) originGuard(r *http.Request) error {
-	if r.Header.Get("Origin") != app.Config.PublicOrigin {
+	if err := app.OriginProtection.Check(r); err != nil {
 		return &core.Error{Status: 403, Code: "ORIGIN_INVALID"}
 	}
 	return nil

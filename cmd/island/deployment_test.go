@@ -53,7 +53,7 @@ func TestDatabaseStatusCLI(t *testing.T) {
 		t.Fatal(err)
 	}
 	fields := strings.Split(strings.TrimSuffix(output.String(), "\n"), "\t")
-	if len(fields) != 10 || fields[0] != "missing" || fields[1] != database || fields[4] != "http://127.0.0.1:8080" {
+	if len(fields) != 9 || fields[0] != "missing" || fields[1] != database || fields[4] != "http://127.0.0.1:8080" {
 		t.Fatalf("invalid publish protocol: %q", output.String())
 	}
 	if err := runWithIO(context.Background(), []string{"db-status", "-config", configuration, "-format", "unknown"}, strings.NewReader(""), &output); err == nil {

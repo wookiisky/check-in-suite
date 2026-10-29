@@ -2,7 +2,6 @@ package httpapi
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
@@ -55,7 +54,7 @@ func (app *App) login(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, r, err)
 		return
 	}
-	app.setCookie(w, token, int(app.Config.SessionTTL.Seconds()))
+	app.setCookie(w, r, token, int(app.Config.SessionTTL.Seconds()))
 	WriteJSON(w, 200, session)
 }
 
@@ -85,7 +84,7 @@ func (app *App) logout(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, r, err)
 		return
 	}
-	app.setCookie(w, "", -1)
+	app.setCookie(w, r, "", -1)
 	WriteJSON(w, 204, nil)
 }
 
@@ -201,12 +200,12 @@ func (app *App) password(kind string) http.HandlerFunc {
 			WriteError(w, r, err)
 			return
 		}
-		app.setCookie(w, "", -1)
+		app.setCookie(w, r, "", -1)
 		WriteJSON(w, 204, nil)
 	}
 }
 
-// setCookie uses the configured public scheme, never spoofable forwarded headers.
-func (app *App) setCookie(w http.ResponseWriter, token string, maxAge int) {
-	http.SetCookie(w, &http.Cookie{Name: sessionCookieName, Value: token, Path: "/", HttpOnly: true, Secure: strings.HasPrefix(app.Config.PublicOrigin, "https://"), SameSite: http.SameSiteLaxMode, MaxAge: maxAge})
+// setCookie follows actual TLS or the external protocol reported by a local proxy.
+func (app *App) setCookie(w http.ResponseWriter, r *http.Request, token string, maxAge int) {
+	http.SetCookie(w, &http.Cookie{Name: sessionCookieName, Value: token, Path: "/", HttpOnly: true, Secure: requestHTTPS(r), SameSite: http.SameSiteLaxMode, MaxAge: maxAge})
 }

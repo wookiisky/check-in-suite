@@ -57,7 +57,7 @@ test('deploy detects Linux architecture, uploads, then publishes with a terminal
   assert.ok(calls.at(-1).args.includes('-t'));
   assert.match(calls.at(-1).args.at(-1), /bash '.*\/deploy\/publish.sh' --root '\/srv\/island'/);
   assert.match(result.publishCommand, /ssh/);
-  assert.ok(calls.at(-1).args.at(-1).includes(`--server-host ${shellQuote(options.host)}`));
+  assert.ok(!calls.at(-1).args.at(-1).includes("--server-host"));
 });
 
 test('upload-only preserves the uploaded release and returns its executable publication command', async (t) => {

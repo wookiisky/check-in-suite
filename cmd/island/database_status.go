@@ -26,7 +26,6 @@ type deploymentStatus struct {
 	MediaDirectory         string `json:"media_directory"`  // Absolute private attachment path.
 	TempDirectory          string `json:"temp_directory"`   // Absolute temporary upload path.
 	AssetsDirectory        string `json:"assets_directory"` // Absolute persistent artwork path.
-	PublicOrigin           string `json:"public_origin"`    // Browser origin retained during deployments.
 }
 
 // databaseStatus emits either JSON or a fixed TSV protocol without creating application directories.
@@ -49,7 +48,7 @@ func databaseStatus(ctx context.Context, cfg config.Config, output io.Writer, fo
 	} else if host == "::" {
 		host = "::1"
 	}
-	result := deploymentStatus{DatabaseStatus: observed, HealthURL: "http://" + net.JoinHostPort(host, port), FFprobePath: cfg.FFprobePath, PublicOrigin: cfg.PublicOrigin}
+	result := deploymentStatus{DatabaseStatus: observed, HealthURL: "http://" + net.JoinHostPort(host, port), FFprobePath: cfg.FFprobePath}
 	for _, item := range []struct {
 		source string
 		target *string
@@ -62,7 +61,7 @@ func databaseStatus(ctx context.Context, cfg config.Config, output io.Writer, fo
 	if format == "json" {
 		return json.NewEncoder(output).Encode(result)
 	}
-	fields := []string{result.State, result.DatabasePath, strconv.FormatBool(result.AccountExists), strconv.FormatBool(result.DemoComplete), result.HealthURL, result.FFprobePath, result.MediaDirectory, result.TempDirectory, result.AssetsDirectory, result.PublicOrigin}
+	fields := []string{result.State, result.DatabasePath, strconv.FormatBool(result.AccountExists), strconv.FormatBool(result.DemoComplete), result.HealthURL, result.FFprobePath, result.MediaDirectory, result.TempDirectory, result.AssetsDirectory}
 	for _, field := range fields {
 		if strings.ContainsFunc(field, unicode.IsControl) {
 			return errors.New(content.Text("invalid_status_field"))

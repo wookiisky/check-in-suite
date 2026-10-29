@@ -26,9 +26,9 @@ func TestShopHTTP(t *testing.T) {
 		t.Fatal(err)
 	}
 	request := func(method, path, body, key string) *httptest.ResponseRecorder {
-		req := httptest.NewRequest(method, path, strings.NewReader(body))
+		req := httptest.NewRequest(method, "https://island.example"+path, strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Origin", app.Config.PublicOrigin)
+		req.Header.Set("Origin", "https://island.example")
 		req.Header.Set("X-CSRF-Token", session.CSRF)
 		req.Header.Set("Idempotency-Key", key)
 		req.AddCookie(cookie)

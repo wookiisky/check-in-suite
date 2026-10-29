@@ -59,7 +59,7 @@ go run ./cmd/island serve -config config/app.local.yaml
 ISLAND_API_TARGET=http://127.0.0.1:8080 npm run dev:web
 ```
 
-最后一条命令中的地址应与本地配置的 Go 监听地址一致。`public_origin` 必须与浏览器访问的来源一致，默认 `http://127.0.0.1:5173`；更换访问地址或端口时同时修改，否则写请求会被拒绝。业务时区固定为 `Asia/Taipei`，不受开发机器时区影响。
+最后一条命令中的地址应与本地配置的 Go 监听地址一致。来源校验自动根据当前请求判断同源，更换访问 IP、域名或端口无需配置固定来源。业务时区固定为 `Asia/Taipei`，不受开发机器时区影响。
 
 ## 正式工程检查与构建
 
@@ -125,7 +125,7 @@ npm run deploy -- --host 192.0.2.10 --port 22 --user deploy
 npm run deploy -- --host 192.0.2.10 --port 22 --user deploy --upload-only
 ```
 
-支持 Linux amd64 / arm64，远程需要 systemd、Bash、ffprobe、curl、sha256sum、flock，以及 root 或 sudo 权限。脚本自动构建、上传和校验，并运行发布包内的 `deploy/publish.sh`。首次发布默认监听 `0.0.0.0:38100`，访问来源询问默认使用 `http://SSH地址:38100`，回车采用，也可改填域名或 HTTPS 来源；已有服务器配置继续沿用。HTTPS 入口和系统依赖由维护者准备。数据库处理、测试数据选择和故障恢复说明见 [自动部署与远程发布](docs/operations.md#自动部署与远程发布)。
+支持 Linux amd64 / arm64，远程需要 systemd、Bash、ffprobe、curl、sha256sum、flock，以及 root 或 sudo 权限。脚本自动构建、上传和校验，并运行发布包内的 `deploy/publish.sh`。首次发布默认监听 `0.0.0.0:38100`，无需填写网站来源；已有服务器配置继续沿用。HTTPS 入口和系统依赖由维护者准备。数据库处理、测试数据选择和故障恢复说明见 [自动部署与远程发布](docs/operations.md#自动部署与远程发布)。
 
 `deploy/` 提供 Caddy、systemd 和生产配置示例；主机地址、域名、证书与服务用户须按实际环境填写。数据库、媒体和历史素材使用独立持久化目录，不能放在前端公开目录中。已有素材标识不可覆写；历史不兼容时必须明确选择重置或另行处理数据；发布脚本不提供备份或数据库恢复。
 

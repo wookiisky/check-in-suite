@@ -28,5 +28,5 @@ func Defaults() Config {
 	if err != nil {
 		panic(err)
 	}
-	return Config{PublicOrigin: "http://127.0.0.1:5173", StaticDirectory: "web/dist", AssetsDirectory: ".local/assets", SessionTTL: 7 * 24 * time.Hour, ManagementTTL: 30 * time.Minute, UploadTimeout: 90 * time.Second, MediaOrphanTTL: 24 * time.Hour, MediaCleanupInterval: time.Hour, Location: zone, Limits: Limits{PasswordMin: 10, PasswordMax: 128, NameMax: 40, TextMax: 2000, MessageMax: 500, RewardMax: 1000000, PriceMax: 1000000, StockMax: 1000000, DailyLimitMax: 1000, ListDaysMax: 31, StatsDaysMax: 366, PhotoBytesMax: 10 << 20, PhotoPixelsMax: 20000000, PhotoEdgeMax: 2560, AudioBytesMax: 10 << 20, AudioSecondsMax: 60}}
+	return Config{StaticDirectory: "web/dist", AssetsDirectory: ".local/assets", SessionTTL: 7 * 24 * time.Hour, ManagementTTL: 30 * time.Minute, UploadTimeout: 90 * time.Second, MediaOrphanTTL: 24 * time.Hour, MediaCleanupInterval: time.Hour, Location: zone, Limits: Limits{PasswordMin: 10, PasswordMax: 128, NameMax: 40, TextMax: 2000, MessageMax: 500, RewardMax: 1000000, PriceMax: 1000000, StockMax: 1000000, DailyLimitMax: 1000, ListDaysMax: 31, StatsDaysMax: 366, PhotoBytesMax: 10 << 20, PhotoPixelsMax: 20000000, PhotoEdgeMax: 2560, AudioBytesMax: 10 << 20, AudioSecondsMax: 60}}
 }

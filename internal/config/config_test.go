@@ -24,7 +24,7 @@ func TestLoad(t *testing.T) {
 		{"request shorter than lock", strings.ReplaceAll(valid, "10s", "4s"), true},
 		{"invalid address", strings.ReplaceAll(valid, "127.0.0.1:8080", "localhost"), true},
 		{"multiple documents", valid + "---\n" + valid, true},
-		{"origin path", valid + "public_origin: https://island.example/path\n", true},
+		{"legacy origin ignored", valid + "public_origin: https://island.example/path\n", false},
 		{"empty static root", valid + "static_directory: ''\n", true},
 		{"empty artwork root", valid + "assets_directory: ' '\n", true},
 		{"authorization exceeds login", valid + "session_ttl: 10m\nmanagement_ttl: 30m\n", true},

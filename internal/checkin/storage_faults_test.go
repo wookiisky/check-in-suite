@@ -50,7 +50,6 @@ func newFaultApplication(t *testing.T, directory string) faultApplication {
 	cfg.DatabasePath = filepath.Join(directory, "island.db")
 	cfg.MediaDirectory = filepath.Join(directory, "media")
 	cfg.TempDirectory = filepath.Join(directory, "tmp")
-	cfg.PublicOrigin = "https://fault-test.example"
 	for _, path := range []string{cfg.MediaDirectory, cfg.TempDirectory} {
 		if err := os.MkdirAll(path, 0700); err != nil {
 			t.Fatal(err)
@@ -103,7 +102,7 @@ func (f faultApplication) command(t *testing.T, key string) *httptest.ResponseRe
 	}
 	r := httptest.NewRequest("POST", "/api/v1/checkins", bytes.NewReader(data))
 	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Origin", f.app.Config.PublicOrigin)
+	r.Header.Set("Origin", "http://example.com")
 	r.Header.Set("X-CSRF-Token", f.csrf)
 	r.Header.Set("Idempotency-Key", key)
 	r.AddCookie(f.cookie)

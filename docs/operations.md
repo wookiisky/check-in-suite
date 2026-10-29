@@ -50,9 +50,11 @@ npm run deploy -- --host 192.0.2.10 --port 2222 --user deploy --upload-only
 
 无参数且终端可交互时，依次输入 IP、SSH 端口、用户名和安装目录。脚本只读探测服务器系统及架构，再调用 `release` 交叉构建，打包到远程 `/tmp/island-upload.*/<发布名>`，校验 SHA256SUMS 后运行发布脚本。`--upload-only` 保留产物并输出可直接执行的 SSH 发布命令。远程暂存目录和历史 release 由维护者按需清理，不能把 `/tmp` 当作持久发布目录。
 
-首次运行会创建 `island` 服务用户、安装目录、配置与 systemd 服务。先选择监听地址，默认 `0.0.0.0:38100`；然后询问网站访问来源，默认使用输入的 SSH 地址和监听端口，例如 `http://服务器IP:38100`。回车采用默认值，也可以填写 `https://island.example.com` 等实际来源。有本机反向代理时可监听 `127.0.0.1:38100`。已有 `/srv/island/config/app.yaml` 会沿用，所有相对路径以安装根目录为基准。维护命令与服务均以 `island` 用户运行。
+首次运行会创建 `island` 服务用户、安装目录、配置与 systemd 服务。选择监听地址，默认 `0.0.0.0:38100`，之后无需填写网站来源或服务器 IP。有本机反向代理时可监听 `127.0.0.1:38100`。已有 `/srv/island/config/app.yaml` 会沿用，所有相对路径以安装根目录为基准。维护命令与服务均以 `island` 用户运行。
 
-在服务器单独执行时，默认地址优先使用 `--server-host`，其次使用 SSH 连接中的服务器 IP，地址会在 sudo 提权前保存；IPv6 自动补上 URL 方括号。如果没有可用地址，仍需手动填写来源。`--origin` 可显式指定来源并跳过该项询问。
+来源校验通过 Go 标准库的 `http.CrossOriginProtection` 自动判断当前请求是否同源，不绑定 IP、域名或端口。它优先检查浏览器的 `Sec-Fetch-Site`，没有该字段时比较 `Origin` 与请求的 `Host`；两者都没有时按非浏览器请求放行，但写操作仍需要有效会话和 CSRF Token。登录仍需验证密码。旧配置的 `public_origin` 兼容读取但忽略，新配置不再生成此字段；`--origin`、`--server-host` 参数已移除。
+
+HTTPS 直连根据 TLS 设置 Secure Cookie；本机反向代理仅在直接 TCP 对端为回环地址时信任单值 `X-Forwarded-Proto: https`。Caddy 应保留浏览器的 Host，并覆盖外部协议头；其他网络地址的代理头不会影响 Cookie，非本机代理不在默认信任范围内。
 
 也可以在服务器上对完整发布目录执行：
 
@@ -93,7 +95,7 @@ npm run db:status
 
 账户、业务数据和 `demo_seeds` 完成标记同事务提交。重复执行只跳过，不补写或覆盖后续修改；不能凭用户名判断数据库能否导入。未标记的已有账户或业务数据会拒绝初始化。测试内容在源码 `internal/demo/settings.json`，变更后需重新打包。
 
-`db-status` 默认输出 JSON，包含 `state`、迁移数量、账户与测试数据标记、绝对持久路径、探活地址及来源；`-format tsv` 是发布脚本的固定十字段协议。状态包括 `missing`、`empty`、`pending`、`current`、`incompatible`、`newer`。检查不存在的数据库不会创建文件；损坏或读取故障返回非零退出码。此检查只说明结构与迁移兼容性，不替代业务或实际入口验收。
+`db-status` 默认输出 JSON，包含 `state`、迁移数量、账户与测试数据标记、绝对持久路径和探活地址；`-format tsv` 是发布脚本的固定九字段协议。状态包括 `missing`、`empty`、`pending`、`current`、`incompatible`、`newer`。检查不存在的数据库不会创建文件；损坏或读取故障返回非零退出码。此检查只说明结构与迁移兼容性，不替代业务或实际入口验收。
 
 ## 安装到一台 Linux 主机
 
@@ -127,11 +129,10 @@ sudo install -o root -g island -m 0640 /srv/island/current/deploy/app.production
 
 将 `deploy/app.production.example.yaml` 复制为 `/srv/island/config/app.yaml`，修改：
 
-- `public_origin`：真实 HTTPS 来源，包含必要端口，不含路径或末尾斜线。
 - `ffprobe_path`：主机上实际的 `ffprobe` 绝对路径。
 - 所有目录路径：若采用不同安装位置，一并调整。
 
-HTTP Origin 校验严格匹配 `public_origin`；不能将其设为 Go 内部监听地址而让用户从另一域名访问。生产配置使用 HTTPS，应用因此设置 Secure Cookie。
+应用自动判断同源；HTTP 或 HTTPS 的 Cookie 属性按实际连接或受信任的本机代理协议设置，不需要固定访问地址。
 
 ## 空安装与账户初始化
 
@@ -151,7 +152,7 @@ sudo -u island /srv/island/current/island init -config /srv/island/config/app.ya
 
 将 `deploy/island.service` 安装为 `/etc/systemd/system/island.service`，确保其中的路径和用户与实际安装一致。示例只允许应用向 `/srv/island/data` 写入，停服等待时间为 120 秒，覆盖默认 90 秒上传期限；若调整上传期限，同时调整停服等待时间。
 
-将 `deploy/Caddyfile` 中的主机名替换为与 `public_origin` 相同的真实域名，再把该站点块合并到 `/etc/caddy/Caddyfile`，保留其他已有站点。Caddy 将所有请求代理给 `127.0.0.1:38100`，不直接公开媒体或数据库目录。
+将 `deploy/Caddyfile` 中的主机名替换为实际访问的域名，再把该站点块合并到 `/etc/caddy/Caddyfile`，保留其他已有站点。Caddy 将所有请求代理给 `127.0.0.1:38100`，不直接公开媒体或数据库目录。
 
 ```sh
 sudo systemd-analyze verify /etc/systemd/system/island.service
@@ -214,7 +215,7 @@ FROM wallets WHERE account_id = 1;
 
 | 现象 | 检查与处理 |
 |---|---|
-| `ORIGIN_INVALID` | 比较浏览器访问的来源与配置 `public_origin`，检查 HTTPS 域名和端口。 |
+| `ORIGIN_INVALID` | 检查请求是否跨站，以及代理是否保留了浏览器的 Host 和 Fetch Metadata。 |
 | `SESSION_REQUIRED` | 重新登录；密码修改、重置、退出或会话到期都会使旧登录失效。 |
 | `MANAGEMENT_REQUIRED` | 重新输入管理密码；退出管理或授权到期后原页面不再有写权限。 |
 | `DATABASE_BUSY` | 检查是否有另一应用或维护命令持有写事务；保留原请求重试，不新建第二笔交易。 |

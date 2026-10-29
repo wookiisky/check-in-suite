@@ -17,8 +17,8 @@ import (
 
 // checkinRequest supplies the exact browser protocol, including CSRF and an optional command key.
 func checkinRequest(app *App, method, path, body string, cookie *http.Cookie, csrf, key string) *httptest.ResponseRecorder {
-	request := httptest.NewRequest(method, path, strings.NewReader(body))
-	request.Header.Set("Origin", app.Config.PublicOrigin)
+	request := httptest.NewRequest(method, "https://island.example"+path, strings.NewReader(body))
+	request.Header.Set("Origin", "https://island.example")
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("X-CSRF-Token", csrf)
 	request.Header.Set("Idempotency-Key", key)
@@ -76,8 +76,8 @@ func TestCheckinHTTP(t *testing.T) {
 			t.Fatalf("unknown field %d %s", bad.Code, bad.Body)
 		}
 	}
-	request := httptest.NewRequest("POST", "/api/v1/checkins", strings.NewReader(input))
-	request.Header.Set("Origin", app.Config.PublicOrigin)
+	request := httptest.NewRequest("POST", "https://island.example/api/v1/checkins", strings.NewReader(input))
+	request.Header.Set("Origin", "https://island.example")
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("X-CSRF-Token", csrf)
 	request.Header.Set("Idempotency-Key", "lost-response")
