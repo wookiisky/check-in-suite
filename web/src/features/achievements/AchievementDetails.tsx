@@ -9,7 +9,8 @@ export function AchievementDetails({ item, onClose }: { item: Achievement; onClo
   return <Modal title={item.name} onClose={onClose}>
     <div className="achievement-details">
       <img className="achievement-art" src={badgeURL(item.asset_key)} alt="" />
-      <p><AchievementRule item={item} /></p><p>{achievementWindow(item.window_days)}</p>
+      <p><AchievementRule item={item} /></p>
+      {item.window_days !== null && <p>{achievementWindow(item.window_days)}</p>}
       {item.scope !== 'all' && <section className="achievement-targets" aria-label={content.scope}>
         <p>{content.scope}</p>
         {item.category && <p>{achievementTargetName(item.category)}</p>}
@@ -17,7 +18,6 @@ export function AchievementDetails({ item, onClose }: { item: Achievement; onClo
       </section>}
       <p>{content.progress} <AchievementProgress item={item} /></p>
       {item.earned_at && <p>{content.earnedAt} <time dateTime={item.earned_at}>{achievementTime(item.earned_at)}</time></p>}
-      <p className="achievement-hint">{content.historyHint}</p>
     </div>
   </Modal>;
 }

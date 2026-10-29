@@ -45,7 +45,7 @@ describe('照片与录音编辑', () => {
     expect(changed).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: content.useRecording }));
     expect(changed.mock.lastCall?.[0].audio?.file).toBeInstanceOf(File);
-    expect(screen.getByText(content.selected)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: content.removeAudio })).toBeInTheDocument();
   });
   it('组件关闭时停止正在采集的音轨并通知声音恢复', async () => {
     const activity = vi.fn(); const { unmount } = render(<MediaEditor value={emptyMediaDraft()} onChange={changed} limits={limits} onRecordingChange={activity} />);

@@ -4,7 +4,7 @@ import { ApiFailure } from '../../api/client';
 import { createIdempotencyKey } from '../../api/idempotency-key';
 import type { Camp, Product, Purchase, PurchaseResult, ShopClient, Wallet } from './types';
 import { pendingPurchases } from './pending';
-import { assetURL, canBuy, portraitType, shopError, uncertainResult } from './helpers';
+import { assetURL, canBuy, shopError, uncertainResult } from './helpers';
 import { Price } from './Price';
 import { dispatchFeedback } from '../../feedback/feedback-events';
 import content from './content.json';
@@ -112,7 +112,6 @@ export function PurchaseDialog({
         <img src={assetURL(product.asset_key, product.type === 'effect')} alt="" />
         <h3>{product.name}</h3>
       </div>
-      <p>{product.description}</p>
       <p>{content.purchaseCost}</p>
       <Price coins={product.coin_price} diamonds={product.diamond_price} />
       <p>{content.afterPurchase}</p>
@@ -120,9 +119,6 @@ export function PurchaseDialog({
         coins={wallet.coins - product.coin_price}
         diamonds={wallet.diamonds - product.diamond_price}
       />
-      <p className="shop-hint">{product.island_item_key ? content.islandPurchaseHint : content.noAutoEquip}</p>
-      {product.island_item_key && portraitType(product) && <p className="shop-hint">{content.dualUseHint}</p>}
-      {product.repeatable && <p className="shop-hint">{content.repeatableHint}</p>}
       {!canBuy(product, wallet) && !pending && (
         <p className="shop-hint">
           {product.owned && !product.repeatable

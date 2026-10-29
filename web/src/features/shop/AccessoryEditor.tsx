@@ -152,7 +152,6 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
       }} />
       </section>
       <section className="shop-outfit-settings" aria-label={content.editControls} tabIndex={0}>
-      <p className="shop-hint">{content.layoutHint}</p>
       <label htmlFor="outfit-selected">{content.selectedAccessory}</label>
       <select id="outfit-selected" value={available ? draft.id : ''} disabled={busy} onChange={(event) => select(event.target.value)}>
         {!available && <option value="" disabled>{content.selectAccessory}</option>}

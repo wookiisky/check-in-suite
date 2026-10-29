@@ -22,10 +22,10 @@ describe('免费形象与固定穿戴', () => {
     });
     render(<ShopPage client={{ request }} session={session} />);
     fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
-    await screen.findByText(content.animalWearableHint);
-    expect(screen.getByRole('button', { name: `${content.unequip} ${hair.name_snapshot}` })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: `${content.unequip} ${hair.name_snapshot}` })).toBeEnabled();
+    expect(screen.getByRole('button', { name: content.baseAvatarNames['avatar-boy-v2'] })).toHaveAttribute('aria-pressed', 'false');
     fireEvent.click(screen.getByRole('button', { name: content.baseAvatarNames['avatar-boy-v2'] }));
-    await waitFor(() => expect(screen.queryByText(content.animalWearableHint)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('button', { name: content.baseAvatarNames['avatar-boy-v2'] })).toHaveAttribute('aria-pressed', 'true'));
     expect(current.wearables.hair).toEqual(hair);
   });
   it('切换免费基础形象不创建订单，并保留已装备的衣服', async () => {
@@ -69,7 +69,7 @@ describe('免费形象与固定穿戴', () => {
     fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
     await screen.findByRole('button', { name: content.baseAvatarNames['avatar-boy-v2'] });
     fireEvent.change(screen.getByRole('combobox', { name: content.typeFilter }), { target: { value: 'hair' } });
-    await screen.findByText(content.moreHint);
+    await screen.findByRole('button', { name: content.more });
     expect(screen.queryByText(content.emptyPurchases)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: content.more }));
     fireEvent.click(await screen.findByRole('button', { name: `${content.equip} ${hair.name_snapshot}` }));

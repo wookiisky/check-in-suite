@@ -14,6 +14,7 @@ import { draftMediaIDs, getPendingEdit, markAttached, mediaMatches, rememberEdit
 import type { PendingEdit } from './media-submission';
 import { checkinError, isDefiniteFailure } from './format';
 import { readCurrentRecord } from './records';
+import { TaskIcon } from './TaskIcon';
 import { CREATE_DRAFT_KEY, getDraft, rememberDraft } from './drafts';
 import content from './content.json';
 
@@ -205,13 +206,12 @@ export function CheckinComposer({ client, session, task, date, management = fals
   return <Modal title={editing ? content.edit : content.newCheckin} onClose={close} closeDisabled={busy}>
     {discard ? <div className="checkin-stack"><p>{content.discardQuestion}</p><div className="checkin-actions"><button onClick={() => setDiscard(false)}>{content.keepEditing}</button><button className="secondary" onClick={abandon}>{content.discard}</button></div></div> :
       <form className="checkin-stack" onSubmit={(event) => { event.preventDefault(); void save(); }}>
-        <h3>{editing?.task_name_snapshot ?? currentTask.name}</h3>
+        <div className="checkin-composer-header"><TaskIcon name={editing?.task_icon_snapshot ?? currentTask.icon_key} /><h3>{editing?.task_name_snapshot ?? currentTask.name}</h3></div>
         <p>{content.date}：{editing?.business_date ?? currentDate}</p>
         {!editing && <p className="checkin-rewards"><CurrencyAmount currency="coins" amount={currentTask.coin_reward} /><CurrencyAmount currency="diamonds" amount={currentTask.diamond_reward} /></p>}
         {!editing && management && <p className="checkin-hint">{content.backfillWarning}</p>}
         <label htmlFor={textId}>{content.text}</label>
         <textarea id={textId} rows={4} value={text} onChange={(event) => changeText(event.target.value)} aria-invalid={tooLong} />
-        <p className="checkin-hint">{content.optionalText}（{[...text].length}/{session.limits.text_max}）</p>
         {tooLong && <p role="alert" className="checkin-error">{content.textTooLong}</p>}
         <FieldError error={error} field="text" />
         <MediaEditor value={media} onChange={changeMedia} limits={session.limits} disabled={busy} onRecordingChange={setRecording} />

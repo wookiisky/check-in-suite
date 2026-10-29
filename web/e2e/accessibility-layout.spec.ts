@@ -11,13 +11,13 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
   await page.getByLabel(content.account.username).fill('island-e2e');
   await page.getByLabel(content.account.loginPassword).fill('Island-Test-2026');
   await page.getByRole('button', { name: content.account.login, exact: true }).click();
-  await expect(page.getByRole('heading', { name: family.sounds })).toBeVisible();
-  const audit = async (label: string) => {
-    const layout = await page.evaluate(() => {
+  await expect(page.getByRole('heading', { name: checkin.todayTasks })).toBeVisible();
+  const audit = async (label: string, minFontSize = 22) => {
+    const layout = await page.evaluate((minSize) => {
       const visible = (element: Element) => { const box = element.getBoundingClientRect(); return box.width > 0 && box.height > 0 && getComputedStyle(element).visibility !== 'hidden'; };
       return {
         width: document.documentElement.scrollWidth, viewport: innerWidth,
-        smallText: [...document.querySelectorAll('body *')].filter((element) => visible(element) && [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) && parseFloat(getComputedStyle(element).fontSize) < 18).map((element) => element.tagName),
+        smallText: [...document.querySelectorAll('body *')].filter((element) => visible(element) && [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) && parseFloat(getComputedStyle(element).fontSize) < minSize).map((element) => `${element.tagName}.${element.className}:${getComputedStyle(element).fontSize}`),
         // 复选框与单选框的关联label也是实际点击区域，不能只测方框的视觉尺寸。
         smallControls: [...document.querySelectorAll('button,input,select,textarea,a')].filter(visible).filter((element) => {
           const targets: Element[] = [element];
@@ -26,13 +26,13 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
         }).map((element) => `${element.tagName}:${element.getAttribute('type') ?? ''}:${element.getBoundingClientRect().width}x${element.getBoundingClientRect().height}`),
         animated: [...document.querySelectorAll('body *')].filter(visible).filter((element) => getComputedStyle(element).animationName !== 'none').map((element) => element.className),
       };
-    });
+    }, minFontSize);
     expect(layout.width, label).toBeLessThanOrEqual(layout.viewport);
     expect(layout.smallText, label).toEqual([]);
     expect(layout.smallControls, label).toEqual([]);
     expect(layout.animated, label).toEqual([]);
   };
-  for (const route of ['camp', 'island', 'calendar', 'stats', 'shop'] as const) {
+  for (const route of ['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const) {
     await page.getByRole('button', { name: content.navigation[route], exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     if (route === 'island') await expect(page.locator('.island-scene')).toBeVisible();
@@ -40,6 +40,7 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
     if (route === 'camp') { await expect(page.getByRole('heading', { name: checkin.todayTasks })).toBeVisible(); await expect(page.getByRole('heading', { name: family.title })).toBeVisible(); }
     if (route === 'stats') await expect(page.locator('.reports-summary')).toBeVisible();
     if (route === 'shop') await expect(page.locator('.shop-wallet')).toBeVisible();
+    if (route === 'achievements') await expect(page.locator('.achievement-grid')).toBeVisible();
     await audit(route);
     if (route === 'camp') {
       const records = await page.locator('.checkin-records-panel').boundingBox();
@@ -70,9 +71,9 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
   await opener.click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  for (const section of ['account', 'tasks', 'records', 'products'] as const) {
+  for (const section of ['account', 'tasks', 'records', 'products', 'achievements'] as const) {
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation[section], exact: true }).click();
     await expect(page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation[section], exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await audit(section);
+    await audit(section, 18);
   }
 });

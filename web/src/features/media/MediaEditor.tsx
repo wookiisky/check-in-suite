@@ -69,8 +69,7 @@ export function MediaEditor({ value, onChange, limits, disabled = false, onRecor
 
   return <div className="media-editor">
     <fieldset disabled={disabled} className="media-section">
-      <legend>{content.photos}</legend>
-      <p className="media-hint">{content.photoHint}</p>
+      <legend><img className="media-legend-icon" src="/api/v1/assets/camera-v1" alt="" aria-hidden="true" /><span>{content.photos}</span></legend>
       <div className="media-actions">
         <button type="button" className="secondary" onClick={() => camera.current?.click()}>{content.takePhoto}</button>
         <button type="button" className="secondary" onClick={() => photoPicker.current?.click()}>{content.choosePhoto}</button>
@@ -82,8 +81,7 @@ export function MediaEditor({ value, onChange, limits, disabled = false, onRecor
       {photoError && <p className="media-error" role="alert">{content.errors[photoError]}</p>}
     </fieldset>
     <fieldset disabled={disabled} className="media-section">
-      <legend>{content.audio}</legend>
-      <p className="media-hint">{content.audioHint}</p>
+      <legend><img className="media-legend-icon" src="/api/v1/assets/mic-v1" alt="" aria-hidden="true" /><span>{content.audio}</span></legend>
       {captureState === 'requesting' && <p role="status">{content.requesting}</p>}
       {captureState === 'recording' && <p role="status">{content.recording} {seconds} / {limits.audio_seconds_max} {content.seconds}</p>}
       {captureState === 'stopping' && <p role="status">{content.stopping}</p>}
@@ -91,11 +89,8 @@ export function MediaEditor({ value, onChange, limits, disabled = false, onRecor
         {captureState === 'recording' ? <button type="button" onClick={() => capture.current?.stop()}>{content.stopRecording}</button> : <button type="button" className="secondary" disabled={recording} onClick={startRecording}>{value.audio || candidate ? content.recordAgain : content.startRecording}</button>}
       </div>
       {!recording && audioURL && <audio controls preload="metadata" src={audioURL} aria-label={content.audioPreview} />}
-      {!recording && candidate && <>
-        <p role="status">{content.preview}</p>
-        <div className="media-actions"><button type="button" onClick={() => { onChange({ ...value, audio: { file: candidate, mediaId: null, attached: false } }); setCandidate(null); }}>{content.useRecording}</button><button type="button" className="secondary" onClick={() => setCandidate(null)}>{content.discardRecording}</button></div>
-      </>}
-      {!recording && !candidate && value.audio && <><p role="status">{content.selected}</p><button type="button" className="secondary" onClick={() => { setAudioError(null); onChange({ ...value, audio: null }); }}>{content.removeAudio}</button></>}
+      {!recording && candidate && <div className="media-actions"><button type="button" onClick={() => { onChange({ ...value, audio: { file: candidate, mediaId: null, attached: false } }); setCandidate(null); }}>{content.useRecording}</button><button type="button" className="secondary" onClick={() => setCandidate(null)}>{content.discardRecording}</button></div>}
+      {!recording && !candidate && value.audio && <button type="button" className="secondary" onClick={() => { setAudioError(null); onChange({ ...value, audio: null }); }}>{content.removeAudio}</button>}
       {audioError && <p className="media-error" role="alert">{content.errors[audioError]}</p>}
     </fieldset>
   </div>;

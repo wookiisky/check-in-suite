@@ -20,13 +20,11 @@ export function CharacterPanel({
   return (
     <section className="shop-character" aria-label={content.character}>
       <h3>{displayName}</h3>
-      {equipment.title ? (
+      {equipment.title && (
         <p className="shop-character-title">
           <img src={assetURL(portraitAssetKey(equipment.title))} alt="" />
           {equipment.title.name_snapshot}
         </p>
-      ) : (
-        <p className="shop-hint">{content.emptyTitle}</p>
       )}
       <CharacterStage equipment={equipment} reduceMotion={reduceMotion} {...(editor ? { editor } : {})} />
     </section>

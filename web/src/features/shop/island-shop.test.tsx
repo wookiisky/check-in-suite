@@ -69,9 +69,9 @@ describe('小岛商店与多件所有权', () => {
     });
     render(<ShopPage client={{ request }} session={session} />);
     fireEvent.click(screen.getByRole('button', { name: content.islandInventory }));
-    await screen.findByText(content.moreHint);
+    const more = await screen.findByRole('button', { name: content.more });
     expect(screen.queryByText(content.emptyPurchases)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: content.more }));
+    fireEvent.click(more);
     await screen.findByText(tree.name);
   });
   it('岛屿成交物品追加画像能力后可被饰品筛选找到并调用饰品装备接口', async () => {

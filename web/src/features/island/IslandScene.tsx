@@ -182,7 +182,7 @@ export function IslandScene({ scene = defaultPresentation, insets, placements, c
       <button type="button" className="secondary" aria-label={content.zoomOut} onClick={() => setView((current) => zoomAt(current, { x: size.width / 2, y: size.height / 2 }, 1 / 1.2))}>−</button>
       <button type="button" className="secondary island-reset-view" aria-label={content.resetView} title={content.resetView} onClick={resetView}><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 10V4m0 0h6M4 4l4 4a7 7 0 1 1-2 8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
     </div>
-    <svg ref={svg} viewBox={`0 0 ${size.width} ${size.height}`} className="island-scene" role="group" aria-label={content.scene} aria-describedby="island-scene-help" tabIndex={0}
+    <svg ref={svg} viewBox={`0 0 ${size.width} ${size.height}`} className="island-scene" role="group" aria-label={content.scene} tabIndex={0}
       data-zoom={view.zoom.toFixed(3)} data-pan-x={view.x.toFixed(2)} data-pan-y={view.y.toFixed(2)} data-editing={editing}
       onPointerDown={start} onPointerMove={move} onPointerUp={(event) => finish(event, false)} onPointerCancel={(event) => finish(event, true)} onKeyDown={keydown}>
       <g transform={worldTransform}>
@@ -210,7 +210,6 @@ export function IslandScene({ scene = defaultPresentation, insets, placements, c
         })}
       </g>
     </svg>
-    <p id="island-scene-help" className="island-view-help">{editing ? content.editHelp : content.viewHelp}</p>
     <span className="island-sr-only">{content.keyboardHelp}</span>
   </div>;
 }

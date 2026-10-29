@@ -53,7 +53,7 @@ describe('打卡奖励反馈', () => {
       expect(screen.queryByText('+7')).not.toBeInTheDocument();
       expect(view.container.querySelectorAll('.checkin-reward-particle')).toHaveLength(0);
       fireEvent.click(screen.getByRole('button', { name: content.previousDay }));
-      await screen.findByText(content.historyReadOnly);
+      await screen.findByText('2026-10-27');
       expect(success).toHaveBeenCalledTimes(1);
     } finally { view.unmount(); window.removeEventListener(CHECKIN_SUCCESS_EVENT, success); }
   });

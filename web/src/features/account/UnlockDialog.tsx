@@ -21,7 +21,6 @@ export function UnlockDialog({ client, onUnlock, onClose }: { client: ApiClient;
     finally { if (!cancelled.current) setBusy(false); }
   }
   return <Modal title={content.account.unlockTitle} onClose={close} closeDisabled={busy}>
-    <p className="muted">{content.account.unlockHint}</p>
     <form onSubmit={submit} className="form-stack">
       <label htmlFor="management-password">{content.account.managementPassword}</label><input id="management-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required autoFocus />
       <FormFeedback error={error} />

@@ -39,8 +39,35 @@ describe('商店页面读取与动作边界', () => {
     expect(card.queryByText(content.repeatableHint)).not.toBeInTheDocument();
     expect(card.queryByText(new RegExp(content.stock))).not.toBeInTheDocument();
     const buy = card.getByRole('button', { name: `${content.buy} ${item.name}` });
+    expect(buy).toHaveAccessibleDescription(expect.stringContaining(`${content.coins} ${item.coin_price}`));
+    expect(within(buy).getByRole('img', { name: content.coins })).toBeInTheDocument();
+    expect(within(buy).queryByRole('img', { name: content.ownedCount })).not.toBeInTheDocument();
+    expect(buy).not.toHaveTextContent(content.buy);
+    expect(buy).not.toHaveTextContent(content.buyAnother);
+    if (item.diamond_price > 0) {
+      expect(within(buy).getByRole('img', { name: content.diamonds })).toBeInTheDocument();
+      expect(buy).toHaveAccessibleDescription(expect.stringContaining(`${content.diamonds} ${item.diamond_price}`));
+    } else {
+      expect(buy).not.toHaveAccessibleDescription(expect.stringContaining(content.diamonds));
+    }
     if (item.owned && !item.repeatable) expect(buy).toBeDisabled();
     else expect(buy).toBeEnabled();
+  });
+
+  it.each([
+    { changes: { owned: true }, reason: content.owned },
+    { changes: { stock: 0 }, reason: content.soldOut },
+    { changes: { coin_price: camp.wallet.coins + 1 }, reason: content.insufficient },
+  ])('价格按钮保留不可购买的原因：$reason', async ({ changes, reason }) => {
+    const request = vi.fn().mockImplementation(async (path: string) =>
+      path === '/camp' ? camp : { items: [{ ...product, ...changes }] },
+    );
+    render(<ShopPage client={{ request }} session={session} />);
+    const buy = await screen.findByRole('button', { name: `${content.buy} ${product.name}` });
+    expect(buy).toBeDisabled();
+    expect(buy).toHaveAccessibleDescription(expect.stringContaining(reason));
+    expect(within(buy).getByRole('img', { name: content.coins })).toBeInTheDocument();
+    expect(buy).not.toHaveTextContent(reason);
   });
 
   it('购买成功切换我的装扮；后续读取失败只重试读取，不重复购买或自动装备', async () => {
@@ -91,15 +118,14 @@ describe('商店页面读取与动作边界', () => {
     });
     render(<ShopPage client={{ request }} session={session} />);
     fireEvent.click(screen.getByRole('button', { name: content.rewards }));
-    await screen.findByText(content.moreHint);
-    fireEvent.click(screen.getByRole('button', { name: content.more }));
+    fireEvent.click(await screen.findByRole('button', { name: content.more }));
     await screen.findByText('第二个奖励');
     expect(
       request.mock.calls.some(
         ([path]) => path === '/purchases?type=reward&status=pending&cursor=next-page',
       ),
     ).toBe(true);
-    expect(screen.queryByText(content.moreHint)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: content.more })).not.toBeInTheDocument();
   });
 
   it('饰品装备只写指定物品，失败后不移除其他装备', async () => {

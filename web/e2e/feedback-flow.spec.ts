@@ -36,8 +36,8 @@ test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, 
   await expect(dialog).toHaveCSS('animation-name', 'dialog-appear');
   expect((await feedbackAudioState(page)).notes).toBe(0);
   await dialog.getByRole('button', { name: checkin.checkin, exact: true }).click();
-  await expect(page.getByText(`${checkin.coins} +7`, { exact: true })).toBeVisible();
-  await expect(page.getByText(`${checkin.diamonds} +3`, { exact: true })).toBeVisible();
+  await expect(page.locator('.checkin-reward-coins')).toContainText('+7');
+  await expect(page.locator('.checkin-reward-diamonds')).toContainText('+3');
   await expect(page.locator('.checkin-reward-coins .checkin-reward-particle')).toHaveCount(7);
   await expect(page.locator('.checkin-reward-diamonds .checkin-reward-particle')).toHaveCount(3);
   await expect(page.locator('.checkin-reward-diamonds')).toHaveClass(/checkin-reward-featured/);
@@ -72,7 +72,7 @@ test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, 
   await expect(dialog).toHaveCSS('animation-name', 'none');
   await dialog.getByRole('button', { name: checkin.checkin, exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(page.getByText(`${checkin.diamonds} +3`, { exact: true })).toBeVisible();
+  await expect(page.locator('.checkin-reward-diamonds')).toContainText('+3');
   await expect(page.locator('.checkin-reward-particle')).toHaveCount(0);
   const notesAfterReducedCheckin = (await feedbackAudioState(page)).notes;
   expect(notesAfterReducedCheckin).toBe(playedAudio.notes * 2);
@@ -87,13 +87,13 @@ test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, 
   await task.click();
   await dialog.getByRole('button', { name: checkin.checkin, exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(page.getByText(`${checkin.coins} +7`, { exact: true })).toBeVisible();
+  await expect(page.locator('.checkin-reward-coins')).toContainText('+7');
   expect((await feedbackAudioState(page)).notes).toBe(notesAfterReducedCheckin);
 
   await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
   await expect(page.locator('.page-content')).toHaveCSS('animation-name', 'page-appear');
   await page.getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await expect(page.getByRole('heading', { name: checkin.todayTasks, exact: true })).toBeVisible();
-  await expect(page.getByText(`${checkin.coins} +7`, { exact: true })).toHaveCount(0);
+  await expect(page.locator('.checkin-reward-coins')).toHaveCount(0);
   expect((await feedbackAudioState(page)).notes).toBe(notesAfterReducedCheckin);
 });

@@ -59,7 +59,7 @@ export function StatsPage({ client, session }: { client: Pick<ApiClient, 'reques
   }
   const maximum = Math.max(1, ...(data?.items.map((item) => item.count) ?? []));
   return <section className="panel reports-page">
-    <h1>{session.account.display_name} · {content.stats}</h1>
+    <h1>{content.stats}</h1>
     <label>{content.range}<select value={preset} onChange={(event) => { setPreset(event.target.value as Preset); setValidation(''); }}>{(['week', 'month', 'last7', 'last30', 'custom'] as const).map((item) => <option key={item} value={item}>{content[item]}</option>)}</select></label>
     {preset === 'custom' && <form className="reports-range" onSubmit={apply} noValidate><label>{content.start}<input type="date" value={start} max={today} onChange={(event) => setStart(event.target.value)} /></label><label>{content.end}<input type="date" value={end} max={today} onChange={(event) => setEnd(event.target.value)} /></label><button>{content.apply}</button></form>}
     {validation && <p className="form-error" role="alert">{validation}</p>}
@@ -68,7 +68,7 @@ export function StatsPage({ client, session }: { client: Pick<ApiClient, 'reques
     {loading && <p role="status">{content.loading}</p>}
     {data && !validation && <>
       <p className="muted">{data.start_date} — {data.end_date}</p>
-      <dl className="reports-summary"><div><dt>{content.total}</dt><dd>{data.total_count} {content.times}</dd></div><div><dt>{content.activeDays}</dt><dd>{data.active_days} {content.days}</dd></div></dl>
+      <dl className="reports-summary"><div><dt><img src="/api/v1/assets/star-v1" alt="" aria-hidden="true" />{content.total}</dt><dd>{data.total_count} {content.times}</dd></div><div><dt><img src="/api/v1/assets/calendar-v1" alt="" aria-hidden="true" />{content.activeDays}</dt><dd>{data.active_days} {content.days}</dd></div></dl>
       {data.items.length === 0 ? <p>{content.empty}</p> : <ol className="reports-bars">{data.items.map((item) => <li key={item.task_id}><div className="reports-bar-label"><img src={`/api/v1/assets/${encodeURIComponent(item.icon_key)}`} alt="" /><strong>{item.name}</strong><span>{item.count} {content.times}</span></div><div className="reports-track" aria-hidden="true"><span style={{ width: `${item.count / maximum * 100}%` }} /></div></li>)}</ol>}
     </>}
   </section>;

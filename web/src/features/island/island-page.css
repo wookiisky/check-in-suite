@@ -21,7 +21,7 @@
 /* 编辑抽屉与短屏工具栏会占用下方空间，相机操作保持一行可点击。 */
 .island-scene-editing .island-view-controls { flex-direction:row; align-items:center; }
 .island-view-controls button { white-space:nowrap; flex-shrink:0; }
-.island-view-help { position:absolute; top:100px; left:24px; margin:0; pointer-events:none; font-size:18px; color:#405d53; max-width:50%; }
+.island-view-help { position:absolute; top:100px; left:24px; margin:0; pointer-events:none; font-size:22px; color:#405d53; max-width:50%; }
 .island-game-dock { position:absolute; z-index:3; bottom:max(16px,env(safe-area-inset-bottom)); right:max(20px,env(safe-area-inset-right)); width:380px; max-width:calc(100% - 32px); border:2px solid #becbae; background:#fffdf0f5; border-radius:26px; padding:12px 16px; box-shadow:0 8px 30px #34594324; }
 .island-character-status { display:flex; justify-content:center; align-items:center; gap:12px; margin:0 0 10px; font-size:22px; }
 .island-status-dot { width:12px; height:12px; border-radius:50%; background:#8da762; box-shadow:0 0 0 5px #e5ecd8; flex-shrink:0; }
@@ -47,12 +47,12 @@
 .island-inventory-item { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #e4e5d1; }
 .island-inventory-item>div { min-width:0; flex:1; }
 .island-inventory-item strong { display:block; font-size:22px; overflow-wrap:anywhere; }
-.island-inventory-item span { display:block; font-size:18px; color:#69745e; }
+.island-inventory-item span { display:block; font-size:22px; color:#69745e; }
 .island-inventory-item button { padding:8px; flex-shrink:0; }
 .island-placed-list button[aria-pressed=true] { background:#dbe8c1; border-color:#789b4e; }
 .island-notice,.island-fullscreen>p[role=status] { position:absolute; z-index:6; top:100px; left:50%; transform:translateX(-50%); max-width:calc(100% - 32px); width:max-content; padding:14px 20px; border:2px solid #becbae; border-radius:16px; background:#fffdf3; box-shadow:0 4px 16px #34594320; }
 .island-error { background:#fff0df; border-color:#cfaa80; }
-.island-hint { font-size:18px; color:#626e56; }
+.island-hint { font-size:22px; color:#626e56; }
 .island-sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
 @media(max-width:1050px) and (min-height:500px), (max-width:700px) {
  .island-editor-shell { top:auto; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 148px); left:12px; right:12px; width:auto; max-width:none; height:42dvh; }
@@ -94,12 +94,12 @@
 .island-wallet img { width:32px; height:32px; }
 .island-checkin-panel { position:absolute; z-index:4; top:var(--island-hud-top); left:max(12px,env(safe-area-inset-left)); width:136px; border:2px solid var(--island-line); border-radius:20px; overflow:hidden; background:#fffdf3f5; }
 .island-checkin-toggle { display:flex; align-items:center; justify-content:space-between; gap:6px; width:100%; padding:8px 10px; border:0; border-radius:0; white-space:nowrap; }
-.island-checkin-toggle strong { font-size:18px; }
+.island-checkin-toggle strong { font-size:22px; }
 .island-checkin-list { display:grid; grid-template-columns:repeat(2,56px); gap:4px; max-height:min(220px,30dvh); overflow:auto; padding:6px; overscroll-behavior:contain; }
 .island-checkin-list button { display:flex; align-items:center; justify-content:center; padding:6px; width:56px; height:56px; }
 
 .island-checkin-list img { width:40px; height:40px; flex:0 0 40px; }
-.island-checkin-list p { font-size:18px; margin:4px; }
+.island-checkin-list p { font-size:22px; margin:4px; }
 .island-reset-view { display:flex; align-items:center; justify-content:center; }
 .island-view-help { display:none; }
 @media(max-width:1050px) {

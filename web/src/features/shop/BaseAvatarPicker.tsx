@@ -19,7 +19,5 @@ export function BaseAvatarPicker({ equipment, busy, onSelect }: {
         <span>{content.baseAvatarNames[item.key as keyof typeof content.baseAvatarNames]}</span>
       </button>)}
     </div>
-    <p className="shop-hint">{content.freeBaseAvatar}</p>
-    {equipment.avatar && <p className="shop-hint">{content.animalWearableHint}</p>}
   </section>;
 }

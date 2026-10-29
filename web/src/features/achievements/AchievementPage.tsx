@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Achievement, AchievementProps } from './types';
-import { achievementError, achievementWindow, badgeURL } from './achievement-format';
+import { achievementError, badgeURL } from './achievement-format';
 import { AchievementProgress, AchievementRule } from './AchievementRule';
 import { AchievementDetails } from './AchievementDetails';
 import content from './content.json';
@@ -48,11 +48,11 @@ export function AchievementPage({ client }: AchievementProps) {
     {loading ? <p role="status">{content.loading}</p> : <div className="achievement-grid">
       {shown.length === 0 && <p>{content.empty}</p>}
       {shown.map((item) => <article className={`panel achievement-card ${item.qualified ? 'is-owned' : ''}`} key={item.id}>
+        <h2>{item.name}</h2>
         <button className="secondary achievement-preview" aria-label={`${content.details} ${item.name}`} onClick={(event) => { event.currentTarget.focus(); setSelected(item); }}><img className="achievement-art" src={badgeURL(item.asset_key)} alt="" /></button>
-        <h2>{item.name}</h2><p className="achievement-state">{item.equipped ? content.equipped : item.qualified ? content.owned : content.unowned}</p>
-        <p><AchievementRule item={item} /></p><p className="achievement-hint">{achievementWindow(item.window_days)}</p>
-        <label className="achievement-progress"><span>{content.progress} <AchievementProgress item={item} /></span><progress max={item.target} value={Math.min(item.progress, item.target)} /></label>
-        {item.qualified && <button disabled={busy} className={item.equipped ? 'secondary' : undefined} onClick={() => void equip(item)}>{item.equipped ? content.unequip : content.equip}</button>}
+        <p><AchievementRule item={item} /></p>
+        <label className="achievement-progress"><span><AchievementProgress item={item} /></span><progress aria-label={content.progress} max={item.target} value={Math.min(item.progress, item.target)} /></label>
+        {item.qualified ? <button disabled={busy} className={item.equipped ? 'secondary' : undefined} onClick={() => void equip(item)}>{item.equipped ? content.unequip : content.equip}</button> : <p className="achievement-state">{content.unowned}</p>}
       </article>)}
     </div>}
     {selected && <AchievementDetails item={selected} onClose={() => setSelected(null)} />}

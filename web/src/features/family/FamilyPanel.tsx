@@ -104,7 +104,7 @@ export function FamilyPanel({ client, session }: { client: Client; session: Sess
     <FormFeedback error={readError} />{readError !== null && <button className="secondary" onClick={() => void load()}>{content.reload}</button>}
     {!loading && !readError && items.length === 0 && <p className="muted">{content.empty}</p>}
     <ul className="family-messages">{items.map((item) => <li key={item.id}><p>{item.text}</p><time dateTime={item.created_at}>{new Intl.DateTimeFormat('zh-CN', { timeZone: session.timezone, dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.created_at))}</time><button className="secondary" disabled={busy} onClick={(event) => { event.currentTarget.focus(); setRemoveTarget(item); setWriteError(null); }}>{content.remove}</button></li>)}</ul>
-    {loading && <p role="status">{content.loading}</p>}{cursor && <><p className="muted">{content.incomplete}</p><button className="secondary" disabled={loading} onClick={() => void load(cursor)}>{content.loadMore}</button></>}
+    {loading && <p role="status">{content.loading}</p>}{cursor && <button className="secondary" disabled={loading} onClick={() => void load(cursor)}>{content.loadMore}</button>}
     {removeTarget && <Modal title={content.remove} onClose={() => setRemoveTarget(null)} closeDisabled={busy}><div className="family-form"><p>{content.removeWarning}</p><p className="family-message-text">{removeTarget.text}</p><FormFeedback error={writeError} /><div className="button-row"><button disabled={busy} onClick={() => void remove()}>{content.confirmRemove}</button><button className="secondary" disabled={busy} onClick={() => setRemoveTarget(null)}>{content.cancel}</button></div></div></Modal>}
   </section>;
 }

@@ -40,7 +40,6 @@ export function RedeemDialog({
   return (
     <Modal title={content.redeemTitle} onClose={onClose} closeDisabled={busy}>
       <h3>{purchase.name_snapshot}</h3>
-      <p>{content.redeemHint}</p>
       <form className="form-stack" onSubmit={submit}>
         <label htmlFor="redeem-password">{content.redeemPassword}</label>
         <input

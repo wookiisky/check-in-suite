@@ -8,6 +8,7 @@ import { Modal } from '../../components/Modal';
 import type { Session } from '../../api/types';
 import type { Checkin, CheckinClient, Task } from './types';
 import { CheckinComposer } from './CheckinComposer';
+import { TaskIcon } from './TaskIcon';
 import { checkinError, operationTime } from './format';
 import content from './content.json';
 
@@ -61,14 +62,15 @@ export function RecordDialog({ client, session, record: initialRecord, today, ma
   if (mode === 'edit') return <CheckinComposer client={client} session={session} record={record} task={task} date={record.business_date} management={management} onClose={onClose} onSaved={onSaved} />;
   return <Modal title={content.recordDetail} onClose={onClose} closeDisabled={busy}>
     <div className="checkin-stack">
-      <h3>{record.task_name_snapshot}</h3><p>{content.date}：{record.business_date} {record.source === 'backfill' ? content.backfill : ''}</p>
-      <p className="checkin-hint">{content.operationTime}：{operationTime(record.created_at)}</p>
+      <div className="checkin-composer-header"><TaskIcon name={record.task_icon_snapshot} /><h3>{record.task_name_snapshot}</h3></div>
+      <p>{content.date}：{record.business_date}{management && record.source === 'backfill' ? ` ${content.backfill}` : ''}</p>
+      {management && <p className="checkin-hint">{content.operationTime}：{operationTime(record.created_at)}</p>}
       {mode === 'detail' ? <>
-        <p className="checkin-text">{record.text}</p>
+        {record.text && <p className="checkin-text">{record.text}</p>}
         {record.photo_media_id && <img className="checkin-photo" src={`/api/v1/media/${record.photo_media_id}`} alt={content.attachmentPhoto} />}
         {record.audio_media_id && <audio aria-label={content.attachmentAudio} controls src={`/api/v1/media/${record.audio_media_id}`} />}
         {management && <p className="checkin-rewards"><CurrencyAmount currency="coins" amount={record.coin_reward_snapshot} /><CurrencyAmount currency="diamonds" amount={record.diamond_reward_snapshot} /></p>}
-        {editable ? <div className="checkin-actions"><button onClick={() => setMode('edit')}>{content.edit}</button>{deletable && <button className="secondary" onClick={() => setMode('delete')}>{content.delete}</button>}{management && onCorrect && <button className="secondary" onClick={() => setMode('correct')}>{content.correctRecord}</button>}</div> : <><p className="checkin-hint">{content.historyReadOnly}</p>{(pendingEdit || draft) && <button onClick={() => setMode('edit')}>{pendingEdit ? content.recover : content.continueDraft}</button>}</>}
+        {editable ? <div className="checkin-actions"><button onClick={() => setMode('edit')}>{content.edit}</button>{deletable && <button className="secondary" onClick={() => setMode('delete')}>{content.delete}</button>}{management && onCorrect && <button className="secondary" onClick={() => setMode('correct')}>{content.correctRecord}</button>}</div> : <>{(pendingEdit || draft) && <button onClick={() => setMode('edit')}>{pendingEdit ? content.recover : content.continueDraft}</button>}</>}
       </> : <>
         <p>{mode === 'correct' ? content.correctWarning : content.deleteWarning}</p>
         <p className="checkin-rewards"><CurrencyAmount currency="coins" amount={`−${record.coin_reward_snapshot}`} /><CurrencyAmount currency="diamonds" amount={`−${record.diamond_reward_snapshot}`} /></p>

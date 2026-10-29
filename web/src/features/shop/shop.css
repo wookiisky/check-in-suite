@@ -28,7 +28,12 @@
   border: 2px solid var(--line);
   border-radius: 24px;
   background: var(--paper);
+  box-shadow: 0 6px 0 #dce5ce;
   min-width: 0;
+}
+.shop-card.is-equipped {
+  border-color: var(--forest);
+  background: #f3f7eb;
 }
 .shop-card > button {
   margin-top: auto;
@@ -43,46 +48,97 @@
   width: min(100%, 180px);
   height: 180px;
 }
-.shop-price,
-.shop-product-stats {
+.shop-product-card {
+  align-items: center;
+  text-align: center;
+}
+.shop-product-card > h3 {
+  width: 100%;
+  font-size: 28px;
+  text-align: center;
+}
+.shop-product-card > button {
+  width: 100%;
+}
+.shop-product-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-top: auto;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.shop-product-buy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  min-width: 0;
+  padding: 12px;
+}
+.shop-product-buy > span,
+.shop-product-owned {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.shop-product-owned {
+  flex-shrink: 0;
+}
+.shop-product-footer img {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.shop-price {
   display: flex;
   flex-wrap: wrap;
   gap: 12px 20px;
 }
-.shop-price > span,
-.shop-product-stats > span {
+.shop-price > span {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
-.shop-price img,
-.shop-product-stats img {
+.shop-price img {
   width: 28px;
   height: 28px;
-}
-.shop-product-stats {
-  font-variant-numeric: tabular-nums;
-}
-.shop-product-stats > span {
-  flex-wrap: nowrap;
 }
 .shop-wallet {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
   align-items: center;
   padding: 20px;
   border: 2px solid #e3d6ae;
   border-radius: 20px;
   background: var(--gold);
+  box-shadow: 0 6px 0 #dfcf9f;
+}
+.shop-wallet .shop-price {
+  font-size: 30px;
+  font-weight: 750;
+}
+.shop-wallet .shop-price img {
+  width: 34px;
+  height: 34px;
 }
 .shop-hint {
   color: var(--muted);
-  font-size: 18px;
+  font-size: 22px;
 }
 .shop-error {
   color: var(--danger);
+  font-size: 22px;
+}
+.management-workspace .shop-hint,
+.management-workspace .shop-error {
   font-size: 18px;
 }
 .shop-warning {
@@ -223,10 +279,6 @@
   align-content: start;
   padding: 4px 8px 8px 4px;
 }
-.shop-outfit-settings > .shop-hint {
-  margin: 0;
-  font-size: 16px;
-}
 .shop-outfit-controls legend {
   margin-bottom: 12px;
 }
@@ -250,7 +302,7 @@
   min-width: 0;
   min-height: 56px;
   padding: 12px 8px;
-  font-size: 18px;
+  font-size: 22px;
   white-space: nowrap;
 }
 .shop-layer-list {

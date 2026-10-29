@@ -1,7 +1,6 @@
 import type { Equipment, Purchase } from './types';
 import { portraitType } from './helpers';
 import content from './content.json';
-import { categoryLabel, itemCategory } from './shop-categories';
 import { ShopItemArtwork } from './ShopItemArtwork';
 
 // 每次仅修改一个槽位或一个饰品，永久所有权来自订单快照。
@@ -23,9 +22,6 @@ export function Wardrobe({
       <p>
         {content.equippedCount} {equipment.accessories.length} / {content.equipmentLimit}
       </p>
-      {equipment.accessories.length >= content.equipmentLimit && (
-        <p className="shop-hint">{content.accessoryLimit}</p>
-      )}
       {items.length === 0 && !hasMore && !busy && <p>{content.emptyPurchases}</p>}
       <div className="shop-grid">
         {items.map((item) => {
@@ -44,15 +40,9 @@ export function Wardrobe({
             !equipped &&
             equipment.accessories.length >= content.equipmentLimit;
           return (
-            <article className="shop-card" key={item.id}>
-              <ShopItemArtwork item={item} />
+            <article className={`shop-card shop-product-card ${equipped ? 'is-equipped' : ''}`} key={item.id}>
               <h3>{item.name_snapshot}</h3>
-              <p className="shop-hint">{categoryLabel(itemCategory(item, true)!)}</p>
-              <p>{item.description_snapshot}</p>
-              {item.wearable_slot && <p className="shop-hint">{content.wearableHint}</p>}
-              {kind === 'effect' && <p className="shop-hint">{content.effectHint}</p>}
-              {kind === 'background' && <p className="shop-hint">{content.backgroundHint}</p>}
-              {equipped && <p>{content.equipped}</p>}
+              <ShopItemArtwork className="shop-item-art shop-product-art" item={item} />
               <button
                 className={equipped ? 'secondary' : ''}
                 disabled={busy || limitReached}

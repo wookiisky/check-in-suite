@@ -94,7 +94,7 @@ describe('小岛页面', () => {
     render(<IslandPage client={{ request }} session={{ ...testSession, timezone: 'Asia/Taipei' }} />);
     fireEvent.click(await screen.findByRole('button', { name: content.edit }));
     fireEvent.click(screen.getAllByRole('button', { name: `${content.place} 树木` })[0]!);
-    expect(screen.getByText(content.staticItem)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: content.store })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await screen.findByText(content.conflict);
     expect(screen.getByRole('button', { name: content.save })).toBeDisabled();

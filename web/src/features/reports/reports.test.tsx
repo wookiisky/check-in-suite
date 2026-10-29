@@ -42,9 +42,8 @@ describe('查询页面', () => {
     const day = await screen.findByRole('button', { name: /2026-10-29/ });
     expect(screen.getByRole('button', { name: /2026-10-01/ })).toBeInTheDocument();
     fireEvent.click(day);
-    await screen.findByText('还有记录尚未加载');
-    fireEvent.click(screen.getByRole('button', { name: '加载更多记录' }));
-    await waitFor(() => expect(screen.queryByText('还有记录尚未加载')).not.toBeInTheDocument());
+    fireEvent.click(await screen.findByRole('button', { name: '加载更多记录' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: '加载更多记录' })).not.toBeInTheDocument());
     expect(request).toHaveBeenLastCalledWith('/checkins?start_date=2026-10-29&end_date=2026-10-29&cursor=next-page', expect.anything());
   });
 });

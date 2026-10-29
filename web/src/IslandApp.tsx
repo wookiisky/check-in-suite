@@ -26,6 +26,15 @@ const IslandPage = lazy(() => import('./features/island/IslandPage').then((modul
 type Page = 'island' | 'camp' | 'calendar' | 'stats' | 'shop' | 'achievements';
 type ManagementSection = 'account' | 'tasks' | 'records' | 'products' | 'achievements';
 
+const navIcons: Record<Page, string> = {
+  camp: 'book-v1',
+  island: 'home-v1',
+  calendar: 'calendar-v1',
+  stats: 'chart-v1',
+  shop: 'shop-v1',
+  achievements: 'crown-v1',
+};
+
 // 应用仅保存当前会话与页面状态，业务草稿归各功能组件所有。
 export function IslandApp() {
   const [session, setSession] = useState<Session | null>(null);
@@ -113,14 +122,14 @@ export function IslandApp() {
   return <div className={`application ${immersive ? 'application-island' : ''}`}>
     {!immersive && <header className="site-header"><div className="header-inner">
       <a className="brand" href="#" onClick={(event) => { event.preventDefault(); navigate('camp'); }}><svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg><strong>{content.appName}</strong></a>
-      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}>{content.navigation[item]}</button>)}</nav><div className="account-tools"><span className="name-chip">{session.account.display_name}</span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button>{!management && <button className="secondary header-management-entry" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button>}</div></>}
+      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}><img src={`/api/v1/assets/${navIcons[item]}`} alt="" aria-hidden="true" /><span>{content.navigation[item]}</span></button>)}</nav><div className="account-tools"><span className="name-chip"><img src="/api/v1/assets/user-v1" alt="" aria-hidden="true" /><span>{session.account.display_name}</span></span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button>{!management && <button className="secondary header-management-entry" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}><img src="/api/v1/assets/settings-v1" alt="" aria-hidden="true" /><span>{content.navigation.management}</span></button>}</div></>}
     </div></header>}
     <main className={immersive ? 'island-app-shell' : 'app-shell'}>
       {notice && <p className="notice" role="status">{notice}</p>}
       {loading ? <p role="status">{content.common.loading}</p> : error && !session ? <section className="panel"><FormFeedback error={error} /><button onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{content.common.retry}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <>
         <FormFeedback error={error} />
         {lockPending && <div className="notice" role="alert"><p>{content.account.lockUnconfirmed}</p><button type="button" onClick={() => void lock()}>{content.account.retryLock}</button></div>}
-        <div key={management ? 'management' : page} className={immersive ? 'page-content page-content-island' : 'page-content'}>
+        <div key={management ? 'management' : page} className={immersive ? 'page-content page-content-island' : management ? 'page-content management-workspace' : 'page-content'}>
         {management ? <>
           <div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div>
           <nav className="management-sections" aria-label={content.navigation.management}>

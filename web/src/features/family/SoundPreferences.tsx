@@ -133,8 +133,8 @@ export function SoundPreferences({ client, session, onPreferencesChange, present
     } finally { effectsSuppressed.current = false; if (mounted.current) setBusy(null); }
   }
   const controls = <section className={presentation === 'panel' ? 'panel family-sound-panel' : 'family-sound-dialog'}>{presentation === 'panel' && <h2>{content.sounds}</h2>}<div className="family-preferences">{(['music_enabled', 'effects_enabled', 'reduce_motion'] as const).map((key) => <label key={key}><input type="checkbox" checked={preferences[key]} disabled={busy !== null} onChange={(event) => void change(key, event.target.checked)} />{key === 'music_enabled' ? content.music : key === 'effects_enabled' ? content.effects : content.reduceMotion}</label>)}</div>
-    {preferences.music_enabled && <><p className="muted">{recording ? content.recordingPaused : !playing ? content.musicNeedsGesture : ''}</p><button className="secondary" onClick={() => { if (playing) { wantedPlayback.current = false; setPlaying(false); engine.current?.stopMusic(); } else void startMusic(); }}>{playing ? content.pauseMusic : content.playMusic}</button></>}
-    {systemReduced && <p className="muted">{content.systemReduced}</p>}{audioError && <p role="alert" className="form-error">{audioError}</p>}<FormFeedback error={error} />
+    {preferences.music_enabled && <>{recording && <p className="muted">{content.recordingPaused}</p>}<button className="secondary" onClick={() => { if (playing) { wantedPlayback.current = false; setPlaying(false); engine.current?.stopMusic(); } else void startMusic(); }}>{playing ? content.pauseMusic : content.playMusic}</button></>}
+    {audioError && <p role="alert" className="form-error">{audioError}</p>}<FormFeedback error={error} />
   </section>;
   if (presentation === 'dialog') return open ? <Modal title={content.sounds} onClose={() => onClose?.()}>{controls}</Modal> : null;
   return controls;

@@ -10,7 +10,7 @@ import { BaseAvatarPicker } from './BaseAvatarPicker';
 import { ShopItemArtwork } from './ShopItemArtwork';
 import { categoryLabel, categoryPurchaseType, itemCategory, shopCategories, wardrobeCategories } from './shop-categories';
 import { pendingPurchases } from './pending';
-import { assetURL, canBuy, portraitType, purchaseTime, shopError } from './helpers';
+import { assetURL, canBuy, portraitType, shopError } from './helpers';
 import { dispatchFeedback } from '../../feedback/feedback-events';
 import content from './content.json';
 import './shop.css';
@@ -185,12 +185,8 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
         ))}
       </div>
       {snapshot && (
-        <div className="shop-wallet">
-          <strong>{content.balance}</strong>
+        <div className="shop-wallet" aria-label={content.balance}>
           <Price coins={snapshot.wallet.coins} diamonds={snapshot.wallet.diamonds} />
-          {(snapshot.wallet.coins < 0 || snapshot.wallet.diamonds < 0) && (
-            <p className="shop-hint">{content.negativeBalance}</p>
-          )}
         </div>
       )}
       {message && (
@@ -234,17 +230,14 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
           ))}
         </div>
       ) : (tab === 'browse' || tab === 'wardrobe') && (
-        <label>
-          {content.typeFilter}
-          <select value={type} onChange={(event) => setType(event.target.value)}>
-            <option value="">{content.allTypes}</option>
-            {(tab === 'browse' ? shopCategories : wardrobeCategories).map((item) => (
-              <option value={item} key={item}>
-                {categoryLabel(item)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <select aria-label={content.typeFilter} value={type} onChange={(event) => setType(event.target.value)}>
+          <option value="">{content.allTypes}</option>
+          {(tab === 'browse' ? shopCategories : wardrobeCategories).map((item) => (
+            <option value={item} key={item}>
+              {categoryLabel(item)}
+            </option>
+          ))}
+        </select>
       )}
       {loading && <p role="status">{content.loading}</p>}
       {browsing && !loading && snapshot && (
@@ -252,42 +245,45 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
           {visibleProducts.length === 0 && <p>{content.emptyProducts}</p>}
           <div className="shop-grid">
             {visibleProducts.map((item) => (
-              <article className="shop-card" key={item.id}>
-                <ShopItemArtwork className="shop-item-art shop-product-art" item={item} />
+              <article className="shop-card shop-product-card" key={item.id}>
                 <h3>{item.name}</h3>
-                <div className="shop-product-stats">
-                  <span>
-                    <img src="/api/v1/assets/coin-v1" alt={content.coins} />
-                    <strong>{item.coin_price}</strong>
-                  </span>
-                  {item.diamond_price > 0 && (
+                <ShopItemArtwork className="shop-item-art shop-product-art" item={item} />
+                <div className="shop-product-footer">
+                  <button
+                    className="shop-product-buy"
+                    type="button"
+                    disabled={Boolean(pending) || !canBuy(item, snapshot.wallet)}
+                    onClick={(event) => {
+                      event.currentTarget.focus();
+                      setSelected(item);
+                    }}
+                    aria-label={`${content.buy} ${item.name}`}
+                    aria-description={[
+                      `${content.coins} ${item.coin_price}`,
+                      item.diamond_price > 0 ? `${content.diamonds} ${item.diamond_price}` : null,
+                      item.owned && !item.repeatable
+                        ? content.owned
+                        : item.stock === 0
+                          ? content.soldOut
+                          : !canBuy(item, snapshot.wallet) ? content.insufficient : null,
+                    ].filter(Boolean).join('，')}
+                  >
                     <span>
-                      <img src="/api/v1/assets/gem-v1" alt={content.diamonds} />
-                      <strong>{item.diamond_price}</strong>
+                      <img src="/api/v1/assets/coin-v1" alt={content.coins} />
+                      <strong>{item.coin_price}</strong>
                     </span>
-                  )}
-                  <span>
+                    {item.diamond_price > 0 && (
+                      <span>
+                        <img src="/api/v1/assets/gem-v1" alt={content.diamonds} />
+                        <strong>{item.diamond_price}</strong>
+                      </span>
+                    )}
+                  </button>
+                  <span className="shop-product-owned">
                     <img src="/api/v1/assets/accessory-backpack-v1" alt={content.ownedCount} />
                     <strong>{item.owned_count ?? (item.owned ? 1 : 0)}</strong>
                   </span>
                 </div>
-                <button
-                  type="button"
-                  disabled={Boolean(pending) || !canBuy(item, snapshot.wallet)}
-                  onClick={(event) => {
-                    event.currentTarget.focus();
-                    setSelected(item);
-                  }}
-                  aria-label={`${content.buy} ${item.name}`}
-                >
-                  {item.owned && !item.repeatable
-                    ? content.owned
-                    : item.stock === 0
-                      ? content.soldOut
-                      : !canBuy(item, snapshot.wallet)
-                        ? content.insufficient
-                        : item.owned && item.repeatable ? content.buyAnother : content.buy}
-                </button>
               </article>
             ))}
           </div>
@@ -319,16 +315,12 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
       )}
       {tab === 'islandInventory' && !loading && (
         <section className="shop-stack">
-          <p className="shop-hint">{content.islandInventoryHint}</p>
           {onIsland && <button type="button" onClick={onIsland}>{content.goToIsland}</button>}
           {islandItems.length === 0 && !cursor && <p>{content.emptyPurchases}</p>}
           <div className="shop-grid">
-            {islandItems.map((item) => <article className="shop-card" key={item.id}>
-              <img className="shop-item-art" src={assetURL(item.asset_key_snapshot, item.type_snapshot === 'effect')} alt="" />
+            {islandItems.map((item) => <article className="shop-card shop-product-card" key={item.id}>
               <h3>{item.name_snapshot}</h3>
-              <p>{item.description_snapshot}</p>
-              {portraitType(item) && <p className="shop-hint">{content.dualUseHint}</p>}
-              <p className="shop-hint">{content.purchasedAt} {purchaseTime(item.created_at)}</p>
+              <img className="shop-item-art shop-product-art" src={assetURL(item.asset_key_snapshot, item.type_snapshot === 'effect')} alt="" />
             </article>)}
           </div>
         </section>
@@ -339,20 +331,10 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
           {purchases.length === 0 && <p>{content.emptyPurchases}</p>}
           <div className="shop-grid">
             {purchases.map((item) => (
-              <article className="shop-card" key={item.id}>
-                <img className="shop-item-art" src={assetURL(item.asset_key_snapshot)} alt="" />
+              <article className="shop-card shop-product-card" key={item.id}>
                 <h3>{item.name_snapshot}</h3>
-                <p>{item.description_snapshot}</p>
-                <p className="shop-hint">
-                  {content.purchasedAt} {purchaseTime(item.created_at)}
-                </p>
-                <strong>{item.status === 'redeemed' ? content.redeemed : content.pending}</strong>
-                {item.redeemed_at && (
-                  <p className="shop-hint">
-                    {content.redeemedAt} {purchaseTime(item.redeemed_at)}
-                  </p>
-                )}
-                {item.status === 'pending' && (
+                <img className="shop-item-art shop-product-art" src={assetURL(item.asset_key_snapshot)} alt="" />
+                {item.status === 'pending' ? (
                   <button
                     onClick={(event) => {
                       event.currentTarget.focus();
@@ -362,6 +344,8 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
                   >
                     {content.redeem}
                   </button>
+                ) : (
+                  <strong>{content.redeemed}</strong>
                 )}
               </article>
             ))}
@@ -370,7 +354,6 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
       )}
       {cursor && (
         <div className="shop-stack">
-          <p className="shop-hint">{content.moreHint}</p>
           <button className="secondary" disabled={loading} onClick={() => void more()}>
             {content.more}
           </button>

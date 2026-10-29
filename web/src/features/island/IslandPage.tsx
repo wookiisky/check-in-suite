@@ -324,18 +324,17 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
             {selectedPlacement && selectedDefinition ? <>
               <strong>{selectedDefinition.name}</strong>
               <p>{selectedPlacement.zone === 'indoor' ? content.indoor : content.outdoor}</p>
-              {!selectedDefinition.activity && <p className="island-hint">{content.staticItem}</p>}
-              {selectedDefinition.movable ? <><div className="island-move-buttons"><button className="secondary" aria-label={content.moveLeft} onClick={() => adjust(-0.25, 0)}>←</button><button className="secondary" aria-label={content.moveUp} onClick={() => adjust(0, -0.25)}>↑</button><button className="secondary" aria-label={content.moveDown} onClick={() => adjust(0, 0.25)}>↓</button><button className="secondary" aria-label={content.moveRight} onClick={() => adjust(0.25, 0)}>→</button></div>
+              {selectedDefinition.movable && <><div className="island-move-buttons"><button className="secondary" aria-label={content.moveLeft} onClick={() => adjust(-0.25, 0)}>←</button><button className="secondary" aria-label={content.moveUp} onClick={() => adjust(0, -0.25)}>↑</button><button className="secondary" aria-label={content.moveDown} onClick={() => adjust(0, 0.25)}>↓</button><button className="secondary" aria-label={content.moveRight} onClick={() => adjust(0.25, 0)}>→</button></div>
                 {selectedDefinition.category === 'decoration' || selectedDefinition.category === 'creature' ? <button className="secondary" onClick={() => { const next = { ...selectedPlacement, rotation: selectedPlacement.rotation === 0 ? 180 as const : 0 as const }; if (canPlace(next, placements, state.catalog)) move(next); else showMessage(content.blockedPlacement); }}>{content.rotate}</button> : null}
                 {selectedDefinition.category !== 'house' && selectedDefinition.category !== 'creature' && selectedDefinition.model !== 'run' && <button className="secondary" onClick={changeZone}>{selectedPlacement.zone === 'indoor' ? content.moveOutside : content.moveInside}</button>}
-              </> : <p className="island-hint">{content.fixedItem}</p>}
-              {selectedDefinition.category === 'house' || selectedDefinition.category === 'environment' ? <p className="island-hint">{content.requiredPlacement}</p> : <button className="secondary" onClick={() => { setDraft(placements.filter((item) => item.id !== selectedPlacement.id)); setSelected(null); }}>{content.store}</button>}
+              </>}
+              {selectedDefinition.category !== 'house' && selectedDefinition.category !== 'environment' && <button className="secondary" onClick={() => { setDraft(placements.filter((item) => item.id !== selectedPlacement.id)); setSelected(null); }}>{content.store}</button>}
             </> : <p>{content.nothingSelected}</p>}
           </div>
           <h3>{content.stored}</h3>
           <div className="island-inventory-list">{state.inventory.filter((item) => !placements.some((placed) => placed.id === item.id)).map((item) => {
             const definition = state.catalog.find((entry) => entry.key === item.item_key);
-            return definition && <div className="island-inventory-item" key={item.id} data-inventory-id={item.id}><ItemPreview definition={definition} /><div><strong>{definition.name}</strong><span>{content.categories[definition.category]}</span></div><button className="secondary" aria-label={`${content.place} ${definition.name}`} onClick={() => place(item.id)}>{content.place}</button></div>;
+            return definition && <div className="island-inventory-item" key={item.id} data-inventory-id={item.id}><ItemPreview definition={definition} /><div><strong>{definition.name}</strong></div><button className="secondary" aria-label={`${content.place} ${definition.name}`} onClick={() => place(item.id)}>{content.place}</button></div>;
           })}{state.inventory.every((item) => placements.some((placed) => placed.id === item.id)) && <p className="island-hint">{content.emptyInventory}</p>}</div>
           <h3>{content.placed}</h3>
           <div className="island-placed-list">{placements.map((item) => <button key={item.id} className="secondary" aria-pressed={item.id === selected} onClick={() => { setSelected(item.id); setShowIndoor(item.zone === 'indoor'); }}>{state.catalog.find((entry) => entry.key === item.item_key)?.name}</button>)}</div>

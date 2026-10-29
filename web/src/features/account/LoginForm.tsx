@@ -19,7 +19,8 @@ export function LoginForm({ client, onLogin }: { client: ApiClient; onLogin: (se
     finally { setBusy(false); }
   }
   return <section className="panel login-panel" aria-labelledby="login-title">
-    <h1 id="login-title">{content.account.loginTitle}</h1><p className="muted">{content.account.loginHint}</p>
+    <svg className="login-hero" aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg>
+    <h1 id="login-title">{content.account.loginTitle}</h1>
     <form onSubmit={submit} className="form-stack">
       <label htmlFor="login-username">{content.account.username}</label><input id="login-username" name="username" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} required aria-describedby="username-error" />
       <FieldError error={error} field="username" id="username-error" />
