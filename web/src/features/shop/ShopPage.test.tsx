@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Session } from '../../api/types';
 import { testSession } from '../../test/account-fixtures';
@@ -10,6 +10,39 @@ import content from './content.json';
 const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
 
 describe('商店页面读取与动作边界', () => {
+  it.each([
+    { diamond_price: 2, owned_count: 3, owned: true, repeatable: true },
+    { diamond_price: 0, owned_count: 0, owned: false, repeatable: true },
+    { diamond_price: 0, owned_count: undefined, owned: true, repeatable: false },
+  ])('商品卡片只展示名称、图片和图标旁的价格及已有数量：%j', async (ownership) => {
+    const item = { ...product, ...ownership, island_item_key: 'book' };
+    const request = vi.fn().mockImplementation(async (path: string) => {
+      if (path === '/camp') return camp;
+      if (path === '/products') return { items: [item] };
+      throw new Error(`Unexpected path ${path}`);
+    });
+    render(<ShopPage client={{ request }} session={session} />);
+    await screen.findByRole('heading', { name: item.name });
+    const card = within(screen.getByRole('article'));
+    expect(card.getByRole('img', { name: content.coins }).parentElement).toHaveTextContent(String(item.coin_price));
+    expect(card.getByRole('img', { name: content.ownedCount }).parentElement).toHaveTextContent(
+      String(item.owned_count ?? (item.owned ? 1 : 0)),
+    );
+    if (item.diamond_price > 0) {
+      expect(card.getByRole('img', { name: content.diamonds }).parentElement).toHaveTextContent(String(item.diamond_price));
+    } else {
+      expect(card.queryByRole('img', { name: content.diamonds })).not.toBeInTheDocument();
+    }
+    expect(card.queryByText(item.description)).not.toBeInTheDocument();
+    expect(card.queryByText(content.types[item.type])).not.toBeInTheDocument();
+    expect(card.queryByText(content.dualUseHint)).not.toBeInTheDocument();
+    expect(card.queryByText(content.repeatableHint)).not.toBeInTheDocument();
+    expect(card.queryByText(new RegExp(content.stock))).not.toBeInTheDocument();
+    const buy = card.getByRole('button', { name: `${content.buy} ${item.name}` });
+    if (item.owned && !item.repeatable) expect(buy).toBeDisabled();
+    else expect(buy).toBeEnabled();
+  });
+
   it('购买成功切换我的装扮；后续读取失败只重试读取，不重复购买或自动装备', async () => {
     const feedback = vi.fn();
     window.addEventListener(FEEDBACK_EVENT, feedback);

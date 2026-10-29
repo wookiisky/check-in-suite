@@ -58,6 +58,21 @@ test('真实商店购买恢复、十件装扮与逐次密码兑现', async ({ pa
   const reward = await api(page, '/management/products', 'POST', { type: 'reward', name: `奖励-${testInfo.project.name}`, asset_key: 'reward-gift-v1', description: '', coin_price: 0, diamond_price: 0, stock: null, enabled: true }) as Product;
   await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
 
+  const avatarCard = page.getByRole('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
+  await expect(avatarCard.getByRole('img', { name: shop.coins, exact: true })).toBeVisible();
+  await expect(avatarCard.getByRole('img', { name: shop.diamonds, exact: true })).toBeVisible();
+  await expect(avatarCard.getByRole('img', { name: shop.ownedCount, exact: true }).locator('..')).toHaveText('0');
+  const rewardCard = page.getByRole('article').filter({ has: page.getByRole('heading', { name: reward.name, exact: true }) });
+  await expect(rewardCard.getByRole('img', { name: shop.diamonds, exact: true })).toHaveCount(0);
+  const artwork = avatarCard.locator('.shop-item-art');
+  await expect(artwork).toBeVisible();
+  const artBounds = (await artwork.boundingBox())!;
+  expect(artBounds.width).toBeGreaterThanOrEqual(160);
+  expect(artBounds.height).toBeGreaterThanOrEqual(160);
+  expect(await artwork.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  if (process.env.ISLAND_CAPTURE_PREVIEWS) await avatarCard.screenshot({ path: `.local/previews/shop-card-${testInfo.project.name}.png` });
+
   let dropped = false;
   const keys: string[] = [];
   await page.route('**/api/v1/purchases', async (route) => {

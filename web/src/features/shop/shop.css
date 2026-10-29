@@ -39,20 +39,33 @@
   object-fit: contain;
   align-self: center;
 }
-.shop-price {
+.shop-product-art {
+  width: min(100%, 180px);
+  height: 180px;
+}
+.shop-price,
+.shop-product-stats {
   display: flex;
   flex-wrap: wrap;
   gap: 12px 20px;
 }
-.shop-price > span {
+.shop-price > span,
+.shop-product-stats > span {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
-.shop-price img {
+.shop-price img,
+.shop-product-stats img {
   width: 28px;
   height: 28px;
+}
+.shop-product-stats {
+  font-variant-numeric: tabular-nums;
+}
+.shop-product-stats > span {
+  flex-wrap: nowrap;
 }
 .shop-wallet {
   display: flex;

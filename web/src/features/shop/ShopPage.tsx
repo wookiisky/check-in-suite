@@ -231,17 +231,24 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
           <div className="shop-grid">
             {visibleProducts.map((item) => (
               <article className="shop-card" key={item.id}>
-                <img className="shop-item-art" src={assetURL(item.asset_key, item.type === 'effect')} alt="" />
+                <img className="shop-item-art shop-product-art" src={assetURL(item.asset_key, item.type === 'effect')} alt="" />
                 <h3>{item.name}</h3>
-                <p className="shop-hint">{content.types[item.type]}</p>
-                <p>{item.description}</p>
-                {item.island_item_key && portraitType(item) && <p className="shop-hint">{content.dualUseHint}</p>}
-                {item.repeatable && <p className="shop-hint">{content.repeatableHint}</p>}
-                {item.owned_count !== undefined && <p>{content.ownedCount} {item.owned_count}</p>}
-                <Price coins={item.coin_price} diamonds={item.diamond_price} />
-                <p>
-                  {content.stock} {item.stock ?? content.unlimited}
-                </p>
+                <div className="shop-product-stats">
+                  <span>
+                    <img src="/api/v1/assets/coin-v1" alt={content.coins} />
+                    <strong>{item.coin_price}</strong>
+                  </span>
+                  {item.diamond_price > 0 && (
+                    <span>
+                      <img src="/api/v1/assets/gem-v1" alt={content.diamonds} />
+                      <strong>{item.diamond_price}</strong>
+                    </span>
+                  )}
+                  <span>
+                    <img src="/api/v1/assets/accessory-backpack-v1" alt={content.ownedCount} />
+                    <strong>{item.owned_count ?? (item.owned ? 1 : 0)}</strong>
+                  </span>
+                </div>
                 <button
                   type="button"
                   disabled={Boolean(pending) || !canBuy(item, snapshot.wallet)}
