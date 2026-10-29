@@ -45,7 +45,6 @@
   "activitiesTitle": "和伙伴一起",
   "previousActivities": "向左浏览动作",
   "nextActivities": "向右浏览动作",
-  "freeActivities": "活动可以自由体验，打卡关联将逐步加入。",
   "activityUnavailable": "暂时走不到这里，请调整物品或房门附近的位置。",
   "blockedPlacement": "这里放不下，请留出物品和房门的空间。",
   "requiredPlacement": "小岛需要一间房屋和一种环境，选择另一款即可替换。",
@@ -90,5 +89,13 @@
   "expandCheckins": "展开今日打卡",
   "collapseCheckins": "收起今日打卡",
   "coins": "金币",
-  "diamonds": "钻石"
+  "diamonds": "钻石",
+  "activityLocked": "需要今日打卡",
+  "activityUnlockHint": "今天完成以下任一任务，即可解锁这项活动。",
+  "goCheckin": "去打卡",
+  "dismiss": "知道了",
+  "accessRefreshFailed": "活动状态更新失败，请重试。布置修改已保留。",
+  "retryAccess": "重试活动状态",
+  "accessPending": "正在更新活动状态…",
+  "inactiveTask": "已停用"
 }

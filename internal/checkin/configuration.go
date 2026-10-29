@@ -178,6 +178,11 @@ func normalizeTask(in *TaskInput) {
 	in.Weekdays = slices.Clone(in.Weekdays)
 	slices.Sort(in.Weekdays)
 	in.Weekdays = slices.Compact(in.Weekdays)
+	if in.UnlockActivities != nil {
+		in.UnlockActivities = slices.Clone(in.UnlockActivities)
+		slices.Sort(in.UnlockActivities)
+		in.UnlockActivities = slices.Compact(in.UnlockActivities)
+	}
 }
 
 // validTask checks current creation rules only after an existing command has had a chance to replay.
@@ -196,6 +201,11 @@ func (s *Service) validTask(in *TaskInput) error {
 	}
 	if in.DailyLimit < 1 || in.DailyLimit > s.Config.Limits.DailyLimitMax {
 		return core.Invalid("daily_limit", "INVALID_NUMBER")
+	}
+	for _, activity := range in.UnlockActivities {
+		if activity != "read" && activity != "run" && activity != "ball" {
+			return core.Invalid("unlock_activities", "INVALID_VALUE")
+		}
 	}
 	if len(in.Weekdays) == 0 {
 		return core.Invalid("weekdays", "REQUIRED")
@@ -232,6 +242,9 @@ func weekdays(mask int) []int {
 func (s *Service) CreateTask(ctx context.Context, p account.Principal, key string, in TaskInput) (Task, error) {
 	var result Task
 	normalizeTask(&in)
+	if in.UnlockActivities == nil {
+		in.UnlockActivities = []string{}
+	}
 	tx, now, err := s.begin(ctx, p, true)
 	if err != nil {
 		return result, err
@@ -247,6 +260,9 @@ func (s *Service) CreateTask(ctx context.Context, p account.Principal, key strin
 	}
 	if saved != nil {
 		err = json.Unmarshal(saved.JSON, &result)
+		if result.UnlockActivities == nil {
+			result.UnlockActivities = []string{}
+		}
 		return result, err
 	}
 	if err := s.validTask(&in); err != nil {
@@ -257,9 +273,12 @@ func (s *Service) CreateTask(ctx context.Context, p account.Principal, key strin
 			return result, err
 		}
 	}
-	result = Task{ID: core.ID(), CategoryID: in.CategoryID, Name: in.Name, IconKey: in.IconKey, CoinReward: in.CoinReward, DiamondReward: in.DiamondReward, DailyLimit: in.DailyLimit, Weekdays: in.Weekdays, Enabled: in.Enabled, Version: 1}
+	result = Task{UnlockActivities: in.UnlockActivities, ID: core.ID(), CategoryID: in.CategoryID, Name: in.Name, IconKey: in.IconKey, CoinReward: in.CoinReward, DiamondReward: in.DiamondReward, DailyLimit: in.DailyLimit, Weekdays: in.Weekdays, Enabled: in.Enabled, Version: 1}
 	_, err = tx.ExecContext(ctx, "INSERT INTO tasks(id,category_id,name,icon_key,coin_reward,diamond_reward,daily_limit,weekday_mask,enabled,version,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,1,?,?)", result.ID, in.CategoryID, in.Name, in.IconKey, in.CoinReward, in.DiamondReward, in.DailyLimit, weekdayMask(in.Weekdays), in.Enabled, now.UnixMilli(), now.UnixMilli())
 	if err != nil {
+		return result, err
+	}
+	if err = replaceTaskIslandActivities(ctx, tx, result.ID, in.UnlockActivities); err != nil {
 		return result, err
 	}
 	if err = achievement.RecordSchedule(ctx, tx, result.ID, core.Today(now), weekdayMask(in.Weekdays), in.Enabled); err != nil {
@@ -301,6 +320,11 @@ func (s *Service) UpdateTask(ctx context.Context, p account.Principal, id string
 	_, err = tx.ExecContext(ctx, "UPDATE tasks SET category_id=?,name=?,icon_key=?,coin_reward=?,diamond_reward=?,daily_limit=?,weekday_mask=?,enabled=?,version=version+1,updated_at=? WHERE id=?", in.CategoryID, in.Name, in.IconKey, in.CoinReward, in.DiamondReward, in.DailyLimit, weekdayMask(in.Weekdays), in.Enabled, now.UnixMilli(), id)
 	if err != nil {
 		return result, err
+	}
+	if in.UnlockActivities != nil {
+		if err = replaceTaskIslandActivities(ctx, tx, id, in.UnlockActivities); err != nil {
+			return result, err
+		}
 	}
 	if !slices.Equal(old.Weekdays, in.Weekdays) || old.Enabled != in.Enabled {
 		if err = achievement.RecordSchedule(ctx, tx, id, core.Today(now), weekdayMask(in.Weekdays), in.Enabled); err != nil {
@@ -345,7 +369,7 @@ func (s *Service) DeleteTask(ctx context.Context, p account.Principal, id string
 	return tx.Commit()
 }
 
-const taskColumns = "id,category_id,name,icon_key,coin_reward,diamond_reward,daily_limit,weekday_mask,enabled,version"
+const taskColumns = "id,category_id,name,icon_key,coin_reward,diamond_reward,daily_limit,weekday_mask,enabled,version,(SELECT json_group_array(activity) FROM (SELECT activity FROM task_island_activities WHERE task_id=tasks.id ORDER BY activity))"
 
 // scanner is the shared standard-library Scan shape for single and multiple rows.
 type scanner interface{ Scan(...any) error }
@@ -354,7 +378,11 @@ type scanner interface{ Scan(...any) error }
 func scanTask(row scanner) (Task, error) {
 	var t Task
 	var mask int
-	err := row.Scan(&t.ID, &t.CategoryID, &t.Name, &t.IconKey, &t.CoinReward, &t.DiamondReward, &t.DailyLimit, &mask, &t.Enabled, &t.Version)
+	var activities string
+	err := row.Scan(&t.ID, &t.CategoryID, &t.Name, &t.IconKey, &t.CoinReward, &t.DiamondReward, &t.DailyLimit, &mask, &t.Enabled, &t.Version, &activities)
+	if err == nil {
+		err = json.Unmarshal([]byte(activities), &t.UnlockActivities)
+	}
 	t.Weekdays = weekdays(mask)
 	return t, err
 }

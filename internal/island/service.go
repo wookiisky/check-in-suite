@@ -6,16 +6,28 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
 	"github.com/wookiisky/check-in-suite/internal/core"
 )
 
 // readState resolves ownership using all purchases, never the paginated shop view.
-func readState(ctx context.Context, tx *sql.Tx) (State, error) {
+func readState(ctx context.Context, tx *sql.Tx, now time.Time) (State, error) {
 	state := State{Version: 1, Placements: defaultPlacements(), Inventory: baseInventory(), Catalog: Catalog()}
+	zone, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		return state, err
+	}
+	local := now.In(zone)
+	state.Today = core.Today(now)
+	state.ExpiresAt = time.Date(local.Year(), local.Month(), local.Day()+1, 0, 0, 0, 0, zone).Format(time.RFC3339)
+	state.ActivityAccess, err = readActivityAccess(ctx, tx, state.Catalog, state.Today)
+	if err != nil {
+		return state, err
+	}
 	var raw string
-	err := tx.QueryRowContext(ctx, "SELECT version,placements FROM island_state WHERE id=1").Scan(&state.Version, &raw)
+	err = tx.QueryRowContext(ctx, "SELECT version,placements FROM island_state WHERE id=1").Scan(&state.Version, &raw)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return state, err
 	}
@@ -52,10 +64,11 @@ func (s *Service) Read(ctx context.Context, p account.Principal) (State, error) 
 		return State{}, err
 	}
 	defer tx.Rollback()
-	if err = account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
+	now := s.Now()
+	if err = account.Authorize(ctx, tx, p, false, now); err != nil {
 		return State{}, err
 	}
-	result, err := readState(ctx, tx)
+	result, err := readState(ctx, tx, now)
 	if err != nil {
 		return result, err
 	}
@@ -69,10 +82,11 @@ func (s *Service) Save(ctx context.Context, p account.Principal, input SaveInput
 		return State{}, err
 	}
 	defer tx.Rollback()
-	if err = account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
+	now := s.Now()
+	if err = account.Authorize(ctx, tx, p, false, now); err != nil {
 		return State{}, err
 	}
-	state, err := readState(ctx, tx)
+	state, err := readState(ctx, tx, now)
 	if err != nil {
 		return state, err
 	}

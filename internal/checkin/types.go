@@ -42,29 +42,31 @@ type CategoryInput struct {
 
 // Task is the currently configured rule for future check-ins.
 type Task struct {
-	ID            string  `json:"id"`             // Stable task identity retained after soft deletion.
-	CategoryID    *string `json:"category_id"`    // Current category; task deletion preserves its final membership.
-	Name          string  `json:"name"`           // Display name used by future snapshots.
-	IconKey       string  `json:"icon_key"`       // Versioned controlled icon key.
-	CoinReward    int64   `json:"coin_reward"`    // Nonnegative reward per new record.
-	DiamondReward int64   `json:"diamond_reward"` // Nonnegative reward per new record.
-	DailyLimit    int64   `json:"daily_limit"`    // Maximum effective records on an eligible date.
-	Weekdays      []int   `json:"weekdays"`       // Monday is one and Sunday is seven.
-	Enabled       bool    `json:"enabled"`        // Whether new records may be made.
-	Version       int64   `json:"version"`        // Confirmation version for new records.
+	UnlockActivities []string `json:"unlock_activities"` // Island activities opened by one effective check-in today.
+	ID               string   `json:"id"`                // Stable task identity retained after soft deletion.
+	CategoryID       *string  `json:"category_id"`       // Current category; task deletion preserves its final membership.
+	Name             string   `json:"name"`              // Display name used by future snapshots.
+	IconKey          string   `json:"icon_key"`          // Versioned controlled icon key.
+	CoinReward       int64    `json:"coin_reward"`       // Nonnegative reward per new record.
+	DiamondReward    int64    `json:"diamond_reward"`    // Nonnegative reward per new record.
+	DailyLimit       int64    `json:"daily_limit"`       // Maximum effective records on an eligible date.
+	Weekdays         []int    `json:"weekdays"`          // Monday is one and Sunday is seven.
+	Enabled          bool     `json:"enabled"`           // Whether new records may be made.
+	Version          int64    `json:"version"`           // Confirmation version for new records.
 }
 
 // TaskInput replaces mutable task configuration without modifying past rewards.
 type TaskInput struct {
-	CategoryID      *string `json:"category_id"`                // Null leaves a task ungrouped.
-	Name            string  `json:"name"`                       // Required display name.
-	IconKey         string  `json:"icon_key"`                   // Controlled icon identity.
-	CoinReward      int64   `json:"coin_reward"`                // Nonnegative coin amount.
-	DiamondReward   int64   `json:"diamond_reward"`             // Nonnegative diamond amount.
-	DailyLimit      int64   `json:"daily_limit"`                // Positive limit.
-	Weekdays        []int   `json:"weekdays"`                   // Nonempty set of weekdays.
-	Enabled         bool    `json:"enabled"`                    // Future-record eligibility.
-	ExpectedVersion int64   `json:"expected_version,omitempty"` // Required for an edit.
+	UnlockActivities []string `json:"unlock_activities,omitempty"` // Omitted edits preserve links; an empty array clears them.
+	CategoryID       *string  `json:"category_id"`                 // Null leaves a task ungrouped.
+	Name             string   `json:"name"`                        // Required display name.
+	IconKey          string   `json:"icon_key"`                    // Controlled icon identity.
+	CoinReward       int64    `json:"coin_reward"`                 // Nonnegative coin amount.
+	DiamondReward    int64    `json:"diamond_reward"`              // Nonnegative diamond amount.
+	DailyLimit       int64    `json:"daily_limit"`                 // Positive limit.
+	Weekdays         []int    `json:"weekdays"`                    // Nonempty set of weekdays.
+	Enabled          bool     `json:"enabled"`                     // Future-record eligibility.
+	ExpectedVersion  int64    `json:"expected_version,omitempty"`  // Required for an edit.
 }
 
 // Record retains its original date, identity and rewards during content edits.

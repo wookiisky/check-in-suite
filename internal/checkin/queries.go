@@ -52,7 +52,12 @@ func (s *Service) Camp(ctx context.Context, p account.Principal, categoryID stri
 	for rows.Next() {
 		var t AvailableTask
 		var weekdaysMask int
-		if err := rows.Scan(&t.ID, &t.CategoryID, &t.Name, &t.IconKey, &t.CoinReward, &t.DiamondReward, &t.DailyLimit, &weekdaysMask, &t.Enabled, &t.Version, &t.Remaining); err != nil {
+		var activities string
+		if err := rows.Scan(&t.ID, &t.CategoryID, &t.Name, &t.IconKey, &t.CoinReward, &t.DiamondReward, &t.DailyLimit, &weekdaysMask, &t.Enabled, &t.Version, &activities, &t.Remaining); err != nil {
+			rows.Close()
+			return out, err
+		}
+		if err := json.Unmarshal([]byte(activities), &t.UnlockActivities); err != nil {
 			rows.Close()
 			return out, err
 		}

@@ -11,7 +11,7 @@ export type IslandActivity = NonNullable<IslandDefinition['activity']>;
 
 // 页面使用应用已有会话，不创建第二份认证状态。
 export interface IslandPageProps {
-  client: Pick<ApiClient, 'request'>; // 共享请求入口。
+  client: Pick<ApiClient, 'request'> & Partial<Pick<ApiClient, 'now' | 'recordServerTime'>>; // 共享请求入口。
   session: Session; // 当前角色所属账户和动效偏好。
   onCamp?: () => void; // 从打卡快捷入口进入营地主界面。
   onBack?: () => void; // 返回进入小岛前的页面。

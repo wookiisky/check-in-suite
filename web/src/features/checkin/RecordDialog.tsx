@@ -32,7 +32,7 @@ export function RecordDialog({ client, session, record: initialRecord, today, ma
   const [error, setError] = useState<unknown>(null);
   const editable = management || (record.business_date === today && record.can_edit);
   const deletable = management || (record.business_date === today && record.can_delete);
-  const task: Task = { id: record.task_id, category_id: null, name: record.task_name_snapshot, icon_key: record.task_icon_snapshot, coin_reward: record.coin_reward_snapshot, diamond_reward: record.diamond_reward_snapshot, daily_limit: 1, weekdays: [], enabled: false, version: 1 };
+  const task: Task = { id: record.task_id, category_id: null, name: record.task_name_snapshot, icon_key: record.task_icon_snapshot, coin_reward: record.coin_reward_snapshot, diamond_reward: record.diamond_reward_snapshot, daily_limit: 1, weekdays: [], enabled: false, unlock_activities: [], version: 1 };
 
   // 删除具有重复成功语义，失败保留原版本以安全重试。
   async function remove() {

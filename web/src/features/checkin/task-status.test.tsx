@@ -11,7 +11,7 @@ const session = testSession as Session;
 
 describe('任务开启和关闭', () => {
   it('默认隐藏关闭任务，显示后可以重新开启并使用服务端返回的版本', async () => {
-    const closed = { ...taskFixture, enabled: false };
+    const closed = { ...taskFixture, enabled: false, unlock_activities: ['read', 'ball'] as const };
     const patch = vi.fn().mockResolvedValueOnce({ ...closed, enabled: true, version: 2 }).mockResolvedValueOnce({ ...closed, version: 3 });
     const request = vi.fn().mockImplementation(async (path: string, options?: { method?: string }) => {
       if (options?.method === 'PATCH') return patch(path, options);
@@ -26,7 +26,7 @@ describe('任务开启和关闭', () => {
     fireEvent.click(screen.getByLabelText(content.showDisabledTasks));
     fireEvent.click(screen.getByRole('button', { name: `${content.disableTask} ${closed.name}` }));
     await screen.findByText(content.taskDisabled);
-    expect(patch.mock.calls[1]?.[1]).toMatchObject({ body: { enabled: false, expected_version: 2 } });
+    expect(patch.mock.calls[1]?.[1]).toMatchObject({ body: { enabled: false, expected_version: 2, unlock_activities: ['read', 'ball'] } });
     expect(screen.queryByText(closed.name)).not.toBeInTheDocument();
   });
 
@@ -44,7 +44,7 @@ describe('任务开启和关闭', () => {
       method: 'PATCH', body: {
         name: taskFixture.name, category_id: taskFixture.category_id, icon_key: taskFixture.icon_key,
         coin_reward: taskFixture.coin_reward, diamond_reward: taskFixture.diamond_reward,
-        daily_limit: taskFixture.daily_limit, weekdays: taskFixture.weekdays, enabled: false, expected_version: 1,
+        daily_limit: taskFixture.daily_limit, weekdays: taskFixture.weekdays, unlock_activities: taskFixture.unlock_activities, enabled: false, expected_version: 1,
       },
     });
     expect(screen.queryByText(taskFixture.name)).not.toBeInTheDocument();

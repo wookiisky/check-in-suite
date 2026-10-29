@@ -753,8 +753,9 @@ components:
     Task:
       type: "object"
       additionalProperties: false
-      required: ["id", "category_id", "name", "icon_key", "coin_reward", "diamond_reward", "daily_limit", "weekdays", "enabled", "version"]
+      required: ["id", "category_id", "name", "icon_key", "coin_reward", "diamond_reward", "daily_limit", "weekdays", "enabled", "version", "unlock_activities"]
       properties:
+        unlock_activities: {"type": "array", "uniqueItems": true, "items": {"$ref": "#/components/schemas/IslandActivity"}, "description": "当天一次有效打卡可解锁的活动。新增省略为空，更新省略保留，显式空数组清除关联。"}
         id: {"type": "string", "minLength": 1}
         category_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
@@ -770,6 +771,7 @@ components:
       additionalProperties: false
       required: ["category_id", "name", "icon_key", "coin_reward", "diamond_reward", "daily_limit", "weekdays", "enabled"]
       properties:
+        unlock_activities: {"type": "array", "uniqueItems": true, "items": {"$ref": "#/components/schemas/IslandActivity"}, "description": "当天一次有效打卡可解锁的活动。新增省略为空，更新省略保留，显式空数组清除关联。"}
         category_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
         icon_key: {"type": "string", "minLength": 1}
@@ -783,6 +785,7 @@ components:
       additionalProperties: false
       required: ["category_id", "name", "icon_key", "coin_reward", "diamond_reward", "daily_limit", "weekdays", "enabled", "expected_version"]
       properties:
+        unlock_activities: {"type": "array", "uniqueItems": true, "items": {"$ref": "#/components/schemas/IslandActivity"}, "description": "当天一次有效打卡可解锁的活动。新增省略为空，更新省略保留，显式空数组清除关联。"}
         category_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
         icon_key: {"type": "string", "minLength": 1}
@@ -795,8 +798,9 @@ components:
     AvailableTask:
       type: "object"
       additionalProperties: false
-      required: ["id", "category_id", "name", "icon_key", "coin_reward", "diamond_reward", "daily_limit", "weekdays", "enabled", "version", "remaining"]
+      required: ["id", "category_id", "name", "icon_key", "coin_reward", "diamond_reward", "daily_limit", "weekdays", "enabled", "version", "remaining", "unlock_activities"]
       properties:
+        unlock_activities: {"type": "array", "uniqueItems": true, "items": {"$ref": "#/components/schemas/IslandActivity"}, "description": "当天一次有效打卡可解锁的活动。新增省略为空，更新省略保留，显式空数组清除关联。"}
         id: {"type": "string", "minLength": 1}
         category_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
@@ -941,11 +945,33 @@ components:
         asset_key: {"type": "string", "minLength": 1, "description": "商品缩略图和当前受控素材身份。"}
         coin_price: {"type": "integer", "minimum": 0, "description": "资源默认价格；实际购买以商品价格为准。"}
         diamond_price: {"type": "integer", "minimum": 0, "description": "资源默认钻石价格；实际购买以商品价格为准。"}
+    IslandActivity:
+      type: "string"
+      enum: ["read", "run", "ball"]
+    IslandActivityTask:
+      type: "object"
+      additionalProperties: false
+      required: ["id", "name", "enabled"]
+      properties:
+        id: {"type": "string", "minLength": 1}
+        name: {"type": "string"}
+        enabled: {"type": "boolean"}
+    IslandActivityAccess:
+      type: "object"
+      additionalProperties: false
+      required: ["activity", "available", "tasks"]
+      properties:
+        activity: {"$ref": "#/components/schemas/IslandActivity"}
+        available: {"type": "boolean"}
+        tasks: {"type": "array", "items": {"$ref": "#/components/schemas/IslandActivityTask"}, "description": "仍关联的未删除任务；停用任务保留。没有关联任务时活动开放。"}
     IslandState:
       type: "object"
       additionalProperties: false
-      required: ["version", "placements", "inventory", "catalog"]
+      required: ["version", "placements", "inventory", "catalog", "today", "expires_at", "activity_access"]
       properties:
+        today: {"type": "string", "format": "date", "description": "本次资格计算采用的台北业务日期。"}
+        expires_at: {"type": "string", "format": "date-time", "description": "下一个台北午夜，旧资格到期后不能继续使用。"}
+        activity_access: {"type": "array", "items": {"$ref": "#/components/schemas/IslandActivityAccess"}}
         version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         placements: {"type": "array", "items": {"$ref": "#/components/schemas/IslandPlacement"}}
         inventory: {"type": "array", "items": {"$ref": "#/components/schemas/IslandOwnedItem"}}

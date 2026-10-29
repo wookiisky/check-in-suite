@@ -6,11 +6,12 @@ import type { Camp } from '../shop/types';
 import { portraitAssetKey } from '../shop/helpers';
 import { useReducedMotion } from '../shop/useReducedMotion';
 import { advanceActor, createActor, startActivity } from './island-activity';
+import { allowedIslandActivities, useIslandActivityAccess } from './useIslandActivityAccess';
 import { canPlace, clampPlacement, interactionPoint } from './island-geometry';
 import { TaskIcon } from '../checkin/TaskIcon';
 import { IslandScene } from './IslandScene';
 import { ItemArtwork } from './IslandArtwork';
-import type { IslandDefinition, IslandPageProps, IslandPlacement, IslandState } from './island-types';
+import type { IslandActivity, IslandDefinition, IslandPageProps, IslandPlacement, IslandState } from './island-types';
 import { dispatchFeedback } from '../../feedback/feedback-events';
 import content from './content.json';
 import './island-page.css';
@@ -30,7 +31,7 @@ function ItemPreview({ definition, fit = false }: { definition: IslandDefinition
 }
 
 // 滚动与边界测量留在活动列表内，不改变角色活动或场景镜头。
-function IslandActivityList({ state, reduced, onActivity }: { state: IslandState; reduced: boolean; onActivity: (id: string) => void }) {
+function IslandActivityList({ state, reduced, allowed, onActivity }: { state: IslandState; reduced: boolean; allowed: readonly IslandActivity[]; onActivity: (id: string) => void }) {
   const id = useId();
   const section = useRef<HTMLElement>(null);
   const list = useRef<HTMLDivElement>(null);
@@ -69,8 +70,9 @@ function IslandActivityList({ state, reduced, onActivity }: { state: IslandState
     <div ref={list} id={id} className="island-activity-buttons"><div ref={track} className="island-activity-track">{state.placements.map((item) => {
       const definition = state.catalog.find((entry) => entry.key === item.item_key);
       if (!definition?.activity) return null;
-      const label = `${content.activities[definition.activity]} ${definition.name}`;
-      return <button key={item.id} className="secondary" aria-label={label} title={label} onFocus={(event) => event.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' })} onClick={() => onActivity(item.id)}><ItemPreview definition={definition} fit/></button>;
+      const locked = !allowed.includes(definition.activity);
+      const label = `${content.activities[definition.activity]} ${definition.name}${locked ? `，${content.activityLocked}` : ''}`;
+      return <button key={item.id} className={`secondary ${locked ? 'island-activity-locked' : ''}`} aria-label={label} title={label} onFocus={(event) => event.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' })} onClick={() => onActivity(item.id)}><ItemPreview definition={definition} fit/>{locked && <svg className="island-lock-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5z" fill="var(--island-soft)" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg>}</button>;
     })}</div></div>
     {scroll.overflow && <button className="secondary island-activity-arrow" aria-label={content.nextActivities} title={content.nextActivities} aria-controls={id} disabled={scroll.end} onClick={() => browse(1)}><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}
   </section>;
@@ -79,6 +81,9 @@ function IslandActivityList({ state, reduced, onActivity }: { state: IslandState
 // 页面管理持久草稿，随机活动只在内存运行，不产生钱包或打卡写入。
 export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp }: IslandPageProps) {
   const [state, setState] = useState<IslandState | null>(null);
+  const activityAccess = useIslandActivityAccess(client, state);
+  const allowed = allowedIslandActivities(activityAccess.access, client.now?.().getTime() ?? Date.now());
+  const [lockedActivity, setLockedActivity] = useState<IslandActivity | null>(null);
   const [draft, setDraft] = useState<IslandPlacement[] | null>(null);
   const [camp, setCamp] = useState<Camp | null>(null);
   const [checkinsOpen, setCheckinsOpen] = useState(true);
@@ -106,8 +111,13 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   const editing = draft !== null;
   const dirty = Boolean(draft && state && JSON.stringify(draft) !== JSON.stringify(state.placements));
   const placements = draft ?? state?.placements ?? [];
-  const latest = useRef({ placements, catalog: state?.catalog ?? [] });
-  latest.current = { placements, catalog: state?.catalog ?? [] };
+  const latest = useRef({ placements, catalog: state?.catalog ?? [], access: activityAccess.access });
+  latest.current = { placements, catalog: state?.catalog ?? [], access: activityAccess.access };
+
+  // 暂停和减少动效时也立即终止已失去资格的活动。
+  useEffect(() => {
+    setActor((current) => advanceActor(current, 0, latest.current.placements, latest.current.catalog, undefined, allowedIslandActivities(activityAccess.access, client.now?.().getTime() ?? Date.now())));
+  }, [activityAccess.access]);
 
   // 保存提示与普通状态明确区分，阻挡或不可用信息不使用成功动效。
   function showMessage(text: string, success = false) { setMessage({ text, success }); }
@@ -147,7 +157,11 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(null);
-    void Promise.all([client.request<IslandState>('/island', { signal: controller.signal }), client.request<Camp>('/camp', { signal: controller.signal })]).then(([next, camp]) => {
+    void Promise.all([client.request<IslandState>('/island', { signal: controller.signal }), client.request<Camp>('/camp', { signal: controller.signal }).then((camp) => {
+      // 收到时立即校准，不能等待另一个请求后把时钟倒拨到旧响应时间。
+      if (!controller.signal.aborted) client.recordServerTime?.(camp.server_now);
+      return camp;
+    })]).then(([next, camp]) => {
       if (controller.signal.aborted) return;
       setState(next); setCamp(camp); setAvatar(camp.equipment.avatar ? portraitAssetKey(camp.equipment.avatar) : 'fox-v1');
       setActor(createActor(next.placements, next.catalog)); setConflict(false); setUnconfirmedSave(false);
@@ -166,7 +180,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
       if (document.visibilityState === 'hidden') { previous = null; return; }
       if (previous !== null) {
         const seconds = Math.min((timestamp - previous) / 1000, 0.05);
-        setActor((current) => advanceActor(current, seconds, latest.current.placements, latest.current.catalog));
+        setActor((current) => advanceActor(current, seconds, latest.current.placements, latest.current.catalog, undefined, allowedIslandActivities(latest.current.access, client.now?.().getTime() ?? Date.now())));
       }
       previous = timestamp;
       frame = window.requestAnimationFrame(tick);
@@ -248,7 +262,11 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   // 主动互动与自主活动共享执行路径；减少动效时直接展示活动静态状态。
   function interact(id: string) {
     if (!state || editing) return;
-    const next = startActivity(actor, id, state.placements, state.catalog);
+    const definition = state.catalog.find((entry) => entry.key === state.placements.find((item) => item.id === id)?.item_key);
+    const currentAllowed = allowedIslandActivities(activityAccess.access, client.now?.().getTime() ?? Date.now());
+    if (definition?.activity && !currentAllowed.includes(definition.activity)) { setLockedActivity(definition.activity); showMessage(''); return; }
+    setLockedActivity(null);
+    const next = startActivity(actor, id, state.placements, state.catalog, currentAllowed);
     if (!next) { showMessage(content.activityUnavailable); return; }
     if (reduced) {
       const point = next.route.at(-1);
@@ -282,6 +300,13 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     </aside>}
     {loading && <p role="status">{content.loading}</p>}
     {error !== null && !leaving && <div className="island-notice island-error" role="alert"><p>{errorMessage(error)}</p>{!editing && <button onClick={() => setAttempt((value) => value + 1)}>{content.retry}</button>}</div>}
+    {(activityAccess.error !== null || (lockedActivity && !allowed.includes(lockedActivity))) && <section className="island-notice island-access-notice" aria-label={content.activityLocked}>
+      {activityAccess.error !== null && <><p role="alert">{content.accessRefreshFailed}</p><button disabled={activityAccess.pending} onClick={activityAccess.refresh}>{content.retryAccess}</button></>}
+      {lockedActivity && !allowed.includes(lockedActivity) && <><p role="status">{activityAccess.pending ? content.accessPending : content.activityUnlockHint}</p>
+        <ul>{activityAccess.access?.activity_access.find((entry) => entry.activity === lockedActivity)?.tasks.map((task) => <li key={task.id}>{task.name}{!task.enabled && <span> · {content.inactiveTask}</span>}</li>)}</ul>
+        <div className="button-row">{onCamp && <button disabled={saving} onClick={() => leave('camp')}>{content.goCheckin}</button>}<button className="secondary" onClick={() => setLockedActivity(null)}>{content.dismiss}</button></div>
+      </>}
+    </section>}
     {message.text && <p className={`island-notice ${message.success ? 'feedback-success' : ''}`} role="status">{message.text}</p>}
     {conflict && <div className="island-notice island-error" role="alert"><p>{content.conflict}</p><button onClick={cancel}>{content.reloadAfterCancel}</button></div>}
     {state && <>
@@ -316,7 +341,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
       </div>
       {!editing && <div ref={dock} className="island-game-dock">
         <div className="island-character-status"><span className="island-status-dot"/><span aria-live="polite">{paused ? content.paused : content.actorStatus[actor.action]}</span><button className="secondary" onClick={() => setPaused((value) => !value)}>{paused ? content.resume : content.pause}</button></div>
-        <IslandActivityList state={state} reduced={reduced} onActivity={interact}/>
+        <IslandActivityList state={state} reduced={reduced} allowed={allowed} onActivity={interact}/>
       </div>}
 
     </>}

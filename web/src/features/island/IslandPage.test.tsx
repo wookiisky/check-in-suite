@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
 import { IslandPage } from './IslandPage';
@@ -170,5 +170,77 @@ describe('小岛打卡与钱包', () => {
     const request = vi.fn().mockImplementation(async (path) => path === '/camp' ? { ...camp, has_scheduled_tasks: scheduled } : state);
     render(<IslandPage client={{ request }} session={{ ...testSession, timezone: 'Asia/Taipei' }} onCamp={vi.fn()} />);
     expect(await screen.findByText(scheduled ? '今天的打卡已完成' : '今天没有打卡项目')).toBeInTheDocument();
+  });
+});
+
+
+describe('打卡解锁活动', () => {
+  it('锁定入口说明关联任务，不能启动，前台刷新后可以活动', async () => {
+    let unlocked = false;
+    const locked = { ...state, activity_access: state.activity_access.map((entry) => entry.activity === 'run'
+      ? { ...entry, available: false, tasks: [{ id: 'exercise', name: '晨间运动', enabled: true }] } : entry) };
+    const request = vi.fn().mockImplementation(async (path) => path === '/camp' ? camp : unlocked ? state : locked);
+    const onCamp = vi.fn();
+    const session = { ...testSession, timezone: 'Asia/Taipei' as const, account: { ...testSession.account, preferences: { ...testSession.account.preferences, reduce_motion: true } } };
+    render(<IslandPage client={{ request }} session={session} onCamp={onCamp}/>);
+    const button = await screen.findByRole('button', { name: `${content.activities.run} 运动区，${content.activityLocked}` });
+    fireEvent.click(button);
+    expect(screen.getByText('晨间运动')).toBeInTheDocument();
+    expect(screen.queryByText(content.actorStatus.run)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: content.goCheckin }));
+    expect(onCamp).toHaveBeenCalledOnce();
+    unlocked = true;
+    fireEvent.focus(window);
+    const openButton = await screen.findByRole('button', { name: `${content.activities.run} 运动区` });
+    fireEvent.click(openButton);
+    expect(screen.getByText(content.actorStatus.run)).toBeInTheDocument();
+  });
+  it('前台刷新失败保留布置草稿，可以重试资格', async () => {
+    let fail = false;
+    const request = vi.fn().mockImplementation(async (path) => {
+      if (path === '/camp') return camp;
+      if (fail) throw new Error('offline');
+      return state;
+    });
+    render(<IslandPage client={{ request }} session={{ ...testSession, timezone: 'Asia/Taipei' }}/>);
+    fireEvent.click(await screen.findByRole('button', { name: content.edit }));
+    fireEvent.click(screen.getAllByRole('button', { name: `${content.place} 树木` })[0]!);
+    fail = true;
+    fireEvent.focus(window);
+    await screen.findByText(content.accessRefreshFailed);
+    expect(document.querySelector('[data-placement-id="tree-1"]')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: content.save })).toBeInTheDocument();
+    fail = false;
+    fireEvent.click(screen.getByRole('button', { name: content.retryAccess }));
+    await waitFor(() => expect(screen.queryByText(content.accessRefreshFailed)).not.toBeInTheDocument());
+    expect(document.querySelector('[data-placement-id="tree-1"]')).toBeInTheDocument();
+  });
+});
+
+
+describe('小岛初次读取跨日', () => {
+  it('营地先返回就校准时间，较晚的小岛响应不能倒拨到昨日', async () => {
+    let time = Date.parse('2026-10-29T23:59:59+08:00');
+    const clock = vi.spyOn(Date, 'now').mockImplementation(() => time);
+    let resolveIsland!: (value: typeof state) => void;
+    const oldIsland = new Promise<typeof state>((resolve) => { resolveIsland = resolve; });
+    const linked = [{ activity: 'run' as const, available: true, tasks: [{ id: 't', name: '运动打卡', enabled: true }] }];
+    const expired = { ...state, today: '2026-10-29', expires_at: '2026-10-30T00:00:00+08:00', activity_access: linked };
+    const next = { ...expired, today: '2026-10-30', expires_at: '2026-10-31T00:00:00+08:00', activity_access: linked.map((entry) => ({ ...entry, available: false })) };
+    const request = vi.fn().mockImplementation((path) => path === '/camp' ? Promise.resolve({ ...camp, server_now: '2026-10-29T23:59:59+08:00' }) : oldIsland);
+    let offset = 0;
+    const recordServerTime = vi.fn((serverNow: string) => { offset = Date.parse(serverNow) - Date.now(); });
+    const client = { request, recordServerTime, now: () => new Date(Date.now() + offset) };
+    const view = render(<IslandPage client={client} session={{ ...testSession, timezone: 'Asia/Taipei' }}/>);
+    try {
+      await act(async () => {});
+      expect(recordServerTime).toHaveBeenCalledOnce();
+      time += 5000;
+      request.mockImplementation(async (path) => path === '/camp' ? camp : next);
+      await act(async () => { resolveIsland(expired); });
+      await screen.findByRole('button', { name: `${content.activities.run} 运动区，${content.activityLocked}` });
+      expect(request.mock.calls.filter(([path]) => path === '/island')).toHaveLength(2);
+      expect(recordServerTime).toHaveBeenCalledOnce();
+    } finally { view.unmount(); clock.mockRestore(); }
   });
 });

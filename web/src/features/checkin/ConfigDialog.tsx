@@ -42,6 +42,8 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
   const [dailyLimit, setDailyLimit] = useState(task?.daily_limit ?? 1);
   const [weekdays, setWeekdays] = useState(task?.weekdays ?? [1, 2, 3, 4, 5, 6, 7]);
   const [enabled, setEnabled] = useState(task?.enabled ?? true);
+  const [unlockActivities, setUnlockActivities] = useState<Task['unlock_activities']>(task?.unlock_activities ?? []);
+  const activityOptions: NonNullable<components['schemas']['IslandDefinition']['activity']>[] = ['read', 'run', 'ball'];
   const [version, setVersion] = useState(item?.version ?? 1);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [latest, setLatest] = useState<Task | Category | null>(null);
@@ -71,7 +73,7 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
   async function save(confirmedVersion?: number) {
     if (busy || invalidDraft || (needsConfirmation && (!latest || confirmedVersion !== latest.version))) return;
     setBusy(true); setError(null);
-    const draft = kind === 'task' ? { name, category_id: categoryID || null, icon_key: icon, coin_reward: coins, diamond_reward: diamonds, daily_limit: dailyLimit, weekdays, enabled } : { name, sort_order: sortOrder };
+    const draft = kind === 'task' ? { name, category_id: categoryID || null, icon_key: icon, coin_reward: coins, diamond_reward: diamonds, daily_limit: dailyLimit, weekdays, enabled, unlock_activities: unlockActivities } : { name, sort_order: sortOrder };
     const command = pendingConfiguration.get(client) ?? { path, key: crypto.randomUUID(), body: draft };
     if (!item) pendingConfiguration.set(client, command);
     try {
@@ -114,6 +116,7 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
       setCategoryID(latest.category_id ?? ''); setIcon(latest.icon_key);
       setCoins(latest.coin_reward); setDiamonds(latest.diamond_reward);
       setDailyLimit(latest.daily_limit); setWeekdays(latest.weekdays); setEnabled(latest.enabled);
+      setUnlockActivities(latest.unlock_activities);
     } else setSortOrder(latest.sort_order);
     setNeedsConfirmation(false); setLatest(null); setError(null); setDirty(false);
   }
@@ -129,6 +132,8 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
           <label>{content.dailyLimit}<input type="number" min="1" max={session.limits.daily_limit_max} step="1" value={dailyLimit} disabled={unknown} onChange={(event) => setDailyLimit(Number(event.target.value))} /></label></div>
         <fieldset className="checkin-checks" disabled={unknown}><legend>{content.weekdaysLabel}</legend>{content.weekdays.map((label, index) => <label key={label}><input type="checkbox" checked={weekdays.includes(index + 1)} onChange={(event) => setWeekdays((values) => event.target.checked ? [...values, index + 1].sort() : values.filter((value) => value !== index + 1))} />{label}</label>)}</fieldset>
         {weekdays.length === 0 && <p role="alert">{content.weekdayRequired}</p>}<FieldError error={error} field="weekdays" />
+        <fieldset className="checkin-checks" disabled={unknown}><legend>{content.unlockActivities}</legend>{activityOptions.map((activity) => <label key={activity}><input type="checkbox" checked={unlockActivities.includes(activity)} onChange={(event) => setUnlockActivities((values) => event.target.checked ? [...values, activity] : values.filter((value) => value !== activity))} />{content.activityLabels[activity]}</label>)}</fieldset>
+        <p>{content.unlockActivitiesHelp}</p><FieldError error={error} field="unlock_activities" />
         <label className="checkin-toggle"><input type="checkbox" checked={enabled} disabled={unknown} onChange={(event) => setEnabled(event.target.checked)} />{content.enabled}</label>
       </>}
       {unknown && <p role="status">{content.configUnknown}</p>}{error !== null && <p role="alert" className="checkin-error">{checkinError(error)}</p>}
@@ -146,6 +151,7 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
             <dt>{content.diamonds}</dt><dd>{latestTask.diamond_reward}</dd>
             <dt>{content.dailyLimit}</dt><dd>{latestTask.daily_limit}</dd>
             <dt>{content.weekdaysLabel}</dt><dd>{latestTask.weekdays.map((day) => content.weekdays[day - 1]).join(content.weekdaySeparator)}</dd>
+            <dt>{content.unlockActivities}</dt><dd>{latestTask.unlock_activities.length ? latestTask.unlock_activities.map((activity) => content.activityLabels[activity]).join(content.weekdaySeparator) : content.noUnlockActivities}</dd>
             <dt>{content.configurationStatus}</dt><dd>{latestTask.enabled ? content.enabledStatus : content.disabled}</dd>
           </>}
         </dl>

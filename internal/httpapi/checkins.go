@@ -15,14 +15,15 @@ type versionRequest struct {
 
 // taskCreation excludes edit-only version fields from the create route's accepted JSON.
 type taskCreation struct {
-	CategoryID    *string `json:"category_id"`    // Optional category.
-	Name          string  `json:"name"`           // Required display name.
-	IconKey       string  `json:"icon_key"`       // Controlled versioned icon.
-	CoinReward    int64   `json:"coin_reward"`    // Nonnegative coin reward.
-	DiamondReward int64   `json:"diamond_reward"` // Nonnegative diamond reward.
-	DailyLimit    int64   `json:"daily_limit"`    // Positive daily allowance.
-	Weekdays      []int   `json:"weekdays"`       // Monday-based eligible weekdays.
-	Enabled       bool    `json:"enabled"`        // Initial future-record eligibility.
+	UnlockActivities []string `json:"unlock_activities"` // Optional controlled island capabilities.
+	CategoryID       *string  `json:"category_id"`       // Optional category.
+	Name             string   `json:"name"`              // Required display name.
+	IconKey          string   `json:"icon_key"`          // Controlled versioned icon.
+	CoinReward       int64    `json:"coin_reward"`       // Nonnegative coin reward.
+	DiamondReward    int64    `json:"diamond_reward"`    // Nonnegative diamond reward.
+	DailyLimit       int64    `json:"daily_limit"`       // Positive daily allowance.
+	Weekdays         []int    `json:"weekdays"`          // Monday-based eligible weekdays.
+	Enabled          bool     `json:"enabled"`           // Initial future-record eligibility.
 }
 
 // RegisterCheckins binds ordinary and management authority to distinct server routes.
@@ -180,7 +181,7 @@ func (app *App) registerTaskConfiguration(service *checkin.Service) {
 			WriteError(w, r, err)
 			return
 		}
-		result, err := service.CreateTask(r.Context(), p, r.Header.Get("Idempotency-Key"), checkin.TaskInput{CategoryID: input.CategoryID, Name: input.Name, IconKey: input.IconKey, CoinReward: input.CoinReward, DiamondReward: input.DiamondReward, DailyLimit: input.DailyLimit, Weekdays: input.Weekdays, Enabled: input.Enabled})
+		result, err := service.CreateTask(r.Context(), p, r.Header.Get("Idempotency-Key"), checkin.TaskInput{CategoryID: input.CategoryID, Name: input.Name, IconKey: input.IconKey, CoinReward: input.CoinReward, DiamondReward: input.DiamondReward, DailyLimit: input.DailyLimit, Weekdays: input.Weekdays, Enabled: input.Enabled, UnlockActivities: input.UnlockActivities})
 		if err != nil {
 			WriteError(w, r, err)
 			return

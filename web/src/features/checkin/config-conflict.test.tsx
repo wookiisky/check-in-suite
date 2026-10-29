@@ -11,7 +11,7 @@ import content from './content.json';
 const session = testSession as Session;
 const category: Category = { id: 'category-1', name: '学习', sort_order: 1, version: 1 };
 const nextCategory: Category = { id: 'category-2', name: '新的类别', sort_order: 2, version: 1 };
-const latestTask: Task = { ...taskFixture, version: 2, name: '另一设备的名称', category_id: nextCategory.id, icon_key: 'star-v1', coin_reward: 99, diamond_reward: 7, daily_limit: 8, weekdays: [2, 4], enabled: false };
+const latestTask: Task = { ...taskFixture, version: 2, name: '另一设备的名称', category_id: nextCategory.id, icon_key: 'star-v1', coin_reward: 99, diamond_reward: 7, daily_limit: 8, weekdays: [2, 4], enabled: false, unlock_activities: ['run'] };
 const conflict = () => new ApiFailure(409, { code: 'VERSION_CONFLICT', field_errors: {}, request_id: '' });
 const assets = { items: [{ key: 'book-v1', name: '书本图标', kind: 'icon' }, { key: 'star-v1', name: '星星图标', kind: 'icon' }] };
 
@@ -35,7 +35,7 @@ describe('配置编辑冲突恢复', () => {
     expect(patch).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: content.confirmLatest }));
     const current = await screen.findByRole('region', { name: '服务端最新配置' });
-    for (const value of [latestTask.name, nextCategory.name, '星星图标', '99', '7', '8', '星期二、星期四', content.disabled]) {
+    for (const value of [latestTask.name, nextCategory.name, '星星图标', '99', '7', '8', '星期二、星期四', content.disabled, '运动活动']) {
       expect(within(current).getByText(value)).toBeInTheDocument();
     }
     expect(screen.getByLabelText(content.name)).toHaveValue('我的名称');
@@ -47,7 +47,7 @@ describe('配置编辑冲突恢复', () => {
     fireEvent.change(screen.getByLabelText(content.coins), { target: { value: '2' } });
     fireEvent.click(screen.getByRole('button', { name: '以当前草稿覆盖并保存' }));
     await waitFor(() => expect(saved).toHaveBeenCalledOnce());
-    expect(patch.mock.calls[1]?.[1]).toMatchObject({ body: { expected_version: 2, name: '我的名称', coin_reward: 2, icon_key: 'book-v1', enabled: true } });
+    expect(patch.mock.calls[1]?.[1]).toMatchObject({ body: { expected_version: 2, name: '我的名称', coin_reward: 2, icon_key: 'book-v1', enabled: true, unlock_activities: [] } });
   });
 
   it('采用最新任务同步全部表单字段，再次保存不会恢复旧奖励或类别', async () => {
@@ -73,11 +73,13 @@ describe('配置编辑冲突恢复', () => {
     expect(screen.getByLabelText(content.diamonds)).toHaveValue(7);
     expect(screen.getByLabelText(content.dailyLimit)).toHaveValue(8);
     expect(screen.getByLabelText(content.enabled)).not.toBeChecked();
+    expect(screen.getByLabelText('运动活动')).toBeChecked();
+    expect(screen.getByLabelText('阅读活动')).not.toBeChecked();
     expect(screen.getByLabelText(content.weekdays[0]!)).not.toBeChecked();
     expect(screen.getByLabelText(content.weekdays[1]!)).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await waitFor(() => expect(patch).toHaveBeenCalledTimes(2));
-    expect(patch.mock.calls[1]?.[1]).toMatchObject({ body: { expected_version: 2, category_id: nextCategory.id, coin_reward: 99, weekdays: [2, 4], enabled: false } });
+    expect(patch.mock.calls[1]?.[1]).toMatchObject({ body: { expected_version: 2, category_id: nextCategory.id, coin_reward: 99, weekdays: [2, 4], enabled: false, unlock_activities: ['run'] } });
   });
 
   it('类别冲突时保留草稿与最新排序，读取失败可重试，再次冲突必须重新核对', async () => {

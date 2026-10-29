@@ -141,5 +141,14 @@
   "historyNeedsManagement": "这条记录已属于历史日期，草稿已保留；请进入管理界面重新确认修改。",
   "draftAvailable": "还有一份未完成的打卡草稿。",
   "continueDraft": "继续编辑草稿",
-  "draftManagement": "补录草稿已保留，请进入管理界面继续编辑。"
+  "draftManagement": "补录草稿已保留，请进入管理界面继续编辑。",
+  "unlockActivities": "解锁小岛活动",
+  "unlockActivitiesHelp": "当天完成任一关联项目一次，即可使用对应活动；没有关联项目的活动保持开放。停用项目会保留关联；若当天尚未完成，活动仍会锁定。",
+  "noUnlockActivities": "不关联活动",
+  "activityLabels": {
+    "read": "阅读活动",
+    "run": "运动活动",
+    "ball": "玩球活动"
+  },
+  "taskDeleteUnlockWarning": "删除项目也会解除小岛活动关联；若没有其他关联项目，对应活动将恢复开放。"
 }

@@ -12,6 +12,13 @@ export const definitions: IslandDefinition[] = [
 // 免费基础物品和未摆放的购买实例构成一个真实页面响应。
 export const state: IslandState = {
   version: 1,
+  today: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date()),
+  expires_at: new Date(Date.now() + 86_400_000).toISOString(),
+  activity_access: [
+    { activity: 'read', available: true, tasks: [] },
+    { activity: 'run', available: true, tasks: [] },
+    { activity: 'ball', available: true, tasks: [] },
+  ],
   catalog: definitions,
   inventory: [
     { id: 'base:house', item_key: 'house' }, { id: 'base:desk', item_key: 'desk' },

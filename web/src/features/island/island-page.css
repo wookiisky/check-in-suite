@@ -138,3 +138,10 @@
  .island-actions { grid-column:1 / -1; justify-self:end; gap:8px; }
  .island-actions button { max-width:none; }
 }
+
+/* 锁定标记保留物品外观，点击后说明需要完成的任务。 */
+.island-activity-buttons button.island-activity-locked { position:relative; background:#eef0e4; color:#405539; }
+.island-activity-locked .island-lock-icon { position:absolute; right:2px; bottom:2px; background:#fffdf3; border-radius:4px; }
+.island-access-notice { top:calc(var(--island-hud-top) + 12px); max-height:45dvh; overflow:auto; width:380px; }
+.island-access-notice p { margin:0 0 12px; }
+.island-access-notice ul { margin:0 0 16px; padding-inline-start:24px; }

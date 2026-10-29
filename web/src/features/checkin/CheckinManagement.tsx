@@ -47,7 +47,7 @@ export function CheckinManagement({ client, session, section }: CheckinProps & {
     const body: components['schemas']['TaskUpdate'] = {
       name: task.name, category_id: task.category_id, icon_key: task.icon_key,
       coin_reward: task.coin_reward, diamond_reward: task.diamond_reward,
-      daily_limit: task.daily_limit, weekdays: task.weekdays,
+      daily_limit: task.daily_limit, weekdays: task.weekdays, unlock_activities: task.unlock_activities,
       enabled: !task.enabled, expected_version: task.version,
     };
     try {
@@ -130,6 +130,6 @@ export function CheckinManagement({ client, session, section }: CheckinProps & {
       </section>
     </>}
     {editing && <ConfigDialog client={client} session={session} kind={editing.kind} item={editing.item} categories={categories} onClose={() => setEditing(null)} onSaved={() => refresh((value) => value + 1)} />}
-    {deleting && <Modal title={content.remove} closeDisabled={busy} onClose={() => setDeleting(null)}><div className="checkin-stack"><h3>{deleting.item.name}</h3><p>{content.configDeleteQuestion}</p>{error !== null && <p role="alert">{checkinError(error)}</p>}{error instanceof ApiFailure && error.detail.code === 'VERSION_CONFLICT' && <button className="secondary" disabled={busy} onClick={() => void refreshDeleteTarget()}>{content.confirmLatest}</button>}<div className="checkin-actions"><button disabled={busy} onClick={() => void remove()}>{busy ? content.saving : content.remove}</button><button className="secondary" disabled={busy} onClick={() => setDeleting(null)}>{content.cancel}</button></div></div></Modal>}
+    {deleting && <Modal title={content.remove} closeDisabled={busy} onClose={() => setDeleting(null)}><div className="checkin-stack"><h3>{deleting.item.name}</h3><p>{content.configDeleteQuestion}</p>{deleting.kind === 'task' && <p>{content.taskDeleteUnlockWarning}</p>}{error !== null && <p role="alert">{checkinError(error)}</p>}{error instanceof ApiFailure && error.detail.code === 'VERSION_CONFLICT' && <button className="secondary" disabled={busy} onClick={() => void refreshDeleteTarget()}>{content.confirmLatest}</button>}<div className="checkin-actions"><button disabled={busy} onClick={() => void remove()}>{busy ? content.saving : content.remove}</button><button className="secondary" disabled={busy} onClick={() => setDeleting(null)}>{content.cancel}</button></div></div></Modal>}
   </div>;
 }

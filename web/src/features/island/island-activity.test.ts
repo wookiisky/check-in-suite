@@ -5,6 +5,40 @@ import { canPlace, isWalkable } from './island-geometry';
 import { state } from './island-test-fixtures';
 
 describe('角色活动', () => {
+  it('手动活动仅在传入资格开放时启动，物品能力保持不变', () => {
+    const actor = createActor();
+    expect(startActivity(actor, 'base:run', state.placements, state.catalog, ['read'])).toBeNull();
+    expect(startActivity(actor, 'base:run', state.placements, state.catalog, ['run'])).not.toBeNull();
+    expect(state.catalog.find((item) => item.key === 'run')?.activity).toBe('run');
+  });
+  it('同一阅读资格同时控制书桌与故事书', () => {
+    const catalog = [...state.catalog, { ...state.catalog[1]!, key: 'book', model: 'book', name: '故事书' }];
+    const placements = [...state.placements, { id: 'book-1', item_key: 'book', x: -1, y: 0, rotation: 0 as const, zone: 'indoor' as const }];
+    const actor = { ...createActor(), zone: 'indoor' as const, x: 0, y: 1.5 };
+    for (const id of ['base:desk', 'book-1']) {
+      expect(startActivity(actor, id, placements, catalog, [])).toBeNull();
+      expect(startActivity(actor, id, placements, catalog, ['read'])).not.toBeNull();
+    }
+  });
+  it('自主活动跳过锁定目标，并通过相同资格判断启动开放活动', () => {
+    const actor = { ...createActor(), elapsed: 5 };
+    const next = advanceActor(actor, 0.1, state.placements, state.catalog, () => 0, ['run']);
+    expect(next).toMatchObject({ targetID: 'base:run', destination: 'run' });
+  });
+  it.each(['walking', 'acting'] as const)('目标重新锁定后取消%s阶段，清除目的地但保留位置', (phase) => {
+    const target = startActivity(createActor(), 'base:run', state.placements, state.catalog, ['run'])!;
+    const actor = { ...target, phase, action: phase === 'acting' ? 'run' as const : 'walk' as const };
+    const next = advanceActor(actor, 0.1, state.placements, state.catalog, () => 0, []);
+    expect(next).toMatchObject({ x: actor.x, y: actor.y, phase: 'idle', action: 'idle', targetID: null, destination: 'idle', route: [], elapsed: 0 });
+    expect(next.motionElapsed).toBeCloseTo(actor.motionElapsed + 0.1);
+  });
+  it('全部活动锁定后仍可散步和休息，不选择锁定的器材', () => {
+    const walking = advanceActor({ ...createActor(), elapsed: 5 }, 0.1, state.placements, state.catalog, () => 0, []);
+    expect(walking).toMatchObject({ phase: 'walking', action: 'walk', targetID: null, destination: 'idle' });
+    const resting = advanceActor({ ...createActor(), x: 0, y: 0, elapsed: 5 }, 0.1, [], [], () => 0.5, []);
+    expect(resting).toMatchObject({ phase: 'acting', action: 'rest', targetID: null });
+    expect(advanceActor(resting, 1, [], [], () => 0, [])).toMatchObject({ phase: 'acting', action: 'rest' });
+  });
   it.each([20, 60, 120])('每秒 %i 帧时沿多个路径点保持相同速度', (fps) => {
     let actor: IslandActor = { ...createActor(), x: 0, y: 0, phase: 'walking', action: 'walk',
       route: Array.from({ length: 10 }, (_, index) => ({ x: -(index + 1) / 2, y: 0, zone: 'outdoor' })) };

@@ -929,6 +929,8 @@ export interface components {
             items: components["schemas"]["Category"][];
         };
         Task: {
+            /** @description 当天一次有效打卡可解锁的活动。新增省略为空，更新省略保留，显式空数组清除关联。 */
+            unlock_activities: components["schemas"]["IslandActivity"][];
             id: string;
             category_id: string | null;
             name: string;
@@ -941,6 +943,8 @@ export interface components {
             version: number;
         };
         TaskCreate: {
+            /** @description 当天一次有效打卡可解锁的活动。新增省略为空，更新省略保留，显式空数组清除关联。 */
+            unlock_activities?: components["schemas"]["IslandActivity"][];
             category_id: string | null;
             name: string;
             icon_key: string;
@@ -951,6 +955,8 @@ export interface components {
             enabled: boolean;
         };
         TaskUpdate: {
+            /** @description 当天一次有效打卡可解锁的活动。新增省略为空，更新省略保留，显式空数组清除关联。 */
+            unlock_activities?: components["schemas"]["IslandActivity"][];
             category_id: string | null;
             name: string;
             icon_key: string;
@@ -962,6 +968,8 @@ export interface components {
             expected_version: number;
         };
         AvailableTask: {
+            /** @description 当天一次有效打卡可解锁的活动。新增省略为空，更新省略保留，显式空数组清除关联。 */
+            unlock_activities: components["schemas"]["IslandActivity"][];
             id: string;
             category_id: string | null;
             name: string;
@@ -1087,7 +1095,31 @@ export interface components {
             /** @description 资源默认钻石价格；实际购买以商品价格为准。 */
             diamond_price?: number;
         };
+        /** @enum {string} */
+        IslandActivity: "read" | "run" | "ball";
+        IslandActivityTask: {
+            id: string;
+            name: string;
+            enabled: boolean;
+        };
+        IslandActivityAccess: {
+            activity: components["schemas"]["IslandActivity"];
+            available: boolean;
+            /** @description 仍关联的未删除任务；停用任务保留。没有关联任务时活动开放。 */
+            tasks: components["schemas"]["IslandActivityTask"][];
+        };
         IslandState: {
+            /**
+             * Format: date
+             * @description 本次资格计算采用的台北业务日期。
+             */
+            today: string;
+            /**
+             * Format: date-time
+             * @description 下一个台北午夜，旧资格到期后不能继续使用。
+             */
+            expires_at: string;
+            activity_access: components["schemas"]["IslandActivityAccess"][];
             version: number;
             placements: components["schemas"]["IslandPlacement"][];
             inventory: components["schemas"]["IslandOwnedItem"][];

@@ -1,6 +1,9 @@
 import { findPath, interactionPoint, isWalkable } from './island-geometry';
 import type { IslandActivity, IslandDefinition, IslandPlacement, IslandPoint, IslandZone } from './island-types';
 
+// 独立场景测试默认开放；正式页面始终传入当前快照允许的活动。
+const allActivities: readonly IslandActivity[] = ['read', 'run', 'ball'];
+
 // 路径上的区域切换只发生在房门处，房屋剖面由角色区域决定。
 interface ActivityStep extends IslandPoint {
   zone: IslandZone; // 当前路径点所属空间。
@@ -48,10 +51,10 @@ function routeTo(actor: IslandActor, end: ActivityStep, placements: IslandPlacem
 }
 
 // 物品的活动能力由目录声明，静态物品不产生空互动。
-export function startActivity(actor: IslandActor, id: string, placements: IslandPlacement[], catalog: IslandDefinition[]): IslandActor | null {
+export function startActivity(actor: IslandActor, id: string, placements: IslandPlacement[], catalog: IslandDefinition[], allowedActivities: readonly IslandActivity[] = allActivities): IslandActor | null {
   const target = placements.find((item) => item.id === id);
   const definition = catalog.find((item) => item.key === target?.item_key);
-  if (!target || !definition?.activity) return null;
+  if (!target || !definition?.activity || !allowedActivities.includes(definition.activity)) return null;
   const point = interactionPoint(target, definition);
   const route = routeTo(actor, { ...point, zone: target.zone }, placements, catalog);
   if (!route) return null;
@@ -59,10 +62,15 @@ export function startActivity(actor: IslandActor, id: string, placements: Island
 }
 
 // 时间和随机源可注入，页面在隐藏或暂停时不调用此函数。
-export function advanceActor(actor: IslandActor, seconds: number, placements: IslandPlacement[], catalog: IslandDefinition[], random: () => number = Math.random): IslandActor {
+export function advanceActor(actor: IslandActor, seconds: number, placements: IslandPlacement[], catalog: IslandDefinition[], random: () => number = Math.random, allowedActivities: readonly IslandActivity[] = allActivities): IslandActor {
   const elapsed = actor.elapsed + seconds;
   const motionElapsed = actor.motionElapsed + seconds;
-  if (actor.targetID && !placements.some((item) => item.id === actor.targetID)) return { ...actor, motionElapsed, phase: 'idle', action: 'idle', route: [], targetID: null, elapsed: 0 };
+  // 删除、收起或重新锁定目标时取消整条活动路径，不继续走向已经失效的器材。
+  if (actor.targetID) {
+    const target = placements.find((item) => item.id === actor.targetID);
+    const activity = catalog.find((item) => item.key === target?.item_key)?.activity;
+    if (!activity || !allowedActivities.includes(activity)) return { ...actor, motionElapsed, phase: 'idle', action: 'idle', destination: 'idle', route: [], targetID: null, elapsed: 0 };
+  }
   if (actor.phase === 'walking') {
     let { x, y, facing } = actor;
     let remaining = seconds * 2.2;
@@ -91,10 +99,13 @@ export function advanceActor(actor: IslandActor, seconds: number, placements: Is
   }
   if (actor.phase === 'acting') return elapsed >= 8 ? { ...actor, motionElapsed, phase: 'idle', action: 'idle', targetID: null, elapsed: 0 } : { ...actor, elapsed, motionElapsed };
   if (elapsed < 4) return { ...actor, elapsed, motionElapsed };
-  const targets = placements.filter((placement) => catalog.find((item) => item.key === placement.item_key)?.activity);
+  const targets = placements.filter((placement) => {
+    const activity = catalog.find((item) => item.key === placement.item_key)?.activity;
+    return activity && allowedActivities.includes(activity);
+  });
   if (targets.length && random() < 0.65) {
     const target = targets[Math.min(targets.length - 1, Math.floor(random() * targets.length))]!;
-    const activity = startActivity(actor, target.id, placements, catalog);
+    const activity = startActivity(actor, target.id, placements, catalog, allowedActivities);
     if (activity) return { ...activity, motionElapsed };
   }
   const point: ActivityStep = { x: Math.round((random() * 2 - 1) * 6), y: Math.round((random() * 2 - 1) * 6), zone: 'outdoor' };
