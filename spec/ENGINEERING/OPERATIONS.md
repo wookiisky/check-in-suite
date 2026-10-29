@@ -1,8 +1,31 @@
+---
+summary: 构建发布、单机安装、账户维护、数据库升级和故障处置的操作步骤。
+owns:
+- operations.workflow
+source:
+- scripts/release.mjs
+- scripts/deploy.mjs
+- deploy/publish.sh
+- deploy/app.production.example.yaml
+- deploy/Caddyfile
+- deploy/island.service
+- cmd/island/maintenance.go
+- cmd/island/database_status.go
+- internal/demo/settings.json
+tests:
+- scripts/release.test.mjs
+- scripts/deploy.test.mjs
+- scripts/publish.test.mjs
+- cmd/island/deployment_test.go
+- internal/demo/seed_test.go
+---
 # 成长岛运行手册
 
 正式运行由一个 Go 进程提供页面、API 和私有媒体，SQLite、照片、录音与历史素材放在本机持久磁盘。生产运行需要应用二进制、前端构建文件、`ffprobe` 和 HTTPS 入口，不需要 Node.js。
 
-本手册提供部署步骤和本机验证方法，不代表已经配置生产服务器、证书或网络入口。按本次确认范围，不提供备份、恢复或真机验收流程。
+本手册提供部署步骤和本机检查方法，不代表已经配置生产服务器、证书或网络入口。当前产品不提供备份及从备份恢复能力，真机验收不在既定范围内。
+
+构建与 npm 命令在源码根目录执行；发布目录中的命令和 `deploy/` 路径以发布包为基准。文件顶部元数据只供源码仓库导航，发布包运行不需要这些源码或测试文件。
 
 ## 构建发布目录
 
@@ -52,9 +75,7 @@ npm run deploy -- --host 192.0.2.10 --port 2222 --user deploy --upload-only
 
 首次运行会创建 `island` 服务用户、安装目录、配置与 systemd 服务。选择监听地址，默认 `0.0.0.0:38100`，之后无需填写网站来源或服务器 IP。有本机反向代理时可监听 `127.0.0.1:38100`。已有 `/srv/island/config/app.yaml` 会沿用，所有相对路径以安装根目录为基准。维护命令与服务均以 `island` 用户运行。
 
-来源校验通过 Go 标准库的 `http.CrossOriginProtection` 自动判断当前请求是否同源，不绑定 IP、域名或端口。它优先检查浏览器的 `Sec-Fetch-Site`，没有该字段时比较 `Origin` 与请求的 `Host`；两者都没有时按非浏览器请求放行，但写操作仍需要有效会话和 CSRF Token。登录仍需验证密码。旧配置的 `public_origin` 兼容读取但忽略，新配置不再生成此字段；`--origin`、`--server-host` 参数已移除。
-
-HTTPS 直连根据 TLS 设置 Secure Cookie；本机反向代理仅在直接 TCP 对端为回环地址时信任单值 `X-Forwarded-Proto: https`。Caddy 应保留浏览器的 Host，并覆盖外部协议头；其他网络地址的代理头不会影响 Cookie，非本机代理不在默认信任范围内。
+部署时无需配置固定网站来源。Caddy 应保留浏览器的 Host，并覆盖外部协议头；仅回环地址的直接代理可通过单值 `X-Forwarded-Proto: https` 影响 Secure Cookie。非本机代理需要重新评估信任边界。
 
 也可以在服务器上对完整发布目录执行：
 
@@ -91,7 +112,7 @@ npm run db:status
 ./island db-status -config /绝对路径/app.yaml
 ```
 
-测试用户名 `user`，登录和管理密码均为 `pass`，仅测试初始化命令局部允许短密码。正式账户初始化和修改密码仍遵循配置，默认最短 10 字。当前种子覆盖全部 96 项受控素材，提供 28 任务、56 商品、12 成就、30 天的 90 笔打卡、12 笔购买、钱包流水、部分已解锁及未解锁成就、装扮、小岛布置与留言；不伪造照片或录音。资源目录按用途映射，界面图标用于任务，徽章用于成就。
+测试用户名 `user`，登录和管理密码均为 `pass`，仅测试初始化命令局部允许短密码。正式账户初始化和修改密码仍遵循配置。种子提供任务、商品、成就、近期打卡、购买、钱包流水、装扮、小岛布置与留言；不伪造照片或录音。具体内容由源码 `internal/demo/settings.json` 和素材目录共同生成，不将数量作为初始化契约。
 
 账户、业务数据和 `demo_seeds` 完成标记同事务提交。重复执行只跳过，不补写或覆盖后续修改；不能凭用户名判断数据库能否导入。未标记的已有账户或业务数据会拒绝初始化。测试内容在源码 `internal/demo/settings.json`，变更后需重新打包。
 
@@ -177,15 +198,15 @@ sudo -u island /srv/island/current/island reset-password -kind management -confi
 
 命令交互读取新密码及确认，并撤销全部会话。它不改变用户名、姓名、余额或业务记录。不提供邮件、短信或网页“忘记密码”入口。
 
-## 开发阶段的数据库初始化
+## 数据库迁移与不兼容处理
 
 新增结构使用追加编号迁移；已应用的 SQL 文件必须保持不变。历史较早且一致的数据库可以追加迁移，旧建表脚本发生过变化的数据库无法自动转换。使用新的数据库和数据目录，按上面的 `migrate`、`init` 步骤初始化，再启动服务并验证登录、读取和写入。
 
-`migrate` 保留为显式建库命令；建表 SQL 与版本记录在同一事务提交，失败时不记录成功。应用启动只检查 schema，不自动改库。已有数据库的版本或脚本校验与程序不匹配时仍会拒绝启动；不能通过删除版本记录绕过检查；不兼容时由维护者明确选择重置或另行处理数据。
+`migrate` 是显式建库和升级命令；建表 SQL 与版本记录在同一事务提交，失败时不记录成功。应用启动只检查 schema，不自动改库。已有数据库的版本或脚本校验与程序不匹配时仍会拒绝启动；不能通过删除版本记录绕过检查；不兼容时由维护者明确选择重置或另行处理数据。
 
 ## 媒体清理与日常检查
 
-服务启动后运行媒体清理，每小时检查一次。未关联上传及解除引用文件默认 24 小时后物理清理；解除引用后立即不能读取。仍关联有效记录的媒体长期保留。清理失败会记录并重试，重启可继续处理已经标记的删除；素材目录不参与媒体清理。
+服务启动后按配置周期清理媒体。排障时核对 `media_cleanup_interval` 和 `media_orphan_ttl`，并区分已关联、未关联和等待删除的文件；素材目录不参与媒体清理。清理失败时检查目录权限、容量和日志，修复原因后由后续轮次或重启继续处理。
 
 孤儿清理仅处理服务生成的上传临时文件和 UUID `.media` 文件。`media_directory`、`temp_directory` 不得设置为数据库所在目录，包括指向该目录的符号链接；配置检查会拒绝这种设置。可以按示例将数据库放在 `data/island.db`，将上传分别放在 `data/media/` 和 `data/tmp/`，无需事先创建这些新目录。
 

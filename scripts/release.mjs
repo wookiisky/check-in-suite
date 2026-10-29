@@ -49,7 +49,7 @@ export async function buildRelease(values = {}) {
     const binary = path.join(directory, goos === 'windows' ? 'island.exe' : 'island');
     await run('go', ['build', '-trimpath', '-ldflags', `-s -w -X main.buildVersion=${version} -X main.buildTime=${builtAt}`, '-o', binary, './cmd/island'], { ...process.env, GOOS: goos, GOARCH: goarch, CGO_ENABLED: '0' });
     await cp(path.join(root, 'deploy'), path.join(directory, 'deploy'), { recursive: true, errorOnExist: true, force: false });
-    await cp(path.join(root, 'docs', 'operations.md'), path.join(directory, 'operations.md'), { errorOnExist: true, force: false });
+    await cp(path.join(root, 'spec', 'ENGINEERING', 'OPERATIONS.md'), path.join(directory, 'operations.md'), { errorOnExist: true, force: false });
     const migrationFiles = await checksums(path.join(root, 'migrations'));
     const manifest = { version, revision, dirty, built_at: builtAt, goos, goarch, files: await checksums(directory), migrations: migrationFiles };
     await writeFile(path.join(directory, 'release.json'), `${JSON.stringify(manifest, null, 2)}\n`, { flag: 'wx' });

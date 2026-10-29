@@ -11,9 +11,9 @@
   },
   "packageManager": "npm@11.19.0",
   "scripts": {
-    "start": "python3 -m http.server 4173 --bind 127.0.0.1 --directory design",
-    "test": "node --test design/tests/*.test.mjs",
-    "check": "node --check design/src/app.mjs && node --check design/src/domain.mjs && node --check design/src/icons.mjs && node --check design/src/seed.mjs && node --check design/src/camp-views.mjs && node --check design/src/ui-format.mjs && node --check design/src/cartoon-icons.mjs",
+    "start": "npm run dev",
+    "test": "npm run test:go && npm run test:web && npm run test:deploy && npm run test:spec",
+    "check": "npm run check:spec && npm run check:go && npm run typecheck",
     "dev": "concurrently --kill-others --success first --names api,web \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "go run ./cmd/island serve -config config/app.example.yaml",
     "dev:web": "npm run dev --workspace @island/web --",
@@ -30,11 +30,13 @@
     "build:web": "npm run build --workspace @island/web",
     "build": "npm run typecheck && npm run build:web && npm run build:api",
     "release": "node scripts/release.mjs",
-    "verify": "npm test && npm run check && npm run test:deploy && npm run check:go && npm run test:race && npm run test:web && npm run build && npm run test:e2e",
+    "verify": "npm run check && npm run test:spec && npm run test:deploy && npm run test:race && npm run test:web && npm run build:web && npm run build:api && npm run test:e2e",
     "db:seed": "go run ./cmd/island migrate -config config/app.example.yaml && go run ./cmd/island seed-demo -config config/app.example.yaml",
     "db:status": "go run ./cmd/island db-status -config config/app.example.yaml",
     "deploy": "node scripts/deploy.mjs",
-    "test:deploy": "node --test scripts/deploy.test.mjs scripts/release.test.mjs scripts/publish.test.mjs"
+    "test:deploy": "node --test scripts/deploy.test.mjs scripts/release.test.mjs scripts/publish.test.mjs",
+    "check:spec": "node scripts/check-spec.mjs",
+    "test:spec": "node --test scripts/check-spec.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",

@@ -2,7 +2,7 @@ openapi: "3.1.0"
 info:
   title: "成长岛服务接口"
   version: "0.2.0"
-  description: "已批准的首版接口契约；端点实现和验收状态见tasks.md。单账户、同源Cookie认证；写请求自动判断同源并校验CSRF。未知字段拒绝，整数不超过JavaScript安全范围。"
+  description: "已批准的首版接口契约；接口语义见spec/SYSTEM/HTTP_API.md，验证边界见spec/ENGINEERING/TESTING.md。单账户、同源Cookie认证；写请求自动判断同源并校验CSRF。未知字段拒绝，整数不超过JavaScript安全范围。"
 servers: [{"url": "/"}]
 security: [{"sessionCookie": []}]
 paths:
