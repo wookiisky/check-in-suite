@@ -226,5 +226,41 @@
     "name": "礼物",
     "kind": "reward",
     "url": "/api/v1/assets/reward-gift-v1"
+  },
+  {
+    "key": "badge-sprout-v1",
+    "name": "成长新芽",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-sprout-v1"
+  },
+  {
+    "key": "badge-star-v1",
+    "name": "闪亮之星",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-star-v1"
+  },
+  {
+    "key": "badge-book-v1",
+    "name": "阅读时光",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-book-v1"
+  },
+  {
+    "key": "badge-mountain-v1",
+    "name": "勇敢登峰",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-mountain-v1"
+  },
+  {
+    "key": "badge-coins-v1",
+    "name": "金币收藏家",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-coins-v1"
+  },
+  {
+    "key": "badge-diamonds-v1",
+    "name": "钻石收藏家",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-diamonds-v1"
   }
 ]

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/achievement"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/shop"
 	"github.com/wookiisky/check-in-suite/internal/wallet"
@@ -78,6 +79,10 @@ func (s *Service) Camp(ctx context.Context, p account.Principal, categoryID stri
 		return out, err
 	}
 	out.Equipment, err = shop.ReadEquipment(ctx, tx)
+	if err != nil {
+		return out, err
+	}
+	out.Achievements, err = achievement.ReadEquipped(ctx, tx)
 	if err != nil {
 		return out, err
 	}

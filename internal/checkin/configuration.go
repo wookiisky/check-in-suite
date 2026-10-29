@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/achievement"
 	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/idempotency"
@@ -105,7 +106,7 @@ func (s *Service) UpdateCategory(ctx context.Context, p account.Principal, id st
 
 // DeleteCategory refuses any remaining task reference, including disabled tasks.
 func (s *Service) DeleteCategory(ctx context.Context, p account.Principal, id string, version int64) error {
-	tx, _, err := s.begin(ctx, p, true)
+	tx, now, err := s.begin(ctx, p, true)
 	if err != nil {
 		return err
 	}
@@ -118,13 +119,13 @@ func (s *Service) DeleteCategory(ctx context.Context, p account.Principal, id st
 		return core.VersionConflict(item.Version)
 	}
 	var n int
-	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM tasks WHERE category_id=?", id).Scan(&n); err != nil {
+	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM tasks WHERE category_id=? AND deleted_at IS NULL", id).Scan(&n); err != nil {
 		return err
 	}
 	if n > 0 {
 		return core.Fail(409, "CATEGORY_NOT_EMPTY")
 	}
-	if _, err = tx.ExecContext(ctx, "DELETE FROM categories WHERE id=?", id); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE categories SET deleted_at=?,updated_at=?,version=version+1 WHERE id=?", now.UnixMilli(), now.UnixMilli(), id); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -133,7 +134,7 @@ func (s *Service) DeleteCategory(ctx context.Context, p account.Principal, id st
 // categoryByID returns a stable not-found error instead of leaking SQL diagnostics.
 func categoryByID(ctx context.Context, tx *sql.Tx, id string) (Category, error) {
 	var c Category
-	err := tx.QueryRowContext(ctx, "SELECT id,name,sort_order,version FROM categories WHERE id=?", id).Scan(&c.ID, &c.Name, &c.SortOrder, &c.Version)
+	err := tx.QueryRowContext(ctx, "SELECT id,name,sort_order,version FROM categories WHERE id=? AND deleted_at IS NULL", id).Scan(&c.ID, &c.Name, &c.SortOrder, &c.Version)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = core.Fail(404, "NOT_FOUND")
 	}
@@ -143,7 +144,7 @@ func categoryByID(ctx context.Context, tx *sql.Tx, id string) (Category, error) 
 // readCategories is shared by ordinary configuration reads and the camp snapshot.
 func readCategories(ctx context.Context, tx *sql.Tx) ([]Category, error) {
 	items := []Category{}
-	rows, err := tx.QueryContext(ctx, "SELECT id,name,sort_order,version FROM categories ORDER BY sort_order,id")
+	rows, err := tx.QueryContext(ctx, "SELECT id,name,sort_order,version FROM categories WHERE deleted_at IS NULL ORDER BY sort_order,id")
 	if err != nil {
 		return nil, err
 	}
@@ -261,6 +262,12 @@ func (s *Service) CreateTask(ctx context.Context, p account.Principal, key strin
 	if err != nil {
 		return result, err
 	}
+	if err = achievement.RecordSchedule(ctx, tx, result.ID, core.Today(now), weekdayMask(in.Weekdays), in.Enabled); err != nil {
+		return result, err
+	}
+	if err = achievement.Reconcile(ctx, tx, now); err != nil {
+		return result, err
+	}
 	if err = idempotency.Save(ctx, tx, "task.create", key, hash, result.ID, 201, result, now); err != nil {
 		return result, err
 	}
@@ -295,6 +302,14 @@ func (s *Service) UpdateTask(ctx context.Context, p account.Principal, id string
 	if err != nil {
 		return result, err
 	}
+	if !slices.Equal(old.Weekdays, in.Weekdays) || old.Enabled != in.Enabled {
+		if err = achievement.RecordSchedule(ctx, tx, id, core.Today(now), weekdayMask(in.Weekdays), in.Enabled); err != nil {
+			return result, err
+		}
+	}
+	if err = achievement.Reconcile(ctx, tx, now); err != nil {
+		return result, err
+	}
 	result, err = taskByID(ctx, tx, id)
 	if err != nil {
 		return result, err
@@ -302,7 +317,7 @@ func (s *Service) UpdateTask(ctx context.Context, p account.Principal, id string
 	return result, tx.Commit()
 }
 
-// DeleteTask preserves its historical identity and releases its category reference.
+// DeleteTask retains category and schedule history while stopping future task appearances.
 func (s *Service) DeleteTask(ctx context.Context, p account.Principal, id string, version int64) error {
 	tx, now, err := s.begin(ctx, p, true)
 	if err != nil {
@@ -316,8 +331,15 @@ func (s *Service) DeleteTask(ctx context.Context, p account.Principal, id string
 	if item.Version != version {
 		return core.VersionConflict(item.Version)
 	}
-	_, err = tx.ExecContext(ctx, "UPDATE tasks SET category_id=NULL,enabled=0,deleted_at=?,updated_at=?,version=version+1 WHERE id=?", now.UnixMilli(), now.UnixMilli(), id)
+	_, err = tx.ExecContext(ctx, "UPDATE tasks SET enabled=0,deleted_at=?,updated_at=?,version=version+1 WHERE id=?", now.UnixMilli(), now.UnixMilli(), id)
 	if err != nil {
+		return err
+	}
+	day, _ := core.ParseDate(core.Today(now))
+	if err = achievement.RecordSchedule(ctx, tx, id, day.AddDate(0, 0, 1).Format(time.DateOnly), weekdayMask(item.Weekdays), false); err != nil {
+		return err
+	}
+	if err = achievement.Reconcile(ctx, tx, now); err != nil {
 		return err
 	}
 	return tx.Commit()

@@ -667,6 +667,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/achievements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看可获得及已获得成就 */
+        get: operations["listAchievements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/achievements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理成就配置 */
+        get: operations["manageListAchievements"];
+        put?: never;
+        /** 创建规则并补授历史达标成就 */
+        post: operations["createAchievement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/achievements/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取含已删除关联的类别和任务 */
+        get: operations["achievementOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/achievements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 停止新授予并保留已获得成就 */
+        delete: operations["deleteAchievement"];
+        options?: never;
+        head?: never;
+        /** 修改成就并按新规则重算资格 */
+        patch: operations["updateAchievement"];
+        trace?: never;
+    };
+    "/api/v1/achievements/{id}/equipment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 佩戴或卸下已获得成就 */
+        put: operations["equipAchievement"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -986,12 +1073,13 @@ export interface components {
             account: components["schemas"]["Account"];
             has_scheduled_tasks: boolean;
             equipment: components["schemas"]["Equipment"];
+            achievements: components["schemas"]["Achievement"][];
         };
         Asset: {
             key: string;
             name: string;
             /** @enum {string} */
-            kind: "icon" | "avatar" | "accessory" | "title" | "reward";
+            kind: "icon" | "avatar" | "accessory" | "title" | "reward" | "badge";
             url: string;
         };
         AssetList: {
@@ -1047,6 +1135,78 @@ export interface components {
         MessageList: {
             items: components["schemas"]["Message"][];
             next_cursor: string | null;
+        };
+        /** @description 每条成就一种指标。all要求category_id=null且task_ids为空；category要求category_id非空且task_ids为空；tasks要求非空task_ids且category_id=null。window_days为空表示不限，否则在历史上任意连续N个台北自然日中寻找最佳成绩。streak按当时排期，当日所有应做任务各至少完成一次才计一个计划日，无安排日跳过。coins/diamonds累计有效打卡的原奖励，消费不扣减。 */
+        AchievementCreate: {
+            name: string;
+            asset_key: string;
+            /** @enum {string} */
+            metric: "count" | "days" | "streak" | "coins" | "diamonds";
+            /** @enum {string} */
+            scope: "all" | "category" | "tasks";
+            category_id: string | null;
+            task_ids: string[];
+            target: number;
+            window_days: number | null;
+            enabled: boolean;
+        };
+        AchievementUpdate: {
+            name: string;
+            asset_key: string;
+            /** @enum {string} */
+            metric: "count" | "days" | "streak" | "coins" | "diamonds";
+            /** @enum {string} */
+            scope: "all" | "category" | "tasks";
+            category_id: string | null;
+            task_ids: string[];
+            target: number;
+            window_days: number | null;
+            enabled: boolean;
+            expected_version: number;
+        };
+        /** @description 资格按当前成就规则及有效记录重算。删除打卡使成绩不足时收回并卸下；删除任务配置保留历史贡献与排期。重新达标更新获得时间，不恢复佩戴。停用或删除定义停止新授予，但仍重验已获得资格。category与tasks提供所选范围的当前名称及删除状态，和资格来自同一快照；category仅在类别范围非空，tasks与task_ids顺序一致，其他范围返回空数组。 */
+        Achievement: {
+            id: string;
+            name: string;
+            asset_key: string;
+            /** @enum {string} */
+            metric: "count" | "days" | "streak" | "coins" | "diamonds";
+            /** @enum {string} */
+            scope: "all" | "category" | "tasks";
+            category_id: string | null;
+            task_ids: string[];
+            target: number;
+            window_days: number | null;
+            enabled: boolean;
+            deleted: boolean;
+            version: number;
+            progress: number;
+            qualified: boolean;
+            equipped: boolean;
+            earned_at: string | null;
+            category: components["schemas"]["AchievementCategoryOption"] | null;
+            tasks: components["schemas"]["AchievementTaskOption"][];
+        };
+        AchievementList: {
+            items: components["schemas"]["Achievement"][];
+        };
+        AchievementOptions: {
+            categories: components["schemas"]["AchievementCategoryOption"][];
+            tasks: components["schemas"]["AchievementTaskOption"][];
+        };
+        AchievementCategoryOption: {
+            id: string;
+            name: string;
+            deleted: boolean;
+        };
+        AchievementTaskOption: {
+            id: string;
+            name: string;
+            category_id: string | null;
+            deleted: boolean;
+        };
+        AchievementEquipment: {
+            equipped: boolean;
         };
     };
     responses: {
@@ -2349,6 +2509,183 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listAchievements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AchievementList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    manageListAchievements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AchievementList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createAchievement: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AchievementCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Achievement"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    achievementOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AchievementOptions"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteAchievement: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功，无响应体 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateAchievement: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AchievementUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Achievement"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    equipAchievement: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AchievementEquipment"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Achievement"];
+                };
             };
             default: components["responses"]["Error"];
         };

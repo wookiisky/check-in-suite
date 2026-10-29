@@ -18,5 +18,6 @@
   "ACCOUNT_NOT_INITIALIZED": "账户尚未初始化。",
   "PASSWORD_INVALID": "密码不符合长度要求。",
   "PASSWORD_MISMATCH": "两次输入的密码不一致。",
+  "ACHIEVEMENT_NOT_EARNED": "这个成就尚未获得，暂时不能佩戴。",
   "INTERNAL_ERROR": "操作失败，请检查服务日志。"
 }

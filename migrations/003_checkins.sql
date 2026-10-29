@@ -67,6 +67,7 @@ CREATE TABLE categories (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     sort_order INTEGER NOT NULL DEFAULT 0,
+    deleted_at INTEGER,
     version INTEGER NOT NULL DEFAULT 1 CHECK(version > 0),
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
@@ -88,6 +89,42 @@ CREATE TABLE tasks (
     updated_at INTEGER NOT NULL
 ) STRICT;
 CREATE INDEX tasks_category ON tasks(category_id);
+
+CREATE TABLE task_schedule_history (
+    task_id TEXT NOT NULL REFERENCES tasks(id),
+    start_date TEXT NOT NULL,
+    weekday_mask INTEGER NOT NULL CHECK(weekday_mask BETWEEN 1 AND 127),
+    enabled INTEGER NOT NULL CHECK(enabled IN (0,1)),
+    PRIMARY KEY(task_id,start_date)
+) STRICT;
+
+CREATE TABLE achievements (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL CHECK(length(trim(name)) > 0),
+    asset_key TEXT NOT NULL,
+    metric TEXT NOT NULL CHECK(metric IN ('count','days','streak','coins','diamonds')),
+    scope TEXT NOT NULL CHECK(scope IN ('all','category','tasks')),
+    category_id TEXT REFERENCES categories(id),
+    target INTEGER NOT NULL CHECK(target > 0),
+    window_days INTEGER CHECK(window_days > 0),
+    enabled INTEGER NOT NULL CHECK(enabled IN (0,1)),
+    deleted_at INTEGER,
+    version INTEGER NOT NULL DEFAULT 1 CHECK(version > 0),
+    progress INTEGER NOT NULL DEFAULT 0 CHECK(progress >= 0),
+    qualified INTEGER NOT NULL DEFAULT 0 CHECK(qualified IN (0,1)),
+    equipped INTEGER NOT NULL DEFAULT 0 CHECK(equipped IN (0,1)),
+    earned_at INTEGER,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    CHECK((scope='category' AND category_id IS NOT NULL) OR (scope!='category' AND category_id IS NULL)),
+    CHECK(equipped=0 OR qualified=1),
+    CHECK(qualified=0 OR earned_at IS NOT NULL)
+) STRICT;
+CREATE TABLE achievement_tasks (
+    achievement_id TEXT NOT NULL REFERENCES achievements(id),
+    task_id TEXT NOT NULL REFERENCES tasks(id),
+    PRIMARY KEY(achievement_id,task_id)
+) STRICT;
 
 CREATE TABLE checkins (
     id TEXT PRIMARY KEY,

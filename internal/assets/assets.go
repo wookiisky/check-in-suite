@@ -25,6 +25,7 @@ const (
 	KindAccessory Kind = "accessory" // Decoration rendered around the current character.
 	KindTitle     Kind = "title"     // Emblem shown with the equipped title.
 	KindReward    Kind = "reward"    // Illustration for a household reward.
+	KindBadge     Kind = "badge"     // Permanent achievement emblem displayed below the character.
 	DefaultAvatar      = "fox-v1"    // Stable default character identity retained across releases.
 )
 

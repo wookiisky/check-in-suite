@@ -20,7 +20,9 @@
     "account": "账户与密码",
     "tasks": "类别与项目",
     "records": "打卡记录",
-    "products": "商店配置"
+    "products": "商店配置",
+    "achievements": "成就",
+    "achievementManagement": "成就管理"
   },
   "account": {
     "loginTitle": "欢迎回到成长岛",
@@ -93,6 +95,7 @@
     "MEDIA_UNAVAILABLE": "附件已经不可用，请重新选择。",
     "MEDIA_TOO_LARGE": "附件超过允许的大小，请选择较小的文件。",
     "MEDIA_ATTACHED": "附件正在被记录使用，不能直接移除。",
-    "INVALID_RANGE": "请选择有效的日期范围。"
+    "INVALID_RANGE": "请选择有效的日期范围。",
+    "ACHIEVEMENT_NOT_QUALIFIED": "这项成就尚未获得或已不再达标，请重新加载。"
   }
 }

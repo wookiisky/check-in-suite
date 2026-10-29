@@ -16,6 +16,7 @@ import (
 	"syscall"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/achievement"
 	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/checkin"
 	"github.com/wookiisky/check-in-suite/internal/config"
@@ -113,6 +114,7 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 	application.RegisterAssets(artwork)
 	checkins := checkin.New(db, accounts, cfg)
 	application.RegisterCheckins(checkins)
+	application.RegisterAchievements(achievement.New(db, accounts, cfg))
 	application.RegisterShop(shop.New(db, cfg, accounts))
 	application.RegisterQueries(checkins)
 	application.RegisterMessages(message.New(db, cfg))

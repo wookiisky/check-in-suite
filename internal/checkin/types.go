@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/achievement"
 	"github.com/wookiisky/check-in-suite/internal/config"
 	"github.com/wookiisky/check-in-suite/internal/shop"
 	"github.com/wookiisky/check-in-suite/internal/wallet"
@@ -42,7 +43,7 @@ type CategoryInput struct {
 // Task is the currently configured rule for future check-ins.
 type Task struct {
 	ID            string  `json:"id"`             // Stable task identity retained after soft deletion.
-	CategoryID    *string `json:"category_id"`    // Optional category; deletion clears this reference.
+	CategoryID    *string `json:"category_id"`    // Current category; task deletion preserves its final membership.
 	Name          string  `json:"name"`           // Display name used by future snapshots.
 	IconKey       string  `json:"icon_key"`       // Versioned controlled icon key.
 	CoinReward    int64   `json:"coin_reward"`    // Nonnegative reward per new record.
@@ -129,15 +130,16 @@ type AvailableTask struct {
 
 // Camp is read from one SQLite snapshot, even while another connection commits a write.
 type Camp struct {
-	Today             string          `json:"today"`               // Taipei date used for every eligibility decision.
-	ServerNow         string          `json:"server_now"`          // Single instant for the response.
-	Timezone          string          `json:"timezone"`            // Fixed site timezone.
-	Tasks             []AvailableTask `json:"tasks"`               // Eligible tasks with remaining allowance.
-	Categories        []Category      `json:"categories"`          // Current category choices.
-	Wallet            wallet.Balance  `json:"wallet"`              // Same-snapshot spendable balance.
-	Account           account.Account `json:"account"`             // Same-snapshot household profile and preferences.
-	HasScheduledTasks bool            `json:"has_scheduled_tasks"` // Distinguishes no schedule from all completed.
-	Equipment         shop.Equipment  `json:"equipment"`           // Same-snapshot equipped ownership.
+	Today             string                    `json:"today"`               // Taipei date used for every eligibility decision.
+	ServerNow         string                    `json:"server_now"`          // Single instant for the response.
+	Timezone          string                    `json:"timezone"`            // Fixed site timezone.
+	Tasks             []AvailableTask           `json:"tasks"`               // Eligible tasks with remaining allowance.
+	Categories        []Category                `json:"categories"`          // Current category choices.
+	Wallet            wallet.Balance            `json:"wallet"`              // Same-snapshot spendable balance.
+	Account           account.Account           `json:"account"`             // Same-snapshot household profile and preferences.
+	HasScheduledTasks bool                      `json:"has_scheduled_tasks"` // Distinguishes no schedule from all completed.
+	Equipment         shop.Equipment            `json:"equipment"`           // Same-snapshot equipped ownership.
+	Achievements      []achievement.Achievement `json:"achievements"`        // Same-snapshot equipped earned badges.
 }
 
 // RecordPage declares whether more records remain instead of silently truncating a date range.

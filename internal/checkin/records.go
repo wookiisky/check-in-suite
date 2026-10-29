@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/achievement"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/idempotency"
 	"github.com/wookiisky/check-in-suite/internal/media"
@@ -142,6 +143,12 @@ func (s *Service) Create(ctx context.Context, p account.Principal, management bo
 	if err != nil {
 		return result, err
 	}
+	if err = achievement.ExtendInitialSchedule(ctx, tx, task.ID, date); err != nil {
+		return result, err
+	}
+	if err = achievement.Reconcile(ctx, tx, now); err != nil {
+		return result, err
+	}
 	record, err := recordByID(ctx, tx, id)
 	if err != nil {
 		return result, err
@@ -233,6 +240,9 @@ func (s *Service) Delete(ctx context.Context, p account.Principal, management bo
 	}
 	result.Wallet, err = wallet.Apply(ctx, tx, wallet.Event{Type: wallet.CheckinRevoke, ResourceID: id, Coins: -record.CoinRewardSnapshot, Diamonds: -record.DiamondRewardSnapshot, At: now})
 	if err != nil {
+		return result, err
+	}
+	if err = achievement.Reconcile(ctx, tx, now); err != nil {
 		return result, err
 	}
 	if err = tx.Commit(); err != nil {

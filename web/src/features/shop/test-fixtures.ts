@@ -41,4 +41,5 @@ export const camp: Camp = {
   account: testSession.account,
   has_scheduled_tasks: false,
   equipment,
+  achievements: [],
 };

@@ -13,11 +13,14 @@ import { CalendarPage } from './features/reports/CalendarPage';
 import { StatsPage } from './features/reports/StatsPage';
 import { CharacterPanel } from './features/shop/CharacterPanel';
 import { FamilyPanel } from './features/family/FamilyPanel';
+import { AchievementPage } from './features/achievements/AchievementPage';
+import { AchievementManagement } from './features/achievements/AchievementManagement';
+import { AchievementStrip } from './features/achievements/AchievementStrip';
 import { SoundPreferences } from './features/family/SoundPreferences';
 import content from './content/zh-CN.json';
 
-type Page = 'camp' | 'calendar' | 'stats' | 'shop';
-type ManagementSection = 'account' | 'tasks' | 'records' | 'products';
+type Page = 'camp' | 'calendar' | 'stats' | 'shop' | 'achievements';
+type ManagementSection = 'account' | 'tasks' | 'records' | 'products' | 'achievements';
 
 // 应用仅保存当前会话与页面状态，业务草稿归各功能组件所有。
 export function IslandApp() {
@@ -92,7 +95,7 @@ export function IslandApp() {
   return <div className="application">
     <header className="site-header"><div className="header-inner">
       <a className="brand" href="#" onClick={(event) => { event.preventDefault(); navigate('camp'); }}><svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg><strong>{content.appName}</strong></a>
-      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'calendar', 'stats', 'shop'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}>{content.navigation[item]}</button>)}</nav><div className="account-tools"><span className="name-chip">{session.account.display_name}</span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button></div></>}
+      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}>{content.navigation[item]}</button>)}</nav><div className="account-tools"><span className="name-chip">{session.account.display_name}</span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button></div></>}
     </div></header>
     <main className="app-shell">
       {notice && <p className="notice" role="status">{notice}</p>}
@@ -102,22 +105,25 @@ export function IslandApp() {
         {management ? <>
           <div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div>
           <nav className="management-sections" aria-label={content.navigation.management}>
-            {(['account', 'tasks', 'records', 'products'] as const).map((section) =>
-              <button key={section} className="secondary" aria-pressed={managementSection === section} onClick={() => setManagementSection(section)}>{content.navigation[section]}</button>
+            {(['account', 'tasks', 'records', 'products', 'achievements'] as const).map((section) =>
+              <button key={section} className="secondary" aria-pressed={managementSection === section} onClick={() => setManagementSection(section)}>{section === 'achievements' ? content.navigation.achievementManagement : content.navigation[section]}</button>
             )}
           </nav>
           {managementSection === 'account' && <ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} />}
           {managementSection === 'products' && <ProductManagement client={client} session={session} />}
+          {managementSection === 'achievements' && <AchievementManagement client={client} session={session} />}
           {(managementSection === 'tasks' || managementSection === 'records') && <CheckinManagement key={managementSection} client={client} session={session} section={managementSection === 'tasks' ? 'configuration' : 'records'} />}
         </> : <>
           {page === 'camp' && <>
             <h1 className="page-heading">{content.navigation.camp}</h1>
             <CampPage client={client} session={session} renderSidebar={(camp) => <>
               <CharacterPanel equipment={camp.equipment} displayName={camp.account.display_name} />
+              <AchievementStrip items={camp.achievements} onViewAll={() => navigate('achievements')} />
               <FamilyPanel client={client} session={session} />
             </>} />
           </>}
           {page === 'shop' && <ShopPage client={client} session={session} />}
+          {page === 'achievements' && <AchievementPage client={client} session={session} />}
           {page === 'calendar' && <CalendarPage client={client} session={session} />}
           {page === 'stats' && <StatsPage client={client} session={session} />}
           <div className="management-entry"><button className="secondary" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button></div>
