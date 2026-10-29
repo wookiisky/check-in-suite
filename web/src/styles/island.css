@@ -1,6 +1,24 @@
 /* 沿用原型森林配色和大字，不以缩字适应手机。 */
 :root { --forest:#345943; --forest-dark:#203e2b; --cream:#f6f4e9; --paper:#fffef8; --ink:#304b38; --muted:#58674d; --line:#d4dec7; --danger:#9a3d31; --focus:#865b19; --gold:#fff3d6; font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif; font-size:22px; line-height:1.6; color:var(--ink); background:var(--cream); font-synthesis:none; text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; }
 * { box-sizing:border-box; }
+:root { --motion-press:100ms; --motion-enter:220ms; --motion-feedback:460ms; --ease-out:cubic-bezier(.22,1,.36,1); }
+/* 动效不等待退场；声音实例在页面容器之外持续运行。 */
+.page-content { animation: page-appear var(--motion-enter) ease-out; }
+.page-content-island { height:100%; }
+.island-dialog[open] { animation: dialog-appear var(--motion-enter) var(--ease-out); }
+.island-dialog[open]::backdrop { animation: page-appear var(--motion-enter) ease-out; }
+.feedback-success { animation: feedback-appear var(--motion-enter) var(--ease-out); }
+.feedback-pop { animation: feedback-pop var(--motion-feedback) var(--ease-out); }
+@keyframes page-appear { from { opacity:.4; } to { opacity:1; } }
+@keyframes dialog-appear { from { opacity:.4; transform:translateY(10px) scale(.98); } to { opacity:1; transform:none; } }
+@keyframes feedback-appear { from { opacity:.4; translate:0 8px; } to { opacity:1; translate:0 0; } }
+@keyframes feedback-pop { 0%,100% { transform:scale(1); } 40% { transform:scale(1.06); } }
+@media (prefers-reduced-motion:no-preference) {
+  button:not(.shop-accessory-handle) { transition:translate var(--motion-press) var(--ease-out),scale var(--motion-press) var(--ease-out),background-color 160ms ease-out,box-shadow 160ms ease-out; }
+  @media (hover:hover) and (pointer:fine) { button:not(:disabled):not(.shop-accessory-handle):hover { translate:0 -2px; } }
+  button:not(:disabled):not(.shop-accessory-handle):active { translate:0 1px; scale:.98; }
+}
+body[data-reduce-motion=true] button { translate:none!important; scale:none!important; }
 body { margin:0; background-image:radial-gradient(#80926614 1px,transparent 1px); background-size:20px 20px; }
 h1,h2,h3,p { margin:0; overflow-wrap:anywhere; }
 h1 { color:var(--forest-dark); font-size:clamp(32px,4vw,40px); line-height:1.4; }

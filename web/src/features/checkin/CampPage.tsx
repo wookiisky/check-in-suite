@@ -9,7 +9,8 @@ import { TaskIcon } from './TaskIcon';
 import { getPending } from './submission';
 import { CREATE_DRAFT_KEY, getDraft } from './drafts';
 import { checkinError } from './format';
-import { CHECKIN_SUCCESS_EVENT } from './events';
+import { CHECKIN_SUCCESS_EVENT, type CheckinSuccessDetail } from './events';
+import { CheckinRewardFeedback } from './CheckinRewardFeedback';
 import content from './content.json';
 import './checkin.css';
 
@@ -27,6 +28,9 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
   const [error, setError] = useState<unknown>(null);
   const [message, setMessage] = useState('');
   const [successID, setSuccessID] = useState('');
+  const [reward, setReward] = useState<{ record: Checkin; walletVersion: number | undefined } | null>(null);
+  const [walletFeedbackID, setWalletFeedbackID] = useState('');
+  const awaitingWalletFeedback = useRef(false);
   const [task, setTask] = useState<Task | null>(null);
   const [selected, setSelected] = useState<Checkin | null>(null);
   const generation = useRef(0);
@@ -75,6 +79,13 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
     return () => { window.clearTimeout(timer); document.removeEventListener('visibilitychange', visible); };
   }, [camp, client]);
 
+  // 首次读到打卡后的余额就消费强调机会，后续普通读取不会重新播放。
+  useEffect(() => {
+    if (!awaitingWalletFeedback.current || !reward || camp?.wallet.version === reward.walletVersion) return;
+    awaitingWalletFeedback.current = false;
+    setWalletFeedbackID(reward.record.id);
+  }, [camp, reward]);
+
   // 分页沿用当前日期范围，保留已加载内容，迟到响应不能混入新筛选。
   async function loadMore() {
     if (!cursor || loading || loadingMore) return;
@@ -92,17 +103,22 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
   // 同一记录的幂等重放不重复播放成功反馈，编辑只给静态保存提示。
   function saved(notice: string, record?: Checkin, created = false) {
     setMessage(notice);
-    if (created && record && !animatedRecords.current.has(record.id)) {
+    if (created && record && !record.deleted && !animatedRecords.current.has(record.id)) {
       setSuccessID(record.id); animatedRecords.current.add(record.id);
-      window.dispatchEvent(new CustomEvent(CHECKIN_SUCCESS_EVENT, { detail: record.id }));
-    } else setSuccessID('');
+      setReward({ record, walletVersion: camp?.wallet.version });
+      awaitingWalletFeedback.current = true;
+      window.dispatchEvent(new CustomEvent<CheckinSuccessDetail>(CHECKIN_SUCCESS_EVENT, {
+        detail: { recordId: record.id, coins: record.coin_reward_snapshot, diamonds: record.diamond_reward_snapshot },
+      }));
+    } else { setSuccessID(''); setReward(null); awaitingWalletFeedback.current = false; setWalletFeedbackID(''); }
     refresh((value) => value + 1);
   }
 
   const visibleTasks = camp?.tasks.filter((item) => !category || item.category_id === category) ?? [];
   const showRecords = !loading && (error === null || records.length > 0);
+  const highlightWallet = walletFeedbackID !== '' && walletFeedbackID === successID && !session.account.preferences.reduce_motion;
   return <div className="checkin-workspace">
-    {message && <p key={successID} role="status" className={`checkin-notice ${successID && !session.account.preferences.reduce_motion ? 'checkin-celebrate' : ''}`}>{message}</p>}
+    {message && <div key={successID} role="status" className={`checkin-notice ${successID && !session.account.preferences.reduce_motion ? 'checkin-celebrate' : ''}`}><p>{message}</p>{reward && <CheckinRewardFeedback key={reward.record.id} coins={reward.record.coin_reward_snapshot} diamonds={reward.record.diamond_reward_snapshot} reduceMotion={session.account.preferences.reduce_motion} />}</div>}
     {pending && <div className="checkin-warning"><p>{content.pendingBanner}</p>{pending.path.startsWith('/management') ? <p>{content.pendingManagement}</p> : <button onClick={() => setTask(pending.task)}>{content.recover}</button>}</div>}
     {!pending && draft && <div className="checkin-warning"><p>{content.draftAvailable}</p>{draft.management ? <p>{content.draftManagement}</p> : <button onClick={() => setTask(draft.task)}>{content.continueDraft}</button>}</div>}
     {error !== null && <div role="alert" className="checkin-error"><p>{checkinError(error)}</p><button className="secondary" onClick={() => refresh((value) => value + 1)}>{content.reload}</button></div>}
@@ -122,7 +138,7 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
           {visibleTasks.length === 0 ? <p className="checkin-empty">{!camp.has_scheduled_tasks ? content.noTasks : camp.tasks.length === 0 ? content.allDone : content.categoryDone}</p> : <div className="checkin-task-grid">{visibleTasks.map((item) => <button key={item.id} className="checkin-task secondary" disabled={pending !== null || draft !== null || loading || error !== null} onClick={() => setTask(item)}><TaskIcon name={item.icon_key} /><strong>{item.name}</strong><span className="checkin-rewards"><span>{content.coins} {item.coin_reward}</span><span>{content.diamonds} {item.diamond_reward}</span></span></button>)}</div>}
         </>}
       </section>
-      <aside className="checkin-sidebar"><section className="checkin-panel checkin-wallet" aria-label={content.balance}>{camp && <><h2>{camp.account.display_name}</h2><p>{content.coins} <strong>{camp.wallet.coins}</strong></p><p>{content.diamonds} <strong>{camp.wallet.diamonds}</strong></p>{(camp.wallet.coins < 0 || camp.wallet.diamonds < 0) && <p className="checkin-hint">{content.negativeBalance}</p>}</>}</section>{camp && renderSidebar?.(camp)}</aside>
+      <aside className="checkin-sidebar"><section className="checkin-panel checkin-wallet" aria-label={content.balance}>{camp && <><h2>{camp.account.display_name}</h2><p>{content.coins} <strong key={`coins-${successID}`} className={highlightWallet ? 'feedback-pop' : undefined} onAnimationEnd={() => setWalletFeedbackID('')}>{camp.wallet.coins}</strong></p><p>{content.diamonds} <strong key={`diamonds-${successID}`} className={highlightWallet ? 'feedback-pop' : undefined} onAnimationEnd={() => setWalletFeedbackID('')}>{camp.wallet.diamonds}</strong></p>{(camp.wallet.coins < 0 || camp.wallet.diamonds < 0) && <p className="checkin-hint">{content.negativeBalance}</p>}</>}</section>{camp && renderSidebar?.(camp)}</aside>
     </div>
     {task && <CheckinComposer client={client} session={session} task={task} date={camp?.today ?? session.today} onClose={() => setTask(null)} onSaved={saved} />}
     {selected && <RecordDialog client={client} session={session} record={selected} today={camp?.today ?? session.today} onClose={() => setSelected(null)} onSaved={saved} />}

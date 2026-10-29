@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Modal } from '../../components/Modal';
 import { ApiFailure } from '../../api/client';
 import type { Camp, Product, Purchase, PurchaseResult, ShopClient, Wallet } from './types';
 import { pendingPurchases } from './pending';
 import { assetURL, canBuy, portraitType, shopError, uncertainResult } from './helpers';
 import { Price } from './Price';
+import { dispatchFeedback } from '../../feedback/feedback-events';
 import content from './content.json';
 
 // 购买确认固定版本与幂等键，未知结果跨弹窗恢复原命令。
@@ -30,7 +31,10 @@ export function PurchaseDialog({
   const [needsRefresh, setNeedsRefresh] = useState(false);
   const [reviewed, setReviewed] = useState(false);
   const [available, setAvailable] = useState(true);
+  const completed = useRef(false); // 已确认成交后不再提交或重播成功反馈。
+  // 结果未知沿用原命令，只有第一次确认成交才发出反馈。
   async function submit() {
+    if (busy || completed.current) return;
     const command = pending ?? {
       key: crypto.randomUUID(),
       product,
@@ -53,6 +57,8 @@ export function PurchaseDialog({
       });
       pendingPurchases.delete(client);
       setPending(null);
+      completed.current = true;
+      dispatchFeedback('purchase');
       onPurchased(result.purchase);
     } catch (reason) {
       setError(reason);
@@ -141,7 +147,7 @@ export function PurchaseDialog({
         )}
         <button
           type="button"
-          disabled={busy || (!pending && (needsRefresh || !available || !canBuy(product, wallet)))}
+          disabled={busy || completed.current || (!pending && (needsRefresh || !available || !canBuy(product, wallet)))}
           onClick={() => void submit()}
         >
           {busy ? content.purchasing : pending ? content.recoverPurchase : content.confirmPurchase}

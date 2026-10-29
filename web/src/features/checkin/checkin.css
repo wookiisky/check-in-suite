@@ -5,7 +5,7 @@
 .checkin-section-heading { justify-content: space-between; margin-bottom: 18px; }
 .checkin-panel h2 { margin-bottom: 16px; }
 .checkin-wallet { background: #eef2d9; }
-.checkin-wallet strong { font-size: 32px; }
+.checkin-wallet strong { display: inline-block; font-size: 32px; }
 .checkin-task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 16px; margin-top: 20px; }
 .checkin-task { display: grid; justify-items: center; gap: 12px; width: 100%; padding: 22px; background: #fff8df; color: var(--forest-dark); border-color: #d9bd72; }
 .checkin-task:hover { background: #fbefc7; }
@@ -43,9 +43,37 @@
 @media (max-width: 700px) { .checkin-form-grid { grid-template-columns: 1fr; } .checkin-panel { padding: 18px; } .checkin-actions > button { flex-grow: 1; } }
 @media (prefers-reduced-motion: reduce) { .checkin-workspace *, .checkin-stack * { animation: none !important; transition: none !important; } }
 
-.checkin-celebrate { animation: checkin-appear 240ms ease-out; }
-@keyframes checkin-appear { from { opacity: .5; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { .checkin-celebrate { animation: none; } }
+.checkin-celebrate { animation: checkin-appear 360ms var(--ease-out); }
+.checkin-reward-feedback { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.checkin-reward-card { position: relative; isolation: isolate; overflow: hidden; display: grid; place-items: center; min-height: 144px; flex: 1 1 220px; min-width: 0; padding: 54px 12px 16px; border: 1px solid #d4b56b; border-radius: 18px; background: var(--gold); }
+.checkin-reward-amount { position: relative; z-index: 1; align-self: end; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; font-weight: 700; }
+.checkin-reward-amount span { border-radius: 12px; padding: 2px 8px; background: var(--gold); overflow-wrap: anywhere; }
+.checkin-reward-icon { width: 32px; height: 32px; flex-shrink: 0; }
+.checkin-reward-featured { color: #333877; border: 2px solid #8e8bc8; background: radial-gradient(ellipse at 50% 40%, #fff 0%, #e5f3ff 48%, #e5ddff 100%); }
+.checkin-reward-featured .checkin-reward-icon { width: 52px; height: 52px; filter: drop-shadow(0 3px 6px #9cbcf1); }
+.checkin-reward-featured .checkin-reward-amount { font-size: 26px; }
+.checkin-reward-featured .checkin-reward-amount span { background: #f1f3ff; }
+.checkin-reward-particles { position: absolute; inset: 0; pointer-events: none; }
+.checkin-reward-particle { position: absolute; left: calc(50% - 12px); top: calc(50% - 12px); width: 24px; height: 24px; opacity: 0; animation: checkin-reward-burst 900ms var(--ease-out) both; }
+.checkin-reward-diamonds .checkin-reward-particle { left: calc(50% - 17px); top: calc(50% - 17px); width: 34px; height: 34px; animation-duration: 1200ms; filter: drop-shadow(0 0 3px #aeb9f6); }
+/* 钻石只扫光一次；不循环闪烁，装饰不阻挡操作或改变卡片尺寸。 */
+.checkin-reward-playing .checkin-reward-featured::after { content: ''; position: absolute; inset: -50%; pointer-events: none; background: linear-gradient(110deg, transparent 38%, #ffffffb8 50%, transparent 62%); opacity: 0; animation: checkin-diamond-shine 1200ms ease-out both; }
+@keyframes checkin-reward-burst {
+  0% { opacity: 0; transform: translate(0, 18px) scale(.35); }
+  20% { opacity: .95; }
+  65% { opacity: .85; }
+  100% { opacity: 0; transform: translate(var(--reward-x), var(--reward-y)) rotate(var(--reward-turn)) scale(1); }
+}
+@keyframes checkin-diamond-shine {
+  0% { opacity: 0; transform: translateX(-70%); }
+  35% { opacity: .8; }
+  100% { opacity: 0; transform: translateX(70%); }
+}
+@keyframes checkin-appear { from { opacity: .4; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .checkin-celebrate { animation: none; }
+  .checkin-reward-particles, .checkin-reward-featured::after { display: none; }
+}
 
 /* DOM顺序固定为记录、任务、侧栏，切换视图不会卸载留言草稿。 */
 .checkin-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 24px; align-items: start; }

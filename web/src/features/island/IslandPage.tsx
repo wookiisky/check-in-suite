@@ -11,6 +11,7 @@ import { TaskIcon } from '../checkin/TaskIcon';
 import { IslandScene } from './IslandScene';
 import { ItemArtwork } from './IslandArtwork';
 import type { IslandDefinition, IslandPageProps, IslandPlacement, IslandState } from './island-types';
+import { dispatchFeedback } from '../../feedback/feedback-events';
 import content from './content.json';
 import './island-page.css';
 
@@ -31,7 +32,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState<unknown>(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState({ text: '', success: false });
   const [saving, setSaving] = useState(false);
   const [conflict, setConflict] = useState(false);
   const [unconfirmedSave, setUnconfirmedSave] = useState(false);
@@ -51,6 +52,9 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   const placements = draft ?? state?.placements ?? [];
   const latest = useRef({ placements, catalog: state?.catalog ?? [] });
   latest.current = { placements, catalog: state?.catalog ?? [] };
+
+  // 保存提示与普通状态明确区分，阻挡或不可用信息不使用成功动效。
+  function showMessage(text: string, success = false) { setMessage({ text, success }); }
 
   // 只测量浮层占用，列表在内部滚动，不改变场景尺寸。
   useLayoutEffect(() => {
@@ -116,10 +120,11 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   // 保存失败保持完整草稿，版本冲突不能通过盲目重试覆盖他人的状态。
   async function save() {
     if (!state || !draft || saving || conflict) return false;
-    setSaving(true); setError(null); setMessage('');
+    setSaving(true); setError(null); showMessage('');
     try {
       const next = await client.request<IslandState>('/island', { method: 'PUT', body: { expected_version: state.version, placements: draft } });
-      setState(next); setDraft(null); setSelected(null); setMessage(content.saved); setActor(createActor(next.placements, next.catalog)); setUnconfirmedSave(false); return true;
+      setState(next); setDraft(null); setSelected(null); showMessage(content.saved, true); setActor(createActor(next.placements, next.catalog)); setUnconfirmedSave(false);
+      dispatchFeedback('island-save'); return true;
     } catch (reason) {
       if (reason instanceof ApiFailure && reason.detail.code === 'VERSION_CONFLICT') setConflict(true);
       else {
@@ -131,13 +136,13 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   }
   // 退出编辑还原服务器布局，冲突时重新读取已确认的新版本。
   function cancel() {
-    setDraft(null); setSelected(null); setError(null); setMessage(''); setShowIndoor(false); setPanelOpen(true);
+    setDraft(null); setSelected(null); setError(null); showMessage(''); setShowIndoor(false); setPanelOpen(true);
     if (conflict || unconfirmedSave) { setConflict(false); setUnconfirmedSave(false); setState(null); setAttempt((value) => value + 1); }
   }
   // 同一实例只在草稿中替换，不创建额外所有权。
   function move(next: IslandPlacement) {
     setDraft((current) => current?.map((item) => item.id === next.id ? next : item) ?? current);
-    setMessage('');
+    showMessage('');
   }
   // 自动寻找第一个可用位置；房屋和环境替换当前同类，不复制出第二份。
   function place(id: string) {
@@ -161,19 +166,19 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
       candidates.sort((a, b) => Number(a.y < front) - Number(b.y < front) || Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y));
     }
     const candidate = candidates.map((item) => clampPlacement(item, definition)).find((item) => canPlace(item, remaining, state.catalog));
-    if (!candidate) { setMessage(content.blockedPlacement); return; }
-    setDraft([...remaining, candidate]); setSelected(id); setMessage('');
+    if (!candidate) { showMessage(content.blockedPlacement); return; }
+    setDraft([...remaining, candidate]); setSelected(id); showMessage('');
   }
   // 主动互动与自主活动共享执行路径；减少动效时直接展示活动静态状态。
   function interact(id: string) {
     if (!state || editing) return;
     const next = startActivity(actor, id, state.placements, state.catalog);
-    if (!next) { setMessage(content.activityUnavailable); return; }
+    if (!next) { showMessage(content.activityUnavailable); return; }
     if (reduced) {
       const point = next.route.at(-1);
       setActor({ ...next, ...(point ?? {}), phase: 'acting', action: next.destination, route: [] });
     } else setActor(next);
-    setPaused(false); setMessage('');
+    setPaused(false); showMessage('');
   }
   const selectedPlacement = placements.find((item) => item.id === selected);
   const selectedDefinition = state?.catalog.find((item) => item.key === selectedPlacement?.item_key);
@@ -181,20 +186,20 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   function adjust(dx: number, dy: number) {
     if (!selectedPlacement || !selectedDefinition || !state) return;
     const next = clampPlacement({ ...selectedPlacement, x: selectedPlacement.x + dx, y: selectedPlacement.y + dy }, selectedDefinition);
-    if (canPlace(next, placements, state.catalog)) move(next); else setMessage(content.blockedPlacement);
+    if (canPlace(next, placements, state.catalog)) move(next); else showMessage(content.blockedPlacement);
   }
   // 物品移入房屋后使用室内局部坐标，避免保存室外的大坐标。
   function changeZone() {
     if (!selectedPlacement || !selectedDefinition || !state) return;
     const zone = selectedPlacement.zone === 'indoor' ? 'outdoor' : 'indoor';
     const next = clampPlacement({ ...selectedPlacement, zone, x: 0, y: zone === 'indoor' ? 0 : 3 }, selectedDefinition);
-    if (canPlace(next, placements, state.catalog)) { move(next); setShowIndoor(zone === 'indoor'); } else setMessage(content.blockedPlacement);
+    if (canPlace(next, placements, state.catalog)) { move(next); setShowIndoor(zone === 'indoor'); } else showMessage(content.blockedPlacement);
   }
   const activeObjects = state?.placements.filter((item) => state.catalog.find((entry) => entry.key === item.item_key)?.activity) ?? [];
   return <div className="island-page island-fullscreen" style={{ '--island-hud-top': `${hudTop}px` } as CSSProperties}>
     <header ref={header} className="island-page-header"><div className="island-heading"><button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); leave('back'); }}>{content.back}</button><h1>{content.title}</h1></div>
       {camp && <section className="island-wallet" aria-label={content.balance}><span><img src="/api/v1/assets/coin-v1" alt=""/><span className="island-currency-name">{content.coins}</span><strong aria-label={`${content.coins} ${camp.wallet.coins}`}>{camp.wallet.coins}</strong></span><span><img src="/api/v1/assets/gem-v1" alt=""/><span className="island-currency-name">{content.diamonds}</span><strong aria-label={`${content.diamonds} ${camp.wallet.diamonds}`}>{camp.wallet.diamonds}</strong></span></section>}
-      <div className="island-actions">{state && <button disabled={editing || saving} aria-pressed={editing} onClick={() => { setDraft(state.placements.map((item) => ({ ...item }))); setCheckinsOpen(false); setPanelOpen(true); setError(null); setMessage(''); }}>{content.edit}</button>}{onShop && <button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); leave('shop'); }}>{content.shop}</button>}{onSettings && <button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); onSettings(); }}>{content.settings}</button>}</div>
+      <div className="island-actions">{state && <button disabled={editing || saving} aria-pressed={editing} onClick={() => { setDraft(state.placements.map((item) => ({ ...item }))); setCheckinsOpen(false); setPanelOpen(true); setError(null); showMessage(''); }}>{content.edit}</button>}{onShop && <button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); leave('shop'); }}>{content.shop}</button>}{onSettings && <button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); onSettings(); }}>{content.settings}</button>}</div>
     </header>
     {camp && onCamp && <aside ref={checkins} className={`island-checkin-panel ${checkinsOpen ? 'is-expanded' : 'is-collapsed'}`} aria-label={content.checkinTitle}>
       <button className="secondary island-checkin-toggle" aria-label={checkinsOpen ? content.collapseCheckins : content.expandCheckins} aria-expanded={checkinsOpen} aria-controls="island-checkin-list" onClick={() => setCheckinsOpen((value) => !value)}><svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><path d="M9 5h11M9 12h11M9 19h11M2 5l1 1 3-3M2 12l1 1 3-3M2 19l1 1 3-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg><svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" style={{ transform: checkinsOpen ? 'rotate(180deg)' : undefined }}><path d="m3 6 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
@@ -202,13 +207,13 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     </aside>}
     {loading && <p role="status">{content.loading}</p>}
     {error !== null && !leaving && <div className="island-notice island-error" role="alert"><p>{errorMessage(error)}</p>{!editing && <button onClick={() => setAttempt((value) => value + 1)}>{content.retry}</button>}</div>}
-    {message && <p className="island-notice" role="status">{message}</p>}
+    {message.text && <p className={`island-notice ${message.success ? 'feedback-success' : ''}`} role="status">{message.text}</p>}
     {conflict && <div className="island-notice island-error" role="alert"><p>{content.conflict}</p><button onClick={cancel}>{content.reloadAfterCancel}</button></div>}
     {state && <>
       {editing && <div ref={dock} className="island-edit-bar"><button disabled={saving || conflict} onClick={() => void save()}>{saving ? content.saving : content.save}</button><button className="secondary" disabled={saving} onClick={cancel}>{content.cancel}</button><button className="secondary" aria-pressed={showIndoor} disabled={saving} onClick={() => setShowIndoor((value) => !value)}>{showIndoor ? content.showOutdoor : content.showIndoor}</button><button className="secondary" aria-expanded={panelOpen} aria-controls="island-inventory-panel" onClick={() => setPanelOpen((value) => !value)}>{panelOpen ? content.closeInventory : content.openInventory}</button></div>}
       <div className={`island-workspace ${editing ? 'island-is-editing' : ''}`} aria-busy={saving}>
         <div className="island-main-scene" inert={saving}>
-          <IslandScene insets={insets} placements={placements} catalog={state.catalog} actor={actor} avatar={avatar} editing={editing} indoor={showIndoor} selected={selected} staticMotion={reduced || paused || editing} onSelect={setSelected} onMove={move} onActivity={interact} onBlocked={() => setMessage(content.blockedPlacement)} />
+          <IslandScene insets={insets} placements={placements} catalog={state.catalog} actor={actor} avatar={avatar} editing={editing} indoor={showIndoor} selected={selected} staticMotion={reduced || paused || editing} onSelect={setSelected} onMove={move} onActivity={interact} onBlocked={() => showMessage(content.blockedPlacement)} />
 
         </div>
         {editing && panelOpen && <aside ref={panel} id="island-inventory-panel" className="island-editor island-editor-shell" inert={saving} aria-label={content.inventory}>
@@ -219,7 +224,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
               <p>{selectedPlacement.zone === 'indoor' ? content.indoor : content.outdoor}</p>
               {!selectedDefinition.activity && <p className="island-hint">{content.staticItem}</p>}
               {selectedDefinition.movable ? <><div className="island-move-buttons"><button className="secondary" aria-label={content.moveLeft} onClick={() => adjust(-0.25, 0)}>←</button><button className="secondary" aria-label={content.moveUp} onClick={() => adjust(0, -0.25)}>↑</button><button className="secondary" aria-label={content.moveDown} onClick={() => adjust(0, 0.25)}>↓</button><button className="secondary" aria-label={content.moveRight} onClick={() => adjust(0.25, 0)}>→</button></div>
-                {selectedDefinition.category === 'decoration' || selectedDefinition.category === 'creature' ? <button className="secondary" onClick={() => { const next = { ...selectedPlacement, rotation: selectedPlacement.rotation === 0 ? 180 as const : 0 as const }; if (canPlace(next, placements, state.catalog)) move(next); else setMessage(content.blockedPlacement); }}>{content.rotate}</button> : null}
+                {selectedDefinition.category === 'decoration' || selectedDefinition.category === 'creature' ? <button className="secondary" onClick={() => { const next = { ...selectedPlacement, rotation: selectedPlacement.rotation === 0 ? 180 as const : 0 as const }; if (canPlace(next, placements, state.catalog)) move(next); else showMessage(content.blockedPlacement); }}>{content.rotate}</button> : null}
                 {selectedDefinition.category !== 'house' && selectedDefinition.category !== 'creature' && selectedDefinition.model !== 'run' && <button className="secondary" onClick={changeZone}>{selectedPlacement.zone === 'indoor' ? content.moveOutside : content.moveInside}</button>}
               </> : <p className="island-hint">{content.fixedItem}</p>}
               {selectedDefinition.category === 'house' || selectedDefinition.category === 'environment' ? <p className="island-hint">{content.requiredPlacement}</p> : <button className="secondary" onClick={() => { setDraft(placements.filter((item) => item.id !== selectedPlacement.id)); setSelected(null); }}>{content.store}</button>}

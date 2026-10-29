@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
 import { ApiClient, ApiFailure } from '../../api/client';
 import { PurchaseDialog } from './PurchaseDialog';
 import { CharacterPanel } from './CharacterPanel';
@@ -13,6 +14,8 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('购买确认与恢复', () => {
   it('真实201响应JSON截断后保留原命令，跨弹窗重放不重复购买文本奖励', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
     const rewardProduct = {
       ...product,
       type: 'reward' as const,
@@ -49,6 +52,7 @@ describe('购买确认与恢复', () => {
     fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
     await screen.findByText(content.purchasePending);
     expect(onPurchased).not.toHaveBeenCalled();
+    expect(feedback).not.toHaveBeenCalled();
     first.unmount();
     render(
       <PurchaseDialog
@@ -62,6 +66,12 @@ describe('购买确认与恢复', () => {
     fireEvent.click(screen.getByRole('button', { name: content.recoverPurchase }));
     await waitFor(() => expect(onPurchased).toHaveBeenCalledWith(rewardPurchase));
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(feedback).toHaveBeenCalledTimes(1);
+    expect(feedback.mock.calls[0]?.[0].detail).toBe('purchase');
+    fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
+    expect(feedback).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
     const firstWrite = fetchMock.mock.calls[0]?.[1];
     const replay = fetchMock.mock.calls[1]?.[1];
     expect(replay?.body).toBe(firstWrite?.body);

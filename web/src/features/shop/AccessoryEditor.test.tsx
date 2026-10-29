@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
 import { AccessoryEditor } from './AccessoryEditor';
 import { CharacterPanel } from './CharacterPanel';
 import { camp, equipment, outfit, purchase } from './test-fixtures';
@@ -8,6 +9,8 @@ import content from './content.json';
 
 describe('饰品编辑', () => {
   it('逐层穿过角色并只保存选中饰品的位置、尺寸和最终顺序', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
     const request = vi.fn().mockResolvedValue(outfit);
     render(<AccessoryEditor equipment={outfit} displayName="小朋友" client={{ request }} onSaved={vi.fn()} onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: content.moveRight }));
@@ -20,9 +23,15 @@ describe('饰品编辑', () => {
     await waitFor(() => expect(request).toHaveBeenCalledWith(`/equipment/accessories/${purchase.id}/layout`, {
       method: 'PATCH', body: { x: 0.51, y: 0.5, size: 0.3, before_id: 'avatar' },
     }));
+    expect(await screen.findByText(content.equipmentSaved)).toHaveClass('feedback-success');
+    expect(feedback).toHaveBeenCalledTimes(1);
+    expect(feedback.mock.calls[0]?.[0].detail).toBe('equip');
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
   });
 
   it('取消恢复草稿；保存失败保留草稿，切换饰品前要求处理未保存内容', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
     const request = vi.fn().mockRejectedValue(new TypeError('offline'));
     render(<AccessoryEditor equipment={outfit} displayName="小朋友" client={{ request }} onSaved={vi.fn()} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(content.accessorySize), { target: { value: '40' } });
@@ -37,6 +46,8 @@ describe('饰品编辑', () => {
     fireEvent.click(screen.getByRole('button', { name: content.keepEditing }));
     expect(screen.getByLabelText(content.selectedAccessory)).toHaveValue(purchase.id);
     expect(screen.getByLabelText(content.accessorySize)).toHaveValue('40');
+    expect(feedback).not.toHaveBeenCalled();
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
   });
 
   it('键盘微调与缩放限制在画布内，图片容器保持等比', () => {
@@ -60,6 +71,8 @@ describe('饰品编辑', () => {
   });
 
   it('排序目标卸下后从营地刷新，保留位置大小并重新确认可用顺序', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
     const latest = { ...outfit, accessories: [purchase], accessory_layouts: { [purchase.id]: outfit.accessory_layouts[purchase.id]! } };
     const request = vi.fn()
       .mockRejectedValueOnce(new ApiFailure(409, { code: 'EQUIPMENT_CHANGED', field_errors: {}, request_id: '' }))
@@ -71,6 +84,7 @@ describe('饰品编辑', () => {
     await screen.findByText(content.errors.EQUIPMENT_CHANGED);
     fireEvent.click(screen.getByRole('button', { name: content.reloadEquipment }));
     await screen.findByText(content.reviewLayout);
+    expect(feedback).not.toHaveBeenCalled();
     expect(request).toHaveBeenNthCalledWith(2, '/camp');
     expect(screen.getByLabelText(content.accessorySize)).toHaveValue('35');
     expect(screen.queryByRole('option', { name: '帽子' })).not.toBeInTheDocument();
@@ -78,6 +92,8 @@ describe('饰品编辑', () => {
     await waitFor(() => expect(request).toHaveBeenNthCalledWith(3, `/equipment/accessories/${purchase.id}/layout`, {
       method: 'PATCH', body: { x: 0.5, y: 0.5, size: 0.35, before_id: null },
     }));
+    expect(feedback).toHaveBeenCalledTimes(1);
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
   });
 
   it('反复换装使层号增长后特效仍高于全部饰品，编辑操作高于特效', () => {

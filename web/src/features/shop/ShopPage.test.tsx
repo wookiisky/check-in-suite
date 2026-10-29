@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Session } from '../../api/types';
 import { testSession } from '../../test/account-fixtures';
+import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
 import { ShopPage } from './ShopPage';
 import { camp, equipment, product, purchase } from './test-fixtures';
 import content from './content.json';
@@ -10,6 +11,8 @@ const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
 
 describe('商店页面读取与动作边界', () => {
   it('购买成功切换我的装扮；后续读取失败只重试读取，不重复购买或自动装备', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
     let purchased = false;
     let failedRead = false;
     const request = vi.fn().mockImplementation(async (path: string) => {
@@ -29,12 +32,18 @@ describe('商店页面读取与动作边界', () => {
       throw new Error(`Unexpected path ${path}`);
     });
     render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(await screen.findByRole('button', { name: `${content.buy} ${product.name}` }));
+    const buy = await screen.findByRole('button', { name: `${content.buy} ${product.name}` });
+    expect(feedback).not.toHaveBeenCalled();
+    fireEvent.click(buy);
     fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
     await screen.findByText(content.purchaseSuccess);
     fireEvent.click(await screen.findByRole('button', { name: content.reload }));
     await screen.findByRole('button', { name: `${content.equip} ${purchase.name_snapshot}` });
     expect(request.mock.calls.filter(([path]) => path === '/purchases')).toHaveLength(1);
+    expect(feedback).toHaveBeenCalledTimes(1);
+    expect(feedback.mock.calls[0]?.[0].detail).toBe('purchase');
+    expect(screen.getByRole('status')).toHaveClass('feedback-success');
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
     expect(request.mock.calls.some(([path]) => String(path).startsWith('/equipment'))).toBe(false);
   });
 
@@ -61,6 +70,8 @@ describe('商店页面读取与动作边界', () => {
   });
 
   it('饰品装备只写指定物品，失败后不移除其他装备', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
     const equipped = { ...purchase, id: 'existing', name_snapshot: '已有饰品' };
     const extra = { ...purchase, id: 'extra', name_snapshot: '新饰品' };
     const request = vi.fn().mockImplementation(async (path: string) => {
@@ -76,12 +87,16 @@ describe('商店页面读取与动作边界', () => {
     fireEvent.click(await screen.findByRole('button', { name: `${content.equip} 新饰品` }));
     await screen.findByRole('button', { name: content.reload });
     expect(screen.getByRole('button', { name: `${content.unequip} 已有饰品` })).toBeEnabled();
+    expect(feedback).not.toHaveBeenCalled();
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
     expect(request.mock.calls.filter(([path]) => String(path).startsWith('/equipment'))).toEqual([
       ['/equipment/accessories/extra', { method: 'PUT' }],
     ]);
   });
 
   it('背景使用独立槽位，特效逐件装备并保留原饰品', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
     const background = { ...purchase, id: 'bg', type_snapshot: 'background' as const, name_snapshot: '草地背景' };
     const effect = { ...purchase, id: 'effect', type_snapshot: 'effect' as const, name_snapshot: '雪花特效' };
     const request = vi.fn().mockImplementation(async (path: string) => {
@@ -99,5 +114,41 @@ describe('商店页面读取与动作边界', () => {
       ['/equipment/background', { method: 'PUT', body: { purchase_id: 'bg' } }],
       ['/equipment/effects/effect', { method: 'PUT' }],
     ]));
+    await waitFor(() => expect(feedback).toHaveBeenCalledTimes(2));
+    expect(feedback.mock.calls.every(([event]) => event.detail === 'equip')).toBe(true);
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
   });
+
+  it('装备写成功后读取失败仍只反馈一次，读到新角色后才强调', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
+    let equipped = false;
+    let failRead = true;
+    const request = vi.fn().mockImplementation(async (path: string) => {
+      if (path === `/equipment/accessories/${purchase.id}`) {
+        equipped = true;
+        return { purchase_id: purchase.id, equipped: true };
+      }
+      if (path === '/camp') {
+        if (equipped && failRead) throw new TypeError('read offline');
+        return equipped ? { ...camp, equipment: { ...equipment, accessories: [purchase], accessory_layouts: { [purchase.id]: { x: 0.5, y: 0.5, size: 0.2, layer: 1 } } } } : camp;
+      }
+      if (path === '/products') return { items: [] };
+      return { items: [purchase], next_cursor: null };
+    });
+    render(<ShopPage client={{ request }} session={session} />);
+    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
+    fireEvent.click(await screen.findByRole('button', { name: `${content.equip} ${purchase.name_snapshot}` }));
+    await screen.findByRole('button', { name: content.reload });
+    expect(screen.getByText(content.equipmentSaved)).toBeInTheDocument();
+    expect(feedback).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.feedback-pop')).toBeNull();
+    failRead = false;
+    fireEvent.click(screen.getByRole('button', { name: content.reload }));
+    expect(await screen.findByAltText(purchase.name_snapshot)).toBeInTheDocument();
+    expect(document.querySelector('.feedback-pop')).not.toBeNull();
+    expect(feedback).toHaveBeenCalledTimes(1);
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
+  });
+
 });

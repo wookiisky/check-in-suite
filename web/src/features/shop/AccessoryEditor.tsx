@@ -5,6 +5,7 @@ import { CharacterStage } from './CharacterStage';
 import { accessoryLayout, accessoryOrder, clampLayout, previewEquipment } from './accessory-layout';
 import type { AccessoryLayout, AccessoryLayoutInput } from './accessory-layout';
 import { shopError } from './helpers';
+import { dispatchFeedback } from '../../feedback/feedback-events';
 import content from './content.json';
 
 // 单件编辑草稿，其他饰品仍以最近一次服务端结果为准。
@@ -39,6 +40,7 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [message, setMessage] = useState('');
+  const [highlightCharacter, setHighlightCharacter] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ kind: 'close' } | { kind: 'select'; id: string } | null>(null);
   const available = saved.accessories.some((item) => item.id === draft.id);
   const dirty = available && JSON.stringify(layoutInput(draft)) !== JSON.stringify(layoutInput(draftFor(saved, draft.id)));
@@ -88,6 +90,7 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
   // 单件布局与层级一次提交，失败保留原草稿供重试。
   async function save() {
     setBusy(true);
+    setHighlightCharacter(false);
     setError(null);
     setMessage('');
     try {
@@ -95,6 +98,8 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
       setSaved(result);
       setDraft(draftFor(result, draft.id));
       setMessage(content.equipmentSaved);
+      setHighlightCharacter(true);
+      dispatchFeedback('equip');
       onSaved(result);
     } catch (reason) {
       setError(reason);
@@ -138,7 +143,7 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
   </Modal>;
   return <Modal title={content.editOutfit} onClose={close} closeDisabled={busy}>
     <div className="shop-outfit-editor">
-      <section className="shop-outfit-preview" aria-label={`${displayName} ${content.character}`}>
+      <section className={`shop-outfit-preview ${highlightCharacter ? 'feedback-pop' : ''}`} onAnimationEnd={(event) => { if (event.target === event.currentTarget) setHighlightCharacter(false); }} aria-label={`${displayName} ${content.character}`}>
       <CharacterStage equipment={preview} reduceMotion={reduceMotion} editor={{
         selectedID: draft.id,
         disabled: busy,
@@ -174,7 +179,7 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
         </ol>
       </fieldset>
       {error !== null && <div role="alert"><p className="shop-error">{shopError(error)}</p><button type="button" className="secondary" disabled={busy} onClick={() => void reload()}>{content.reloadEquipment}</button></div>}
-      {message && <p role="status">{message}</p>}
+      {message && <p className={highlightCharacter ? 'feedback-success' : undefined} role="status">{message}</p>}
       <div className="button-row">
         <button type="button" disabled={busy || !dirty} onClick={() => void save()}>{busy ? content.saving : content.save}</button>
         <button type="button" className="secondary" disabled={busy || !dirty} onClick={() => { setDraft(draftFor(saved, draft.id)); setError(null); setMessage(''); }}>{content.cancel}</button>

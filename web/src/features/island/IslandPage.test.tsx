@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
 import { IslandPage } from './IslandPage';
 import { state } from './island-test-fixtures';
 import { testSession } from '../../test/account-fixtures';
@@ -11,6 +12,8 @@ import { campFixture } from '../checkin/test-fixtures';
 
 describe('小岛页面', () => {
   it('保存已提交但响应丢失时，取消编辑会重新读取已保存布局', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
     let saved = state;
     const request = vi.fn().mockImplementation(async (path, options) => {
       if (path === '/camp') return camp;
@@ -25,8 +28,12 @@ describe('小岛页面', () => {
     fireEvent.click(screen.getByRole('button', { name: content.cancel }));
     await waitFor(() => expect(request.mock.calls.filter(([path, options]) => path === '/island' && options?.method !== 'PUT')).toHaveLength(2));
     expect(document.querySelectorAll('[data-placement-id="tree-1"]')).toHaveLength(1);
+    expect(feedback).not.toHaveBeenCalled();
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
   });
   it('购买实例按件摆放，保存失败保留草稿，重试成功后退出布置', async () => {
+    const feedback = vi.fn();
+    window.addEventListener(FEEDBACK_EVENT, feedback);
     let fail = true;
     const request = vi.fn().mockImplementation(async (path, options) => {
       if (path === '/camp') return camp;
@@ -45,9 +52,13 @@ describe('小岛页面', () => {
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await screen.findByRole('alert');
     expect(screen.getAllByRole('button', { name: `${content.place} 树木` })).toHaveLength(1);
+    expect(feedback).not.toHaveBeenCalled();
     fail = false;
     fireEvent.click(screen.getByRole('button', { name: content.save }));
-    await screen.findByText(content.saved);
+    expect(await screen.findByText(content.saved)).toHaveClass('feedback-success');
+    expect(feedback).toHaveBeenCalledTimes(1);
+    expect(feedback.mock.calls[0]?.[0].detail).toBe('island-save');
+    window.removeEventListener(FEEDBACK_EVENT, feedback);
     expect(screen.getByRole('button', { name: content.edit })).toBeInTheDocument();
     const writes = request.mock.calls.filter(([, options]) => options?.method === 'PUT');
     expect(writes).toHaveLength(2);

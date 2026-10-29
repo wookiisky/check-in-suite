@@ -120,6 +120,7 @@ export function IslandApp() {
       {loading ? <p role="status">{content.common.loading}</p> : error && !session ? <section className="panel"><FormFeedback error={error} /><button onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{content.common.retry}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <>
         <FormFeedback error={error} />
         {lockPending && <div className="notice" role="alert"><p>{content.account.lockUnconfirmed}</p><button type="button" onClick={() => void lock()}>{content.account.retryLock}</button></div>}
+        <div key={management ? 'management' : page} className={immersive ? 'page-content page-content-island' : 'page-content'}>
         {management ? <>
           <div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div>
           <nav className="management-sections" aria-label={content.navigation.management}>
@@ -147,6 +148,7 @@ export function IslandApp() {
           {page === 'stats' && <StatsPage client={client} session={session} />}
           {!immersive && <div className="management-entry"><button className="secondary" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button></div>}
         </>}
+        </div>
         <SoundPreferences client={client} session={session} onPreferencesChange={acceptPreferences} presentation={immersive ? 'dialog' : 'panel'} open={soundOpen} onClose={() => setSoundOpen(false)} />
         {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setManagementSection('account'); setExpiresAt(expiry); setNotice(''); }} />}
       </>}

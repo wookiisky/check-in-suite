@@ -6,11 +6,10 @@ import { setRecordingActive } from '../media/recordingActivity';
 import { CHECKIN_SUCCESS_EVENT } from '../checkin/events';
 import { SoundPreferences } from './SoundPreferences';
 import content from './content.json';
+import { dispatchFeedback } from '../../feedback/feedback-events';
+import { sound } from './sound-preferences-test-fakes';
 
-const sound = vi.hoisted(() => ({ activate: vi.fn(async () => true), start: vi.fn(), stop: vi.fn(), success: vi.fn(), dispose: vi.fn() }));
-vi.mock('./sound', () => ({ SoundEngine: class {
-  activate = sound.activate; startMusic = sound.start; stopMusic = sound.stop; success = sound.success; dispose = sound.dispose;
-} }));
+vi.mock('./sound', async () => ({ SoundEngine: (await import('./sound-preferences-test-fakes')).SoundEngineFake }));
 const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
 beforeEach(() => vi.clearAllMocks());
 afterEach(() => { setRecordingActive(false); });
@@ -38,11 +37,11 @@ describe('录音与音乐联动', () => {
     expect(sound.activate).not.toHaveBeenCalled();
     fireEvent.pointerDown(document.body);
     await waitFor(() => expect(sound.activate).toHaveBeenCalledTimes(1));
-    act(() => window.dispatchEvent(new CustomEvent(CHECKIN_SUCCESS_EVENT, { detail: 'record' })));
-    expect(sound.success).toHaveBeenCalledTimes(1);
+    act(() => window.dispatchEvent(new CustomEvent(CHECKIN_SUCCESS_EVENT, { detail: { recordId: 'record', coins: 7, diamonds: 3 } })));
+    expect(sound.success).toHaveBeenCalledExactlyOnceWith(7, 3);
     fireEvent.click(screen.getByLabelText('操作音效'));
     await waitFor(() => expect(screen.getByLabelText('操作音效')).not.toBeChecked());
-    act(() => window.dispatchEvent(new CustomEvent(CHECKIN_SUCCESS_EVENT, { detail: 'record2' })));
+    act(() => window.dispatchEvent(new CustomEvent(CHECKIN_SUCCESS_EVENT, { detail: { recordId: 'record2', coins: 50, diamonds: 50 } })));
     expect(sound.success).toHaveBeenCalledTimes(1);
   });
 
@@ -85,4 +84,87 @@ it('全屏设置关闭和切换展示方式不重建声音运行实例', async (
   expect(sound.dispose).not.toHaveBeenCalled();
   view.unmount();
   expect(sound.dispose).toHaveBeenCalledTimes(1);
+});
+
+
+describe('业务反馈的声音边界', () => {
+  it('购买、换装、保存仅在激活后播放，减少动效不会关闭音效', async () => {
+    const reduced = { ...session, account: { ...session.account, preferences: { ...session.account.preferences, reduce_motion: true } } };
+    render(<SoundPreferences client={{ request: vi.fn() }} session={reduced} onPreferencesChange={() => {}} />);
+    act(() => dispatchFeedback('purchase'));
+    expect(sound.feedback).not.toHaveBeenCalled();
+    fireEvent.keyDown(document.body, { key: 'Enter' });
+    await waitFor(() => expect(sound.activate).toHaveBeenCalledTimes(1));
+    for (const kind of ['purchase', 'equip', 'island-save'] as const) act(() => dispatchFeedback(kind));
+    expect(sound.feedback.mock.calls.map(([kind]) => kind)).toEqual(['purchase', 'equip', 'island-save']);
+    act(() => window.dispatchEvent(new CustomEvent(CHECKIN_SUCCESS_EVENT, { detail: { recordId: 'reduced', coins: 2, diamonds: 1 } })));
+    expect(sound.success).toHaveBeenCalledExactlyOnceWith(2, 1);
+    act(() => setRecordingActive(true));
+    act(() => dispatchFeedback('purchase'));
+    act(() => window.dispatchEvent(new CustomEvent(CHECKIN_SUCCESS_EVENT, { detail: { recordId: 'recording', coins: 2, diamonds: 1 } })));
+    expect(sound.success).toHaveBeenCalledTimes(1);
+    expect(sound.feedback).toHaveBeenCalledTimes(3);
+    expect(sound.stop).toHaveBeenCalled();
+    act(() => setRecordingActive(false));
+    act(() => dispatchFeedback('equip'));
+    expect(sound.feedback).toHaveBeenCalledTimes(4);
+  });
+
+  it('隐藏页面停止声音并忽略所有反馈，回来后不重播', async () => {
+    render(<SoundPreferences client={{ request: vi.fn() }} session={session} onPreferencesChange={() => {}} />);
+    fireEvent.pointerDown(document.body);
+    await waitFor(() => expect(sound.activate).toHaveBeenCalledTimes(1));
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    fireEvent(document, new Event('visibilitychange'));
+    expect(sound.stop).toHaveBeenCalled();
+    act(() => dispatchFeedback('purchase'));
+    act(() => window.dispatchEvent(new CustomEvent(CHECKIN_SUCCESS_EVENT)));
+    expect(sound.feedback).not.toHaveBeenCalled();
+    expect(sound.success).not.toHaveBeenCalled();
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    fireEvent(document, new Event('visibilitychange'));
+    expect(sound.feedback).not.toHaveBeenCalled();
+    expect(sound.start).not.toHaveBeenCalled();
+  });
+
+  it('点击关闭音效立即停止短音，偏好保存期间也不播放', async () => {
+    let complete!: (value: unknown) => void;
+    const request = vi.fn().mockImplementation(() => new Promise((resolve) => { complete = resolve; }));
+    render(<SoundPreferences client={{ request }} session={session} onPreferencesChange={() => {}} />);
+    fireEvent.pointerDown(document.body);
+    await waitFor(() => expect(sound.activate).toHaveBeenCalledTimes(1));
+    act(() => dispatchFeedback('equip'));
+    fireEvent.click(screen.getByLabelText(content.effects));
+    expect(sound.stopEffects).toHaveBeenCalledTimes(1);
+    act(() => dispatchFeedback('purchase'));
+    expect(sound.feedback).toHaveBeenCalledTimes(1);
+    await act(async () => complete({ ...session.account.preferences, effects_enabled: false }));
+    act(() => dispatchFeedback('island-save'));
+    expect(sound.feedback).toHaveBeenCalledTimes(1);
+  });
+
+  it('音频激活失败后下一次用户手势会重试，同一时刻只激活一次', async () => {
+    sound.activate.mockResolvedValueOnce(false).mockResolvedValue(true);
+    render(<SoundPreferences client={{ request: vi.fn() }} session={session} onPreferencesChange={() => {}} />);
+    fireEvent.pointerDown(document.body);
+    fireEvent.keyDown(document.body, { key: 'Enter' });
+    await waitFor(() => expect(sound.activate).toHaveBeenCalledTimes(1));
+    fireEvent.pointerDown(document.body);
+    await waitFor(() => expect(sound.activate).toHaveBeenCalledTimes(2));
+    fireEvent.pointerDown(document.body);
+    expect(sound.activate).toHaveBeenCalledTimes(2);
+  });
+
+  it('关闭音效保存失败后保留原偏好，之后的成功操作仍可发声', async () => {
+    const request = vi.fn().mockRejectedValue(new Error('offline'));
+    render(<SoundPreferences client={{ request }} session={session} onPreferencesChange={() => {}} />);
+    fireEvent.pointerDown(document.body);
+    await waitFor(() => expect(sound.activate).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByLabelText(content.effects));
+    expect(sound.stopEffects).toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByLabelText(content.effects)).toBeEnabled());
+    expect(screen.getByLabelText(content.effects)).toBeChecked();
+    act(() => dispatchFeedback('purchase'));
+    expect(sound.feedback).toHaveBeenCalledWith('purchase');
+  });
 });

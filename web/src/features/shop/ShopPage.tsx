@@ -8,6 +8,7 @@ import { RedeemDialog } from './RedeemDialog';
 import { Wardrobe } from './Wardrobe';
 import { pendingPurchases } from './pending';
 import { assetURL, canBuy, portraitType, purchaseTime, shopError } from './helpers';
+import { dispatchFeedback } from '../../feedback/feedback-events';
 import content from './content.json';
 import './shop.css';
 
@@ -30,6 +31,8 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
   const [selected, setSelected] = useState<Product | null>(null);
   const [reward, setReward] = useState<Purchase | null>(null);
   const [editingOutfit, setEditingOutfit] = useState(false);
+  const [highlightCharacter, setHighlightCharacter] = useState(false);
+  const highlightAfterRefresh = useRef(false); // 装备写回执不总含完整布局，读取新角色后才强调。
   const generation = useRef(0);
   const pending = pendingPurchases.get(client);
   const browsing = tab === 'browse' || tab === 'construction';
@@ -54,6 +57,10 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
         ]);
         if (controller.signal.aborted || generation.current !== current) return;
         setSnapshot(camp);
+        if (highlightAfterRefresh.current) {
+          highlightAfterRefresh.current = false;
+          setHighlightCharacter(true);
+        }
         if (browsing) setProducts(result.items as Product[]);
         else {
           setPurchases(result.items as Purchase[]);
@@ -94,7 +101,9 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
     setType('');
     setMessage('');
   }
+  // 成交后显示结果，重新读取失败只重试读取，不重放购买反馈。
   function purchased(item: Purchase) {
+    setHighlightCharacter(true);
     setSelected(null);
     setMessage(item.type_snapshot === 'reward' ? content.rewardPurchased : item.island_item_key ? content.islandPurchased : content.purchaseSuccess);
     setTab(item.type_snapshot === 'reward' ? 'rewards' : item.island_item_key ? 'islandInventory' : 'wardrobe');
@@ -102,10 +111,12 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
     setStatus('pending');
     refresh((value) => value + 1);
   }
+  // 装备状态由服务端确认后再提示成功，失败保留当前角色。
   async function toggle(item: Purchase, equip: boolean) {
     const kind = portraitType(item);
     if (!kind) return;
     setWriting(true);
+    setHighlightCharacter(false);
     setError(null);
     setMessage('');
     try {
@@ -119,6 +130,8 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
           body: { purchase_id: equip ? item.id : null },
         });
       setMessage(content.equipmentSaved);
+      highlightAfterRefresh.current = true;
+      dispatchFeedback('equip');
       refresh((value) => value + 1);
     } catch (reason) {
       setError(reason);
@@ -156,7 +169,7 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
         </div>
       )}
       {message && (
-        <p className="shop-warning" role="status">
+        <p className="shop-warning feedback-success" role="status">
           {message}
         </p>
       )}
@@ -263,11 +276,13 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
             />
           </section>
           <aside className="panel">
-            <CharacterPanel
-              equipment={snapshot.equipment}
-              displayName={session.account.display_name}
-              reduceMotion={session.account.preferences.reduce_motion}
-            />
+            <div className={highlightCharacter ? 'feedback-pop' : undefined} onAnimationEnd={(event) => { if (event.target === event.currentTarget) setHighlightCharacter(false); }}>
+              <CharacterPanel
+                equipment={snapshot.equipment}
+                displayName={session.account.display_name}
+                reduceMotion={session.account.preferences.reduce_motion}
+              />
+            </div>
             <button type="button" className="secondary shop-edit-outfit" disabled={writing || loading || snapshot.equipment.accessories.length === 0} onClick={() => setEditingOutfit(true)}>{content.editOutfit}</button>
           </aside>
         </div>

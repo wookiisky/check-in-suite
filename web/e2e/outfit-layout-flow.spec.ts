@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import type { components } from '../src/api/schema';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import family from '../src/features/family/content.json' with { type: 'json' };
@@ -47,6 +47,16 @@ async function saveLayout(page: Page, purchaseID: string) {
   await page.getByRole('dialog').getByRole('button', { name: shop.save, exact: true }).click();
   expect((await response).ok()).toBeTruthy();
   await expect(page.getByRole('dialog').getByRole('button', { name: shop.save, exact: true })).toBeDisabled();
+}
+
+// 操作框须始终覆盖素材，悬停、按下或减少动效都不能改变中心和尺寸。
+async function expectAccessoryAligned(handle: Locator, artwork: Locator) {
+  await expect.poll(async () => {
+    const control = await handle.boundingBox();
+    const image = await artwork.boundingBox();
+    if (!control || !image) return Infinity;
+    return Math.max(Math.abs(control.x - image.x), Math.abs(control.y - image.y), Math.abs(control.width - image.width), Math.abs(control.height - image.height));
+  }).toBeLessThan(1);
 }
 
 // 桌面用实际指针拖动，手机模拟器用微调按钮；两者共用真实保存和重载断言。
@@ -104,6 +114,15 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await expect(selection.locator('option')).toHaveCount(2);
   const stage = editor.locator('.shop-character-stage');
   const starArt = stage.locator(`[data-purchase-id="${star.id}"]`);
+  const starHandle = stage.getByRole('button', { name: `${shop.selectAccessory} ${star.name_snapshot}`, exact: true });
+  await starHandle.hover();
+  await expectAccessoryAligned(starHandle, starArt);
+  await page.mouse.down();
+  await expectAccessoryAligned(starHandle, starArt);
+  await page.mouse.up();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expectAccessoryAligned(starHandle, starArt);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   if (isMobile) {
     await editor.getByRole('button', { name: shop.moveRight, exact: true }).click();
     await editor.getByRole('button', { name: shop.moveDown, exact: true }).click();
@@ -171,6 +190,16 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await expect.poll(() => character.locator('img').evaluateAll((images) => images.every((image) =>
     (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
   if (process.env.ISLAND_CAPTURE_PREVIEWS) await character.screenshot({ path: `.local/previews/outfit-${suffix}.png` });
+  await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
+  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
+  await page.getByRole('button', { name: shop.editOutfit, exact: true }).click();
+  await selection.selectOption(star.id);
+  await starHandle.hover();
+  await expectAccessoryAligned(starHandle, starArt);
+  await page.mouse.down();
+  await expectAccessoryAligned(starHandle, starArt);
+  await page.mouse.up();
+  await editor.getByRole('button', { name: shop.close, exact: true }).first().click();
   await reduceMotion.click();
   await expect(reduceMotion).not.toBeChecked();
   await page.emulateMedia({ reducedMotion: 'reduce' });
