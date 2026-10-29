@@ -27,7 +27,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   const [checkinsOpen, setCheckinsOpen] = useState(true);
   const checkins = useRef<HTMLElement>(null);
   const [hudTop, setHudTop] = useState(100);
-  const [avatar, setAvatar] = useState<'fox' | 'bunny'>('fox');
+  const [avatar, setAvatar] = useState('fox-v1');
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState<unknown>(null);
@@ -89,7 +89,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     setLoading(true); setError(null);
     void Promise.all([client.request<IslandState>('/island', { signal: controller.signal }), client.request<Camp>('/camp', { signal: controller.signal })]).then(([next, camp]) => {
       if (controller.signal.aborted) return;
-      setState(next); setCamp(camp); setAvatar(camp.equipment.avatar && portraitAssetKey(camp.equipment.avatar) === 'bunny-v1' ? 'bunny' : 'fox');
+      setState(next); setCamp(camp); setAvatar(camp.equipment.avatar ? portraitAssetKey(camp.equipment.avatar) : 'fox-v1');
       setActor(createActor(next.placements, next.catalog)); setConflict(false); setUnconfirmedSave(false);
     }).catch((reason: unknown) => { if (!controller.signal.aborted) setError(reason); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();

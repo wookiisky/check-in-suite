@@ -134,6 +134,8 @@ npm start
 
 ## 文档与设计图
 
+- [新增 36 件素材总览](docs/previews/materials-overview.png) · [分类预览页面](docs/previews/materials.html)
+- [人物发型总览](docs/previews/human-avatars.png) · [人物发型预览页面](docs/previews/human-avatars.html)
 - [产品描述与交互规则](docs/product.md)
 - [技术方案](docs/tech.md)
 - [桌面首页](design/previews/home-desktop.jpg)
@@ -144,6 +146,12 @@ npm start
 - [统计](design/previews/stats-desktop.jpg)
 - [商店](design/previews/shop-desktop.jpg)
 - [登录](design/previews/login-desktop.jpg)
+
+正式工程内置素材新增 4 个角色、4 款角色背景、8 件透明饰品、10 件小岛物件、6 枚成就徽章和 4 个日常任务图标，均为本地 SVG。管理页可按用途选用这些素材；新增商品的名称、价格、库存与上架状态，以及成就规则，仍由管理页配置，不自动创建。
+
+另提供一位男孩和一位女孩的 6 款人物素材：男孩包含短发、卷发和侧分发，女孩包含长发、双辫和短发。同一人物的脸型、五官、肤色、服装和姿势保持一致，只改变发型。每款作为独立的整体形象选用，沿用现有购买、装备与展示方式。
+
+小岛新物件均为可重复购买、独立摆放的静态装饰，帐篷和风车也不带进入或活动能力。小岛会展示已装备的新角色静态形象，原有狐狸和兔子继续使用肢体动画。新素材随服务启动安装到私有素材目录，已有版本不会被覆盖；更新后需重新构建并启动 Go 服务。
 
 图片支持本地选择与预览，每张上限 2 MB。录音使用最长 60 秒的模拟计时，支持停止、重录、移除与示例音试听，不采集真实麦克风声音。打卡弹窗中的“设计预览”可演示设备不可用、录音失败、提交失败和重试。背景音乐为用户主动开启的合成旋律。
 

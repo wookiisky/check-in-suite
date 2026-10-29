@@ -934,6 +934,7 @@ components:
         depth: {"type": "number", "exclusiveMinimum": 0}
         movable: {"type": "boolean"}
         repeatable: {"type": "boolean"}
+        catalog_only: {"type": "boolean", "description": "仅提供素材与摆放能力，不在初始化时自动创建商品；商品由管理页配置。"}
         activity: {"type": "string", "enum": ["read", "run", "ball"]}
         animation: {"type": "string", "enum": ["sway", "flutter"], "description": "独立于互动的常驻视觉动作。"}
         portrait_asset_key: {"type": "string", "minLength": 1}

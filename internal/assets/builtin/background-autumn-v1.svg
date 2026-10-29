@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none">
+  <defs><linearGradient id="autumnSky" x2="0" y2="1"><stop stop-color="#e8dec5"/><stop offset="1" stop-color="#faeacb"/></linearGradient></defs>
+  <path d="M0 0h320v320H0Z" fill="url(#autumnSky)"/>
+  <circle cx="229" cy="65" r="25" fill="#f3d18b"/>
+  <path d="M104 56c6-13 21-17 31-6 15-6 27 4 27 13H92c1-4 5-7 12-7Zm74 57c7-12 20-13 28-4 12-3 21 4 22 12h-60c1-4 4-6 10-8Z" fill="#fff8e7" opacity=".8"/>
+  <path d="M0 218c41-34 90-36 142-9 57-34 114-42 178-17v128H0Z" fill="#b7bc8c"/>
+  <path d="M0 262c48-33 105-36 159-15 60-24 111-22 161 5v68H0Z" fill="#c6b887"/>
+  <path d="M149 241c-19 21-23 51-10 79h82c-47-39-48-60-72-79Z" fill="#e6cca0"/>
+  <g stroke="#8d7155" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M29 244 36 93h15l-7 152Z" fill="#aa8963"/><path d="m40 164-25-43m28 17 29-32" stroke-linecap="round"/>
+    <path d="m277 246-4-131h12l8 132Z" fill="#aa8963"/><path d="m282 171 23-33m-24 12-20-20" stroke-linecap="round"/>
+    <path d="M-12 68c-5-27 17-45 39-39C40 5 71 10 83 29c30-3 49 24 37 48 11 22-6 44-32 41-19 23-47 20-59-1-27 5-47-24-41-49Z" fill="#cda16a" stroke="#ac875d" stroke-width="2.5"/>
+    <path d="M250 108c-13-25 4-46 26-43 13-24 41-20 51 1 29 7 29 40 11 51-1 22-24 34-43 22-23 12-49-7-45-31Z" fill="#c98d6c" stroke="#ad775d" stroke-width="2.5"/>
+  </g>
+  <g fill="#e0ba7d"><circle cx="18" cy="64" r="22"/><circle cx="56" cy="42" r="23"/><circle cx="84" cy="81" r="23"/><circle cx="45" cy="96" r="19"/></g>
+  <g fill="#dda884"><circle cx="277" cy="96" r="17"/><circle cx="310" cy="88" r="19"/><circle cx="302" cy="120" r="15"/></g>
+  <g stroke="#a57a54" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M89 158c-4-13 5-22 18-21-1 15-5 22-18 21Zm150 39c-11-11-9-24 5-29 7 13 6 24-5 29Z" fill="#d7a367"/>
+    <path d="m88 160 13-16m138 55 3-23"/>
+    <path d="m28 282 9-8 9 5-8 9Zm237 10 7-11 13 3-8 12ZM68 254l11-5 6 8-12 6Z" fill="#c58a68"/>
+    <path d="m39 302 11-6 9 6-11 7Zm244-42 8-7 10 4-9 9Z" fill="#e3bd76"/>
+  </g>
+  <path d="m10 268 4-10 5 9m281 39 4-12 6 10m-216 1 4-11 5 10" stroke="#9da175" stroke-width="3" stroke-linecap="round"/>
+</svg>

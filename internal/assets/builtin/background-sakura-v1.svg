@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none">
+  <defs><linearGradient id="sakuraSky" x2="0" y2="1"><stop stop-color="#e7ece6"/><stop offset="1" stop-color="#fff0d9"/></linearGradient></defs>
+  <path d="M0 0h320v320H0Z" fill="url(#sakuraSky)"/>
+  <circle cx="240" cy="65" r="25" fill="#f8dda3"/>
+  <path d="M112 64c5-12 20-15 28-5 12-4 23 2 24 11h-64c1-4 5-6 12-6Zm70 44c6-12 20-14 27-5 12-4 22 4 23 11h-61c1-4 5-6 11-6Z" fill="#fffdf2" opacity=".8"/>
+  <path d="M0 210c40-28 91-32 145-6 58-33 118-37 175-14v130H0Z" fill="#c4d5af"/>
+  <path d="M0 257c53-37 112-43 163-19 61-28 110-21 157 4v78H0Z" fill="#a3bf90"/>
+  <path d="M0 289c83-25 127-13 183-14 50-3 92-9 137 4v41H0Z" fill="#bbcf9c"/>
+  <g stroke="#96745e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 232 42 80h13l-7 153Z" fill="#ac8b6c"/>
+    <path d="m45 150-26-40m29 17 30-34m-32 13L30 69"/>
+    <path d="m281 232-4-128h12l5 129Z" fill="#ac8b6c"/>
+    <path d="m284 162 28-34m-30 12-22-26"/>
+  </g>
+  <g fill="#e6b7b2" stroke="#c79494" stroke-width="2.5">
+    <path d="M-13 65c-7-28 14-46 39-40 12-31 46-28 60-5 32-2 50 26 37 48 12 22-9 44-31 39-21 24-47 19-58 4C5 120-15 95-13 65Z"/>
+    <path d="M250 95c-13-25 6-49 29-45 17-26 46-16 53 8 25 13 23 44-1 51-3 23-25 35-43 19-20 10-44-8-38-33Z"/>
+  </g>
+  <g fill="#f5d3c7"><circle cx="15" cy="53" r="17"/><circle cx="57" cy="33" r="20"/><circle cx="86" cy="71" r="17"/><circle cx="43" cy="88" r="18"/><circle cx="279" cy="79" r="15"/><circle cx="311" cy="91" r="17"/></g>
+  <g fill="#f9e2d2"><circle cx="28" cy="35" r="4"/><circle cx="70" cy="55" r="4"/><circle cx="17" cy="84" r="3"/><circle cx="102" cy="76" r="3"/><circle cx="269" cy="99" r="3"/><circle cx="300" cy="65" r="4"/></g>
+  <g fill="#e8b8b0"><path d="M88 139q11-1 12 8-10 4-12-8Zm152 23q12 0 10 9-10 3-10-9ZM69 196q10-3 14 5-8 7-14-5Zm196 57q10-2 13 6-9 6-13-6Z"/><ellipse cx="36" cy="266" rx="6" ry="3"/><ellipse cx="65" cy="280" rx="5" ry="3"/><ellipse cx="286" cy="279" rx="6" ry="3"/><ellipse cx="247" cy="295" rx="4" ry="2"/></g>
+  <path d="m22 286 3-12 5 10m259 15 4-13 5 10m-235 5 4-13 4 11" stroke="#7d9f73" stroke-width="3" stroke-linecap="round"/>
+</svg>

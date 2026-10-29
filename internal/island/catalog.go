@@ -16,6 +16,7 @@ type Definition struct {
 	Depth            float64 `json:"depth"`                        // Ground footprint depth.
 	Movable          bool    `json:"movable"`                      // Whether user placement may change the position.
 	Repeatable       bool    `json:"repeatable"`                   // Whether each additional purchase grants another instance.
+	CatalogOnly      bool    `json:"catalog_only,omitempty"`       // Artwork requires a managed offer; initialization does not price it.
 	Animation        string  `json:"animation,omitempty"`          // Optional ambient animation, independent from interaction.
 	Activity         string  `json:"activity,omitempty"`           // Optional activity available at this item.
 	PortraitAssetKey string  `json:"portrait_asset_key,omitempty"` // Optional existing portrait artwork.

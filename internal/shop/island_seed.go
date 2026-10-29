@@ -22,7 +22,7 @@ func SeedIslandProducts(ctx context.Context, db *sql.DB, now int64) error {
 		return tx.Commit()
 	}
 	for _, item := range island.Catalog() {
-		if item.AssetKey == "" {
+		if item.AssetKey == "" || item.CatalogOnly {
 			continue
 		}
 		kind := TypeIsland

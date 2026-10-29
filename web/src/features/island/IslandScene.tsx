@@ -14,7 +14,7 @@ interface SceneProps {
   placements: IslandPlacement[]; // 当前显示布局。
   catalog: IslandDefinition[]; // 物品展示和互动能力。
   actor: IslandActor; // 单一角色活动状态。
-  avatar: 'fox' | 'bunny'; // 当前画像对应的角色。
+  avatar: string; // 当前画像对应的受控角色素材。
   editing: boolean; // 区分拖动画布和摆放。
   indoor: boolean; // 布置时主动展开室内。
   selected: string | null; // 当前调整的实例。

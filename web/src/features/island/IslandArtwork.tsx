@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { assetURL } from '../shop/helpers';
 import './island-art.css';
 
 // 美术只描绘模型，位置、遮挡顺序和交互由场景统一管理。
@@ -14,7 +15,7 @@ interface ItemArtworkProps {
 
 // 角色各肢体独立绘制，使动作不依赖整幅画像的位移。
 interface CharacterArtworkProps {
-  avatar: 'fox' | 'bunny'; // 与画像同步的角色身份。
+  avatar: string; // 与画像同步的受控素材标识；狐狸和兔子继续使用肢体动画。
   moving: boolean; // 地面移动时启用走路动作。
   activity: 'idle' | 'walk' | 'rest' | 'read' | 'run' | 'ball'; // 动作表现，不决定业务行为。
   facing?: number; // 负数朝左，其他值朝右。
@@ -105,6 +106,7 @@ export function ItemArtwork({ model, indoor = false, selected = false, rotation 
   return <g className="island-item-art" data-animation={animation} data-static={staticMotion}>
     {selected && <ellipse cy="6" rx={model === 'house' || model === 'cottage' ? 84 * houseScale : 35} ry={model === 'house' || model === 'cottage' ? 40 * houseScale : 17} fill="#fff8c5" fillOpacity=".45" stroke="#735c2d" strokeWidth="2" strokeDasharray="5 4" />}
     <g transform={`scale(${mirror} 1)`}>
+      {model.startsWith('island-') && <image href={assetURL(model)} x={-60} y={-99.375} width={120} height={120} />}
       {(model === 'house' || model === 'cottage') && <g transform={`scale(${houseScale})`}><HouseArtwork indoor={indoor} cottage={model === 'cottage'} /></g>}
       {model === 'tree' && <g stroke="#67794b" strokeWidth="2" strokeLinejoin="round">
         <ellipse cy="3" rx="30" ry="12" fill="#527749" opacity=".2" stroke="none" />
@@ -149,7 +151,13 @@ export function ItemArtwork({ model, indoor = false, selected = false, rotation 
 
 // 动画只改变身体部位，角色世界位置由活动模块控制。
 export function CharacterArtwork({ avatar, moving, activity, facing = 1, staticMotion = false }: CharacterArtworkProps) {
-  const bunny = avatar === 'bunny';
+  const bunny = avatar === 'bunny' || avatar === 'bunny-v1';
+  // 新角色复用已装备的受控图片，已有活动仍决定世界位置和状态。
+  if (!bunny && avatar !== 'fox' && avatar !== 'fox-v1') {
+    return <g className="island-character-art" data-moving={moving} data-activity={activity} data-static={staticMotion}>
+      <g transform={`scale(${facing < 0 ? -1 : 1} 1)`}><image href={assetURL(avatar)} x={-50} y={-93.75} width={100} height={100} /></g>
+    </g>;
+  }
   const fur = bunny ? '#f7efd9' : '#e4a06a';
   const outline = bunny ? '#647151' : '#7b6550';
   return <g className="island-character-art" data-moving={moving} data-activity={activity} data-static={staticMotion}>

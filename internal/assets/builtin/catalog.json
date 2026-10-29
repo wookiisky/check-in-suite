@@ -322,5 +322,257 @@
     "name": "小树饰品",
     "kind": "accessory",
     "url": "/api/v1/assets/accessory-tree-v1"
+  },
+  {
+    "key": "bear-v1",
+    "name": "小熊",
+    "kind": "avatar",
+    "url": "/api/v1/assets/bear-v1"
+  },
+  {
+    "key": "cat-v1",
+    "name": "小猫",
+    "kind": "avatar",
+    "url": "/api/v1/assets/cat-v1"
+  },
+  {
+    "key": "deer-v1",
+    "name": "小鹿",
+    "kind": "avatar",
+    "url": "/api/v1/assets/deer-v1"
+  },
+  {
+    "key": "red-panda-v1",
+    "name": "小熊猫",
+    "kind": "avatar",
+    "url": "/api/v1/assets/red-panda-v1"
+  },
+  {
+    "key": "background-sakura-v1",
+    "name": "樱花草地",
+    "kind": "background",
+    "url": "/api/v1/assets/background-sakura-v1"
+  },
+  {
+    "key": "background-beach-v1",
+    "name": "海边沙滩",
+    "kind": "background",
+    "url": "/api/v1/assets/background-beach-v1"
+  },
+  {
+    "key": "background-autumn-v1",
+    "name": "秋日森林",
+    "kind": "background",
+    "url": "/api/v1/assets/background-autumn-v1"
+  },
+  {
+    "key": "background-snow-camp-v1",
+    "name": "雪地营地",
+    "kind": "background",
+    "url": "/api/v1/assets/background-snow-camp-v1"
+  },
+  {
+    "key": "accessory-flower-crown-v1",
+    "name": "花环",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-flower-crown-v1"
+  },
+  {
+    "key": "accessory-bow-v1",
+    "name": "蝴蝶结",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-bow-v1"
+  },
+  {
+    "key": "accessory-scarf-v1",
+    "name": "围巾",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-scarf-v1"
+  },
+  {
+    "key": "accessory-glasses-v1",
+    "name": "眼镜",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-glasses-v1"
+  },
+  {
+    "key": "accessory-backpack-v1",
+    "name": "小背包",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-backpack-v1"
+  },
+  {
+    "key": "accessory-wand-v1",
+    "name": "魔法棒",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-wand-v1"
+  },
+  {
+    "key": "accessory-balloons-v1",
+    "name": "气球",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-balloons-v1"
+  },
+  {
+    "key": "accessory-umbrella-v1",
+    "name": "雨伞",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-umbrella-v1"
+  },
+  {
+    "key": "island-flowers-v1",
+    "name": "缤纷花丛",
+    "kind": "island",
+    "url": "/api/v1/assets/island-flowers-v1"
+  },
+  {
+    "key": "island-mushrooms-v1",
+    "name": "森林蘑菇",
+    "kind": "island",
+    "url": "/api/v1/assets/island-mushrooms-v1"
+  },
+  {
+    "key": "island-rocks-v1",
+    "name": "苔藓石头",
+    "kind": "island",
+    "url": "/api/v1/assets/island-rocks-v1"
+  },
+  {
+    "key": "island-fence-v1",
+    "name": "木栅栏",
+    "kind": "island",
+    "url": "/api/v1/assets/island-fence-v1"
+  },
+  {
+    "key": "island-bench-v1",
+    "name": "林间长椅",
+    "kind": "island",
+    "url": "/api/v1/assets/island-bench-v1"
+  },
+  {
+    "key": "island-lantern-v1",
+    "name": "暖光路灯",
+    "kind": "island",
+    "url": "/api/v1/assets/island-lantern-v1"
+  },
+  {
+    "key": "island-tent-v1",
+    "name": "探险帐篷",
+    "kind": "island",
+    "url": "/api/v1/assets/island-tent-v1"
+  },
+  {
+    "key": "island-fountain-v1",
+    "name": "庭院喷泉",
+    "kind": "island",
+    "url": "/api/v1/assets/island-fountain-v1"
+  },
+  {
+    "key": "island-swing-v1",
+    "name": "木架秋千",
+    "kind": "island",
+    "url": "/api/v1/assets/island-swing-v1"
+  },
+  {
+    "key": "island-windmill-v1",
+    "name": "田园风车",
+    "kind": "island",
+    "url": "/api/v1/assets/island-windmill-v1"
+  },
+  {
+    "key": "badge-sport-v1",
+    "name": "运动达人",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-sport-v1"
+  },
+  {
+    "key": "badge-tidy-v1",
+    "name": "整理能手",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-tidy-v1"
+  },
+  {
+    "key": "badge-art-v1",
+    "name": "艺术之星",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-art-v1"
+  },
+  {
+    "key": "badge-music-v1",
+    "name": "音乐之星",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-music-v1"
+  },
+  {
+    "key": "badge-streak-v1",
+    "name": "坚持打卡",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-streak-v1"
+  },
+  {
+    "key": "badge-explorer-v1",
+    "name": "探索小岛",
+    "kind": "badge",
+    "url": "/api/v1/assets/badge-explorer-v1"
+  },
+  {
+    "key": "toothbrush-v1",
+    "name": "刷牙",
+    "kind": "icon",
+    "url": "/api/v1/assets/toothbrush-v1"
+  },
+  {
+    "key": "sleep-v1",
+    "name": "睡觉",
+    "kind": "icon",
+    "url": "/api/v1/assets/sleep-v1"
+  },
+  {
+    "key": "water-v1",
+    "name": "喝水",
+    "kind": "icon",
+    "url": "/api/v1/assets/water-v1"
+  },
+  {
+    "key": "help-v1",
+    "name": "帮助家人",
+    "kind": "icon",
+    "url": "/api/v1/assets/help-v1"
+  },
+  {
+    "key": "avatar-boy-short-v1",
+    "name": "男孩·短发",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-boy-short-v1"
+  },
+  {
+    "key": "avatar-boy-curly-v1",
+    "name": "男孩·卷发",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-boy-curly-v1"
+  },
+  {
+    "key": "avatar-boy-sidepart-v1",
+    "name": "男孩·侧分发",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-boy-sidepart-v1"
+  },
+  {
+    "key": "avatar-girl-long-v1",
+    "name": "女孩·长发",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-girl-long-v1"
+  },
+  {
+    "key": "avatar-girl-braids-v1",
+    "name": "女孩·双辫",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-girl-braids-v1"
+  },
+  {
+    "key": "avatar-girl-short-v1",
+    "name": "女孩·短发",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-girl-short-v1"
   }
 ]

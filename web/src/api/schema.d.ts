@@ -1070,6 +1070,8 @@ export interface components {
             depth: number;
             movable: boolean;
             repeatable: boolean;
+            /** @description 仅提供素材与摆放能力，不在初始化时自动创建商品；商品由管理页配置。 */
+            catalog_only?: boolean;
             /** @enum {string} */
             activity?: "read" | "run" | "ball";
             /**
