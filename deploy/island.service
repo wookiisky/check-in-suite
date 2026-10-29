@@ -1,5 +1,5 @@
 [Unit]
-Description=Little Growth Island
+Description=Growth Camp
 After=network.target
 
 [Service]

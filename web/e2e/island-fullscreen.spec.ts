@@ -205,7 +205,9 @@ test('小岛展示可折叠打卡入口和真实余额，任务跳转保留布�
   await expect(taskButton.locator('img')).toHaveCount(1);
   await expect(shortcuts.getByRole('button', { name: completed.name, exact: true })).toHaveCount(0);
   await expect(shortcuts.locator('.checkin-icon')).toHaveCount(camp.tasks.length);
-  await expect(wallet).toHaveText(new RegExp(`${shop.coins}\\s*${camp.wallet.coins}\\s*${shop.diamonds}\\s*${camp.wallet.diamonds}`));
+  await expect(wallet.locator('.currency-amount')).toHaveText([String(camp.wallet.coins), String(camp.wallet.diamonds)]);
+  await expect(wallet.getByRole('img', { name: shop.coins, exact: true })).toBeVisible();
+  await expect(wallet.getByRole('img', { name: shop.diamonds, exact: true })).toBeVisible();
   await page.getByRole('button', { name: island.collapseCheckins, exact: true }).click();
   await expect(shortcuts.getByRole('button', { name: pending.name, exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: island.expandCheckins, exact: true }).click();
@@ -245,5 +247,5 @@ test('小岛展示可折叠打卡入口和真实余额，任务跳转保留布�
   await page.getByRole('button', { name: content.navigation.island, exact: true }).click();
   const updated = await hudAPI<components['schemas']['CampResponse']>(page, '/camp');
   await expect(shortcuts.getByRole('button', { name: pending.name, exact: true })).toHaveCount(0);
-  await expect(wallet).toHaveText(new RegExp(`${shop.coins}\\s*${updated.wallet.coins}\\s*${shop.diamonds}\\s*${updated.wallet.diamonds}`));
+  await expect(wallet.locator('.currency-amount')).toHaveText([String(updated.wallet.coins), String(updated.wallet.diamonds)]);
 });

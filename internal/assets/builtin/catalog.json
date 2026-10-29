@@ -511,7 +511,7 @@
   },
   {
     "key": "badge-explorer-v1",
-    "name": "探索小岛",
+    "name": "探索营地",
     "kind": "badge",
     "url": "/api/v1/assets/badge-explorer-v1"
   },

@@ -57,11 +57,11 @@ JSON 使用 `snake_case`。普通请求必须是单个 JSON 对象并声明 `app
 
 ## 并发与版本
 
-需要防止覆盖的编辑携带 `expected_version`，例如资料、记录、任务配置和完整小岛布局。服务器在事务内比较当前版本，冲突返回 `VERSION_CONFLICT`，可附 `current_version`。
+需要防止覆盖的编辑携带 `expected_version`，例如资料、记录、任务配置和完整营地布局。服务器在事务内比较当前版本，冲突返回 `VERSION_CONFLICT`，可附 `current_version`。
 
 客户端保留草稿并读取最新状态，由用户选择加载新值或明确按草稿再次保存。仅悄悄替换版本号不算确认；读取失败或再次冲突时不能直接覆盖。
 
-偏好只修改请求指定字段，部分装备操作按指定槽位或单件物品更新，采用后提交生效；它们不借用账户资料版本。各端点的并发单位以 OpenAPI 和 [商店](../FEATURES/SHOP.md)、[小岛](../FEATURES/ISLAND.md) 为准。
+偏好只修改请求指定字段，部分装备操作按指定槽位或单件物品更新，采用后提交生效；它们不借用账户资料版本。各端点的并发单位以 OpenAPI 和 [商店](../FEATURES/SHOP.md)、[营地](../FEATURES/ISLAND.md) 为准。
 
 ## 错误与请求身份
 

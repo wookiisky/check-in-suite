@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
-import { CharacterArtwork, GroundArtwork, ItemArtwork } from './IslandArtwork';
+import { CharacterArtwork, ItemArtwork } from './IslandArtwork';
 import type { IslandActor } from './island-activity';
 import { canPlace, clampPlacement, project, zoomAt, houseArtworkScale, projectInterior, unprojectInterior } from './island-geometry';
 import type { IslandDefinition, IslandPlacement, IslandPoint, IslandView } from './island-types';
@@ -8,9 +8,12 @@ import { fitIslandView } from './island-camera';
 import type { IslandInsets } from './island-camera';
 import content from './content.json';
 import type { Equipment } from '../shop/types';
+import { defaultPresentation } from './scene-presentation';
+import type { ScenePresentation } from './scene-presentation';
 
 // 场景只接收当前草稿，所有保存和所有权判断由页面及服务端完成。
 interface SceneProps {
+  scene?: ScenePresentation; // 整体美术、地形和取景一起替换，布局实例保持不变。
   insets: IslandInsets; // 浮层占用之外的可见区域。
   placements: IslandPlacement[]; // 当前显示布局。
   catalog: IslandDefinition[]; // 物品展示和互动能力。
@@ -47,7 +50,9 @@ function scenePoint(point: IslandPoint, indoor: boolean, house: IslandPlacement 
 }
 
 // SVG整体变换仅影响显示，物件保存地面坐标。
-export function IslandScene({ insets, placements, catalog, actor, avatar, wearables, editing, indoor, selected, staticMotion, motionPaused = false, onSelect, onMove, onActivity, onBlocked }: SceneProps) {
+export function IslandScene({ scene = defaultPresentation, insets, placements, catalog, actor, avatar, wearables, editing, indoor, selected, staticMotion, motionPaused = false, onSelect, onMove, onActivity, onBlocked }: SceneProps) {
+  const { definition, Ground, Sky } = scene;
+  const camera = useMemo(() => editing ? { ...definition.camera, center: definition.camera.editingCenter, landRatio: .5 } : definition.camera, [definition, editing]);
   const [view, setView] = useState<IslandView>(initialView);
   const svg = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ width: 1000, height: 760 });
@@ -56,7 +61,7 @@ export function IslandScene({ insets, placements, catalog, actor, avatar, wearab
   const suppressedClick = useRef(false);
   const house = placements.find((item) => catalog.find((entry) => entry.key === item.item_key)?.category === 'house');
   const houseDefinition = catalog.find((item) => item.key === house?.item_key);
-  const resetView = () => setView(fitIslandView(size.width, size.height, insets));
+  const resetView = () => setView(fitIslandView(size.width, size.height, insets, camera));
   const houseOpen = editing ? indoor : actor.zone === 'indoor';
   const dusk = placements.some((item) => catalog.find((entry) => entry.key === item.item_key)?.model === 'dusk');
   // 视口使用实际像素，避免竖屏出现固定viewBox的上下留白。
@@ -71,7 +76,7 @@ export function IslandScene({ insets, placements, catalog, actor, avatar, wearab
     observer?.observe(element); window.addEventListener('resize', measure); measure();
     return () => { observer?.disconnect(); window.removeEventListener('resize', measure); };
   }, []);
-  useEffect(() => { setView(fitIslandView(size.width, size.height, insets)); }, [size, insets]);
+  useEffect(() => { setView(fitIslandView(size.width, size.height, insets, camera)); }, [size, insets, camera]);
 
   // DOM矩阵包括响应式缩放与留白，避免手机长宽比改变拖放比例。
   function svgPoint(clientX: number, clientY: number): IslandPoint {
@@ -161,7 +166,7 @@ export function IslandScene({ insets, placements, catalog, actor, avatar, wearab
     if (event.target !== event.currentTarget) return;
     const offset = { ArrowLeft: [40, 0], ArrowRight: [-40, 0], ArrowUp: [0, 40], ArrowDown: [0, -40] }[event.key];
     if (offset) { event.preventDefault(); setView((current) => ({ ...current, x: current.x + offset[0]!, y: current.y + offset[1]! })); }
-    else if (['+', '=', '-', 'Home'].includes(event.key)) { event.preventDefault(); setView((current) => event.key === 'Home' ? fitIslandView(size.width, size.height, insets) : zoomAt(current, { x: size.width / 2, y: size.height / 2 }, event.key === '-' ? 0.85 : 1.15)); }
+    else if (['+', '=', '-', 'Home'].includes(event.key)) { event.preventDefault(); setView((current) => event.key === 'Home' ? fitIslandView(size.width, size.height, insets, camera) : zoomAt(current, { x: size.width / 2, y: size.height / 2 }, event.key === '-' ? 0.85 : 1.15)); }
   }
   const visible = placements.filter((item) => catalog.find((entry) => entry.key === item.item_key)?.category !== 'environment' && (item.zone === 'outdoor' || houseOpen));
   const actorPoint = scenePoint(actor, actor.zone === 'indoor', house, houseDefinition);
@@ -170,6 +175,7 @@ export function IslandScene({ insets, placements, catalog, actor, avatar, wearab
     const layer = (entry: typeof a) => entry.actor && actor.zone === 'indoor' || entry.placement?.zone === 'indoor' ? 1 : 0;
     return layer(a) - layer(b) || a.point.y - b.point.y;
   });
+  const worldTransform = `translate(${view.x} ${view.y}) scale(${view.zoom})`;
   return <div className={`island-scene-shell ${editing ? 'island-scene-editing' : ''} ${dusk ? 'island-dusk' : ''}`}>
     <div className="island-view-controls" style={{ top: 'var(--island-hud-top, 100px)', right: Math.max(12, insets.right) }} aria-label={content.scene}>
       <button type="button" className="secondary" aria-label={content.zoomIn} onClick={() => setView((current) => zoomAt(current, { x: size.width / 2, y: size.height / 2 }, 1.2))}>＋</button>
@@ -179,8 +185,12 @@ export function IslandScene({ insets, placements, catalog, actor, avatar, wearab
     <svg ref={svg} viewBox={`0 0 ${size.width} ${size.height}`} className="island-scene" role="group" aria-label={content.scene} aria-describedby="island-scene-help" tabIndex={0}
       data-zoom={view.zoom.toFixed(3)} data-pan-x={view.x.toFixed(2)} data-pan-y={view.y.toFixed(2)} data-editing={editing}
       onPointerDown={start} onPointerMove={move} onPointerUp={(event) => finish(event, false)} onPointerCancel={(event) => finish(event, true)} onKeyDown={keydown}>
-      <g transform={`translate(${view.x} ${view.y}) scale(${view.zoom})`}>
-        <GroundArtwork />
+      <g transform={worldTransform}>
+        <Ground scene={definition} staticMotion={staticMotion} motionPaused={motionPaused}/>
+      </g>
+      {/* 天空遮住远处的地面延伸，物件仍在它上方，向上平移不会截断屋顶。 */}
+      <Sky scene={definition} width={size.width} height={size.height} staticMotion={staticMotion} motionPaused={motionPaused}/>
+      <g transform={worldTransform}>
         {layers.map((entry) => {
           if (entry.actor) return <g key="actor" transform={`translate(${entry.point.x} ${entry.point.y})`} data-actor-zone={actor.zone} data-actor-action={actor.action} aria-hidden="true" pointerEvents="none"><CharacterArtwork avatar={avatar} wearables={wearables} moving={actor.phase === 'walking'} activity={actor.action} facing={actor.facing} staticMotion={staticMotion} motionElapsed={actor.motionElapsed} /></g>;
           const placement = entry.placement!;

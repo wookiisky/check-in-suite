@@ -1,4 +1,3 @@
-import { useId } from 'react';
 import type { CSSProperties } from 'react';
 import { assetURL } from '../shop/helpers';
 import type { IslandDefinition } from './island-types';
@@ -28,55 +27,6 @@ interface CharacterArtworkProps {
   facing?: number; // 负数朝左，其他值朝右。
   staticMotion?: boolean; // 减少动效时仍保留可识别的活动姿态。
   motionElapsed?: number; // 累计动画时间决定姿势，遮挡重排不会重新开始动作。
-}
-
-// 小花只作为地面细节，不会阻挡角色和家具。
-function GroundFlower({ x, y, color = '#fff7d2' }: { x: number; y: number; color?: string }) {
-  return <g transform={`translate(${x} ${y})`}>
-    <path d="M0 2V-5m0 4-5-2m5 4 5-2" stroke="#608453" strokeWidth="1.6" strokeLinecap="round" />
-    <g fill={color}><circle cy="-9" r="3" /><circle cx="-3" cy="-6" r="3" /><circle cx="3" cy="-6" r="3" /><circle cy="-3" r="3" /></g>
-    <circle cy="-6" r="2" fill="#e4b45c" />
-  </g>;
-}
-
-// 固定投影与场景坐标保持一致，岸线包围 -8 到 8 的可用地面。
-export function GroundArtwork() {
-  const id = useId();
-  return <g className="island-ground-art" pointerEvents="none">
-    <defs>
-      <linearGradient id={`${id}-water`} x2="0" y2="1"><stop stopColor="#e5f3ec" /><stop offset="1" stopColor="#b8dddb" /></linearGradient>
-      <linearGradient id={`${id}-soil`} x2="0" y2="1"><stop stopColor="#d5b58b" /><stop offset="1" stopColor="#b89166" /></linearGradient>
-      <linearGradient id={`${id}-grass`} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#bfd492" /><stop offset=".55" stopColor="#a7c47e" /><stop offset="1" stopColor="#96b773" /></linearGradient>
-      <linearGradient id={`${id}-sand`} x2="0" y2="1"><stop stopColor="#f1e5bb" /><stop offset="1" stopColor="#e1cca0" /></linearGradient>
-    </defs>
-    <rect x="-2500" y="-1800" width="6000" height="4400" fill={`url(#${id}-water)`} />
-    <g fill="none" stroke="#f1fbf3" strokeWidth="3" strokeLinecap="round" opacity=".75">
-      <path d="M93 288q24 9 48 0m665-45q30 10 60 0M151 515q24 9 48 0m523 34q26 9 52 0M402 626q24 8 48 0M294 183q19 8 38 0" />
-      <path d="M61 431q17 6 34 0m779-37q20 8 40 0M560 152q18 7 36 0M333 558q16 7 32 0" opacity=".6" />
-    </g>
-    {/* 仅扩大岸线与地面，完整包围可用坐标菱形；物品投影和道路保持原位。 */}
-    <g transform="translate(500 350) scale(1.18 1.24) translate(-500 -350)">
-    <ellipse cx="500" cy="399" rx="365" ry="177" fill="#85b2a3" opacity=".15" />
-    <path d="M145 321Q267 227 461 161Q500 147 540 163Q738 231 855 321Q891 346 858 375Q739 471 543 541Q501 558 459 542Q257 472 142 377Q109 349 145 321Z" fill="none" stroke="#e5f5e6" strokeWidth="32" opacity=".65" />
-    <path d="M139 351Q253 258 461 187Q502 173 540 187Q748 259 860 351V385Q838 419 761 457Q646 518 538 552Q500 565 459 550Q259 484 140 394Q125 380 139 351Z" fill={`url(#${id}-soil)`} stroke="#a18e62" strokeWidth="2.5" />
-    <g stroke="#9e805c" strokeWidth="2.5" opacity=".48" strokeLinecap="round"><path d="m191 416 4 13m61 15 5 15m65 16 2 13m83 15 3 14m82 3v14m70-34-3 14m76-43-3 15m69-53-4 14m62-47-5 12" /></g>
-    <path d="M144 321Q263 230 462 160Q501 147 540 162Q741 232 857 322Q888 347 858 371Q738 465 540 535Q500 549 460 535Q262 467 143 373Q111 349 144 321Z" fill={`url(#${id}-sand)`} stroke="#bfae7b" strokeWidth="2" />
-    <path d="M164 313Q280 232 465 169Q501 156 537 170Q723 234 837 313Q866 336 837 359Q723 443 536 508Q500 521 463 507Q274 442 162 358Q135 335 164 313Z" fill={`url(#${id}-grass)`} stroke="#7d9f63" strokeWidth="2.5" />
-    <path d="M177 312Q294 234 465 177Q500 165 535 177Q714 239 824 312" stroke="#dce6b2" strokeWidth="5" strokeLinecap="round" fill="none" opacity=".85" />
-    </g>
-    <path d="M476 300Q440 332 467 350Q494 370 523 407Q547 434 588 445" stroke="#90ae6c" strokeWidth="24" strokeLinecap="round" fill="none" opacity=".5" />
-    <path d="M476 300Q440 332 467 350Q494 370 523 407Q547 434 588 445" stroke="#dac99c" strokeWidth="19" strokeLinecap="round" fill="none" />
-    <g fill="#e9dbb3" stroke="#c1b18a" strokeWidth="1.3"><path d="m463 321 10-4 9 4-10 5Z" /><path d="m457 343 11-3 9 5-11 5Z" /><path d="m486 366 11-4 10 5-11 4Z" /><path d="m514 397 12-5 11 5-12 6Z" /><path d="m550 433 12-4 12 4-11 6Z" /></g>
-    <g stroke="#779e60" strokeWidth="2" fill="none" strokeLinecap="round" opacity=".8">
-      <path d="m264 317 2-7m-2 7-5-4m7 4 5-4m80-84 2-7m-2 7-5-4m7 4 5-4m304 110 2-7m-2 7-5-4m7 4 5-4m-296 70 2-7m-2 7-5-4m7 4 5-4m240-25 2-7m-2 7-5-4m7 4 5-4m-153 77 2-7m-2 7-5-4m7 4 5-4" />
-    </g>
-    <GroundFlower x={289} y={324} /><GroundFlower x={304} y={329} color="#f6d7be" />
-    <GroundFlower x={648} y={307} /><GroundFlower x={661} y={311} color="#f1d3a0" />
-    <GroundFlower x={367} y={407} color="#f4d5ba" /><GroundFlower x={380} y={412} />
-    <GroundFlower x={601} y={449} /><GroundFlower x={615} y={445} color="#f4d5ba" />
-    <g fill="#9ca99a" stroke="#7c907b" strokeWidth="1.5"><path d="m197 366 9-10 13 3 6 10-12 5Z" /><path d="m781 376 7-8 13 2 7 10-15 4Z" /></g>
-    <g fill="#f9efcf" opacity=".8"><ellipse cx="318" cy="458" rx="5" ry="2.2" /><ellipse cx="695" cy="458" rx="6" ry="2.5" /><ellipse cx="612" cy="504" rx="4" ry="2" /><ellipse cx="242" cy="411" rx="4" ry="2" /></g>
-  </g>;
 }
 
 // 房屋剖面保留后墙与地板，室内家具由场景按深度放入。

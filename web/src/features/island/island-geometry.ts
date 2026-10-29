@@ -1,5 +1,8 @@
 import type { IslandDefinition, IslandPlacement, IslandPoint, IslandView, IslandZone } from './island-types';
 
+// 窄屏允许把整个营地缩入浮层之间，手势和默认取景共用下限。
+export const minimumIslandZoom = 0.45;
+
 // 固定斜俯视投影只存在于绘图层，业务状态始终使用地面坐标。
 export function project(point: IslandPoint): IslandPoint {
   return { x: 500 + (point.x - point.y) * 24, y: 350 + (point.x + point.y) * 12 };
@@ -33,7 +36,7 @@ export function unprojectInterior(point: IslandPoint, house: IslandPlacement, de
 
 // 以指针所在场景点缩放，避免画布在手势期间跳动。
 export function zoomAt(view: IslandView, pointer: IslandPoint, factor: number): IslandView {
-  const zoom = Math.min(2.5, Math.max(0.7, view.zoom * factor));
+  const zoom = Math.min(2.5, Math.max(minimumIslandZoom, view.zoom * factor));
   return { zoom, x: pointer.x - (pointer.x - view.x) * zoom / view.zoom, y: pointer.y - (pointer.y - view.y) * zoom / view.zoom };
 }
 

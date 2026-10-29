@@ -1,6 +1,6 @@
-# 成长岛 Spec
+# 成长营地 Spec
 
-这里维护成长岛当前的行为、设计原因和修改约束。先按任务找到负责该规则的专题，再读其中的源码与测试入口；通常不需要通读全部文档。项目启动见 [README](../README.md)。
+这里维护成长营地当前的行为、设计原因和修改约束。先按任务找到负责该规则的专题，再读其中的源码与测试入口；通常不需要通读全部文档。项目启动见 [README](../README.md)。
 
 ## 从任务开始
 
@@ -8,10 +8,10 @@
 | --- | --- | --- |
 | 理解系统、判断需求边界 | [系统概览](SYSTEM/OVERVIEW.md) | 涉及数据一致性时读存储；涉及浏览器调用时读 HTTP |
 | 修改登录、姓名、密码或管理授权 | [账户与授权](FEATURES/ACCOUNT.md) | HTTP 约束、事务内权限复核分别见 HTTP、存储 |
-| 修改任务、打卡、余额回收、日周月记录或统计 | [打卡与查询](FEATURES/CHECKIN.md) | 发奖和回收读存储；附件读媒体；连动资格读成就、小岛 |
-| 修改购买、装扮或奖励兑现 | [商店与装扮](FEATURES/SHOP.md) | 账务读存储，摆放和物品互动读小岛 |
+| 修改任务、打卡、余额回收、日周月记录或统计 | [打卡与查询](FEATURES/CHECKIN.md) | 发奖和回收读存储；附件读媒体；连动资格读成就、营地 |
+| 修改购买、装扮或奖励兑现 | [商店与装扮](FEATURES/SHOP.md) | 账务读存储，摆放和物品互动读营地 |
 | 修改成就计算或徽章佩戴 | [成就](FEATURES/ACHIEVEMENTS.md) | 记录、排期和删除规则读打卡 |
-| 修改小岛布置、活动资格或动画 | [小岛](FEATURES/ISLAND.md) | 所有权读商店，任务解锁读打卡 |
+| 修改营地布置、活动资格或动画 | [营地](FEATURES/ISLAND.md) | 所有权读商店，任务解锁读打卡 |
 | 修改上传、录音或文件清理 | [媒体](FEATURES/MEDIA.md) | 鉴权读 HTTP，记录关联读打卡 |
 | 修改通用页面交互、家庭留言或声音 | [界面与家庭互动](FEATURES/INTERFACE.md) | 具体业务交互继续读对应功能专题 |
 | 修改接口、错误或重试 | [HTTP 协议](SYSTEM/HTTP_API.md) | 参数结构查 OpenAPI，业务拒绝条件查功能专题 |
@@ -28,9 +28,9 @@
 | `internal/storage/`、`internal/core/`、`internal/wallet/`、`internal/idempotency/`、`migrations/` | 存储与一致性、HTTP 协议 |
 | `internal/account/`、`web/src/features/account/` | 账户与授权 |
 | `internal/checkin/`、`web/src/features/checkin/`、`web/src/features/reports/` | 打卡与查询；成就和活动资格按改动扩展 |
-| `internal/shop/`、`internal/assets/`、`web/src/features/shop/`、`web/src/features/character/` | 商店与装扮；小岛使用同一所有权及素材 |
+| `internal/shop/`、`internal/assets/`、`web/src/features/shop/`、`web/src/features/character/` | 商店与装扮；营地使用同一所有权及素材 |
 | `internal/achievement/`、`web/src/features/achievements/` | 成就 |
-| `internal/island/`、`web/src/features/island/` | 小岛 |
+| `internal/island/`、`web/src/features/island/` | 营地 |
 | `internal/media/`、`web/src/features/media/` | 媒体 |
 | `internal/message/`、`web/src/features/family/`、`web/src/components/`、`web/src/feedback/` | 界面与家庭互动 |
 | `internal/demo/` | 运行手册中的测试数据初始化 |
@@ -68,6 +68,6 @@ tests: []
 
 原产品和技术方案按能力合并为以上专题，旧任务清单中的有效决定归入对应规则，历史验收的限制保存在测试指南。旧静态原型、原型截图及阶段计划已退出当前文档系统，历史可从 Git 查阅。
 
-素材预览保留为辅助资料：[素材分类预览](assets/materials.html)、[素材总览图](assets/materials-overview.png)、[人物与发型预览](assets/human-avatars.html)、[人物预览图](assets/human-avatars.png)。另保留本轮人物效果截图：[桌面衣柜](assets/character-wardrobe-desktop.png)、[手机衣柜](assets/character-wardrobe-mobile.png)、[桌面小岛](assets/character-island-desktop.png)、[手机小岛](assets/character-island-mobile.png)。这些预览用于查看外观，当前可用能力和素材身份以源码目录为准。
+素材预览保留为辅助资料：[素材分类预览](assets/materials.html)、[素材总览图](assets/materials-overview.png)、[人物与发型预览](assets/human-avatars.html)、[人物预览图](assets/human-avatars.png)。另保留本轮人物效果截图：[桌面衣柜](assets/character-wardrobe-desktop.png)、[手机衣柜](assets/character-wardrobe-mobile.png)、[桌面营地](assets/character-island-desktop.png)、[手机营地](assets/character-island-mobile.png)。这些预览用于查看外观，当前可用能力和素材身份以源码目录为准。
 
 本系统参考 Cortex 的 Spec 维护方法，保留唯一入口、规则归属和事实源映射；运行不依赖其他仓库。

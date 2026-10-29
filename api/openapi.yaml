@@ -1,6 +1,6 @@
 openapi: "3.1.0"
 info:
-  title: "成长岛服务接口"
+  title: "成长营地服务接口"
   version: "0.2.0"
   description: "已批准的首版接口契约；接口语义见spec/SYSTEM/HTTP_API.md，验证边界见spec/ENGINEERING/TESTING.md。单账户、同源Cookie认证；写请求自动判断同源并校验CSRF。未知字段拒绝，整数不超过JavaScript安全范围。"
 servers: [{"url": "/"}]
@@ -9,13 +9,13 @@ paths:
   "/api/v1/island":
     get:
       operationId: "getIsland"
-      summary: "读取小岛布局、已拥有物品与当前物品能力"
+      summary: "读取营地布局、已拥有物品与当前物品能力"
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandState"}}}}
         default: {"$ref": "#/components/responses/Error"}
     put:
       operationId: "saveIsland"
-      summary: "按已读取版本原子保存完整小岛布局"
+      summary: "按已读取版本原子保存完整营地布局"
       parameters: [{"$ref": "#/components/parameters/CSRF"}]
       description: "仅需登录，无需管理授权。验证真实所有权、每件实例唯一、室内外范围与房屋环境单选；冲突返回 VERSION_CONFLICT。"
       requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandSave"}}}}
@@ -1011,7 +1011,7 @@ components:
         stock: {"anyOf": [{"type": "integer", "minimum": 0, "maximum": 1000000}, {"type": "null"}]}
         enabled: {"type": "boolean"}
         version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
-        island_item_key: {"type": "string", "description": "当前资源定义关联的稳定小岛物品标识；不支持小岛时省略。"}
+        island_item_key: {"type": "string", "description": "当前资源定义关联的稳定营地物品标识；不支持营地时省略。"}
         repeatable: {"type": "boolean", "description": "由资源定义决定是否允许按件重复购买。"}
         owned_count: {"type": "integer", "minimum": 0, "description": "按稳定物品身份统计已拥有的数量。"}
         owned: {"type": "boolean", "description": "当前是否已拥有该永久商品；reward始终为false。"}
@@ -1069,7 +1069,7 @@ components:
         portrait_type: {"type": "string", "enum": ["title", "avatar", "accessory", "background", "effect"], "description": "当前物品定义授予的画像用途，独立于成交商品类型。"}
         portrait_asset_key: {"type": "string", "minLength": 1, "description": "当前画像展示素材；物品能力后续追加时已购者也可使用。"}
         id: {"type": "string", "minLength": 1}
-        island_item_key: {"type": "string", "description": "根据稳定物品身份读取的当前小岛能力，可随资源更新增加。"}
+        island_item_key: {"type": "string", "description": "根据稳定物品身份读取的当前营地能力，可随资源更新增加。"}
         product_id: {"type": "string", "minLength": 1}
         type_snapshot: {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward", "island"]}
         name_snapshot: {"type": "string", "minLength": 1, "maxLength": 40}

@@ -1,5 +1,5 @@
 {
-  "appName": "成长岛",
+  "appName": "成长营地",
   "common": {
     "loading": "正在加载……",
     "saving": "正在保存……",
@@ -12,8 +12,8 @@
   },
   "navigation": {
     "label": "主要导航",
-    "camp": "成长营地",
-    "island": "小岛",
+    "camp": "每日打卡",
+    "island": "我的营地",
     "calendar": "月历",
     "stats": "统计",
     "shop": "商店",
@@ -26,7 +26,7 @@
     "achievementManagement": "成就管理"
   },
   "account": {
-    "loginTitle": "欢迎回到成长岛",
+    "loginTitle": "欢迎回到成长营地",
     "loginHint": "登录后，记录今天的小小进步。",
     "username": "登录用户名",
     "loginPassword": "登录密码",

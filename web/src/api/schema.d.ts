@@ -11,10 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 读取小岛布局、已拥有物品与当前物品能力 */
+        /** 读取营地布局、已拥有物品与当前物品能力 */
         get: operations["getIsland"];
         /**
-         * 按已读取版本原子保存完整小岛布局
+         * 按已读取版本原子保存完整营地布局
          * @description 仅需登录，无需管理授权。验证真实所有权、每件实例唯一、室内外范围与房屋环境单选；冲突返回 VERSION_CONFLICT。
          */
         put: operations["saveIsland"];
@@ -1168,7 +1168,7 @@ export interface components {
             stock: number | null;
             enabled: boolean;
             version: number;
-            /** @description 当前资源定义关联的稳定小岛物品标识；不支持小岛时省略。 */
+            /** @description 当前资源定义关联的稳定营地物品标识；不支持营地时省略。 */
             island_item_key?: string;
             /** @description 由资源定义决定是否允许按件重复购买。 */
             repeatable?: boolean;
@@ -1215,7 +1215,7 @@ export interface components {
             /** @description 当前画像展示素材；物品能力后续追加时已购者也可使用。 */
             portrait_asset_key?: string;
             id: string;
-            /** @description 根据稳定物品身份读取的当前小岛能力，可随资源更新增加。 */
+            /** @description 根据稳定物品身份读取的当前营地能力，可随资源更新增加。 */
             island_item_key?: string;
             product_id: string;
             /** @enum {string} */

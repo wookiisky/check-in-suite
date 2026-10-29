@@ -160,7 +160,7 @@ if systemctl cat island.service >/dev/null 2>&1; then
 else
   unit="$root/config/island.service"
   {
-    printf '[Unit]\nDescription=Little Growth Island\nAfter=network.target\n[Service]\nType=exec\nUser=island\nGroup=island\nWorkingDirectory='
+    printf '[Unit]\nDescription=Growth Camp\nAfter=network.target\n[Service]\nType=exec\nUser=island\nGroup=island\nWorkingDirectory='
     printf '%s/.' "${root//%/%%}"
     printf '\nExecStart=:/usr/bin/env '; unit_path "$root/current/island"; printf ' serve -config '; unit_path "$configuration"
     printf '\nRestart=on-failure\nRestartSec=5s\nTimeoutStopSec=120s\nUMask=0077\nNoNewPrivileges=true\nPrivateTmp=true\nProtectSystem=strict\nProtectHome=true\nReadWritePaths='
