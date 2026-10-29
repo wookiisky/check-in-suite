@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none">
+  <style>
+    .glow{animation:glow 3.8s ease-in-out infinite alternate}.late{animation-delay:-2.1s}
+    @keyframes glow{from{opacity:.3}to{opacity:.95}}
+    @media(prefers-reduced-motion:reduce){.glow{animation:none;opacity:.85}}
+  </style>
+  <g class="glow" fill="#fff0ae" stroke="#ddb776" stroke-width=".8">
+    <path d="m46 37 3 9 9 3-9 3-3 9-3-9-9-3 9-3ZM39 192l3 8 8 3-8 3-3 8-3-8-8-3 8-3Zm122 83 2 7 7 2-7 2-2 7-2-7-7-2 7-2Z"/>
+  </g>
+  <g class="glow late" fill="#fff0ae" stroke="#ddb776" stroke-width=".8"><path d="m268 74 3 10 10 3-10 3-3 10-3-10-10-3 10-3Zm7 149 3 9 9 3-9 3-3 9-3-9-9-3 9-3Z"/></g>
+  <g fill="#fff5ca" opacity=".8"><circle cx="108" cy="37" r="2.5"/><circle cx="217" cy="137" r="2"/><circle cx="80" cy="259" r="2.5"/><circle cx="296" cy="159" r="2"/></g>
+</svg>

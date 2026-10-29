@@ -10,6 +10,7 @@ CREATE TABLE accounts (
     reduce_motion INTEGER NOT NULL DEFAULT 0 CHECK (reduce_motion IN (0,1)),
     title_purchase_id TEXT REFERENCES purchases(id),
     avatar_purchase_id TEXT REFERENCES purchases(id),
+    background_purchase_id TEXT REFERENCES purchases(id),
     version INTEGER NOT NULL DEFAULT 1 CHECK (version > 0),
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL

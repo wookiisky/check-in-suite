@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Camp, Product, Purchase, PurchaseList, ShopProps } from './types';
 import { CharacterPanel } from './CharacterPanel';
+import { AccessoryEditor } from './AccessoryEditor';
 import { Price } from './Price';
 import { PurchaseDialog } from './PurchaseDialog';
 import { RedeemDialog } from './RedeemDialog';
@@ -28,6 +29,7 @@ export function ShopPage({ client, session }: ShopProps) {
   const [revision, refresh] = useState(0);
   const [selected, setSelected] = useState<Product | null>(null);
   const [reward, setReward] = useState<Purchase | null>(null);
+  const [editingOutfit, setEditingOutfit] = useState(false);
   const generation = useRef(0);
   const pending = pendingPurchases.get(client);
   const query = new URLSearchParams(
@@ -104,8 +106,8 @@ export function ShopPage({ client, session }: ShopProps) {
     setError(null);
     setMessage('');
     try {
-      if (item.type_snapshot === 'accessory')
-        await client.request(`/equipment/accessories/${item.id}`, {
+      if (item.type_snapshot === 'accessory' || item.type_snapshot === 'effect')
+        await client.request(`/equipment/${item.type_snapshot === 'effect' ? 'effects' : 'accessories'}/${item.id}`, {
           method: equip ? 'PUT' : 'DELETE',
         });
       else
@@ -194,8 +196,8 @@ export function ShopPage({ client, session }: ShopProps) {
           <select value={type} onChange={(event) => setType(event.target.value)}>
             <option value="">{content.allTypes}</option>
             {(tab === 'browse'
-              ? (['title', 'avatar', 'accessory', 'reward'] as const)
-              : (['title', 'avatar', 'accessory'] as const)
+              ? (['title', 'avatar', 'accessory', 'background', 'effect', 'reward'] as const)
+              : (['title', 'avatar', 'accessory', 'background', 'effect'] as const)
             ).map((item) => (
               <option value={item} key={item}>
                 {content.types[item]}
@@ -211,7 +213,7 @@ export function ShopPage({ client, session }: ShopProps) {
           <div className="shop-grid">
             {visibleProducts.map((item) => (
               <article className="shop-card" key={item.id}>
-                <img className="shop-item-art" src={assetURL(item.asset_key)} alt="" />
+                <img className="shop-item-art" src={assetURL(item.asset_key, item.type === 'effect')} alt="" />
                 <h3>{item.name}</h3>
                 <p className="shop-hint">{content.types[item.type]}</p>
                 <p>{item.description}</p>
@@ -255,10 +257,13 @@ export function ShopPage({ client, session }: ShopProps) {
             <CharacterPanel
               equipment={snapshot.equipment}
               displayName={session.account.display_name}
+              reduceMotion={session.account.preferences.reduce_motion}
             />
+            <button type="button" className="secondary shop-edit-outfit" disabled={writing || loading || snapshot.equipment.accessories.length === 0} onClick={() => setEditingOutfit(true)}>{content.editOutfit}</button>
           </aside>
         </div>
       )}
+      {editingOutfit && snapshot && <AccessoryEditor equipment={snapshot.equipment} displayName={session.account.display_name} reduceMotion={session.account.preferences.reduce_motion} client={client} onClose={() => setEditingOutfit(false)} onSaved={(next) => setSnapshot((current) => current ? { ...current, equipment: next } : current)} />}
       {tab === 'rewards' && !loading && (
         <>
           {purchases.length === 0 && <p>{content.emptyPurchases}</p>}

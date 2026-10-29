@@ -39,9 +39,9 @@ func readProduct(ctx context.Context, tx *sql.Tx, id string, includeDeleted bool
 	return p, err
 }
 
-// validType uses the four stable product behaviors, never inferred display text.
+// validType uses the declared product behaviors, never inferred display text.
 func validType(kind string) bool {
-	return kind == TypeTitle || kind == TypeAvatar || kind == TypeAccessory || kind == TypeReward
+	return kind == TypeTitle || kind == TypeAvatar || kind == TypeBackground || kind == TypeAccessory || kind == TypeEffect || kind == TypeReward
 }
 
 // validateProduct applies configured numeric and Unicode bounds before any product write.

@@ -33,8 +33,8 @@ export function uncertainResult(error: unknown): boolean {
 }
 
 // 已校验的版本化素材仅通过私有鉴权地址读取。
-export function assetURL(key: string): string {
-  return `/api/v1/assets/${encodeURIComponent(key)}`;
+export function assetURL(key: string, staticMotion = false): string {
+  return `/api/v1/assets/${encodeURIComponent(key)}${staticMotion ? '?motion=static' : ''}`;
 }
 
 // 订单时间始终使用站点时区，避免设备设置改变展示日期。

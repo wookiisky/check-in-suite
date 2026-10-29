@@ -5,7 +5,7 @@ import { PurchaseDialog } from './PurchaseDialog';
 import { CharacterPanel } from './CharacterPanel';
 import { Wardrobe } from './Wardrobe';
 import { RedeemDialog } from './RedeemDialog';
-import { camp, equipment, product, purchase, wallet } from './test-fixtures';
+import { camp, fullEquipment, product, purchase, wallet } from './test-fixtures';
 import type { ShopClient } from './types';
 import content from './content.json';
 
@@ -170,14 +170,7 @@ describe('购买确认与恢复', () => {
 
 describe('所有权、装扮与兑现', () => {
   it('十个饰品都使用实际SVG展示，默认角色仍可见', () => {
-    const full = {
-      ...equipment,
-      accessories: Array.from({ length: 10 }, (_, i) => ({
-        ...purchase,
-        id: `p${i}`,
-        name_snapshot: `饰品${i}`,
-      })),
-    };
+    const full = fullEquipment;
     render(<CharacterPanel equipment={full} displayName="小朋友" />);
     expect(screen.getByAltText(content.defaultAvatar)).toHaveAttribute(
       'src',
@@ -191,14 +184,7 @@ describe('所有权、装扮与兑现', () => {
   });
 
   it('十个饰品时不能装备第十一个，但可以逐件卸下现有饰品', () => {
-    const full = {
-      ...equipment,
-      accessories: Array.from({ length: 10 }, (_, i) => ({
-        ...purchase,
-        id: `p${i}`,
-        name_snapshot: `饰品${i}`,
-      })),
-    };
+    const full = fullEquipment;
     const onToggle = vi.fn();
     render(
       <Wardrobe

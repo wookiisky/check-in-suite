@@ -160,7 +160,38 @@ func (app *App) RegisterShop(service *shop.Service) {
 			}
 			WriteJSON(w, 200, result)
 		})
+		app.Mux.HandleFunc(method+" /api/v1/equipment/effects/{purchase_id}", func(w http.ResponseWriter, r *http.Request) {
+			p, err := app.authenticatedWrite(r)
+			if err != nil {
+				WriteError(w, r, err)
+				return
+			}
+			result, err := service.SetEffect(r.Context(), p, r.PathValue("purchase_id"), r.Method == http.MethodPut)
+			if err != nil {
+				WriteError(w, r, err)
+				return
+			}
+			WriteJSON(w, 200, result)
+		})
 	}
+	app.Mux.HandleFunc("PATCH /api/v1/equipment/accessories/{purchase_id}/layout", func(w http.ResponseWriter, r *http.Request) {
+		p, err := app.authenticatedWrite(r)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		var input shop.AccessoryLayoutInput
+		if err = decodeRequiredJSON(w, r, &input, []string{"x", "y", "size", "before_id"}, "before_id"); err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		result, err := service.SetAccessoryLayout(r.Context(), p, r.PathValue("purchase_id"), input)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		WriteJSON(w, 200, result)
+	})
 	app.Mux.HandleFunc("POST /api/v1/purchases/{id}/redeem", func(w http.ResponseWriter, r *http.Request) {
 		p, err := app.authenticatedWrite(r)
 		if err != nil {

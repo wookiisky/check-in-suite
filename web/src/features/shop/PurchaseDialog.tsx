@@ -102,7 +102,7 @@ export function PurchaseDialog({
   return (
     <Modal title={content.confirmPurchase} onClose={onClose} closeDisabled={busy}>
       <div className="shop-confirm-item">
-        <img src={assetURL(product.asset_key)} alt="" />
+        <img src={assetURL(product.asset_key, product.type === 'effect')} alt="" />
         <h3>{product.name}</h3>
       </div>
       <p>{product.description}</p>

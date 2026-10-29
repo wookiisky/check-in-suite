@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Session } from '../../api/types';
 import { testSession } from '../../test/account-fixtures';
@@ -65,7 +65,7 @@ describe('商店页面读取与动作边界', () => {
     const extra = { ...purchase, id: 'extra', name_snapshot: '新饰品' };
     const request = vi.fn().mockImplementation(async (path: string) => {
       if (path === '/camp')
-        return { ...camp, equipment: { ...equipment, accessories: [equipped] } };
+        return { ...camp, equipment: { ...equipment, accessories: [equipped], accessory_layouts: { [equipped.id]: { x: 0.5, y: 0.5, size: 0.2, layer: 1 } } } };
       if (path === '/products') return { items: [] };
       if (path.startsWith('/purchases?')) return { items: [equipped, extra], next_cursor: null };
       if (path === '/equipment/accessories/extra') throw new TypeError('offline');
@@ -79,5 +79,25 @@ describe('商店页面读取与动作边界', () => {
     expect(request.mock.calls.filter(([path]) => String(path).startsWith('/equipment'))).toEqual([
       ['/equipment/accessories/extra', { method: 'PUT' }],
     ]);
+  });
+
+  it('背景使用独立槽位，特效逐件装备并保留原饰品', async () => {
+    const background = { ...purchase, id: 'bg', type_snapshot: 'background' as const, name_snapshot: '草地背景' };
+    const effect = { ...purchase, id: 'effect', type_snapshot: 'effect' as const, name_snapshot: '雪花特效' };
+    const request = vi.fn().mockImplementation(async (path: string) => {
+      if (path === '/camp') return { ...camp, equipment: { ...equipment, accessories: [purchase], accessory_layouts: { [purchase.id]: { x: 0.5, y: 0.5, size: 0.2, layer: 1 } } } };
+      if (path === '/products') return { items: [] };
+      if (path.startsWith('/purchases?')) return { items: [background, effect], next_cursor: null };
+      return {};
+    });
+    render(<ShopPage client={{ request }} session={session} />);
+    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
+    fireEvent.click(await screen.findByRole('button', { name: `${content.equip} ${background.name_snapshot}` }));
+    await screen.findByText(content.equipmentSaved);
+    fireEvent.click(await screen.findByRole('button', { name: `${content.equip} ${effect.name_snapshot}` }));
+    await waitFor(() => expect(request.mock.calls.filter(([path]) => String(path).startsWith('/equipment'))).toEqual([
+      ['/equipment/background', { method: 'PUT', body: { purchase_id: 'bg' } }],
+      ['/equipment/effects/effect', { method: 'PUT' }],
+    ]));
   });
 });

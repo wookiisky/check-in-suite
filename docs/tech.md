@@ -134,7 +134,7 @@ Go 使用统一业务时钟并加载 `Asia/Taipei`；部署时保证时区数据
 - 金币、钻石、价格、次数和库存均使用整数，不使用浮点数。数据库使用 `INTEGER`，Go 使用 `int64`。
 - API 对余额与价格等整数限定在 JavaScript 安全整数范围内；写入前检查加减结果，越界返回错误并回滚。奖励、价格、库存另设合理的可配置上限，见第 15 节。
 - 余额可以为负；任务奖励和商品价格必须非负；库存用 `NULL` 表示不限量，不能同时用 `-1` 表示。
-- 记录内容、任务、类别、商品及账户资料编辑使用递增 `version`；请求携带 `expected_version`，过期时返回冲突。声音与动效偏好、装备仅更新指定字段、称号或形象槽位、单个饰品，采用后提交生效，不参与账户资料版本检查，也不递增该版本。
+- 记录内容、任务、类别、商品及账户资料编辑使用递增 `version`；请求携带 `expected_version`，过期时返回冲突。声音与动效偏好、装备仅更新指定字段、称号、形象或背景槽位、单个饰品或特效，采用后提交生效，不参与账户资料版本检查，也不递增该版本。
 - 类型和状态使用 Go 常量、TS 联合类型和数据库约束明确表达，不散落魔法字符串。
 - 文本存纯文本，客户端按文本渲染；不支持用户 HTML。可见文案集中配置，内部中文日志事件名允许写在代码中。
 
@@ -168,20 +168,22 @@ Go 官方建议使用 `sql.Tx` 管理事务，并避免混用事务外 `sql.DB` 
 
 | 表 | 主要字段 | 约束与用途 |
 | --- | --- | --- |
-| `accounts` | `id`、`username`、`display_name`、`login_password_hash`、`management_password_hash`、`credential_version`、`music_enabled`、`effects_enabled`、`reduce_motion`、`title_purchase_id`、`avatar_purchase_id`、`version`、时间字段 | `id=1` 固定单账户；用户名唯一且只读；密码分别哈希；`version` 仅用于姓名等账户资料编辑，密码使用独立的 `credential_version`；偏好和装备不递增资料版本；称号和形象字段引用永久物品订单，空形象使用内置默认形象；饰品使用独立关联表 |
+| `accounts` | `id`、`username`、`display_name`、`login_password_hash`、`management_password_hash`、`credential_version`、`music_enabled`、`effects_enabled`、`reduce_motion`、`title_purchase_id`、`avatar_purchase_id`、`background_purchase_id`、`version`、时间字段 | `id=1` 固定单账户；用户名唯一且只读；密码分别哈希；`version` 仅用于姓名等账户资料编辑，密码使用独立的 `credential_version`；偏好和装备不递增资料版本；称号和形象字段引用永久物品订单，空形象使用内置默认形象；饰品使用独立关联表 |
 | `sessions` | `id`、`account_id`、`token_hash`、`csrf_token`、`expires_at`、`management_expires_at`、`management_version`、`credential_version`、时间字段 | 会话 token 哈希唯一；CSRF token 为独立随机值，单独持有不能登录；授权绑定具体会话；注销删除会话；不存明文 cookie |
 | `categories` | `id`、`name`、`sort_order`、`version`、时间字段 | 非空名称；只有没有引用它的项目时才能删除 |
 | `tasks` | `id`、`category_id`、`name`、`icon_key`、`coin_reward`、`diamond_reward`、`daily_limit`、`weekday_mask`、`enabled`、`deleted_at`、`version`、时间字段 | 奖励非负，每日上限正数，星期非空；删除为软删除，保留历史关联 |
 | `checkins` | `id`、`task_id`、`business_date`、`task_name_snapshot`、`task_icon_snapshot`、`coin_reward_snapshot`、`diamond_reward_snapshot`、`text`、`photo_media_id`、`audio_media_id`、`source`、`deleted_at`、`version`、时间字段 | `source=today/backfill`；日期和项目创建后不可改；每种媒体至多一个；不设置任务与日期唯一约束，因为允许每日多次 |
 | `wallets` | `account_id`、`coins`、`diamonds`、`version` | 每账户一行，初始化为零；允许负值；保存当前余额 |
 | `wallet_entries` | `id`、`account_id`、`event_type`、`checkin_id`、`purchase_id`、`coin_delta`、`diamond_delta`、`created_at` | 不可修改的变动流水；事件为 `checkin_grant/checkin_revoke/purchase_debit`；检查引用与事件匹配 |
-| `products` | `id`、`type`、`name`、`asset_key`、`description`、`coin_price`、`diamond_price`、`stock`、`enabled`、`deleted_at`、`version`、时间字段 | 类型为 `title/avatar/accessory/reward`；价格非负；库存为空或非负；有订单后类型不可改变 |
+| `products` | `id`、`type`、`name`、`asset_key`、`description`、`coin_price`、`diamond_price`、`stock`、`enabled`、`deleted_at`、`version`、时间字段 | 类型为 `title/avatar/background/accessory/effect/reward`；价格非负；库存为空或非负；有订单后类型不可改变 |
 | `purchases` | `id`、`product_id`、商品快照字段、成交双币价格、`status`、`redeemed_at`、`version`、`created_at` | 永久物品 `owned`，文本奖励 `pending/redeemed`；成交快照不可变；不提供退款状态 |
 | `equipped_accessories` | `purchase_id`、`equipped_at` | `purchase_id` 为主键并引用永久饰品订单；每件饰品最多一条；事务内限制总数不超过 10，允许为空 |
+| `accessory_layouts` | `purchase_id`、`x`、`y`、`size`、`layer` | 每个已布置饰品保存一份布局；与购买快照分离，卸下后保留位置和大小；图层以角色的 0 层为参照 |
+| `equipped_effects` | `purchase_id`、`equipped_at` | 引用永久特效订单；可以佩戴多个，固定覆盖画布，不提供移动、缩放或层级编辑 |
 | `media_files` | `id`、`storage_key`、`kind`、`mime_type`、`size_bytes`、`duration_ms`、`width`、`height`、`sha256`、`state`、`created_at`、`unreferenced_at` | 文件键唯一；状态为 `ready/attached/deleting/deleted`；系统不按文件哈希跨用户公开复用 |
 | `messages` | `id`、`text`、`created_at` | 去空白后非空；新增和删除需要登录，不需要管理授权 |
 | `idempotency_requests` | `account_id`、`operation`、`key`、`request_hash`、`resource_id`、`http_status`、`response_json`、`created_at` | 组合主键 `(account_id, operation, key)`；与业务结果同事务提交 |
-| `schema_migrations` | `version`、`checksum`、`applied_at` | 已执行脚本不得修改；失败不记录为成功 |
+| `schema_migrations` | `version`、`checksum`、`applied_at` | 同一数据库的脚本校验须匹配；基础结构变化以新库初始化；失败不记录为成功 |
 
 `accounts.id=1` 是单账户产品的明确建模选择，不以每张表都添加租户列来伪装多租户支持。业务数据天然属于唯一账户；若以后扩为多账户，需要重新设计归属、约束和访问控制，不能只开放注册接口。
 
@@ -192,7 +194,7 @@ Go 官方建议使用 `sql.Tx` 管理事务，并避免混用事务外 `sql.DB` 
 - `tasks(category_id)`、`products(enabled, deleted_at, type)`、`purchases(created_at, id)`、`messages(created_at, id)`：对应页面查询。
 - 流水使用部分唯一索引：`UNIQUE(checkin_id, event_type)` 和 `UNIQUE(purchase_id, event_type)`，只针对各自非空引用。每条记录最多发一次、回收一次；每笔订单最多扣一次。
 - `wallet_entries` 的 `CHECK` 保证奖励事件只引用记录、购买事件只引用订单；金额方向符合事件类型，零奖励或免费购买也允许零变动。
-- `purchases(product_id) WHERE type_snapshot IN ('title','avatar','accessory')` 建立唯一索引，阻止永久商品重复购买；订单本身即所有权，无需再维护一张物品库存表。
+- `purchases(product_id) WHERE type_snapshot IN ('title','avatar','background','accessory','effect')` 建立唯一索引，阻止永久商品重复购买；订单本身即所有权，无需再维护一张物品库存表。
 - `checkins.photo_media_id` 和 `audio_media_id` 分别建立非空唯一索引，媒体类型在事务内校验，禁止一个文件同时被多个记录占用。
 - `media_files(state, unreferenced_at)` 支持回收；`sessions(expires_at)` 支持过期清理。
 - 历史对象引用采用限制删除或保留父行，不使用级联删除抹掉记录、订单、流水或所有权。
@@ -251,11 +253,19 @@ Go 官方建议使用 `sql.Tx` 管理事务，并避免混用事务外 `sql.DB` 
 
 任一步失败都不扣款、不扣库存、不生成有效订单。免费商品仍创建订单和零金额流水，以保持购买追溯一致。
 
-“我的装扮”查询永久订单，购买不自动装备。称号和形象保存对应订单 ID，事务内检查有效登录、订单所有权以及类型与槽位匹配，只更新指定槽位，不提交或替换整份账户。不同槽位互不覆盖，同一槽位以服务端后提交的操作为准，不校验账户资料版本。形象槽为空时使用默认形象；称号槽可为空。商品下架后仍根据订单快照装备和展示。
+“我的装扮”查询永久订单，购买不自动装备。称号、形象和背景分别保存对应订单 ID，事务内检查有效登录、订单所有权以及类型与槽位匹配，只更新指定槽位，不提交或替换整份账户。不同槽位互不覆盖，同一槽位以服务端后提交的操作为准，不校验账户资料版本。形象或背景槽为空时使用默认展示；称号槽可为空。商品下架后仍根据订单快照装备和展示。
 
 饰品使用 `equipped_accessories` 保存已装备订单，可同时装备 0–10 个不同饰品。装备时在同一写事务内检查订单所有权及饰品类型；已装备则返回成功且不重复计数，否则检查当前数量小于 10 后插入。达到上限时拒绝新增，保留现有装备；上限不限制持有或购买数量。卸下仅删除指定饰品关联，重复卸下返回未装备的成功状态。单个饰品的装备与卸下以服务端后提交生效，操作不影响其他饰品，也不递增账户资料版本。数量检查和插入必须在同一写事务中完成，避免并发突破上限。
 
-`GET /camp` 返回称号、形象及全部已装备饰品的订单快照和素材引用；饰品按装备时间、订单 ID 稳定排序。装备操作成功后刷新角色区，重新进入或刷新页面时从保存状态恢复，未装备物品不参与主页展示。
+`GET /camp` 的 `equipment` 返回 `title`、`avatar`、`background`、`accessories`、`accessory_layouts` 和 `effects`。购买快照保持不可变，布局独立保存，前端根据布局中的 `layer` 渲染饰品与角色的遮挡关系。装备操作成功后刷新角色区，重新进入或刷新页面时从保存状态恢复，未装备物品不参与主页展示。
+
+饰品布局以订单 ID 为键，包含归一化中心坐标 `x/y`、正方形包围盒边长 `size` 和整数 `layer`。正方形画布的边长为 1；`size` 范围为 0.05–1，包围盒不得越出画布，图片以 `contain` 保持比例。角色占固定层 0，负层位于角色后方，正层位于角色前方。背景独立固定在最底部，特效独立固定在最顶部。
+
+编辑单件饰品时，前端在本地预览位置、大小和顺序，保存时只提交这一件的 `x/y/size/before_id`。`before_id` 是另一件已装备饰品的订单 ID、角色锚点 `avatar` 或表示最顶层的 null。服务端在同一写事务中将选中饰品插到目标之前，并相对角色重新编号；不接受客户端覆盖整套布局，不修改其他饰品的位置和大小。重复提交相同意图不继续上移或下移。选中饰品或排序目标已经卸下时返回 `EQUIPMENT_CHANGED`，前端保留草稿并提供重新读取入口。
+
+卸下仅移除装备关系，保留位置和大小；再次装备恢复这些值，并放到当前饰品最顶层。切换角色不重置饰品布局。首次装备时生成默认位置和大小，之后直接读取已保存布局，不补造旧协议数据。背景和特效均为永久商品，不计入饰品的 10 件限制；特效允许多选，装备及卸下按单件绝对状态写入，不提供布局接口。
+
+内置素材支持 SVG、PNG、WebP，`format` 未提供时按 SVG 读取。素材及元数据继续使用不可覆写的版本 key。动画特效使用受控 SVG，并持久保存同 key 的静态版本；`GET /assets/{key}?motion=static` 返回静态内容。前端在账户或系统开启减少动效时使用静态版本，动画素材本身也提供减少动效样式。此能力不开放素材上传。
 
 ### 5.4 奖励兑现
 
@@ -368,9 +378,11 @@ Go 官方建议使用 `sql.Tx` 管理事务，并避免混用事务外 `sql.DB` 
 | `GET /products` | 登录；包含下架项需管理 | 可售商品、双币价格、库存和是否已拥有；`include_inactive=true` 可读取未删除的下架商品 |
 | `POST /purchases` | 登录 | 商品 ID、商品/钱包版本；原子购买 |
 | `GET /purchases?type=&status=&cursor=` | 登录 | 我的装扮及待兑现/已兑现奖励 |
-| `PUT /equipment/{slot}` | 登录 | 槽位仅为 `title` 或 `avatar`，请求传订单 ID 或 null；无需账户版本，同槽位后提交生效 |
+| `PUT /equipment/{slot}` | 登录 | 槽位为 `title`、`avatar` 或 `background`，请求传订单 ID 或 null；无需账户版本，同槽位后提交生效 |
 | `PUT /equipment/accessories/{purchase_id}` | 登录 | 装备单个已拥有饰品；已装备则返回成功，否则在事务内检查最多 10 个；无需账户版本 |
 | `DELETE /equipment/accessories/{purchase_id}` | 登录 | 卸下指定饰品，其他饰品不变；重复卸下返回未装备的成功状态；无需账户版本 |
+| `PATCH /equipment/accessories/{purchase_id}/layout` | 登录 | 保存选中饰品的位置、大小及相对顺序；其他饰品的位置和大小不变 |
+| `PUT /equipment/effects/{purchase_id}`、`DELETE /equipment/effects/{purchase_id}` | 登录 | 按单件佩戴或移除特效；重复操作成功，保留永久所有权 |
 | `POST /purchases/{id}/redeem` | 登录 + 本次管理密码 | 文本奖励兑现；已兑现返回现状 |
 | `POST /management/products`、`PATCH /management/products/{id}`、`DELETE /management/products/{id}` | 管理 | 商品新增、修改、下架；类型变更受订单约束 |
 | `GET /assets` | 登录 | 已部署且可选的图标、形象、饰品等素材目录 |
@@ -409,7 +421,7 @@ X-CSRF-Token: <当前会话 token>
 | `401` | `SESSION_REQUIRED` | 返回登录；保留当前页面允许保留的非敏感草稿 |
 | `403` | `MANAGEMENT_REQUIRED`、`HISTORY_READ_ONLY`、`CSRF_INVALID` | 不执行修改；必要时重新解锁 |
 | `404` | `RESOURCE_NOT_FOUND` | 对象不存在或不可读取，刷新列表 |
-| `409` | `DAY_CHANGED`、`VERSION_CONFLICT`、`TASK_CHANGED`、`DAILY_LIMIT_REACHED`、`INSUFFICIENT_BALANCE`、`SOLD_OUT`、`ALREADY_OWNED`、`IDEMPOTENCY_CONFLICT` | 保留表单并刷新相关资源；不能盲目自动重试业务冲突 |
+| `409` | `DAY_CHANGED`、`VERSION_CONFLICT`、`TASK_CHANGED`、`DAILY_LIMIT_REACHED`、`INSUFFICIENT_BALANCE`、`SOLD_OUT`、`ALREADY_OWNED`、`IDEMPOTENCY_CONFLICT`、`EQUIPMENT_CHANGED` | 保留表单并刷新相关资源；不能盲目自动重试业务冲突 |
 | `413` / `415` | `MEDIA_TOO_LARGE` / `MEDIA_UNSUPPORTED` | 保留其他内容，更换附件 |
 | `422` | `INVALID_DATE_RANGE`、`INVALID_MEDIA` | 请求可解析但不符合业务约束，定位字段 |
 | `429` | `TOO_MANY_ATTEMPTS` | 提示稍后重试，遵守重试时间 |
@@ -499,7 +511,7 @@ X-CSRF-Token: <当前会话 token>
 - 月历只返回每日摘要，打开日期后加载完整记录；图标过多使用数量摘要。
 - 统计使用服务端汇总，按次数降序、同次数按稳定项目 ID 排序；横向条形图与有数值的列表共享同一结果，不对空数据补示例。
 - 商店确认页显示两种价格与预计余额；冲突后显示变化并要求重新确认。永久物品显示已拥有，文本奖励可重复购买。
-- 我的装扮展示装备状态及饰品数量与上限；购买不自动装备。装备成功后主页展示实际素材，最多同时展示 10 个饰品；卸下仅移除对应展示，满额时提示先卸下一个。桌面和手机均完整呈现已装备饰品，刷新后恢复保存状态。
+- 我的装扮展示称号、形象、背景、饰品和特效；购买不自动装备。最多同时装备 10 个饰品，其他类型不占额度。饰品编辑支持鼠标及触摸拖动、按钮与键盘微调、等比缩放、向上一层、向下一层、置顶与置底，可跨越角色层。选中单件后保存或取消；背景和特效没有布局控件。桌面和手机复用同一画布，刷新后恢复保存状态。
 - 管理表单修改成功后刷新相关区域，姓名变化同步营地、角色和统计。当前页面退出管理或收到授权失效响应后，清除管理页面缓存。
 
 ### 9.3 页面加载与跨日
@@ -590,11 +602,11 @@ ORDER BY checkin_count DESC, c.task_id;
 
 时区固定为 `Asia/Taipei`，不开放通过配置随意改变历史日期含义。配置缺失和非法值启动时清楚报错，不在请求中悄悄使用不同默认值。
 
-### 11.3 发布和迁移
+### 11.3 构建和数据库初始化
 
-构建前执行类型、测试和静态检查，生成可识别版本。停止接收请求并等待在途操作完成后升级；将新素材以不可覆写的版本标识安装到 `data/assets/`，已有标识不得替换为不同内容；维护命令按顺序执行 SQL 迁移；迁移成功后启动新版本并做登录、读取和写入冒烟检查。旧发布目录可清理，持久化素材保留。服务发现数据库版本不匹配时拒绝启动，不自行猜测结构。
+构建前执行类型、测试和静态检查，生成可识别版本。当前开发阶段不考虑旧数据库升级：基础建表脚本直接包含完整业务结构，背景槽位、饰品布局和特效装备均在首次建库时创建，不执行旧表重建、数据回填或兼容转换。
 
-迁移优先在单事务内完成；确实不支持事务的操作单独设计恢复步骤，不能与普通迁移混写。回退二进制前确认 schema 兼容；不兼容时拒绝回退并停止写入，按实际迁移另定修复步骤，不能只替换应用文件或宣称可从不存在的备份恢复。
+`migrate` 维护命令仍作为显式建库入口；服务启动时校验建表版本，不自动改库。使用全新数据目录初始化并执行登录、读取和写入冒烟检查。已有数据库与当前脚本校验不匹配时拒绝启动，不在服务中静默清空或修补。素材安装继续使用不可覆写的版本标识，保证商品下架后已购素材仍可使用。
 
 ### 11.4 备份范围决定
 
@@ -641,6 +653,10 @@ ORDER BY checkin_count DESC, c.task_id;
 | 已售商品改类型、删除商品后装备 | 服务 + SQLite | 类型变更拒绝，历史所有权和素材仍可用 |
 | 多设备修改偏好、装备及姓名 | HTTP + SQLite | 不同字段、称号或形象槽位、不同饰品互不覆盖，同一目标后提交生效；偏好和换装不改变资料版本，姓名编辑仍检查版本，非法装备拒绝 |
 | 饰品装备上限、重复装备及卸下 | HTTP + SQLite | 0–10 个不同饰品可装备，第 11 个被拒绝；重复装备不重复计数；卸下只影响指定饰品，重复卸下成功；满额不阻止合法购买 |
+| 饰品布局、跨角色层级与卸下恢复 | HTTP + SQLite + 浏览器 | 单件保存位置、大小和层级；重复保存不继续移动；越界拒绝；卸下再装备恢复位置大小并置顶；桌面与手机布局一致 |
+| 并发编辑不同饰品、排序目标已卸下 | 同文件独立连接 | 不覆盖其他饰品的位置和大小；目标失效时整个保存失败，前端保留草稿 |
+| 背景与特效装备、减少动效 | HTTP + 浏览器 | 背景单选，特效多选，均不占饰品额度；特效不提供布局编辑，账户及系统减少动效使用静态资源 |
+| 新数据库初始化 | SQLite 建表 + 服务 | 直接包含背景槽位、饰品布局与特效装备表；购买唯一性和外键约束生效 |
 | 已装备 9 个时并发装备两个不同饰品 | 同文件独立连接 | 仅一个新增成功，总数为 10，另一请求提示达到上限，已有饰品不变 |
 | 购买、换装与刷新主页 | 浏览器 + HTTP + SQLite | 购买不自动装备；装备成功后桌面和手机显示实际素材；刷新恢复全部装备；卸下、切换及商品删除后展示符合产品规则 |
 | 营地及统计多查询汇总期间有写入 | 真实文件 SQLite、独立读写连接，按实际驱动配置开启事务 | 读取事务内多次查询来自同一快照；`ReadOnly` 不启用 `IMMEDIATE`，读取结束释放连接，新请求可见已提交变更 |
@@ -726,7 +742,7 @@ SQLite 数据量增加本身不等于必须迁移。优先根据写并发、查�
 | D07 | 补录显示所属日期、补录标记和真实操作时间 | 不增加历史时刻输入 |
 | D08 | 390 px 手机月历按周分组纵向日期列表 | 桌面七列；保持大字及 56 px 操作目标 |
 | D09 | 从受控版本化素材目录选择 | 不开放任意素材上传 |
-| D10 | 以原型森林视觉、素材与合成音乐开发 | 角色和周围布局容纳十个饰品；不凭开发复用推定外部素材发布授权 |
+| D10 | 以原型森林视觉、素材与合成音乐开发 | 正方形画布容纳十个可编辑饰品，背景及固定特效分层展示；不凭开发复用推定外部素材发布授权 |
 | D11 | 有效记录及附件长期保留；未关联、解除引用及孤儿文件 24 小时后清理 | 解除引用立即不可访问；孤儿保留期必须大于上传加探测时限 |
 | D12 | 不做备份及备份恢复演练 | 不阻塞本轮开发；不承诺磁盘丢失后的恢复能力 |
 

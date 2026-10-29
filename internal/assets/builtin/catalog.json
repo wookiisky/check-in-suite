@@ -262,5 +262,29 @@
     "name": "钻石收藏家",
     "kind": "badge",
     "url": "/api/v1/assets/badge-diamonds-v1"
+  },
+  {
+    "key": "background-meadow-v1",
+    "name": "晴日草地",
+    "kind": "background",
+    "url": "/api/v1/assets/background-meadow-v1"
+  },
+  {
+    "key": "background-night-v1",
+    "name": "月夜山丘",
+    "kind": "background",
+    "url": "/api/v1/assets/background-night-v1"
+  },
+  {
+    "key": "effect-snow-v1",
+    "name": "轻柔飘雪",
+    "kind": "effect",
+    "url": "/api/v1/assets/effect-snow-v1"
+  },
+  {
+    "key": "effect-sparkle-v1",
+    "name": "星光闪烁",
+    "kind": "effect",
+    "url": "/api/v1/assets/effect-sparkle-v1"
   }
 ]

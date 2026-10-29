@@ -17,7 +17,7 @@ CREATE INDEX media_cleanup ON media_files(state,unreferenced_at);
 
 CREATE TABLE products (
     id TEXT PRIMARY KEY,
-    type TEXT NOT NULL CHECK(type IN ('title','avatar','accessory','reward')),
+    type TEXT NOT NULL CHECK(type IN ('title','avatar','accessory','background','effect','reward')),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     asset_key TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
@@ -35,7 +35,7 @@ CREATE INDEX products_visible ON products(enabled,deleted_at,type);
 CREATE TABLE purchases (
     id TEXT PRIMARY KEY,
     product_id TEXT NOT NULL REFERENCES products(id),
-    type_snapshot TEXT NOT NULL CHECK(type_snapshot IN ('title','avatar','accessory','reward')),
+    type_snapshot TEXT NOT NULL CHECK(type_snapshot IN ('title','avatar','accessory','background','effect','reward')),
     name_snapshot TEXT NOT NULL,
     description_snapshot TEXT NOT NULL,
     asset_key_snapshot TEXT NOT NULL,
@@ -48,10 +48,27 @@ CREATE TABLE purchases (
     CHECK((type_snapshot='reward' AND status IN ('pending','redeemed')) OR (type_snapshot!='reward' AND status='owned')),
     CHECK((status='redeemed' AND redeemed_at IS NOT NULL) OR (status!='redeemed' AND redeemed_at IS NULL))
 ) STRICT;
-CREATE UNIQUE INDEX purchases_permanent ON purchases(product_id) WHERE type_snapshot IN ('title','avatar','accessory');
+CREATE UNIQUE INDEX purchases_permanent ON purchases(product_id) WHERE type_snapshot IN ('title','avatar','accessory','background','effect');
 CREATE INDEX purchases_date ON purchases(created_at,id);
 
 CREATE TABLE equipped_accessories (
+    purchase_id TEXT PRIMARY KEY REFERENCES purchases(id),
+    equipped_at INTEGER NOT NULL
+) STRICT;
+
+-- Placement belongs to the owned accessory and survives unequipping.
+CREATE TABLE accessory_layouts (
+    purchase_id TEXT PRIMARY KEY REFERENCES purchases(id),
+    x REAL NOT NULL,
+    y REAL NOT NULL,
+    size REAL NOT NULL CHECK(size BETWEEN 0.05 AND 1.0),
+    layer INTEGER NOT NULL CHECK(layer != 0),
+    CHECK(x BETWEEN size/2.0 AND 1.0-size/2.0),
+    CHECK(y BETWEEN size/2.0 AND 1.0-size/2.0)
+) STRICT;
+
+-- Fixed effects are independently equipped and do not consume accessory slots.
+CREATE TABLE equipped_effects (
     purchase_id TEXT PRIMARY KEY REFERENCES purchases(id),
     equipped_at INTEGER NOT NULL
 ) STRICT;

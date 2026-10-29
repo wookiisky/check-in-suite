@@ -507,7 +507,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** 设置称号或形象槽位 */
+        /** 设置称号、形象或背景槽位 */
         put: operations["setEquipmentSlot"];
         post?: never;
         delete?: never;
@@ -535,6 +535,47 @@ export interface paths {
          * @description 最多装备10个不同饰品；重复装备/卸下成功，其他饰品不变。
          */
         delete: operations["deleteAccessory"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/equipment/accessories/{purchase_id}/layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 保存单件饰品的位置、大小和层级 */
+        patch: operations["setAccessoryLayout"];
+        trace?: never;
+    };
+    "/api/v1/equipment/effects/{purchase_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 佩戴动态特效
+         * @description 单件幂等更新；可同时佩戴多件，不占饰品数量；固定最高层，没有可编辑布局。
+         */
+        put: operations["putEffect"];
+        post?: never;
+        /**
+         * 移除动态特效
+         * @description 单件幂等更新；可同时佩戴多件，不占饰品数量；固定最高层，没有可编辑布局。
+         */
+        delete: operations["deleteEffect"];
         options?: never;
         head?: never;
         patch?: never;
@@ -980,7 +1021,7 @@ export interface components {
         Product: {
             id: string;
             /** @enum {string} */
-            type: "title" | "avatar" | "accessory" | "reward";
+            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
             name: string;
             asset_key: string;
             description: string;
@@ -994,7 +1035,7 @@ export interface components {
         };
         ProductCreate: {
             /** @enum {string} */
-            type: "title" | "avatar" | "accessory" | "reward";
+            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
             name: string;
             asset_key: string;
             description: string;
@@ -1005,7 +1046,7 @@ export interface components {
         };
         ProductUpdate: {
             /** @enum {string} */
-            type: "title" | "avatar" | "accessory" | "reward";
+            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
             name: string;
             asset_key: string;
             description: string;
@@ -1022,7 +1063,7 @@ export interface components {
             id: string;
             product_id: string;
             /** @enum {string} */
-            type_snapshot: "title" | "avatar" | "accessory" | "reward";
+            type_snapshot: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
             name_snapshot: string;
             asset_key_snapshot: string;
             description_snapshot: string;
@@ -1051,7 +1092,26 @@ export interface components {
         Equipment: {
             title: components["schemas"]["Purchase"] | null;
             avatar: components["schemas"]["Purchase"] | null;
+            background: components["schemas"]["Purchase"] | null;
             accessories: components["schemas"]["Purchase"][];
+            effects: components["schemas"]["Purchase"][];
+            accessory_layouts: {
+                [key: string]: components["schemas"]["AccessoryLayout"];
+            };
+        };
+        /** @description 以固定正方形画布为基准，x/y 为中心，size 为等比图片 contain 包围盒边长；整个包围盒必须位于画布内。layer 小于零在角色后，大于零在角色前。 */
+        AccessoryLayout: {
+            x: number;
+            y: number;
+            size: number;
+            layer: number;
+        };
+        /** @description 原子保存单件位置、大小和排序。before_id 为另一件已装备饰品的购买ID、角色锚点 avatar，或 null（最前层）。失效排序目标返回 EQUIPMENT_CHANGED，不自动改为置顶。 */
+        AccessoryLayoutInput: {
+            x: number;
+            y: number;
+            size: number;
+            before_id: string | null;
         };
         SlotUpdate: {
             purchase_id: string | null;
@@ -1079,8 +1139,13 @@ export interface components {
             key: string;
             name: string;
             /** @enum {string} */
-            kind: "icon" | "avatar" | "accessory" | "title" | "reward" | "badge";
+            kind: "icon" | "avatar" | "background" | "accessory" | "effect" | "title" | "reward" | "badge";
             url: string;
+            /**
+             * @description 省略时为 svg。
+             * @enum {string}
+             */
+            format?: "svg" | "png" | "webp";
         };
         AssetList: {
             items: components["schemas"]["Asset"][];
@@ -2137,7 +2202,7 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
-                type?: "title" | "avatar" | "accessory" | "reward";
+                type?: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
                 status?: "owned" | "pending" | "redeemed";
             };
             header?: never;
@@ -2194,7 +2259,7 @@ export interface operations {
                 "X-CSRF-Token": components["parameters"]["CSRF"];
             };
             path: {
-                slot: "title" | "avatar";
+                slot: "title" | "avatar" | "background";
             };
             cookie?: never;
         };
@@ -2242,6 +2307,85 @@ export interface operations {
         };
     };
     deleteAccessory: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                purchase_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessoryResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setAccessoryLayout: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                purchase_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessoryLayoutInput"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Equipment"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putEffect: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                purchase_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessoryResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteEffect: {
         parameters: {
             query?: never;
             header: {
@@ -2327,7 +2471,10 @@ export interface operations {
     };
     readAsset: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 特效素材的静态版本，用于减少动态效果。 */
+                motion?: "static";
+            };
             header?: never;
             path: {
                 key: string;
@@ -2336,13 +2483,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 版本化SVG素材 */
+            /** @description 版本化内置素材 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "image/svg+xml": string;
+                    "image/png": string;
+                    "image/webp": string;
                 };
             };
             default: components["responses"]["Error"];

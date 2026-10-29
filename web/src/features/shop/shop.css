@@ -108,30 +108,148 @@
   height: 32px;
 }
 .shop-character-stage {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: 56px minmax(160px, 220px) 56px;
-  gap: 8px;
-  align-items: center;
-  justify-items: center;
+  position: relative;
+  isolation: isolate;
   width: min(100%, 380px);
-  padding: 16px;
+  aspect-ratio: 1;
+  overflow: visible;
   border-radius: 36px;
   background: radial-gradient(ellipse, #e6f0d9 20%, #f6f4e9 70%);
 }
-.shop-accessory-art {
+.shop-background-art,
+.shop-effect-art {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: 56px;
-  max-width: 56px;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+.shop-background-art {
+  object-fit: cover;
+  border-radius: inherit;
+  z-index: 0;
+}
+.shop-effect-art {
   object-fit: contain;
+  border-radius: inherit;
+}
+.shop-accessory-art,
+.shop-avatar-art,
+.shop-accessory-handle {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+.shop-accessory-art,
+.shop-avatar-art {
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 .shop-avatar-art {
-  grid-column: 1/-1;
-  grid-row: 2;
+  left: 50%;
+  top: 50%;
+  width: 70%;
+  height: 70%;
+}
+.shop-character-stage .shop-accessory-handle {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 2px dashed transparent;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  touch-action: none;
+  cursor: grab;
+}
+/* 操作层悬停时仍须透出素材，覆盖全局按钮的悬停填色。 */
+.shop-character-stage .shop-accessory-handle:hover:not(:disabled) {
+  background: transparent;
+}
+.shop-character-stage .shop-accessory-handle:active {
+  cursor: grabbing;
+}
+.shop-character-stage .shop-accessory-handle[aria-pressed='true'],
+.shop-character-stage .shop-accessory-handle:focus-visible {
+  border-color: var(--forest);
+  outline: 2px solid var(--paper);
+  outline-offset: 0;
+}
+.shop-edit-outfit {
+  margin-top: 20px;
   width: 100%;
-  max-width: 240px;
-  height: 100%;
-  object-fit: contain;
+}
+.shop-outfit-settings,
+.shop-outfit-controls {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.island-dialog:has(.shop-outfit-editor) {
+  width: min(900px, calc(100% - 32px));
+}
+.shop-outfit-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  height: min(620px, calc(100dvh - 170px));
+  min-height: 0;
+}
+.shop-outfit-preview {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 4px;
+}
+.shop-outfit-settings {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  align-content: start;
+  padding: 4px 8px 8px 4px;
+}
+.shop-outfit-settings > .shop-hint {
+  margin: 0;
+  font-size: 16px;
+}
+.shop-outfit-controls legend {
+  margin-bottom: 12px;
+}
+.shop-outfit-controls input[type='range'] {
+  width: 100%;
+  padding: 0;
+  accent-color: var(--forest);
+}
+.shop-size-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.shop-layout-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.shop-layout-actions button {
+  min-width: 0;
+  min-height: 56px;
+  padding: 12px 8px;
+  font-size: 18px;
+  white-space: nowrap;
+}
+.shop-layer-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 0;
+  padding-left: 24px;
+}
+.shop-layer-list [aria-current='true'] {
+  font-weight: 750;
+  color: var(--forest);
 }
 .shop-wardrobe-layout {
   display: grid;
@@ -198,6 +316,14 @@
   }
 }
 @media (max-width: 600px) {
+  .shop-outfit-editor {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 12px;
+  }
+  .shop-outfit-preview .shop-character-stage {
+    width: min(100%, clamp(120px, 25dvh, 210px));
+  }
   .shop-card {
     padding: 20px;
   }
@@ -206,9 +332,5 @@
   }
   .shop-product-row {
     padding: 16px;
-  }
-  .shop-character-stage {
-    padding: 8px;
-    gap: 6px;
   }
 }

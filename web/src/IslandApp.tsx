@@ -117,7 +117,7 @@ export function IslandApp() {
           {page === 'camp' && <>
             <h1 className="page-heading">{content.navigation.camp}</h1>
             <CampPage client={client} session={session} renderSidebar={(camp) => <>
-              <CharacterPanel equipment={camp.equipment} displayName={camp.account.display_name} />
+              <CharacterPanel equipment={camp.equipment} displayName={camp.account.display_name} reduceMotion={session.account.preferences.reduce_motion} />
               <AchievementStrip items={camp.achievements} onViewAll={() => navigate('achievements')} />
               <FamilyPanel client={client} session={session} />
             </>} />

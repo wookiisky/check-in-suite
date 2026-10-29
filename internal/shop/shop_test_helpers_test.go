@@ -135,7 +135,7 @@ func requireShopCode(t *testing.T, err error, code string) {
 
 // productInput supplies valid controlled artwork for each product type.
 func productInput(kind string) shop.ProductInput {
-	keys := map[string]string{"title": "title-crown-v1", "avatar": "bunny-v1", "accessory": "accessory-star-v1", "reward": "reward-gift-v1"}
+	keys := map[string]string{"title": "title-crown-v1", "avatar": "bunny-v1", "background": "background-meadow-v1", "effect": "effect-snow-v1", "accessory": "accessory-star-v1", "reward": "reward-gift-v1"}
 	return shop.ProductInput{Type: kind, Name: "测试商品", AssetKey: keys[kind], Enabled: true}
 }
 

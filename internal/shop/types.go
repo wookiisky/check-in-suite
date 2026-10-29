@@ -14,6 +14,8 @@ import (
 const (
 	TypeTitle         = "title"           // One equipped title, permanently owned after purchase.
 	TypeAvatar        = "avatar"          // One equipped character; nil restores the default.
+	TypeBackground    = "background"      // One equipped scene behind the character and accessories.
+	TypeEffect        = "effect"          // Independently equipped fixed animation overlays.
 	TypeAccessory     = "accessory"       // Up to ten distinct equipped permanent decorations.
 	TypeReward        = "reward"          // A repeatable household reward requiring redemption.
 	StatusOwned       = "owned"           // Permanent ownership has no redemption step.
@@ -40,7 +42,7 @@ func New(db *sql.DB, cfg config.Config, accounts *account.Service) *Service {
 // Product describes the current offer; its fields never rewrite existing purchase snapshots.
 type Product struct {
 	ID           string `json:"id"`            // Stable merchandise identity.
-	Type         string `json:"type"`          // One of the four declared product types.
+	Type         string `json:"type"`          // One of the declared product behaviors.
 	Name         string `json:"name"`          // Current display name.
 	AssetKey     string `json:"asset_key"`     // Controlled immutable artwork identity.
 	Description  string `json:"description"`   // Plain product description.
@@ -107,7 +109,7 @@ type PurchaseResult struct {
 
 // PurchaseQuery filters immutable orders using stable keyset pagination.
 type PurchaseQuery struct {
-	Type   string // Empty means all four product types.
+	Type   string // Empty means all declared product types.
 	Status string // Empty means all valid order statuses.
 	Cursor string // Opaque previous page boundary bound to these filters.
 	Limit  int    // Zero uses fifty; valid explicit range is one through one hundred.
@@ -121,9 +123,28 @@ type PurchaseList struct {
 
 // Equipment contains snapshot identities so removing a product never erases an outfit.
 type Equipment struct {
-	Title       *Purchase  `json:"title"`       // Nil leaves the title slot empty.
-	Avatar      *Purchase  `json:"avatar"`      // Nil selects the built-in default character.
-	Accessories []Purchase `json:"accessories"` // Stable equipment-time order, zero through ten.
+	Title            *Purchase                  `json:"title"`             // Nil leaves the title slot empty.
+	Avatar           *Purchase                  `json:"avatar"`            // Nil selects the built-in default character.
+	Background       *Purchase                  `json:"background"`        // Nil selects the built-in default scene.
+	Accessories      []Purchase                 `json:"accessories"`       // Stable equipment-time order, zero through ten.
+	Effects          []Purchase                 `json:"effects"`           // Fixed overlays in stable equipment-time order.
+	AccessoryLayouts map[string]AccessoryLayout `json:"accessory_layouts"` // Geometry and order for equipped accessories only.
+}
+
+// AccessoryLayout uses a square normalized canvas and a square image-contain box.
+type AccessoryLayout struct {
+	X     float64 `json:"x"`     // Horizontal center, with the image box entirely inside the canvas.
+	Y     float64 `json:"y"`     // Vertical center, with the image box entirely inside the canvas.
+	Size  float64 `json:"size"`  // Box side as a fraction of the canvas side, from .05 through 1.
+	Layer int     `json:"layer"` // Negative behind the character; positive in front; character is zero.
+}
+
+// AccessoryLayoutInput saves one accessory and its absolute ordering intent together.
+type AccessoryLayoutInput struct {
+	X        float64 `json:"x"`         // Desired normalized horizontal center.
+	Y        float64 `json:"y"`         // Desired normalized vertical center.
+	Size     float64 `json:"size"`      // Desired normalized square image-contain box side.
+	BeforeID *string `json:"before_id"` // Another equipped purchase or "avatar"; null places it on top.
 }
 
 // AccessoryResult describes only the selected decoration's idempotent desired state.

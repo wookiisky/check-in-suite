@@ -193,7 +193,7 @@ export function ProductEditor({
           </select>
           <FieldError error={error} field="asset_key" />
           {draft.asset_key && (
-            <img className="shop-item-art" src={assetURL(draft.asset_key)} alt="" />
+            <img className="shop-item-art" src={assetURL(draft.asset_key, draft.type === 'effect')} alt="" />
           )}
           <label htmlFor="product-description">{content.description}</label>
           <textarea

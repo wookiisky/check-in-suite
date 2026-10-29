@@ -114,7 +114,7 @@ export function ProductManagement({ client, session }: ShopProps) {
           {products.length === 0 && <p>{content.emptyProducts}</p>}
           {products.map((item) => (
             <article key={item.id} className="shop-product-row">
-              <img src={assetURL(item.asset_key)} alt="" />
+              <img src={assetURL(item.asset_key, item.type === 'effect')} alt="" />
               <div>
                 <h3>{item.name}</h3>
                 <p>
