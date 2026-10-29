@@ -6,6 +6,7 @@ import type { Session } from '../../api/types';
 import type { components } from '../../api/schema';
 import { FormFeedback } from '../../components/FormFeedback';
 import { Modal } from '../../components/Modal';
+import { createIdempotencyKey } from '../../api/idempotency-key';
 import content from './content.json';
 import './family.css';
 
@@ -65,7 +66,7 @@ export function FamilyPanel({ client, session }: { client: Client; session: Sess
   // 先核对原命令；成功后保留不同于原提交的后来输入。
   async function submit(event: FormEvent) {
     event.preventDefault();
-    const command = pending ?? { key: crypto.randomUUID(), text: text.trim() };
+    const command = pending ?? { key: createIdempotencyKey(), text: text.trim() };
     if (!command.text || [...command.text].length > session.limits.message_max) return;
     pendingMessages.set(client, command); setPending(command); setBusy(true); setWriteError(null); setNotice('');
     try {

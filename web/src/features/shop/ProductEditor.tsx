@@ -7,6 +7,7 @@ import type { Asset, Product, ProductInput, ShopProps } from './types';
 import { pendingProducts } from './pending';
 import { assetURL, shopError, uncertainResult } from './helpers';
 import { Price } from './Price';
+import { createIdempotencyKey } from '../../api/idempotency-key';
 import content from './content.json';
 
 // 商品表单只提交可编辑字段，不将id、owned等只读属性回传。
@@ -82,7 +83,7 @@ export function ProductEditor({
           body: { ...draft, expected_version: version },
         });
       else {
-        const command = pending ?? { key: crypto.randomUUID(), body: Object.freeze({ ...draft }) };
+        const command = pending ?? { key: createIdempotencyKey(), body: Object.freeze({ ...draft }) };
         setPending(command);
         pendingProducts.set(client, command);
         result = await client.request<Product>('/management/products', {

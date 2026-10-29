@@ -23,6 +23,7 @@
 .island-item-art[data-animation="sway"] .island-tree-crown { animation: island-tree-breeze 6s ease-in-out infinite; }
 .island-item-art[data-animation="flutter"] .island-butterfly-float { animation: island-butterfly-drift 4s ease-in-out infinite; }
 .island-item-art[data-animation="flutter"] .island-butterfly-wings { animation: island-butterfly-flutter .75s ease-in-out infinite; }
+.island-item-art[data-paused="true"] :is(.island-tree-crown, .island-butterfly-float, .island-butterfly-wings) { animation-play-state: paused; }
 .island-character-art[data-static="true"] *,
 [data-static="true"] .island-tree-crown,
 [data-static="true"] .island-butterfly-float,

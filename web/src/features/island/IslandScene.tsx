@@ -18,7 +18,8 @@ interface SceneProps {
   editing: boolean; // 区分拖动画布和摆放。
   indoor: boolean; // 布置时主动展开室内。
   selected: string | null; // 当前调整的实例。
-  staticMotion: boolean; // 账户偏好或暂停状态。
+  staticMotion: boolean; // 布置或减少动效时使用静态姿态。
+  motionPaused?: boolean; // 暂停或隐藏页面时冻结物件动画。
   onSelect: (id: string) => void; // 选择物品。
   onMove: (placement: IslandPlacement) => void; // 更新本地草稿。
   onActivity: (id: string) => void; // 开始已有互动。
@@ -44,7 +45,7 @@ function scenePoint(point: IslandPoint, indoor: boolean, house: IslandPlacement 
 }
 
 // SVG整体变换仅影响显示，物件保存地面坐标。
-export function IslandScene({ insets, placements, catalog, actor, avatar, editing, indoor, selected, staticMotion, onSelect, onMove, onActivity, onBlocked }: SceneProps) {
+export function IslandScene({ insets, placements, catalog, actor, avatar, editing, indoor, selected, staticMotion, motionPaused = false, onSelect, onMove, onActivity, onBlocked }: SceneProps) {
   const [view, setView] = useState<IslandView>(initialView);
   const svg = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ width: 1000, height: 760 });
@@ -192,7 +193,7 @@ export function IslandScene({ insets, placements, catalog, actor, avatar, editin
               const delta = { ArrowLeft: [-0.25, 0], ArrowRight: [0.25, 0], ArrowUp: [0, -0.25], ArrowDown: [0, 0.25] }[event.key];
               if (editing && delta && definition.movable) { event.preventDefault(); event.stopPropagation(); const next = clampPlacement({ ...placement, x: placement.x + delta[0]!, y: placement.y + delta[1]! }, definition); if (canPlace(next, placements, catalog)) onMove(next); else onBlocked(); }
             }}>
-            <ItemArtwork houseScale={houseArtworkScale(definition)} model={definition.model} indoor={definition.category === 'house' && houseOpen} selected={editing && placement.id === selected} rotation={placement.rotation} {...(definition.animation ? { animation: definition.animation } : {})} staticMotion={staticMotion} />
+            <ItemArtwork houseScale={houseArtworkScale(definition)} model={definition.model} indoor={definition.category === 'house' && houseOpen} selected={editing && placement.id === selected} rotation={placement.rotation} {...(definition.animation ? { animation: definition.animation } : {})} staticMotion={staticMotion} motionPaused={motionPaused} />
           </g>;
         })}
       </g>

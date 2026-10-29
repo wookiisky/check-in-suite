@@ -1,0 +1,28 @@
+/* 局部动画保持原素材锚点，支架、底座与阴影不参与运动。 */
+.island-windmill-blades { transform-origin: 0 0; }
+.island-fountain-water { transform-origin: 160px 130px; }
+.island-fountain-ripple { transform-origin: 160px 229px; }
+.island-swing-seat { transform-origin: 160px 101px; }
+.island-lantern-flame { transform-origin: 159px 102px; }
+.island-lantern-glow { transform-origin: 160px 83px; }
+.island-item-art[data-animation="spin"] .island-windmill-blades { animation: island-windmill-turn 16s linear infinite; }
+.island-item-art[data-animation="flow"] .island-fountain-water { animation: island-fountain-stream 1.8s ease-in-out infinite; }
+.island-item-art[data-animation="flow"] .island-fountain-ripple { animation: island-fountain-ring 2.8s ease-out infinite; }
+.island-item-art[data-animation="swing"] .island-swing-seat { animation: island-swing-sway 4.8s ease-in-out infinite; }
+.island-item-art[data-animation="glow"] .island-lantern-flame { animation: island-lantern-flicker 3.6s ease-in-out infinite; }
+.island-item-art[data-animation="glow"] .island-lantern-glow,
+.island-item-art[data-animation="glow"] .island-lantern-rays { animation: island-lantern-light 3.6s ease-in-out infinite; }
+.island-item-art[data-animation="sway"] .island-flowers-stems { animation: island-flowers-breeze 6s ease-in-out infinite; }
+.island-item-art[data-paused="true"] .island-object-art * { animation-play-state: paused; }
+.island-item-art[data-static="true"] .island-object-art * { animation: none !important; }
+@keyframes island-windmill-turn { to { transform: rotate(360deg); } }
+@keyframes island-fountain-stream { 0%, 100% { transform: scaleY(.97); opacity: .8; } 50% { transform: scaleY(1.02); opacity: 1; } }
+@keyframes island-fountain-ring { 0% { transform: scale(.78); opacity: .2; } 40% { opacity: .9; } 100% { transform: scale(1.05); opacity: .2; } }
+/* 两个绳索悬点处在同一横线上；剪切让它们固定，座椅随绳索轻摆。 */
+@keyframes island-swing-sway { 0%, 100% { transform: skewX(-3deg); } 50% { transform: skewX(3deg); } }
+@keyframes island-lantern-flicker { 0%, 100% { transform: scale(.96, 1); opacity: .85; } 50% { transform: scale(1.04, .94); opacity: 1; } }
+@keyframes island-lantern-light { 0%, 100% { opacity: .12; } 50% { opacity: .34; } }
+@keyframes island-flowers-breeze { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .island-object-art * { animation: none !important; }
+}

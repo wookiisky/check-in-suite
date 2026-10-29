@@ -106,6 +106,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   const panel = useRef<HTMLElement>(null);
   const [insets, setInsets] = useState<IslandInsets>({ top: 100, right: 0, bottom: 140, left: 0 });
   const [paused, setPaused] = useState(false);
+  const [hidden, setHidden] = useState(() => document.visibilityState === 'hidden');
   const [actor, setActor] = useState(createActor);
   const reduced = useReducedMotion(session.account.preferences.reduce_motion);
   const editing = draft !== null;
@@ -169,9 +170,17 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     return () => controller.abort();
   }, [client, attempt]);
 
+  // 角色帧和物件CSS动画共用可见状态；用户已暂停时也能收到后台切换。
+  useEffect(() => {
+    const changed = () => setHidden(document.visibilityState === 'hidden');
+    document.addEventListener('visibilitychange', changed);
+    changed();
+    return () => document.removeEventListener('visibilitychange', changed);
+  }, []);
+
   // 后台和编辑时暂停计时，不在恢复后补算离线活动；减少动效仍可主动体验。
   useEffect(() => {
-    if (!state || paused || editing || reduced) return;
+    if (!state || paused || editing || reduced || hidden) return;
     let frame: number | null = null;
     let previous: number | null = null;
     // 与绘制同步；长帧最多推进50毫秒，避免主线程阻塞后角色突然跳远。
@@ -185,19 +194,11 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
       previous = timestamp;
       frame = window.requestAnimationFrame(tick);
     };
-    // 隐藏时不保留帧请求；重新可见时只建立新的时间基准。
-    const visibilityChanged = () => {
-      previous = null;
-      if (frame !== null) window.cancelAnimationFrame(frame);
-      frame = document.visibilityState === 'hidden' ? null : window.requestAnimationFrame(tick);
-    };
-    document.addEventListener('visibilitychange', visibilityChanged);
-    visibilityChanged();
+    frame = window.requestAnimationFrame(tick);
     return () => {
       if (frame !== null) window.cancelAnimationFrame(frame);
-      document.removeEventListener('visibilitychange', visibilityChanged);
     };
-  }, [state, paused, editing, reduced]);
+  }, [state, paused, editing, reduced, hidden]);
 
   // 防止浏览器刷新静默丢弃尚未保存的布置。
   useEffect(() => {
@@ -313,7 +314,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
       {editing && <div ref={dock} className="island-edit-bar"><button disabled={saving || conflict} onClick={() => void save()}>{saving ? content.saving : content.save}</button><button className="secondary" disabled={saving} onClick={cancel}>{content.cancel}</button><button className="secondary" aria-pressed={showIndoor} disabled={saving} onClick={() => setShowIndoor((value) => !value)}>{showIndoor ? content.showOutdoor : content.showIndoor}</button><button className="secondary" aria-expanded={panelOpen} aria-controls="island-inventory-panel" onClick={() => setPanelOpen((value) => !value)}>{panelOpen ? content.closeInventory : content.openInventory}</button></div>}
       <div className={`island-workspace ${editing ? 'island-is-editing' : ''}`} aria-busy={saving}>
         <div className="island-main-scene" inert={saving}>
-          <IslandScene insets={insets} placements={placements} catalog={state.catalog} actor={actor} avatar={avatar} editing={editing} indoor={showIndoor} selected={selected} staticMotion={reduced || paused || editing} onSelect={setSelected} onMove={move} onActivity={interact} onBlocked={() => showMessage(content.blockedPlacement)} />
+          <IslandScene insets={insets} placements={placements} catalog={state.catalog} actor={actor} avatar={avatar} editing={editing} indoor={showIndoor} selected={selected} staticMotion={reduced || editing} motionPaused={paused || hidden} onSelect={setSelected} onMove={move} onActivity={interact} onBlocked={() => showMessage(content.blockedPlacement)} />
 
         </div>
         {editing && panelOpen && <aside ref={panel} id="island-inventory-panel" className="island-editor island-editor-shell" inert={saving} aria-label={content.inventory}>

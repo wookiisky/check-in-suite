@@ -13,7 +13,39 @@ import content from './content.json';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('购买确认与恢复', () => {
-  it('真实201响应JSON截断后保留原命令，跨弹窗重放不重复购买文本奖励', async () => {
+  it('没有 randomUUID 时仍能发送购买请求并确认成交', async () => {
+    vi.stubGlobal('crypto', { getRandomValues: crypto.getRandomValues.bind(crypto) });
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      Response.json({ purchase, wallet }, { status: 201 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const onPurchased = vi.fn();
+    render(
+      <PurchaseDialog
+        client={new ApiClient()}
+        product={product}
+        wallet={wallet}
+        onClose={vi.fn()}
+        onPurchased={onPurchased}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
+    await waitFor(() => expect(onPurchased).toHaveBeenCalledWith(purchase));
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const request = fetchMock.mock.calls[0]?.[1];
+    expect((request?.headers as Headers).get('Idempotency-Key')).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+    expect(JSON.parse(String(request?.body))).toEqual({
+      product_id: product.id,
+      expected_product_version: product.version,
+      expected_wallet_version: wallet.version,
+    });
+  });
+
+  it.each([true, false])('真实201响应JSON截断后保留原命令，跨弹窗重放不重复购买文本奖励（原生UUID：%s）', async (nativeUUID) => {
+    if (!nativeUUID) vi.stubGlobal('crypto', { getRandomValues: crypto.getRandomValues.bind(crypto) });
     const feedback = vi.fn();
     window.addEventListener(FEEDBACK_EVENT, feedback);
     const rewardProduct = {

@@ -1,3 +1,4 @@
+import { createIdempotencyKey } from '../../api/idempotency-key';
 import { emptyMediaDraft } from '../media/media-draft';
 import type { MediaDraft } from '../media/media-draft';
 import type { CheckinClient, CheckinResult, CreateCheckin, Task } from './types';
@@ -17,7 +18,7 @@ const pendingByClient = new WeakMap<CheckinClient, PendingCheckin>();
 
 /** 创建固定请求快照，日期在用户确认时锁定。 */
 export function createPendingCheckin(task: Task, date: string, text: string, management: boolean, media: MediaDraft = emptyMediaDraft()): PendingCheckin {
-  return { key: crypto.randomUUID(), path: management ? '/management/checkins' : '/checkins', task, draftText: text, draftMedia: media, body: Object.freeze({ task_id: task.id, expected_task_version: task.version, ...(management ? { business_date: date } : { expected_today: date }), text, photo_media_id: media.photo?.mediaId ?? null, audio_media_id: media.audio?.mediaId ?? null }) };
+  return { key: createIdempotencyKey(), path: management ? '/management/checkins' : '/checkins', task, draftText: text, draftMedia: media, body: Object.freeze({ task_id: task.id, expected_task_version: task.version, ...(management ? { business_date: date } : { expected_today: date }), text, photo_media_id: media.photo?.mediaId ?? null, audio_media_id: media.audio?.mediaId ?? null }) };
 }
 
 /** 保存或清除当前客户端唯一未确认提交。 */

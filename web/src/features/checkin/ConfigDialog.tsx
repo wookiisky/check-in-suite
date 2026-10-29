@@ -6,6 +6,7 @@ import { FieldError } from '../../components/FormFeedback';
 import type { Session } from '../../api/types';
 import type { Category, CheckinClient, Task } from './types';
 import { checkinError, isDefiniteFailure } from './format';
+import { createIdempotencyKey } from '../../api/idempotency-key';
 import content from './content.json';
 
 /** 配置新增也保留原命令，关闭弹窗后仍可按原键恢复。 */
@@ -74,7 +75,7 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
     if (busy || invalidDraft || (needsConfirmation && (!latest || confirmedVersion !== latest.version))) return;
     setBusy(true); setError(null);
     const draft = kind === 'task' ? { name, category_id: categoryID || null, icon_key: icon, coin_reward: coins, diamond_reward: diamonds, daily_limit: dailyLimit, weekdays, enabled, unlock_activities: unlockActivities } : { name, sort_order: sortOrder };
-    const command = pendingConfiguration.get(client) ?? { path, key: crypto.randomUUID(), body: draft };
+    const command = pendingConfiguration.get(client) ?? { path, key: createIdempotencyKey(), body: draft };
     if (!item) pendingConfiguration.set(client, command);
     try {
       if (item) await client.request(`${path}/${item.id}`, { method: 'PATCH', body: { ...draft, expected_version: confirmedVersion ?? version } });

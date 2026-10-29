@@ -940,7 +940,7 @@ components:
         repeatable: {"type": "boolean"}
         catalog_only: {"type": "boolean", "description": "仅提供素材与摆放能力，不在初始化时自动创建商品；商品由管理页配置。"}
         activity: {"type": "string", "enum": ["read", "run", "ball"]}
-        animation: {"type": "string", "enum": ["sway", "flutter"], "description": "独立于互动的常驻视觉动作。"}
+        animation: {"type": "string", "enum": ["sway", "flutter", "spin", "flow", "swing", "glow"], "description": "独立于互动的常驻视觉动作。"}
         portrait_asset_key: {"type": "string", "minLength": 1}
         asset_key: {"type": "string", "minLength": 1, "description": "商品缩略图和当前受控素材身份。"}
         coin_price: {"type": "integer", "minimum": 0, "description": "资源默认价格；实际购买以商品价格为准。"}

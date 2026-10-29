@@ -133,8 +133,10 @@ for (const character of [
     await expect(scene.locator('.island-character-art')).toHaveAttribute('data-static', 'true');
     await page.getByRole('button', { name: island.edit, exact: true }).click();
     await page.locator(`[data-inventory-id="${added!.id}"]`).getByRole('button').click();
-    const art = scene.locator(`[data-placement-id="${added!.id}"] image`);
-    await expect(art).toHaveAttribute('href', '/api/v1/assets/island-windmill-v1');
+    const art = scene.locator(`[data-placement-id="${added!.id}"] .island-item-art`);
+    await expect(art.locator('.island-windmill-blades')).toBeVisible();
+    await expect(art).toHaveAttribute('data-animation', 'spin');
+    await expect(art).toHaveAttribute('data-static', 'true');
     await page.getByRole('button', { name: island.save, exact: true }).click();
     await expect(page.getByText(island.saved, { exact: true })).toBeVisible();
     const saved = await api<IslandState>(page, '/island');
@@ -143,14 +145,14 @@ for (const character of [
     for (const asset of [avatar, background, accessory, windmill]) {
       await expect.poll(() => loadedAssets.has(`/api/v1/assets/${asset.asset_key}`)).toBe(true);
     }
-    // SVG 的 image 属性存在不足以证明图片有效；让同一浏览器解码实际受保护地址。
-    for (const image of [scene.locator('.island-character-art image'), art]) {
-      expect(await image.evaluate(async (element) => {
+    // 角色图片与商店风车缩略图仍需可解码，小岛风车则使用分部件模型。
+    for (const url of [`/api/v1/assets/${character.key}`, `/api/v1/assets/${windmill.asset_key}`]) {
+      expect(await page.evaluate(async (source) => {
         const decoded = new Image();
-        decoded.src = element.getAttribute('href')!;
+        decoded.src = source;
         await decoded.decode();
         return decoded.naturalWidth > 0 && decoded.naturalHeight > 0;
-      })).toBe(true);
+      }, url)).toBe(true);
     }
     const equipment = (await api<Camp>(page, '/camp')).equipment;
     expect(equipment.avatar?.asset_key_snapshot).toBe(character.key);
@@ -160,7 +162,9 @@ for (const character of [
     await page.reload();
     await page.getByRole('button', { name: content.navigation.island, exact: true }).click();
     await expect(scene.locator('.island-character-art image')).toHaveAttribute('href', `/api/v1/assets/${character.key}`);
-    await expect(art).toHaveAttribute('href', '/api/v1/assets/island-windmill-v1');
+    await expect(art.locator('.island-windmill-blades')).toBeVisible();
+    await expect(art).toHaveAttribute('data-animation', 'spin');
+    await expect(art).toHaveAttribute('data-static', 'true');
     expect((await api<IslandState>(page, '/island')).placements).toEqual(saved.placements);
     expect((await api<Camp>(page, '/camp')).equipment).toEqual(equipment);
     await page.screenshot({ path: testInfo.outputPath(`${character.preview}-island.png`) });

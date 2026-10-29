@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Modal } from '../../components/Modal';
 import { ApiFailure } from '../../api/client';
+import { createIdempotencyKey } from '../../api/idempotency-key';
 import type { Camp, Product, Purchase, PurchaseResult, ShopClient, Wallet } from './types';
 import { pendingPurchases } from './pending';
 import { assetURL, canBuy, portraitType, shopError, uncertainResult } from './helpers';
@@ -36,7 +37,7 @@ export function PurchaseDialog({
   async function submit() {
     if (busy || completed.current) return;
     const command = pending ?? {
-      key: crypto.randomUUID(),
+      key: createIdempotencyKey(),
       product,
       wallet,
       body: Object.freeze({

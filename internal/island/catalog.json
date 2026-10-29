@@ -135,7 +135,8 @@
     "movable": true,
     "repeatable": true,
     "catalog_only": true,
-    "asset_key": "island-flowers-v1"
+    "asset_key": "island-flowers-v1",
+    "animation": "sway"
   },
   {
     "key": "mushrooms",
@@ -195,7 +196,8 @@
     "movable": true,
     "repeatable": true,
     "catalog_only": true,
-    "asset_key": "island-lantern-v1"
+    "asset_key": "island-lantern-v1",
+    "animation": "glow"
   },
   {
     "key": "tent",
@@ -219,7 +221,8 @@
     "movable": true,
     "repeatable": true,
     "catalog_only": true,
-    "asset_key": "island-fountain-v1"
+    "asset_key": "island-fountain-v1",
+    "animation": "flow"
   },
   {
     "key": "swing",
@@ -231,7 +234,8 @@
     "movable": true,
     "repeatable": true,
     "catalog_only": true,
-    "asset_key": "island-swing-v1"
+    "asset_key": "island-swing-v1",
+    "animation": "swing"
   },
   {
     "key": "windmill",
@@ -243,6 +247,7 @@
     "movable": true,
     "repeatable": true,
     "catalog_only": true,
-    "asset_key": "island-windmill-v1"
+    "asset_key": "island-windmill-v1",
+    "animation": "spin"
   }
 ]

@@ -17,7 +17,7 @@
   "daily_limit": 2,
   "metrics": ["count", "days", "streak", "coins", "diamonds"],
   "targets": [10, 7, 3, 100, 20, 10000],
-  "owned_assets": ["avatar-girl-braids-v1", "background-sakura-v1", "title-crown-v1", "accessory-hat-v1", "accessory-book-v1", "effect-sparkle-v1", "island-tree-v1", "island-ball-v1", "island-flowers-v1", "island-butterfly-v1", "reward-gift-v1"],
+  "owned_assets": ["avatar-boy-short-v1", "background-sakura-v1", "title-crown-v1", "accessory-hat-v1", "accessory-book-v1", "effect-sparkle-v1", "island-tree-v1", "island-ball-v1", "island-flowers-v1", "island-butterfly-v1", "reward-gift-v1"],
   "placements": [
     {"id": "base:house", "item_key": "house", "x": -3, "y": -2, "rotation": 0, "zone": "outdoor"},
     {"id": "base:desk", "item_key": "desk", "x": 0, "y": 0, "rotation": 0, "zone": "indoor"},

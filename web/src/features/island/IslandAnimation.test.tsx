@@ -25,6 +25,28 @@ async function renderWalking() {
 }
 
 describe('小岛动画时钟', () => {
+  it('物件暂停和后台冻结保留动画，布置与减少动效使用静态画面', async () => {
+    const clock = new IslandAnimationTestClock();
+    const view = await renderWalking();
+    const item = () => document.querySelector('[data-placement-id="base:run"] .island-item-art')!;
+    expect(item()).toHaveAttribute('data-paused', 'false');
+    fireEvent.click(screen.getByRole('button', { name: content.pause }));
+    expect(item()).toHaveAttribute('data-paused', 'true');
+    expect(item()).toHaveAttribute('data-static', 'false');
+    fireEvent.click(screen.getByRole('button', { name: content.resume }));
+    clock.setVisibility('hidden');
+    expect(item()).toHaveAttribute('data-paused', 'true');
+    clock.setVisibility('visible');
+    expect(item()).toHaveAttribute('data-paused', 'false');
+    fireEvent.click(screen.getByRole('button', { name: content.edit }));
+    expect(item()).toHaveAttribute('data-static', 'true');
+    fireEvent.click(screen.getByRole('button', { name: content.cancel }));
+    view.rerender(<IslandPage client={view.client} session={{ ...session, account: { ...session.account, preferences: { ...session.account.preferences, reduce_motion: true } } }} />);
+    expect(item()).toHaveAttribute('data-static', 'true');
+    clock.setVisibility('hidden');
+    expect(item()).toHaveAttribute('data-paused', 'true');
+  });
+
   it('按实际帧间隔连续移动，重新渲染后仍只有一个帧循环', async () => {
     const clock = new IslandAnimationTestClock();
     await renderWalking();

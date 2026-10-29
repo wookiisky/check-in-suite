@@ -1,6 +1,8 @@
 import { useId } from 'react';
 import type { CSSProperties } from 'react';
 import { assetURL } from '../shop/helpers';
+import type { IslandDefinition } from './island-types';
+import { IslandObjectArtwork, supportsObjectArtwork } from './IslandObjectArtwork';
 import './island-art.css';
 
 // 美术只描绘模型，位置、遮挡顺序和交互由场景统一管理。
@@ -10,8 +12,9 @@ interface ItemArtworkProps {
   selected?: boolean; // 选择环不参与地面占用判断。
   houseScale?: number; // 房屋模型与服务端占地采用相同比例。
   rotation?: number; // 固定视角下按朝向镜像，不旋转摄像机。
-  animation?: 'sway' | 'flutter'; // 可选动作能力，模型存在不代表必须播放动画。
-  staticMotion?: boolean; // 暂停、编辑或减少动效时展示静态模型。
+  animation?: IslandDefinition['animation']; // 可选动作能力，模型存在不代表必须播放动画。
+  staticMotion?: boolean; // 编辑或减少动效时展示静态模型。
+  motionPaused?: boolean; // 暂停或隐藏时保留当前动画相位。
 }
 
 // 角色各肢体独立绘制，使动作不依赖整幅画像的位移。
@@ -103,12 +106,12 @@ function HouseArtwork({ indoor, cottage }: { indoor: boolean; cottage: boolean }
 }
 
 // 可选能力缺失时物品仍以静态模型完整展示。
-export function ItemArtwork({ model, indoor = false, selected = false, rotation = 0, houseScale = 2, animation, staticMotion = false }: ItemArtworkProps) {
+export function ItemArtwork({ model, indoor = false, selected = false, rotation = 0, houseScale = 2, animation, staticMotion = false, motionPaused = false }: ItemArtworkProps) {
   const mirror = ((rotation % 360) + 360) % 360 >= 180 ? -1 : 1;
-  return <g className="island-item-art" data-animation={animation} data-static={staticMotion}>
+  return <g className="island-item-art" data-animation={animation} data-static={staticMotion} data-paused={motionPaused}>
     {selected && <ellipse cy="6" rx={model === 'house' || model === 'cottage' ? 84 * houseScale : 35} ry={model === 'house' || model === 'cottage' ? 40 * houseScale : 17} fill="#fff8c5" fillOpacity=".45" stroke="#735c2d" strokeWidth="2" strokeDasharray="5 4" />}
     <g transform={`scale(${mirror} 1)`}>
-      {model.startsWith('island-') && <image href={assetURL(model)} x={-60} y={-99.375} width={120} height={120} />}
+      {supportsObjectArtwork(model) ? <IslandObjectArtwork model={model} /> : model.startsWith('island-') && <image href={assetURL(model)} x={-60} y={-99.375} width={120} height={120} />}
       {(model === 'house' || model === 'cottage') && <g transform={`scale(${houseScale})`}><HouseArtwork indoor={indoor} cottage={model === 'cottage'} /></g>}
       {model === 'tree' && <g stroke="#67794b" strokeWidth="2" strokeLinejoin="round">
         <ellipse cy="3" rx="30" ry="12" fill="#527749" opacity=".2" stroke="none" />

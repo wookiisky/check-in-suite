@@ -19,8 +19,13 @@ async function api(page: Page, path: string, method = 'GET', data?: unknown) {
 // 商品创建、未知购买、逐件装备与兑现均经过实际页面和持久服务。
 test('真实商店购买恢复、十件装扮与逐次密码兑现', async ({ page }, testInfo) => {
   test.setTimeout(90_000);
+  // 模拟通过服务器 HTTP IP 访问时缺少 randomUUID，保留浏览器真实随机源。
+  await page.addInitScript(() => {
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
+  });
   const name = `小兔-${testInfo.project.name}`;
   await page.goto('/');
+  expect(await page.evaluate(() => typeof crypto.randomUUID)).toBe('undefined');
   await page.getByLabel(content.account.username).fill('island-e2e');
   await page.getByLabel(content.account.loginPassword).fill('Island-Test-2026');
   await page.getByRole('button', { name: content.account.login, exact: true }).click();
@@ -69,6 +74,7 @@ test('真实商店购买恢复、十件装扮与逐次密码兑现', async ({ pa
   await page.getByRole('dialog').getByRole('button', { name: shop.recoverPurchase, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(keys).toHaveLength(2);
+  expect(keys[0]).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   expect(keys[0]).toBe(keys[1]);
   await page.unroute('**/api/v1/purchases');
   const purchasedCamp = await api(page, '/camp') as Camp;

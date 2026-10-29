@@ -6,6 +6,7 @@ import { FieldError } from '../../components/FormFeedback';
 import type { Achievement, AchievementAsset, AchievementInput, AchievementOptions, AchievementProps } from './types';
 import { achievementError, achievementRule, achievementTargetName, achievementWindow, badgeURL, isUncertainCreation } from './achievement-format';
 import { pendingAchievements } from './achievement-pending';
+import { createIdempotencyKey } from '../../api/idempotency-key';
 import content from './content.json';
 
 // 表单仅保留可修改字段，避免把资格和进度回传为配置。
@@ -41,7 +42,7 @@ export function AchievementEditor({ client, session, item, assets, options, onCl
     if (busy || invalid || (conflict && (!latest || confirmedVersion !== latest.version))) return;
     if (!form.current?.reportValidity()) return;
     setBusy(true); setError(null);
-    const command = pending ?? { key: crypto.randomUUID(), body: { ...draft, task_ids: [...draft.task_ids] } };
+    const command = pending ?? { key: createIdempotencyKey(), body: { ...draft, task_ids: [...draft.task_ids] } };
     if (!item) { pendingAchievements.set(client, command); setPending(command); }
     try {
       if (item) await client.request<Achievement>(`/management/achievements/${item.id}`, { method: 'PATCH', body: { ...draft, expected_version: confirmedVersion ?? version } });

@@ -1086,7 +1086,7 @@ export interface components {
              * @description 独立于互动的常驻视觉动作。
              * @enum {string}
              */
-            animation?: "sway" | "flutter";
+            animation?: "sway" | "flutter" | "spin" | "flow" | "swing" | "glow";
             portrait_asset_key?: string;
             /** @description 商品缩略图和当前受控素材身份。 */
             asset_key?: string;
