@@ -1,5 +1,5 @@
 {
-  "usage": "用法：island version；或 island <serve|migrate|init|reset-password> [-config 配置路径]；重置密码还需 -kind login 或 management。",
+  "usage": "用法：island version；或 island <serve|migrate|init|reset-password|seed-demo|db-status> [-config 配置路径]；重置密码还需 -kind login 或 management；数据库状态支持 -format json 或 tsv。",
   "unexpected_arguments": "不接受额外参数；密码必须通过交互输入。",
   "username_prompt": "用户名：",
   "display_name_prompt": "姓名或昵称：",
@@ -19,5 +19,8 @@
   "PASSWORD_INVALID": "密码不符合长度要求。",
   "PASSWORD_MISMATCH": "两次输入的密码不一致。",
   "ACHIEVEMENT_NOT_EARNED": "这个成就尚未获得，暂时不能佩戴。",
-  "INTERNAL_ERROR": "操作失败，请检查服务日志。"
+  "INTERNAL_ERROR": "操作失败，请检查服务日志。",
+  "DEMO_REQUIRES_EMPTY_DATABASE": "测试初始化只允许空数据库；已有账户或业务数据时，请明确选择重置后再初始化。",
+  "invalid_status_format": "数据库状态输出格式必须为 json 或 tsv。",
+  "invalid_status_field": "配置路径或地址不能包含制表符、换行等控制字符。"
 }

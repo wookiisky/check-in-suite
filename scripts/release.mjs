@@ -29,8 +29,7 @@ async function checksums(directory, relative = '') {
 }
 
 // release builds into a fresh directory and never replaces an existing release.
-async function release() {
-  const { values } = parseArgs({ options: { 'output-root': { type: 'string' }, goos: { type: 'string' }, goarch: { type: 'string' } } });
+export async function buildRelease(values = {}) {
   const revision = (await execute('git', ['rev-parse', 'HEAD'], { cwd: root })).stdout.trim();
   const dirty = (await execute('git', ['status', '--porcelain'], { cwd: root })).stdout.trim() !== '';
   const host = (await execute('go', ['env', 'GOOS', 'GOARCH'], { cwd: root })).stdout.trim().split('\n');
@@ -54,14 +53,27 @@ async function release() {
     const migrationFiles = await checksums(path.join(root, 'migrations'));
     const manifest = { version, revision, dirty, built_at: builtAt, goos, goarch, files: await checksums(directory), migrations: migrationFiles };
     await writeFile(path.join(directory, 'release.json'), `${JSON.stringify(manifest, null, 2)}\n`, { flag: 'wx' });
+    await writeReleaseChecksums(directory);
     console.log(JSON.stringify({ event: '发布构建完成', directory, version, goos, goarch }));
+    return directory;
   } catch (error) {
     await rm(directory, { recursive: true, force: true });
     throw error;
   }
 }
 
-release().catch((error) => {
-  console.error(JSON.stringify({ event: '发布构建失败', error: error.message, stderr: error.stderr }));
-  process.exitCode = 1;
-});
+// writeReleaseChecksums includes the release manifest while avoiding a self-referential hash.
+export async function writeReleaseChecksums(directory) {
+  const files = await checksums(directory);
+  delete files.SHA256SUMS;
+  await writeFile(path.join(directory, 'SHA256SUMS'), Object.entries(files)
+    .map(([name, checksum]) => `${checksum}  ${name}`).join('\n') + '\n');
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const { values } = parseArgs({ options: { 'output-root': { type: 'string' }, goos: { type: 'string' }, goarch: { type: 'string' } } });
+  buildRelease(values).catch((error) => {
+    console.error(JSON.stringify({ event: '发布构建失败', error: error.message, stderr: error.stderr }));
+    process.exitCode = 1;
+  });
+}

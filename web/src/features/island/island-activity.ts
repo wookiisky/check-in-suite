@@ -14,6 +14,7 @@ export interface IslandActor extends ActivityStep {
   destination: IslandActivity | 'idle'; // 到达目的地之后执行的动作。
   route: ActivityStep[]; // 可达的地面路径。
   elapsed: number; // 当前阶段已运行秒数。
+  motionElapsed: number; // 角色累计动画秒数，换活动或过房门时不重置姿势。
   facing: number; // 屏幕朝向，正值向右。
 }
 
@@ -22,7 +23,7 @@ export function createActor(placements: IslandPlacement[] = [], catalog: IslandD
   const candidates: IslandPoint[] = [{ x: 0, y: 4 }];
   for (let y = 6; y >= -7; y -= 1) for (let x = -7; x <= 7; x += 1) candidates.push({ x, y });
   const point = candidates.find((candidate) => isWalkable(candidate, placements, catalog)) ?? { x: -7.5, y: 7.5 };
-  return { ...point, zone: 'outdoor', phase: 'idle', action: 'idle', targetID: null, destination: 'idle', route: [], elapsed: 0, facing: 1 };
+  return { ...point, zone: 'outdoor', phase: 'idle', action: 'idle', targetID: null, destination: 'idle', route: [], elapsed: 0, motionElapsed: 0, facing: 1 };
 }
 
 // 跨房门的路径由室内、室外两段组成，区域切换不跨越墙壁。
@@ -60,26 +61,43 @@ export function startActivity(actor: IslandActor, id: string, placements: Island
 // 时间和随机源可注入，页面在隐藏或暂停时不调用此函数。
 export function advanceActor(actor: IslandActor, seconds: number, placements: IslandPlacement[], catalog: IslandDefinition[], random: () => number = Math.random): IslandActor {
   const elapsed = actor.elapsed + seconds;
-  if (actor.targetID && !placements.some((item) => item.id === actor.targetID)) return { ...actor, phase: 'idle', action: 'idle', route: [], targetID: null, elapsed: 0 };
+  const motionElapsed = actor.motionElapsed + seconds;
+  if (actor.targetID && !placements.some((item) => item.id === actor.targetID)) return { ...actor, motionElapsed, phase: 'idle', action: 'idle', route: [], targetID: null, elapsed: 0 };
   if (actor.phase === 'walking') {
-    const next = actor.route[0];
-    if (!next) return { ...actor, phase: actor.destination === 'idle' ? 'idle' : 'acting', action: actor.destination, elapsed: 0 };
-    if (next.zone !== actor.zone) return { ...actor, ...next, route: actor.route.slice(1), elapsed: 0 };
-    const dx = next.x - actor.x;
-    const dy = next.y - actor.y;
-    const distance = Math.hypot(dx, dy);
-    const step = Math.min(distance, seconds * 2.2);
-    return { ...actor, x: distance ? actor.x + dx / distance * step : next.x, y: distance ? actor.y + dy / distance * step : next.y, route: distance <= step ? actor.route.slice(1) : actor.route, facing: dx - dy < 0 ? -1 : 1, elapsed };
+    let { x, y, facing } = actor;
+    let remaining = seconds * 2.2;
+    let cursor = 0;
+    // 同一帧可以沿原路径经过多个点，避免每到半格就丢失剩余位移。
+    while (cursor < actor.route.length && remaining > 0) {
+      const next = actor.route[cursor]!;
+      // 房门两侧采用不同坐标，切换后停止本帧，不将剩余距离带入室内外。
+      if (next.zone !== actor.zone) return { ...actor, ...next, facing, motionElapsed, route: actor.route.slice(cursor + 1), elapsed: 0 };
+      const dx = next.x - x, dy = next.y - y;
+      const distance = Math.hypot(dx, dy);
+      // 投影后的水平分量是 dx - dy；竖直移动和浮点残差保持原朝向。
+      if (Math.abs(dx - dy) > 1e-6) facing = dx - dy < 0 ? -1 : 1;
+      if (distance > remaining) {
+        x += dx / distance * remaining;
+        y += dy / distance * remaining;
+        break;
+      }
+      x = next.x; y = next.y;
+      remaining -= distance;
+      cursor += 1;
+    }
+    const route = cursor ? actor.route.slice(cursor) : actor.route;
+    if (!route.length) return { ...actor, x, y, facing, route, motionElapsed, phase: actor.destination === 'idle' ? 'idle' : 'acting', action: actor.destination, elapsed: 0 };
+    return { ...actor, x, y, facing, route, elapsed, motionElapsed };
   }
-  if (actor.phase === 'acting') return elapsed >= 8 ? { ...actor, phase: 'idle', action: 'idle', targetID: null, elapsed: 0 } : { ...actor, elapsed };
-  if (elapsed < 4) return { ...actor, elapsed };
+  if (actor.phase === 'acting') return elapsed >= 8 ? { ...actor, motionElapsed, phase: 'idle', action: 'idle', targetID: null, elapsed: 0 } : { ...actor, elapsed, motionElapsed };
+  if (elapsed < 4) return { ...actor, elapsed, motionElapsed };
   const targets = placements.filter((placement) => catalog.find((item) => item.key === placement.item_key)?.activity);
   if (targets.length && random() < 0.65) {
     const target = targets[Math.min(targets.length - 1, Math.floor(random() * targets.length))]!;
     const activity = startActivity(actor, target.id, placements, catalog);
-    if (activity) return activity;
+    if (activity) return { ...activity, motionElapsed };
   }
   const point: ActivityStep = { x: Math.round((random() * 2 - 1) * 6), y: Math.round((random() * 2 - 1) * 6), zone: 'outdoor' };
   const route = routeTo(actor, point, placements, catalog);
-  return route?.length ? { ...actor, phase: 'walking', action: 'walk', destination: 'idle', targetID: null, route, elapsed: 0 } : { ...actor, phase: 'acting', action: 'rest', targetID: null, elapsed: 0 };
+  return route?.length ? { ...actor, motionElapsed, phase: 'walking', action: 'walk', destination: 'idle', targetID: null, route, elapsed: 0 } : { ...actor, motionElapsed, phase: 'acting', action: 'rest', targetID: null, elapsed: 0 };
 }

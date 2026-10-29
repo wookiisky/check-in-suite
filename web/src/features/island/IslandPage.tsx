@@ -102,11 +102,31 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   // 后台和编辑时暂停计时，不在恢复后补算离线活动；减少动效仍可主动体验。
   useEffect(() => {
     if (!state || paused || editing || reduced) return;
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === 'hidden') return;
-      setActor((current) => advanceActor(current, 0.05, latest.current.placements, latest.current.catalog));
-    }, 50);
-    return () => window.clearInterval(timer);
+    let frame: number | null = null;
+    let previous: number | null = null;
+    // 与绘制同步；长帧最多推进50毫秒，避免主线程阻塞后角色突然跳远。
+    const tick = (timestamp: number) => {
+      frame = null;
+      if (document.visibilityState === 'hidden') { previous = null; return; }
+      if (previous !== null) {
+        const seconds = Math.min((timestamp - previous) / 1000, 0.05);
+        setActor((current) => advanceActor(current, seconds, latest.current.placements, latest.current.catalog));
+      }
+      previous = timestamp;
+      frame = window.requestAnimationFrame(tick);
+    };
+    // 隐藏时不保留帧请求；重新可见时只建立新的时间基准。
+    const visibilityChanged = () => {
+      previous = null;
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = document.visibilityState === 'hidden' ? null : window.requestAnimationFrame(tick);
+    };
+    document.addEventListener('visibilitychange', visibilityChanged);
+    visibilityChanged();
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      document.removeEventListener('visibilitychange', visibilityChanged);
+    };
   }, [state, paused, editing, reduced]);
 
   // 防止浏览器刷新静默丢弃尚未保存的布置。

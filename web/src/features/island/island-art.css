@@ -1,23 +1,24 @@
-.island-character-art .island-character-head { transform-origin: 0 -29px; animation: island-head-breathe 4s ease-in-out infinite; }
-.island-character-art .island-character-tail { transform-origin: 10px -15px; animation: island-tail-sway 3.5s ease-in-out infinite; }
+/* 由活动帧的累计时间取样姿势；SVG深度重排后仍显示同一时刻，不重新起步。 */
+.island-character-art .island-character-head { transform-origin: 0 -29px; animation: island-head-breathe 4s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
+.island-character-art .island-character-tail { transform-origin: 10px -15px; animation: island-tail-sway 3.5s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
 .island-character-art .island-character-leg-left { transform-origin: -7px -12px; }
 .island-character-art .island-character-leg-right { transform-origin: 9px -12px; }
 .island-character-art .island-character-arm-left { transform-origin: -14px -24px; }
 .island-character-art .island-character-arm-right { transform-origin: 14px -24px; }
-.island-character-art[data-moving="true"] .island-character-body { animation: island-walk-bob .45s ease-in-out infinite; }
-.island-character-art[data-moving="true"] .island-character-leg-left { animation: island-leg-step .45s ease-in-out infinite; }
-.island-character-art[data-moving="true"] .island-character-leg-right { animation: island-leg-step .45s ease-in-out -.225s infinite; }
-.island-character-art[data-moving="true"] .island-character-arm-left { animation: island-arm-step .45s ease-in-out -.225s infinite; }
-.island-character-art[data-moving="true"] .island-character-arm-right { animation: island-arm-step .45s ease-in-out infinite; }
+.island-character-art[data-moving="true"] .island-character-body { animation: island-walk-bob .45s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
+.island-character-art[data-moving="true"] .island-character-leg-left { animation: island-leg-step .45s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
+.island-character-art[data-moving="true"] .island-character-leg-right { animation: island-leg-step .45s ease-in-out calc(var(--island-motion-delay, 0s) - .225s) infinite paused; }
+.island-character-art[data-moving="true"] .island-character-arm-left { animation: island-arm-step .45s ease-in-out calc(var(--island-motion-delay, 0s) - .225s) infinite paused; }
+.island-character-art[data-moving="true"] .island-character-arm-right { animation: island-arm-step .45s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
 .island-character-art[data-activity="run"] .island-character-leg-left,
 .island-character-art[data-activity="run"] .island-character-leg-right,
 .island-character-art[data-activity="run"] .island-character-body { animation-duration: .3s; }
-.island-character-art[data-activity="read"] .island-character-head { animation: island-reading-nod 3s ease-in-out infinite; }
+.island-character-art[data-activity="read"] .island-character-head { animation: island-reading-nod 3s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
 .island-character-art[data-activity="read"] .island-character-arm-left { transform: rotate(-17deg); }
 .island-character-art[data-activity="read"] .island-character-arm-right { transform: rotate(17deg); }
 .island-character-art[data-activity="rest"] .island-character-body { transform: translateY(5px) scale(1, .91); }
-.island-character-art[data-activity="ball"] .island-character-leg-right { animation: island-kick 1.5s ease-in-out infinite; }
-.island-character-ball { animation: island-ball-hop 1.5s ease-in-out infinite; }
+.island-character-art[data-activity="ball"] .island-character-leg-right { animation: island-kick 1.5s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
+.island-character-ball { animation: island-ball-hop 1.5s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
 .island-tree-crown { transform-origin: 0 -30px; }
 .island-item-art[data-animation="sway"] .island-tree-crown { animation: island-tree-breeze 6s ease-in-out infinite; }
 .island-item-art[data-animation="flutter"] .island-butterfly-float { animation: island-butterfly-drift 4s ease-in-out infinite; }

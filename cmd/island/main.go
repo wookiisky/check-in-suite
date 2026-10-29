@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/checkin"
 	"github.com/wookiisky/check-in-suite/internal/config"
 	"github.com/wookiisky/check-in-suite/internal/content"
+	"github.com/wookiisky/check-in-suite/internal/demo"
 	"github.com/wookiisky/check-in-suite/internal/httpapi"
 	"github.com/wookiisky/check-in-suite/internal/island"
 	"github.com/wookiisky/check-in-suite/internal/media"
@@ -54,13 +56,17 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 		}
 		return printVersion(output)
 	}
-	if len(args) == 0 || (args[0] != "serve" && args[0] != "migrate" && args[0] != "init" && args[0] != "reset-password") {
+	if len(args) == 0 || (args[0] != "serve" && args[0] != "migrate" && args[0] != "init" && args[0] != "reset-password" && args[0] != "seed-demo" && args[0] != "db-status") {
 		return errors.New(content.Text("usage"))
 	}
 	flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	configuration := flags.String("config", "config/app.example.yaml", "configuration file")
 	kind := ""
+	format := "json"
+	if args[0] == "db-status" {
+		flags.StringVar(&format, "format", "json", "output format")
+	}
 	if args[0] == "reset-password" {
 		flags.StringVar(&kind, "kind", "", "credential type")
 	}
@@ -73,6 +79,9 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 	cfg, err := config.Load(*configuration)
 	if err != nil {
 		return err
+	}
+	if args[0] == "db-status" {
+		return databaseStatus(ctx, cfg, output, format)
 	}
 	if err := os.MkdirAll(filepath.Dir(cfg.DatabasePath), 0700); err != nil {
 		return fmt.Errorf("create database directory: %w", err)
@@ -93,6 +102,13 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 	}
 	if err := storage.CheckSchema(startupContext, db, migrations.Files); err != nil {
 		return err
+	}
+	if args[0] == "seed-demo" {
+		result, err := demo.Seed(ctx, db, cfg)
+		if err != nil {
+			return maintenanceError(err)
+		}
+		return json.NewEncoder(output).Encode(result)
 	}
 	accounts := account.New(db, cfg)
 	if args[0] == "init" || args[0] == "reset-password" {

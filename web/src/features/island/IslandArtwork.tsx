@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import type { CSSProperties } from 'react';
 import { assetURL } from '../shop/helpers';
 import './island-art.css';
 
@@ -20,6 +21,7 @@ interface CharacterArtworkProps {
   activity: 'idle' | 'walk' | 'rest' | 'read' | 'run' | 'ball'; // 动作表现，不决定业务行为。
   facing?: number; // 负数朝左，其他值朝右。
   staticMotion?: boolean; // 减少动效时仍保留可识别的活动姿态。
+  motionElapsed?: number; // 累计动画时间决定姿势，遮挡重排不会重新开始动作。
 }
 
 // 小花只作为地面细节，不会阻挡角色和家具。
@@ -150,7 +152,7 @@ export function ItemArtwork({ model, indoor = false, selected = false, rotation 
 }
 
 // 动画只改变身体部位，角色世界位置由活动模块控制。
-export function CharacterArtwork({ avatar, moving, activity, facing = 1, staticMotion = false }: CharacterArtworkProps) {
+export function CharacterArtwork({ avatar, moving, activity, facing = 1, staticMotion = false, motionElapsed = 0 }: CharacterArtworkProps) {
   const bunny = avatar === 'bunny' || avatar === 'bunny-v1';
   // 新角色复用已装备的受控图片，已有活动仍决定世界位置和状态。
   if (!bunny && avatar !== 'fox' && avatar !== 'fox-v1') {
@@ -160,7 +162,7 @@ export function CharacterArtwork({ avatar, moving, activity, facing = 1, staticM
   }
   const fur = bunny ? '#f7efd9' : '#e4a06a';
   const outline = bunny ? '#647151' : '#7b6550';
-  return <g className="island-character-art" data-moving={moving} data-activity={activity} data-static={staticMotion}>
+  return <g className="island-character-art" data-moving={moving} data-activity={activity} data-static={staticMotion} style={{ '--island-motion-delay': `${-motionElapsed}s` } as CSSProperties}>
     <ellipse cy="3" rx="20" ry="7" fill="#496943" opacity=".23" />
     <g transform={`scale(${facing < 0 ? -1 : 1} 1)`} stroke={outline} strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">
       <g className="island-character-body">

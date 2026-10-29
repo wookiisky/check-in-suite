@@ -11,6 +11,12 @@ import (
 
 // Initialize creates the sole account and empty wallet without demo records.
 func (s *Service) Initialize(ctx context.Context, username, displayName, loginPassword, managementPassword string) error {
+	return s.InitializeWith(ctx, username, displayName, loginPassword, managementPassword, nil)
+}
+
+// InitializeWith creates the household and optional initial business data atomically.
+// Password derivation finishes before the write transaction; populate must use the supplied transaction.
+func (s *Service) InitializeWith(ctx context.Context, username, displayName, loginPassword, managementPassword string, populate func(*sql.Tx) error) error {
 	username = strings.TrimSpace(username)
 	displayName = strings.TrimSpace(displayName)
 	for field, value := range map[string]string{"username": username, "display_name": displayName} {
@@ -57,6 +63,11 @@ func (s *Service) Initialize(ctx context.Context, username, displayName, loginPa
 	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO wallets(account_id) VALUES(1)"); err != nil {
 		return err
+	}
+	if populate != nil {
+		if err := populate(tx); err != nil {
+			return err
+		}
 	}
 	return tx.Commit()
 }

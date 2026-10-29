@@ -179,7 +179,7 @@ export function IslandScene({ insets, placements, catalog, actor, avatar, editin
       <g transform={`translate(${view.x} ${view.y}) scale(${view.zoom})`}>
         <GroundArtwork />
         {layers.map((entry) => {
-          if (entry.actor) return <g key="actor" transform={`translate(${entry.point.x} ${entry.point.y})`} data-actor-zone={actor.zone} data-actor-action={actor.action} aria-hidden="true" pointerEvents="none"><CharacterArtwork avatar={avatar} moving={actor.phase === 'walking'} activity={actor.action} facing={actor.facing} staticMotion={staticMotion} /></g>;
+          if (entry.actor) return <g key="actor" transform={`translate(${entry.point.x} ${entry.point.y})`} data-actor-zone={actor.zone} data-actor-action={actor.action} aria-hidden="true" pointerEvents="none"><CharacterArtwork avatar={avatar} moving={actor.phase === 'walking'} activity={actor.action} facing={actor.facing} staticMotion={staticMotion} motionElapsed={actor.motionElapsed} /></g>;
           const placement = entry.placement!;
           const definition = catalog.find((item) => item.key === placement.item_key)!;
           const interactive = editing || Boolean(definition.activity);

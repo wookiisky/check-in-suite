@@ -2,7 +2,9 @@
   "name": "little-growth-island",
   "private": true,
   "type": "module",
-  "workspaces": ["web"],
+  "workspaces": [
+    "web"
+  ],
   "engines": {
     "node": ">=24.20.0 <25",
     "npm": ">=11 <12"
@@ -28,7 +30,11 @@
     "build:web": "npm run build --workspace @island/web",
     "build": "npm run typecheck && npm run build:web && npm run build:api",
     "release": "node scripts/release.mjs",
-    "verify": "npm test && npm run check && npm run check:go && npm run test:race && npm run test:web && npm run build && npm run test:e2e"
+    "verify": "npm test && npm run check && npm run test:deploy && npm run check:go && npm run test:race && npm run test:web && npm run build && npm run test:e2e",
+    "db:seed": "go run ./cmd/island migrate -config config/app.example.yaml && go run ./cmd/island seed-demo -config config/app.example.yaml",
+    "db:status": "go run ./cmd/island db-status -config config/app.example.yaml",
+    "deploy": "node scripts/deploy.mjs",
+    "test:deploy": "node --test scripts/deploy.test.mjs scripts/release.test.mjs scripts/publish.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",

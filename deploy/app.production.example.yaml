@@ -1,5 +1,5 @@
 # All paths are absolute so maintenance commands and systemd use the same files.
-listen_address: 127.0.0.1:8080
+listen_address: 0.0.0.0:38100
 public_origin: https://island.example.com
 static_directory: /srv/island/current/web
 database_path: /srv/island/data/island.db

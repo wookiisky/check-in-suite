@@ -1,0 +1,21 @@
+{
+  "host_prompt": "SSH IP 或主机名：",
+  "port_prompt": "SSH 端口 [22]：",
+  "user_prompt": "SSH 用户 [{default}]：",
+  "root_prompt": "服务器安装目录 [/srv/island]：",
+  "usage": "用法：npm run deploy -- [--host IP] [--port 22] [--user 用户] [--root /srv/island] [--upload-only]\n不带参数时交互读取连接信息；连接使用 SSH 的现有密钥、代理或终端认证。\n--upload-only 仅构建和上传，输出可在本地执行的远程发布命令。",
+  "target": "服务器平台已确认：Linux / {architecture}",
+  "uploaded": "发布包已上传到：{directory}",
+  "publish_command": "远程发布命令：\n{command}",
+  "completed": "远程发布脚本执行成功。",
+  "failed": "部署失败：{error}",
+  "errors": {
+    "DEPLOY_HOST_INVALID": "SSH IP 或主机名格式不正确。",
+    "DEPLOY_PORT_INVALID": "SSH 端口必须介于 1 和 65535。",
+    "DEPLOY_USER_INVALID": "SSH 用户名格式不正确。",
+    "DEPLOY_ROOT_INVALID": "安装目录必须是绝对路径，且不能是根目录或包含换行等控制字符。",
+    "DEPLOY_TARGET_UNSUPPORTED": "只支持 Linux amd64 和 arm64 服务器。",
+    "DEPLOY_REMOTE_DIRECTORY_INVALID": "服务器未返回有效的上传临时目录。",
+    "DEPLOY_HOST_REQUIRED": "请使用 --host 指定服务器 IP 或主机名。"
+  }
+}
