@@ -112,6 +112,28 @@ test('真实打卡、编辑删除、响应丢失恢复和历史补录闭环', as
   const tomorrow = new Date(`${initialCamp.today}T00:00:00Z`); tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
   const future = await sessionAPI(page, '/management/checkins', 'POST', { task_id: task.id, expected_task_version: task.version, business_date: tomorrow.toISOString().slice(0, 10), text: '', photo_media_id: null, audio_media_id: null });
   expect(future.status()).toBe(422);
+
+  // 关闭后隐藏入口、保留记录与余额；重新开启仍沿用同一个任务身份。
+  const beforeDisable = await (await page.request.get('/api/v1/camp')).json() as Camp;
+  await page.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  const disable = page.getByRole('button', { name: `${checkin.disableTask} ${taskName}`, exact: true });
+  await disable.focus();
+  await disable.press('Enter');
+  await expect(page.getByText(checkin.taskDisabled, { exact: true })).toBeVisible();
+  await expect(page.locator('.checkin-config-row').filter({ hasText: taskName })).toHaveCount(0);
+  await expect(page.getByLabel(checkin.showDisabledTasks, { exact: true })).toBeFocused();
+  const disabledCamp = await (await page.request.get('/api/v1/camp')).json() as Camp;
+  expect(disabledCamp.tasks.some((item) => item.id === task.id)).toBe(false);
+  expect(disabledCamp.wallet).toEqual(beforeDisable.wallet);
+  expect((await records()).map((item) => item.text)).toEqual(['核对后保存的新内容']);
+  await page.getByLabel(checkin.showDisabledTasks, { exact: true }).check();
+  await page.getByRole('button', { name: `${checkin.enableTask} ${taskName}`, exact: true }).click();
+  await expect(page.getByText(checkin.taskEnabled, { exact: true })).toBeVisible();
+  await page.getByLabel(checkin.showDisabledTasks, { exact: true }).uncheck();
+  await expect(page.getByRole('button', { name: `${checkin.disableTask} ${taskName}`, exact: true })).toBeVisible();
+  const enabledCamp = await (await page.request.get('/api/v1/camp')).json() as Camp;
+  expect(enabledCamp.tasks.find((item) => item.id === task.id)).toMatchObject({ enabled: true, version: task.version + 2 });
+  expect(enabledCamp.wallet).toEqual(beforeDisable.wallet);
   await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
   await expect(page.getByRole('heading', { name: checkin.todayTasks, exact: true })).toBeVisible();
   const layout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: window.innerWidth, controls: [...document.querySelectorAll('main button,main select')].map((element) => ({ tag: element.tagName, height: element.getBoundingClientRect().height, width: element.getBoundingClientRect().width })) }));
