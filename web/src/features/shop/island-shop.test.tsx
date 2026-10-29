@@ -87,7 +87,7 @@ describe('小岛商店与多件所有权', () => {
     fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
     fireEvent.change(screen.getByRole('combobox', { name: content.typeFilter }), { target: { value: 'accessory' } });
     const equip = await screen.findByRole('button', { name: `${content.equip} ${portrait.name_snapshot}` });
-    expect(screen.getByRole('img', { name: content.defaultAvatar })).toHaveAttribute('src', '/api/v1/assets/fox-v1');
+    expect(screen.getByRole('img', { name: content.baseAvatarNames['avatar-boy-v2'] })).toHaveAttribute('data-base-avatar', 'avatar-boy-v2');
     fireEvent.click(equip);
     await screen.findByText(content.equipmentSaved);
     expect(request).toHaveBeenCalledWith(`/equipment/accessories/${portrait.id}`, { method: 'PUT' });

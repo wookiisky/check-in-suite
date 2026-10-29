@@ -29,10 +29,10 @@ describe('补充素材的场景展示', () => {
     expect(container.querySelector('.island-character-art')).toHaveAttribute('data-activity', 'read');
   });
 
-  it.each(['bear-v1', 'avatar-boy-short-v1', 'avatar-girl-long-v1'])('图片角色 %s 共用动作时钟并保留减少动效的活动道具', (avatar) => {
+  it.each(['bear-v1', 'avatar-boy-v2', 'avatar-girl-v2'])('图片角色 %s 共用动作时钟并保留减少动效的活动道具', (avatar) => {
     const { container, rerender } = render(<svg><CharacterArtwork avatar={avatar} moving={false} activity="read" motionElapsed={2.25} staticMotion /></svg>);
     expect(container.querySelector('.island-character-art')).toHaveStyle({ '--island-motion-delay': '-2.25s' });
-    expect(container.querySelector('.island-character-image-body image')).toHaveAttribute('href', `/api/v1/assets/${avatar}`);
+    expect(container.querySelector('.island-character-image-body [data-character-layer="body"], .island-character-image-body > image')).toHaveAttribute('href', `/api/v1/assets/${avatar}`);
     expect(container.querySelector('.island-character-book')).not.toBeNull();
     expect(container.querySelector('.island-character-art')).toHaveAttribute('data-static', 'true');
     rerender(<svg><CharacterArtwork avatar={avatar} moving={false} activity="ball" motionElapsed={2.5} staticMotion /></svg>);

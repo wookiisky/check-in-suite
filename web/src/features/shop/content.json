@@ -15,7 +15,15 @@
   "rewards": "我的奖励",
   "typeFilter": "商品类型",
   "allTypes": "全部类型",
-  "types": { "title": "称号", "avatar": "整体形象", "accessory": "饰品", "background": "背景", "effect": "特效", "reward": "文本奖励", "island": "小岛物品" },
+  "types": {
+    "title": "称号",
+    "avatar": "动物形象",
+    "accessory": "饰品",
+    "background": "背景",
+    "effect": "特效",
+    "reward": "文本奖励",
+    "island": "小岛物品"
+  },
   "coins": "金币",
   "diamonds": "钻石",
   "balance": "可用余额",
@@ -78,7 +86,7 @@
   "backgroundHint": "背景铺满画布，不占用饰品数量。",
   "equippedCount": "已装备饰品",
   "accessoryLimit": "最多同时装备 10 个饰品，请先卸下一个。",
-  "defaultAvatar": "默认小狐狸",
+  "defaultAvatar": "默认男孩",
   "character": "当前角色",
   "emptyTitle": "尚未装备称号",
   "equipmentLimit": 10,
@@ -136,5 +144,19 @@
     "INVALID_ASSET": "请选择与商品类型对应的素材。",
     "INVALID_CREDENTIALS": "管理密码不正确，请重新输入。",
     "VERSION_CONFLICT": "商品已发生变化，请先加载最新配置。"
-  }
+  },
+  "wearableSlots": {
+    "hair": "发型",
+    "top": "上装",
+    "bottom": "下装",
+    "shoes": "鞋"
+  },
+  "baseAvatars": "基础形象",
+  "baseAvatarNames": {
+    "avatar-boy-v2": "男孩",
+    "avatar-girl-v2": "女孩"
+  },
+  "freeBaseAvatar": "免费使用",
+  "wearableHint": "固定穿戴在对应部位，同部位装备新物品时会替换。",
+  "animalWearableHint": "发型和服装仅在人类形象上显示，切回人类后恢复。"
 }

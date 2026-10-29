@@ -17,7 +17,7 @@ describe('饰品编辑', () => {
     fireEvent.change(screen.getByLabelText(content.accessorySize), { target: { value: '30' } });
     fireEvent.click(screen.getByRole('button', { name: content.layerDown }));
     const drawing = screen.getByAltText(purchase.name_snapshot);
-    const avatar = screen.getByAltText(content.defaultAvatar);
+    const avatar = screen.getByRole('img', { name: content.baseAvatarNames['avatar-boy-v2'] });
     expect(Number(drawing.style.zIndex)).toBeLessThan(Number(avatar.style.zIndex));
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await waitFor(() => expect(request).toHaveBeenCalledWith(`/equipment/accessories/${purchase.id}/layout`, {

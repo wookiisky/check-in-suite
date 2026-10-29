@@ -23,6 +23,25 @@ const assets: Asset[] = [
 afterEach(() => vi.unstubAllGlobals());
 
 describe('商品配置', () => {
+  it('发型按独立类别选素材但仍提交饰品交易类型，免费人物不售卖', async () => {
+    const request = vi.fn().mockResolvedValue(product);
+    const wearableAssets: Asset[] = [...assets,
+      { key: 'avatar-boy-v2', name: '免费男孩', kind: 'avatar', free: true, url: '/api/v1/assets/avatar-boy-v2' },
+      { key: 'hair-curly-v1', name: '卷发', kind: 'accessory', wearable_slot: 'hair', url: '/api/v1/assets/hair-curly-v1' },
+      { key: 'wearable-top-explorer-v1', name: '探险上装', kind: 'accessory', wearable_slot: 'top', url: '/api/v1/assets/wearable-top-explorer-v1' },
+    ];
+    render(<ProductEditor client={{ request }} session={session} product={null} assets={wearableAssets} onClose={vi.fn()} onSaved={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'avatar' } });
+    expect(screen.queryByRole('option', { name: '免费男孩' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'hair' } });
+    expect(screen.getByLabelText(content.asset)).toHaveValue('hair-curly-v1');
+    expect(screen.queryByRole('option', { name: '探险上装' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: '星星' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新发型' } });
+    fireEvent.click(screen.getByRole('button', { name: content.save }));
+    await waitFor(() => expect(request).toHaveBeenCalled());
+    expect(request.mock.calls[0]?.[1].body).toMatchObject({ type: 'accessory', asset_key: 'hair-curly-v1' });
+  });
   it('真实201新增响应截断后跨弹窗恢复同一商品命令', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

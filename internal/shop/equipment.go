@@ -5,20 +5,21 @@ import (
 	"database/sql"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/core"
 )
 
 // ReadEquipment uses the caller's snapshot so camp equipment and wallet describe the same writes.
 func ReadEquipment(ctx context.Context, tx *sql.Tx) (Equipment, error) {
 	result := Equipment{Accessories: []Purchase{}, Effects: []Purchase{}, AccessoryLayouts: map[string]AccessoryLayout{}}
-	var titleID, avatarID, backgroundID sql.NullString
-	if err := tx.QueryRowContext(ctx, "SELECT title_purchase_id,avatar_purchase_id,background_purchase_id FROM accounts WHERE id=1").Scan(&titleID, &avatarID, &backgroundID); err != nil {
+	var titleID, avatarID, backgroundID, hairID, topID, bottomID, shoesID sql.NullString
+	if err := tx.QueryRowContext(ctx, "SELECT title_purchase_id,avatar_purchase_id,background_purchase_id,base_avatar_key,hair_purchase_id,top_purchase_id,bottom_purchase_id,shoes_purchase_id FROM accounts WHERE id=1").Scan(&titleID, &avatarID, &backgroundID, &result.BaseAvatarKey, &hairID, &topID, &bottomID, &shoesID); err != nil {
 		return result, err
 	}
 	for _, slot := range []struct {
 		id     sql.NullString // Persisted single-slot purchase identity.
 		target **Purchase     // Output slot receiving the immutable purchase snapshot.
-	}{{titleID, &result.Title}, {avatarID, &result.Avatar}, {backgroundID, &result.Background}} {
+	}{{titleID, &result.Title}, {avatarID, &result.Avatar}, {backgroundID, &result.Background}, {hairID, &result.Wearables.Hair}, {topID, &result.Wearables.Top}, {bottomID, &result.Wearables.Bottom}, {shoesID, &result.Wearables.Shoes}} {
 		if slot.id.Valid {
 			item, err := readPurchase(ctx, tx, slot.id.String)
 			if err != nil {
@@ -97,6 +98,14 @@ func (s *Service) SetSlot(ctx context.Context, p account.Principal, slot string,
 		column = "avatar_purchase_id"
 	case TypeBackground:
 		column = "background_purchase_id"
+	case string(assets.SlotHair):
+		column = "hair_purchase_id"
+	case string(assets.SlotTop):
+		column = "top_purchase_id"
+	case string(assets.SlotBottom):
+		column = "bottom_purchase_id"
+	case string(assets.SlotShoes):
+		column = "shoes_purchase_id"
 	default:
 		return Equipment{}, core.Invalid("slot", "INVALID_VALUE")
 	}
@@ -114,7 +123,11 @@ func (s *Service) SetSlot(ctx context.Context, p account.Principal, slot string,
 		if err != nil {
 			return Equipment{}, err
 		}
-		if equipmentType(item) != slot || item.Status != StatusOwned {
+		role := equipmentType(item)
+		if item.WearableSlot != "" {
+			role = string(item.WearableSlot)
+		}
+		if role != slot || item.Status != StatusOwned {
 			return Equipment{}, core.Fail(422, "INVALID_EQUIPMENT")
 		}
 	}
@@ -159,7 +172,7 @@ func (s *Service) setDecoration(ctx context.Context, p account.Principal, purcha
 	if err != nil {
 		return result, err
 	}
-	if equipmentType(item) != kind || item.Status != StatusOwned {
+	if equipmentType(item) != kind || item.Status != StatusOwned || item.WearableSlot != "" {
 		return result, core.Fail(422, "INVALID_EQUIPMENT")
 	}
 	if !equipped {

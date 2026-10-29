@@ -43,6 +43,9 @@ func scanProduct(row rowScanner) (Product, error) {
 	if stock.Valid {
 		p.Stock = &stock.Int64
 	}
+	if artwork, ok := assets.Get(p.AssetKey); ok {
+		p.WearableSlot, p.BackAssetKey = artwork.WearableSlot, artwork.BackAssetKey
+	}
 	p.Deleted = deleted.Valid
 	if item, ok := island.ForAsset(p.AssetKey); ok {
 		p.IslandItemKey = item.Key
@@ -77,7 +80,7 @@ func (s *Service) validateProduct(input ProductInput) error {
 	if err := core.Text("description", input.Description, 0, s.Config.Limits.TextMax); err != nil {
 		return err
 	}
-	if !assets.Valid(input.AssetKey, assets.Kind(input.Type)) {
+	if artwork, ok := assets.Get(input.AssetKey); !ok || artwork.Kind != assets.Kind(input.Type) || artwork.Free {
 		return core.Invalid("asset_key", "INVALID_ASSET")
 	}
 	if input.CoinPrice < 0 || input.CoinPrice > s.Config.Limits.PriceMax {

@@ -20,25 +20,49 @@ import (
 type Kind string
 
 const (
-	KindIsland     Kind = "island"     // Controlled island construction thumbnail.
-	KindIcon       Kind = "icon"       // Task icon rendered in current and historical records.
-	KindAvatar     Kind = "avatar"     // Full character illustration.
-	KindAccessory  Kind = "accessory"  // Decoration rendered around the current character.
-	KindBackground Kind = "background" // Fixed artwork behind the character canvas.
-	KindEffect     Kind = "effect"     // Fixed animated overlay with an immutable still alternative.
-	KindTitle      Kind = "title"      // Emblem shown with the equipped title.
-	KindReward     Kind = "reward"     // Illustration for a household reward.
-	KindBadge      Kind = "badge"      // Permanent achievement emblem displayed below the character.
-	DefaultAvatar       = "fox-v1"     // Stable default character identity retained across releases.
+	KindCharacterPart Kind = "character-part" // Internal layer installed for composition, never sold.
+	KindIsland        Kind = "island"         // Controlled island construction thumbnail.
+	KindIcon          Kind = "icon"           // Task icon rendered in current and historical records.
+	KindAvatar        Kind = "avatar"         // Full character illustration.
+	KindAccessory     Kind = "accessory"      // Decoration rendered around the current character.
+	KindBackground    Kind = "background"     // Fixed artwork behind the character canvas.
+	KindEffect        Kind = "effect"         // Fixed animated overlay with an immutable still alternative.
+	KindTitle         Kind = "title"          // Emblem shown with the equipped title.
+	KindReward        Kind = "reward"         // Illustration for a household reward.
+	KindBadge         Kind = "badge"          // Permanent achievement emblem displayed below the character.
+	DefaultAvatar          = "avatar-boy-v2"  // Free default human character selected for a new account.
 )
+
+// WearableSlot identifies a fixed body attachment shared by human characters.
+type WearableSlot string
+
+const (
+	SlotHair   WearableSlot = "hair"   // One hairstyle including optional rear hair.
+	SlotTop    WearableSlot = "top"    // Upper garment.
+	SlotBottom WearableSlot = "bottom" // Lower garment.
+	SlotShoes  WearableSlot = "shoes"  // Footwear.
+)
+
+// Valid reports whether a fixed attachment exists in the character model.
+func (slot WearableSlot) Valid() bool {
+	switch slot {
+	case SlotHair, SlotTop, SlotBottom, SlotShoes:
+		return true
+	default:
+		return false
+	}
+}
 
 // Asset is public metadata for immutable controlled artwork.
 type Asset struct {
-	Key    string `json:"key"`              // Versioned identity also used by historical snapshots.
-	Name   string `json:"name"`             // Display name loaded from the catalog resource.
-	Kind   Kind   `json:"kind"`             // Allowed business use.
-	URL    string `json:"url"`              // Same-origin authenticated content endpoint.
-	Format string `json:"format,omitempty"` // SVG by default; explicit PNG and WebP retain transparency.
+	Free         bool         `json:"free,omitempty"`           // Base characters can be selected without a purchase.
+	WearableSlot WearableSlot `json:"wearable_slot,omitempty"`  // Fixed attachment; empty means ordinary artwork.
+	BackAssetKey string       `json:"back_asset_key,omitempty"` // Internal rear layer belonging to this same wearable.
+	Key          string       `json:"key"`                      // Versioned identity also used by historical snapshots.
+	Name         string       `json:"name"`                     // Display name loaded from the catalog resource.
+	Kind         Kind         `json:"kind"`                     // Allowed business use.
+	URL          string       `json:"url"`                      // Same-origin authenticated content endpoint.
+	Format       string       `json:"format,omitempty"`         // SVG by default; explicit PNG and WebP retain transparency.
 }
 
 // extension keeps historical SVG metadata and filenames compatible.
@@ -116,7 +140,7 @@ func (service *Service) Install() error {
 		return err
 	}
 	for _, item := range items {
-		if !keyPattern.MatchString(item.Key) || item.ContentType() == "" {
+		if !keyPattern.MatchString(item.Key) || item.ContentType() == "" || (item.WearableSlot != "" && (!item.WearableSlot.Valid() || item.Kind != KindAccessory)) || (item.Free && item.Kind != KindAvatar) {
 			return fmt.Errorf("invalid controlled asset key %q", item.Key)
 		}
 		drawing, err := builtin.ReadFile("builtin/" + item.Key + "." + item.extension())
@@ -233,7 +257,7 @@ func (service *Service) List() ([]Asset, error) {
 		if !entry.IsDir() || !keyPattern.MatchString(entry.Name()) {
 			continue
 		}
-		if _, selectable := Get(entry.Name()); !selectable {
+		if choice, selectable := Get(entry.Name()); !selectable || choice.Kind == KindCharacterPart {
 			continue
 		}
 		item, err := service.Lookup(entry.Name())

@@ -22,6 +22,9 @@ func seedDefinitions(ctx context.Context, tx *sql.Tx, items []assets.Asset, cont
 		}
 	}
 	for _, item := range items {
+		if item.Free || item.Kind == assets.KindCharacterPart {
+			continue
+		}
 		switch item.Kind {
 		case assets.KindIcon:
 			id := "demo-task-" + item.Key

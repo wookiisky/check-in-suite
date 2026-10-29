@@ -28,7 +28,7 @@ async function renderWalking(avatar?: string) {
 describe('小岛动画时钟', () => {
   it.each(['pause', 'hidden'] as const)('图片角色在%s时冻结姿势，恢复后继续取样且不补算时间', async (mode) => {
     const clock = new IslandAnimationTestClock();
-    await renderWalking('avatar-boy-short-v1');
+    await renderWalking();
     const pose = () => document.querySelector<SVGGElement>('.island-character-art')!.style.getPropertyValue('--island-motion-delay');
     clock.frame(1000);
     const initial = pose();

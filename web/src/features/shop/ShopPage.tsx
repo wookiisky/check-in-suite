@@ -6,6 +6,9 @@ import { Price } from './Price';
 import { PurchaseDialog } from './PurchaseDialog';
 import { RedeemDialog } from './RedeemDialog';
 import { Wardrobe } from './Wardrobe';
+import { BaseAvatarPicker } from './BaseAvatarPicker';
+import { ShopItemArtwork } from './ShopItemArtwork';
+import { categoryLabel, categoryPurchaseType, itemCategory, shopCategories, wardrobeCategories } from './shop-categories';
 import { pendingPurchases } from './pending';
 import { assetURL, canBuy, portraitType, purchaseTime, shopError } from './helpers';
 import { dispatchFeedback } from '../../feedback/feedback-events';
@@ -37,7 +40,7 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
   const pending = pendingPurchases.get(client);
   const browsing = tab === 'browse' || tab === 'construction';
   const query = new URLSearchParams(
-    tab === 'rewards' ? { type: 'reward', status } : { status: 'owned', ...(type ? { type } : {}) },
+    tab === 'rewards' ? { type: 'reward', status } : { status: 'owned', ...(type ? { type: categoryPurchaseType(type) } : {}) },
   ).toString();
 
   useEffect(() => {
@@ -120,7 +123,11 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
     setError(null);
     setMessage('');
     try {
-      if (kind === 'accessory' || kind === 'effect')
+      if (item.wearable_slot)
+        await client.request(`/equipment/${item.wearable_slot}`, {
+          method: 'PUT', body: { purchase_id: equip ? item.id : null },
+        });
+      else if (kind === 'accessory' || kind === 'effect')
         await client.request(`/equipment/${kind === 'effect' ? 'effects' : 'accessories'}/${item.id}`, {
           method: equip ? 'PUT' : 'DELETE',
         });
@@ -139,8 +146,26 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
       setWriting(false);
     }
   }
-  const visibleProducts = products.filter((item) => (tab !== 'construction' || item.island_item_key) && (!type || item.type === type));
-  const wardrobeItems = purchases.filter((item) => portraitType(item) !== null && (!type || portraitType(item) === type));
+  // 基础形象直接选择，不产生订单；保存后的刷新沿用装备反馈规则。
+  async function selectBaseAvatar(key: string) {
+    setWriting(true);
+    setHighlightCharacter(false);
+    setError(null);
+    setMessage('');
+    try {
+      await client.request('/equipment/base-avatar', { method: 'PUT', body: { asset_key: key } });
+      setMessage(content.equipmentSaved);
+      highlightAfterRefresh.current = true;
+      dispatchFeedback('equip');
+      refresh((value) => value + 1);
+    } catch (reason) {
+      setError(reason);
+    } finally {
+      setWriting(false);
+    }
+  }
+  const visibleProducts = products.filter((item) => (tab !== 'construction' || item.island_item_key) && (!type || itemCategory(item) === type));
+  const wardrobeItems = purchases.filter((item) => portraitType(item) !== null && (!type || itemCategory(item, true) === type));
   const islandItems = purchases.filter((item) => item.island_item_key);
   const confirmationWallet = pending?.wallet ?? snapshot?.wallet;
   return (
@@ -213,12 +238,9 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
           {content.typeFilter}
           <select value={type} onChange={(event) => setType(event.target.value)}>
             <option value="">{content.allTypes}</option>
-            {(tab === 'browse'
-              ? (['title', 'avatar', 'accessory', 'background', 'effect', 'reward', 'island'] as const)
-              : (['title', 'avatar', 'accessory', 'background', 'effect'] as const)
-            ).map((item) => (
+            {(tab === 'browse' ? shopCategories : wardrobeCategories).map((item) => (
               <option value={item} key={item}>
-                {content.types[item]}
+                {categoryLabel(item)}
               </option>
             ))}
           </select>
@@ -231,7 +253,7 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
           <div className="shop-grid">
             {visibleProducts.map((item) => (
               <article className="shop-card" key={item.id}>
-                <img className="shop-item-art shop-product-art" src={assetURL(item.asset_key, item.type === 'effect')} alt="" />
+                <ShopItemArtwork className="shop-item-art shop-product-art" item={item} />
                 <h3>{item.name}</h3>
                 <div className="shop-product-stats">
                   <span>
@@ -274,6 +296,7 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
       {tab === 'wardrobe' && snapshot && (
         <div className="shop-wardrobe-layout">
           <section>
+            <BaseAvatarPicker equipment={snapshot.equipment} busy={writing || loading} onSelect={(key) => void selectBaseAvatar(key)} />
             <Wardrobe
               items={wardrobeItems}
               hasMore={Boolean(cursor)}

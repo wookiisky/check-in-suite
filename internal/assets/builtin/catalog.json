@@ -540,69 +540,166 @@
     "url": "/api/v1/assets/help-v1"
   },
   {
-    "key": "avatar-boy-short-v1",
-    "name": "男孩·短发",
+    "key": "avatar-boy-v2",
+    "name": "男孩",
     "kind": "avatar",
-    "url": "/api/v1/assets/avatar-boy-short-v1"
+    "url": "/api/v1/assets/avatar-boy-v2",
+    "free": true
   },
   {
-    "key": "avatar-boy-curly-v1",
-    "name": "男孩·卷发",
+    "key": "avatar-girl-v2",
+    "name": "女孩",
     "kind": "avatar",
-    "url": "/api/v1/assets/avatar-boy-curly-v1"
+    "url": "/api/v1/assets/avatar-girl-v2",
+    "free": true
   },
   {
-    "key": "avatar-boy-sidepart-v1",
-    "name": "男孩·侧分发",
-    "kind": "avatar",
-    "url": "/api/v1/assets/avatar-boy-sidepart-v1"
+    "key": "hair-short-v1",
+    "name": "短发",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-short-v1",
+    "wearable_slot": "hair"
   },
   {
-    "key": "avatar-boy-mushroom-v1",
-    "name": "男孩·蘑菇头",
-    "kind": "avatar",
-    "url": "/api/v1/assets/avatar-boy-mushroom-v1"
+    "key": "hair-curly-v1",
+    "name": "卷发",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-curly-v1",
+    "wearable_slot": "hair"
   },
   {
-    "key": "avatar-boy-afro-v1",
-    "name": "男孩·爆炸头",
-    "kind": "avatar",
-    "url": "/api/v1/assets/avatar-boy-afro-v1"
+    "key": "hair-sidepart-v1",
+    "name": "侧分发",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-sidepart-v1",
+    "wearable_slot": "hair"
   },
   {
-    "key": "avatar-boy-bangs-v1",
-    "name": "男孩·刘海",
-    "kind": "avatar",
-    "url": "/api/v1/assets/avatar-boy-bangs-v1"
+    "key": "hair-mushroom-v1",
+    "name": "蘑菇头",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-mushroom-v1",
+    "wearable_slot": "hair"
   },
   {
-    "key": "avatar-boy-tousled-v1",
-    "name": "男孩·碎发",
-    "kind": "avatar",
-    "url": "/api/v1/assets/avatar-boy-tousled-v1"
+    "key": "hair-afro-v1",
+    "name": "蓬松卷发",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-afro-v1",
+    "wearable_slot": "hair"
   },
   {
-    "key": "avatar-boy-american-spiky-v1",
-    "name": "男孩·美式前刺",
-    "kind": "avatar",
-    "url": "/api/v1/assets/avatar-boy-american-spiky-v1"
+    "key": "hair-bangs-v1",
+    "name": "斜刘海",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-bangs-v1",
+    "wearable_slot": "hair"
   },
   {
-    "key": "avatar-girl-long-v1",
-    "name": "女孩·长发",
-    "kind": "avatar",
-    "url": "/api/v1/assets/avatar-girl-long-v1"
+    "key": "hair-tousled-v1",
+    "name": "碎发",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-tousled-v1",
+    "wearable_slot": "hair"
   },
   {
-    "key": "avatar-girl-braids-v1",
-    "name": "女孩·双辫",
-    "kind": "avatar",
-    "url": "/api/v1/assets/avatar-girl-braids-v1"
+    "key": "hair-american-spiky-v1",
+    "name": "美式前刺",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-american-spiky-v1",
+    "wearable_slot": "hair"
   },
   {
-    "key": "avatar-girl-short-v1",
-    "name": "女孩·短发",
-    "kind": "avatar",
-    "url": "/api/v1/assets/avatar-girl-short-v1"
+    "key": "hair-long-back-v1",
+    "name": "长发后层",
+    "kind": "character-part",
+    "url": "/api/v1/assets/hair-long-back-v1"
+  },
+  {
+    "key": "hair-long-v1",
+    "name": "长发",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-long-v1",
+    "wearable_slot": "hair",
+    "back_asset_key": "hair-long-back-v1"
+  },
+  {
+    "key": "hair-braids-back-v1",
+    "name": "双辫后层",
+    "kind": "character-part",
+    "url": "/api/v1/assets/hair-braids-back-v1"
+  },
+  {
+    "key": "hair-braids-v1",
+    "name": "双辫",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-braids-v1",
+    "wearable_slot": "hair",
+    "back_asset_key": "hair-braids-back-v1"
+  },
+  {
+    "key": "hair-bob-back-v1",
+    "name": "波波头后层",
+    "kind": "character-part",
+    "url": "/api/v1/assets/hair-bob-back-v1"
+  },
+  {
+    "key": "hair-bob-v1",
+    "name": "波波头",
+    "kind": "accessory",
+    "url": "/api/v1/assets/hair-bob-v1",
+    "wearable_slot": "hair",
+    "back_asset_key": "hair-bob-back-v1"
+  },
+  {
+    "key": "default-top-v1",
+    "name": "日常短袖",
+    "kind": "character-part",
+    "url": "/api/v1/assets/default-top-v1"
+  },
+  {
+    "key": "default-bottom-v1",
+    "name": "日常短裤",
+    "kind": "character-part",
+    "url": "/api/v1/assets/default-bottom-v1"
+  },
+  {
+    "key": "default-shoes-v1",
+    "name": "日常便鞋",
+    "kind": "character-part",
+    "url": "/api/v1/assets/default-shoes-v1"
+  },
+  {
+    "key": "wearable-top-explorer-v1",
+    "name": "森林探险衬衫",
+    "kind": "accessory",
+    "url": "/api/v1/assets/wearable-top-explorer-v1",
+    "wearable_slot": "top"
+  },
+  {
+    "key": "wearable-bottom-denim-v1",
+    "name": "湖蓝牛仔长裤",
+    "kind": "accessory",
+    "url": "/api/v1/assets/wearable-bottom-denim-v1",
+    "wearable_slot": "bottom"
+  },
+  {
+    "key": "wearable-shoes-boots-v1",
+    "name": "暖棕探险短靴",
+    "kind": "accessory",
+    "url": "/api/v1/assets/wearable-shoes-boots-v1",
+    "wearable_slot": "shoes"
+  },
+  {
+    "key": "default-boy-hair-v1",
+    "name": "基础贴头短发",
+    "kind": "character-part",
+    "url": "/api/v1/assets/default-boy-hair-v1"
+  },
+  {
+    "key": "default-girl-hair-v1",
+    "name": "基础耳短发",
+    "kind": "character-part",
+    "url": "/api/v1/assets/default-girl-hair-v1"
   }
 ]

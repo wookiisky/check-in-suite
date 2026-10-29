@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none" stroke="#715945" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<g id="wearable-top">
+    <path d="m147 133-19 2q-10 2-17 18l-5 13 15 7 8-16-3 49q34 10 68 0l-3-49 8 16 15-7-5-13q-7-16-17-18l-19-2Z" fill="#8ba47b"/>
+    <path d="m147 133 13 13 13-13 3 18-16 42-16-42Z" fill="#f9e8bc"/>
+    <path d="m147 133-8 12 13 10 8-9m13-13 8 12-13 10-8-9" fill="#aac097"/>
+    <path d="M160 147v61" stroke="#657d5b" stroke-width="2"/>
+    <path d="M134 164h17v15q-8 5-17 0Zm35 0h17v15q-8 5-17 0Z" fill="#a3b78e" stroke-width="1.8"/>
+    <path d="m134 167 8 3 9-3m18 0 8 3 9-3" stroke="#6e865e" stroke-width="1.2"/>
+    <g fill="#f2d68e" stroke-width="1.2"><circle cx="160" cy="160" r="2"/><circle cx="160" cy="177" r="2"/><circle cx="160" cy="194" r="2"/></g>
+    <path d="m110 160 12 5m76 0 12-5m-78 39 20 3m16 0 20-3" stroke="#c7d1ac" stroke-width="2"/>
+  </g>
+</svg>

@@ -79,6 +79,9 @@ func TestSeedPopulatesUsableHistory(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, item := range items {
+		if item.Free {
+			continue
+		}
 		var count int
 		if err := db.QueryRow(`SELECT (SELECT count(*) FROM tasks WHERE icon_key=?)+(SELECT count(*) FROM achievements WHERE asset_key=?)+(SELECT count(*) FROM products WHERE asset_key=?)`, item.Key, item.Key, item.Key).Scan(&count); err != nil {
 			t.Fatal(err)
@@ -98,6 +101,13 @@ func TestSeedPopulatesUsableHistory(t *testing.T) {
 	}
 	if countRows(t, db, `SELECT count(*) FROM purchases WHERE status='pending'`) == 0 || countRows(t, db, `SELECT count(*) FROM purchases WHERE status='redeemed'`) == 0 {
 		t.Fatal("reward lifecycle absent")
+	}
+	equipment, err := shop.New(db, cfg, service).Equipment(ctx, principal)
+	if err != nil || equipment.BaseAvatarKey != assets.DefaultAvatar || equipment.Avatar != nil || equipment.Wearables.Hair == nil || equipment.Wearables.Top == nil || equipment.Wearables.Bottom == nil || equipment.Wearables.Shoes == nil {
+		t.Fatalf("demo missing composed human outfit: %+v %v", equipment, err)
+	}
+	if countRows(t, db, `SELECT count(*) FROM products WHERE asset_key IN ('avatar-boy-v2','avatar-girl-v2','default-top-v1','default-bottom-v1','default-shoes-v1')`) != 0 {
+		t.Fatal("free or internal assets became products")
 	}
 	state, err := island.New(db, time.Now).Read(ctx, principal)
 	if err != nil {

@@ -11,7 +11,7 @@ type Purchase = components['schemas']['Purchase'];
 // 测试准备与持久结果校验使用浏览器真实会话，不跳过服务端权限。
 async function api(page: Page, path: string, method = 'GET', data?: unknown) {
   const session = await (await page.request.get('/api/v1/session')).json() as components['schemas']['SessionResponse'];
-  const response = await page.request.fetch(`/api/v1${path}`, { method, data, headers: { Origin: 'http://127.0.0.1:15173', 'X-CSRF-Token': session.csrf_token, 'Idempotency-Key': crypto.randomUUID() } });
+  const response = await page.request.fetch(`/api/v1${path}`, { method, data, headers: { Origin: 'http://127.0.0.1:15173', 'Sec-Fetch-Site': 'same-origin', 'X-CSRF-Token': session.csrf_token, 'Idempotency-Key': crypto.randomUUID() } });
   expect(response.ok(), `${method} ${path}: ${await response.text()}`).toBeTruthy();
   return response.status() === 204 ? null : response.json();
 }

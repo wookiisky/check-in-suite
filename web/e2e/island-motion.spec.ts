@@ -43,7 +43,7 @@ test('暂停恢复不跨越路径，进出房屋仍在同一场景切换', async
   await expect(actor).toHaveAttribute('data-actor-action', 'run', { timeout: 15000 });
 });
 
-for (const avatar of ['fox-v1', 'bunny-v1', 'avatar-boy-short-v1']) {
+for (const avatar of ['fox-v1', 'bunny-v1', 'avatar-boy-v2']) {
   test(`${avatar} 点击物件到达后持续运动、玩球和阅读`, async ({ page }, testInfo) => {
     test.setTimeout(60000);
     await openMotionIsland(page, avatar);
@@ -92,7 +92,7 @@ for (const avatar of ['fox-v1', 'bunny-v1', 'avatar-boy-short-v1']) {
 
 test('图片角色减少动效时保留阅读与玩球的静态反馈', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await openMotionIsland(page, 'avatar-girl-long-v1');
+  await openMotionIsland(page, 'avatar-girl-v2');
   const actor = page.locator('[data-actor-zone]');
   const activities = page.getByRole('region', { name: island.activitiesTitle });
   for (const activity of [

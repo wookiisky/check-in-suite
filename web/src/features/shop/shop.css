@@ -347,3 +347,11 @@
     padding: 16px;
   }
 }
+
+.shop-base-avatars { margin-bottom: 1.5rem; }
+.shop-base-avatar-options { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.shop-base-avatar { display: grid; justify-items: center; gap: 0.25rem; min-width: 7rem; padding: 0.5rem 1rem; }
+.shop-base-avatar[aria-pressed="true"] { border-color: var(--forest); background: var(--cream); }
+.shop-base-avatar-art { display: block; width: 5rem; height: 5rem; }
+.shop-avatar-art[data-base-avatar] { width: 90%; height: 90%; }
+.shop-product-row > svg { width: 100px; height: 100px; }

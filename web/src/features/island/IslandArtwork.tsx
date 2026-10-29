@@ -4,6 +4,8 @@ import { assetURL } from '../shop/helpers';
 import type { IslandDefinition } from './island-types';
 import { IslandObjectArtwork, supportsObjectArtwork } from './IslandObjectArtwork';
 import './island-art.css';
+import type { Equipment } from '../shop/types';
+import { HumanCharacterArtwork, isHumanAvatar } from '../character/HumanCharacterArtwork';
 
 // 美术只描绘模型，位置、遮挡顺序和交互由场景统一管理。
 interface ItemArtworkProps {
@@ -20,6 +22,7 @@ interface ItemArtworkProps {
 // 角色各肢体独立绘制，使动作不依赖整幅画像的位移。
 interface CharacterArtworkProps {
   avatar: string; // 与画像同步的受控素材标识；狐狸和兔子继续使用肢体动画。
+  wearables?: Equipment['wearables'] | undefined; // 固定穿戴和人物整体使用同一动作变换。
   moving: boolean; // 地面移动时启用走路动作。
   activity: 'idle' | 'walk' | 'rest' | 'read' | 'run' | 'ball'; // 动作表现，不决定业务行为。
   facing?: number; // 负数朝左，其他值朝右。
@@ -155,16 +158,23 @@ export function ItemArtwork({ model, indoor = false, selected = false, rotation 
 }
 
 // 动画只改变局部姿势，角色世界位置与朝向由外层控制。
-export function CharacterArtwork({ avatar, moving, activity, facing = 1, staticMotion = false, motionElapsed = 0 }: CharacterArtworkProps) {
+export function CharacterArtwork({ avatar, wearables, moving, activity, facing = 1, staticMotion = false, motionElapsed = 0 }: CharacterArtworkProps) {
   const bunny = avatar === 'bunny' || avatar === 'bunny-v1';
+  const human = isHumanAvatar(avatar);
   const motionStyle = { '--island-motion-delay': `${-motionElapsed}s` } as CSSProperties;
-  const book = activity === 'read' && <g className="island-character-book"><path d="m-16-21 16 5 15-6 1 17L0 1-15-4Z" fill="#fff0c4" /><path d="M0-16V1m-11-17 6 2m-6 3 6 2m11-7 5-2m-5 7 5-2" stroke="#c7a77a" strokeWidth="1" /></g>;
+  const book = activity === 'read' && <g className="island-character-book" transform={human ? 'translate(0 -24)' : undefined}><path d="m-16-21 16 5 15-6 1 17L0 1-15-4Z" fill="#fff0c4" /><path d="M0-16V1m-11-17 6 2m-6 3 6 2m11-7 5-2m-5 7 5-2" stroke="#c7a77a" strokeWidth="1" /></g>;
   const ball = activity === 'ball' && <g className="island-character-ball"><circle cx="25" cy="-4" r="9" fill="#f0c17e" /><path d="M16-4h18m-9-9q-7 9 0 18m0-18q7 9 0 18" fill="none" strokeWidth="1" /></g>;
   // 图片角色共用活动时钟与道具；动作放在镜像内层，避免覆盖朝向和地面位置。
   if (!bunny && avatar !== 'fox' && avatar !== 'fox-v1') {
     return <g className="island-character-art" data-moving={moving} data-activity={activity} data-static={staticMotion} style={motionStyle}>
+      {human && <ellipse cy="3" rx="15" ry="5" fill="#496943" opacity=".2" />}
       <g transform={`scale(${facing < 0 ? -1 : 1} 1)`} stroke="#7b6550" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">
-        <g className="island-character-image-body"><image href={assetURL(avatar)} x={-50} y={-93.75} width={100} height={100} />{book}</g>
+        <g className="island-character-image-body">
+          {human
+            ? <HumanCharacterArtwork baseAvatarKey={avatar} wearables={wearables} x={-50} y={-93.75} width={100} height={100} />
+            : <image href={assetURL(avatar)} x={-50} y={-93.75} width={100} height={100} />}
+          {book}
+        </g>
         {ball}
       </g>
     </g>;

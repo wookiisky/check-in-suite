@@ -523,6 +523,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/equipment/base-avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 选择免费的基础人物，保留发型和服装 */
+        put: operations["setBaseAvatar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/equipment/{slot}": {
         parameters: {
             query?: never;
@@ -531,7 +548,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** 设置称号、形象或背景槽位 */
+        /** 设置称号、形象、背景或固定穿戴部位 */
         put: operations["setEquipmentSlot"];
         post?: never;
         delete?: never;
@@ -1130,6 +1147,9 @@ export interface components {
             placements: components["schemas"]["IslandPlacement"][];
         };
         Product: {
+            wearable_slot?: components["schemas"]["WearableSlot"];
+            /** @description 同一穿戴物的后层素材，穿戴时随前层整体切换。 */
+            back_asset_key?: string;
             /**
              * @description 当前物品定义授予的画像用途，独立于成交商品类型。
              * @enum {string}
@@ -1184,6 +1204,9 @@ export interface components {
             items: components["schemas"]["Product"][];
         };
         Purchase: {
+            wearable_slot?: components["schemas"]["WearableSlot"];
+            /** @description 同一穿戴物的后层素材，穿戴时随前层整体切换。 */
+            back_asset_key?: string;
             /**
              * @description 当前物品定义授予的画像用途，独立于成交商品类型。
              * @enum {string}
@@ -1223,6 +1246,9 @@ export interface components {
             next_cursor: string | null;
         };
         Equipment: {
+            /** @description 当前免费基础形象；装备动物时仍保存此选择。 */
+            base_avatar_key: string;
+            wearables: components["schemas"]["Wearables"];
             title: components["schemas"]["Purchase"] | null;
             avatar: components["schemas"]["Purchase"] | null;
             background: components["schemas"]["Purchase"] | null;
@@ -1231,6 +1257,21 @@ export interface components {
             accessory_layouts: {
                 [key: string]: components["schemas"]["AccessoryLayout"];
             };
+        };
+        /**
+         * @description 固定穿戴部位，不接受位置、大小和层级编辑。
+         * @enum {string}
+         */
+        WearableSlot: "hair" | "top" | "bottom" | "shoes";
+        Wearables: {
+            hair: components["schemas"]["Purchase"] | null;
+            top: components["schemas"]["Purchase"] | null;
+            bottom: components["schemas"]["Purchase"] | null;
+            shoes: components["schemas"]["Purchase"] | null;
+        };
+        BaseAvatarUpdate: {
+            /** @description 免费基础人物的受控素材 key。 */
+            asset_key: string;
         };
         /** @description 以固定正方形画布为基准，x/y 为中心，size 为等比图片 contain 包围盒边长；整个包围盒必须位于画布内。layer 小于零在角色后，大于零在角色前。 */
         AccessoryLayout: {
@@ -1269,6 +1310,11 @@ export interface components {
             achievements: components["schemas"]["Achievement"][];
         };
         Asset: {
+            /** @description 无需购买即可选择的基础人物。 */
+            free?: boolean;
+            wearable_slot?: components["schemas"]["WearableSlot"];
+            /** @description 同一发型的后层素材。 */
+            back_asset_key?: string;
             key: string;
             name: string;
             /** @enum {string} */
@@ -2442,6 +2488,33 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    setBaseAvatar: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BaseAvatarUpdate"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Equipment"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     setEquipmentSlot: {
         parameters: {
             query?: never;
@@ -2449,7 +2522,7 @@ export interface operations {
                 "X-CSRF-Token": components["parameters"]["CSRF"];
             };
             path: {
-                slot: "title" | "avatar" | "background";
+                slot: "title" | "avatar" | "background" | "hair" | "top" | "bottom" | "shoes";
             };
             cookie?: never;
         };

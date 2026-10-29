@@ -1,0 +1,11 @@
+{
+  "baseAvatars": [
+    { "key": "avatar-boy-v2", "defaultHair": "default-boy-hair-v1", "defaultHairBack": null },
+    { "key": "avatar-girl-v2", "defaultHair": "default-girl-hair-v1", "defaultHairBack": null }
+  ],
+  "defaults": {
+    "top": "default-top-v1",
+    "bottom": "default-bottom-v1",
+    "shoes": "default-shoes-v1"
+  }
+}

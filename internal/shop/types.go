@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/config"
 	"github.com/wookiisky/check-in-suite/internal/wallet"
 )
@@ -42,23 +43,25 @@ func New(db *sql.DB, cfg config.Config, accounts *account.Service) *Service {
 
 // Product describes the current offer; its fields never rewrite existing purchase snapshots.
 type Product struct {
-	PortraitType     string `json:"portrait_type,omitempty"`      // Current optional portrait equipment role.
-	PortraitAssetKey string `json:"portrait_asset_key,omitempty"` // Current optional portrait artwork, independent from sale thumbnail.
-	IslandItemKey    string `json:"island_item_key,omitempty"`    // Optional current island capability identity.
-	Repeatable       bool   `json:"repeatable"`                   // Additional purchases create independent instances.
-	OwnedCount       int64  `json:"owned_count"`                  // Total instances of this controlled item.
-	ID               string `json:"id"`                           // Stable merchandise identity.
-	Type             string `json:"type"`                         // One of the declared product behaviors.
-	Name             string `json:"name"`                         // Current display name.
-	AssetKey         string `json:"asset_key"`                    // Controlled immutable artwork identity.
-	Description      string `json:"description"`                  // Plain product description.
-	CoinPrice        int64  `json:"coin_price"`                   // Current nonnegative coin price.
-	DiamondPrice     int64  `json:"diamond_price"`                // Current nonnegative diamond price.
-	Stock            *int64 `json:"stock"`                        // Nil means unlimited; zero means sold out.
-	Enabled          bool   `json:"enabled"`                      // Whether new purchases are offered.
-	Version          int64  `json:"version"`                      // Confirmation version, including finite stock changes.
-	Owned            bool   `json:"owned"`                        // Whether the sole account already owns this permanent product.
-	Deleted          bool   `json:"-"`                            // Internal soft-deletion marker, never a client authorization flag.
+	WearableSlot     assets.WearableSlot `json:"wearable_slot,omitempty"`      // Fixed attachment resolved from controlled artwork.
+	BackAssetKey     string              `json:"back_asset_key,omitempty"`     // Optional rear hair layer.
+	PortraitType     string              `json:"portrait_type,omitempty"`      // Current optional portrait equipment role.
+	PortraitAssetKey string              `json:"portrait_asset_key,omitempty"` // Current optional portrait artwork, independent from sale thumbnail.
+	IslandItemKey    string              `json:"island_item_key,omitempty"`    // Optional current island capability identity.
+	Repeatable       bool                `json:"repeatable"`                   // Additional purchases create independent instances.
+	OwnedCount       int64               `json:"owned_count"`                  // Total instances of this controlled item.
+	ID               string              `json:"id"`                           // Stable merchandise identity.
+	Type             string              `json:"type"`                         // One of the declared product behaviors.
+	Name             string              `json:"name"`                         // Current display name.
+	AssetKey         string              `json:"asset_key"`                    // Controlled immutable artwork identity.
+	Description      string              `json:"description"`                  // Plain product description.
+	CoinPrice        int64               `json:"coin_price"`                   // Current nonnegative coin price.
+	DiamondPrice     int64               `json:"diamond_price"`                // Current nonnegative diamond price.
+	Stock            *int64              `json:"stock"`                        // Nil means unlimited; zero means sold out.
+	Enabled          bool                `json:"enabled"`                      // Whether new purchases are offered.
+	Version          int64               `json:"version"`                      // Confirmation version, including finite stock changes.
+	Owned            bool                `json:"owned"`                        // Whether the sole account already owns this permanent product.
+	Deleted          bool                `json:"-"`                            // Internal soft-deletion marker, never a client authorization flag.
 }
 
 // ProductInput is the complete mutable merchandise configuration.
@@ -86,22 +89,24 @@ type ProductList struct {
 
 // Purchase is a permanent transaction snapshot plus the independent redemption state.
 type Purchase struct {
-	ItemKeySnapshot     string  `json:"-"`                            // Stable item identity retained independently from versioned sale artwork.
-	PortraitType        string  `json:"portrait_type,omitempty"`      // Current optional portrait equipment role.
-	PortraitAssetKey    string  `json:"portrait_asset_key,omitempty"` // Current optional portrait artwork, independent from sale thumbnail.
-	IslandItemKey       string  `json:"island_item_key,omitempty"`    // Current capability identity resolved independently of sale facts.
-	ID                  string  `json:"id"`                           // Stable order and ownership identity.
-	ProductID           string  `json:"product_id"`                   // Source product, retained after soft deletion.
-	TypeSnapshot        string  `json:"type_snapshot"`                // Purchased behavior cannot change later.
-	NameSnapshot        string  `json:"name_snapshot"`                // Name at purchase time.
-	AssetKeySnapshot    string  `json:"asset_key_snapshot"`           // Persistent versioned artwork.
-	DescriptionSnapshot string  `json:"description_snapshot"`         // Description at purchase time.
-	CoinPrice           int64   `json:"coin_price"`                   // Coins actually paid.
-	DiamondPrice        int64   `json:"diamond_price"`                // Diamonds actually paid.
-	Status              string  `json:"status"`                       // owned, pending or redeemed.
-	RedeemedAt          *string `json:"redeemed_at"`                  // Actual confirmation instant, or null.
-	Version             int64   `json:"version"`                      // Increases only when redemption changes status.
-	CreatedAt           string  `json:"created_at"`                   // Actual UTC purchase instant.
+	WearableSlot        assets.WearableSlot `json:"wearable_slot,omitempty"`      // Fixed attachment from the purchased controlled artwork.
+	BackAssetKey        string              `json:"back_asset_key,omitempty"`     // Optional rear hair layer.
+	ItemKeySnapshot     string              `json:"-"`                            // Stable item identity retained independently from versioned sale artwork.
+	PortraitType        string              `json:"portrait_type,omitempty"`      // Current optional portrait equipment role.
+	PortraitAssetKey    string              `json:"portrait_asset_key,omitempty"` // Current optional portrait artwork, independent from sale thumbnail.
+	IslandItemKey       string              `json:"island_item_key,omitempty"`    // Current capability identity resolved independently of sale facts.
+	ID                  string              `json:"id"`                           // Stable order and ownership identity.
+	ProductID           string              `json:"product_id"`                   // Source product, retained after soft deletion.
+	TypeSnapshot        string              `json:"type_snapshot"`                // Purchased behavior cannot change later.
+	NameSnapshot        string              `json:"name_snapshot"`                // Name at purchase time.
+	AssetKeySnapshot    string              `json:"asset_key_snapshot"`           // Persistent versioned artwork.
+	DescriptionSnapshot string              `json:"description_snapshot"`         // Description at purchase time.
+	CoinPrice           int64               `json:"coin_price"`                   // Coins actually paid.
+	DiamondPrice        int64               `json:"diamond_price"`                // Diamonds actually paid.
+	Status              string              `json:"status"`                       // owned, pending or redeemed.
+	RedeemedAt          *string             `json:"redeemed_at"`                  // Actual confirmation instant, or null.
+	Version             int64               `json:"version"`                      // Increases only when redemption changes status.
+	CreatedAt           string              `json:"created_at"`                   // Actual UTC purchase instant.
 }
 
 // BuyInput binds the final confirmation to the displayed merchandise and balance versions.
@@ -133,12 +138,22 @@ type PurchaseList struct {
 
 // Equipment contains snapshot identities so removing a product never erases an outfit.
 type Equipment struct {
+	BaseAvatarKey    string                     `json:"base_avatar_key"`   // Selected free character, retained while using an animal.
+	Wearables        Wearables                  `json:"wearables"`         // Independent fixed attachments that never use accessory layouts.
 	Title            *Purchase                  `json:"title"`             // Nil leaves the title slot empty.
 	Avatar           *Purchase                  `json:"avatar"`            // Nil selects the built-in default character.
 	Background       *Purchase                  `json:"background"`        // Nil selects the built-in default scene.
 	Accessories      []Purchase                 `json:"accessories"`       // Stable equipment-time order, zero through ten.
 	Effects          []Purchase                 `json:"effects"`           // Fixed overlays in stable equipment-time order.
 	AccessoryLayouts map[string]AccessoryLayout `json:"accessory_layouts"` // Geometry and order for equipped accessories only.
+}
+
+// Wearables contains one independently replaceable purchase per attachment.
+type Wearables struct {
+	Hair   *Purchase `json:"hair"`   // Nil restores the base character's default hairstyle.
+	Top    *Purchase `json:"top"`    // Nil restores the default upper garment.
+	Bottom *Purchase `json:"bottom"` // Nil restores the default lower garment.
+	Shoes  *Purchase `json:"shoes"`  // Nil restores default footwear.
 }
 
 // AccessoryLayout uses a square normalized canvas and a square image-contain box.

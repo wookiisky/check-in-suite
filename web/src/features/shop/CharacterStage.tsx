@@ -6,6 +6,7 @@ import type { AccessoryLayout } from './accessory-layout';
 import { assetURL, portraitAssetKey } from './helpers';
 import { useReducedMotion } from './useReducedMotion';
 import content from './content.json';
+import { HumanCharacterArtwork, isHumanAvatar } from '../character/HumanCharacterArtwork';
 
 // 编辑交互与图片展示共用同一画布，固定背景和特效不参与选择。
 export interface StageEditor {
@@ -40,6 +41,7 @@ export function CharacterStage({ equipment, reduceMotion = false, editor }: {
   const drag = useRef<DragState | null>(null);
   const staticMotion = useReducedMotion(reduceMotion);
   const order = accessoryOrder(equipment);
+  const avatarKey = equipment.avatar ? portraitAssetKey(equipment.avatar) : equipment.base_avatar_key;
   const effectLayer = order.length + 1;
   const handleLayer = effectLayer + 1;
   // 捕获当前手指或鼠标，未完成草稿确认时不开始新手势。
@@ -67,7 +69,9 @@ export function CharacterStage({ equipment, reduceMotion = false, editor }: {
   return <div className="shop-character-stage" ref={stage} data-editing={editor ? 'true' : undefined}>
     {equipment.background && <img className="shop-background-art" src={assetURL(portraitAssetKey(equipment.background))} alt={equipment.background.name_snapshot} draggable={false} />}
     {equipment.accessories.map((item) => <img key={item.id} className="shop-accessory-art" data-purchase-id={item.id} style={layoutStyle(accessoryLayout(equipment, item.id), order.indexOf(item.id) + 1)} src={assetURL(portraitAssetKey(item))} alt={item.name_snapshot} title={item.name_snapshot} draggable={false} />)}
-    <img className="shop-avatar-art" style={{ zIndex: order.indexOf(avatarLayerID) + 1 }} src={assetURL(equipment.avatar ? portraitAssetKey(equipment.avatar) : 'fox-v1')} alt={equipment.avatar?.name_snapshot ?? content.defaultAvatar} draggable={false} />
+    {isHumanAvatar(avatarKey)
+      ? <HumanCharacterArtwork className="shop-avatar-art" style={{ zIndex: order.indexOf(avatarLayerID) + 1 }} baseAvatarKey={avatarKey} wearables={equipment.wearables} label={content.baseAvatarNames[avatarKey as keyof typeof content.baseAvatarNames]} />
+      : <img className="shop-avatar-art" style={{ zIndex: order.indexOf(avatarLayerID) + 1 }} src={assetURL(avatarKey)} alt={equipment.avatar?.name_snapshot ?? content.defaultAvatar} draggable={false} />}
     {equipment.effects.map((item) => <img key={item.id} className="shop-effect-art" style={{ zIndex: effectLayer }} src={assetURL(portraitAssetKey(item), staticMotion)} alt={item.name_snapshot} draggable={false} />)}
     {editor && equipment.accessories.map((item) => <button
       type="button" key={item.id} className="shop-accessory-handle"

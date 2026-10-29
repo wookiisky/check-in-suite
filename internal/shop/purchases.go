@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/idempotency"
 	"github.com/wookiisky/check-in-suite/internal/island"
@@ -26,6 +27,9 @@ func scanPurchase(row rowScanner) (Purchase, error) {
 	var created int64
 	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created, &p.ItemKeySnapshot)
 	p.CreatedAt = core.Timestamp(created)
+	if artwork, ok := assets.Get(p.AssetKeySnapshot); ok {
+		p.WearableSlot, p.BackAssetKey = artwork.WearableSlot, artwork.BackAssetKey
+	}
 	item, ok := island.Find(p.ItemKeySnapshot)
 	if p.ItemKeySnapshot == "" {
 		item, ok = island.ForAsset(p.AssetKeySnapshot)

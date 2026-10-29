@@ -61,6 +61,12 @@ func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.T
 				return err
 			}
 		case assets.KindAccessory:
+			if artwork, ok := assets.Get(key); ok && artwork.WearableSlot.Valid() {
+				if _, err := tx.ExecContext(ctx, "UPDATE accounts SET "+string(artwork.WearableSlot)+"_purchase_id=? WHERE id=1", id); err != nil {
+					return err
+				}
+				break
+			}
 			if _, err := tx.ExecContext(ctx, `INSERT INTO equipped_accessories(purchase_id,equipped_at) VALUES(?,?)`, id, now.UnixMilli()); err != nil {
 				return err
 			}

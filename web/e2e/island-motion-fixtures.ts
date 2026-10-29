@@ -8,7 +8,10 @@ import island from '../src/features/island/content.json' with { type: 'json' };
 
 // 只替换接口数据，运动、SVG、CSS 和交互仍运行正式页面代码。
 export async function openMotionIsland(page: Page, avatar?: string) {
-  const equippedCamp = avatar ? { ...camp, equipment: { ...camp.equipment, avatar: { ...purchase, type_snapshot: 'avatar' as const, asset_key_snapshot: avatar } } } : camp;
+  const human = avatar === 'avatar-boy-v2' || avatar === 'avatar-girl-v2';
+  const equippedCamp = { ...camp, equipment: { ...camp.equipment,
+    ...(human ? { base_avatar_key: avatar, avatar: null } : { avatar: { ...purchase, type_snapshot: 'avatar' as const, asset_key_snapshot: avatar ?? 'fox-v1' } }),
+  } };
   const activityState = avatar ? {
     ...state,
     catalog: [...state.catalog, { key: 'ball', name: '皮球', category: 'equipment', model: 'ball', width: 1, depth: 1, movable: true, repeatable: false, activity: 'ball' }],
@@ -44,7 +47,8 @@ export async function sampleMotion(page: Page, frames = 180) {
     const headMatrix = new DOMMatrix(getComputedStyle(head).transform);
     let previousAngle = Math.atan2(headMatrix.b, headMatrix.a) * 180 / Math.PI;
     let previousY = headMatrix.f;
-    let previousFrame = performance.now();
+    // 首次取样尚无前一帧时间，不能把调用发生到下一帧的间隔当成完整动画帧。
+    let previousFrame: number | null = null;
     let previousZone = actor.getAttribute('data-actor-zone');
     let minimumLegAngle = Infinity, maximumLegAngle = -Infinity;
     let animation = head.getAnimations()[0];
@@ -79,10 +83,10 @@ export async function sampleMotion(page: Page, frames = 180) {
         const legAngle = Math.atan2(legMatrix.b, legMatrix.a) * 180 / Math.PI;
         minimumLegAngle = Math.min(minimumLegAngle, legAngle);
         maximumLegAngle = Math.max(maximumLegAngle, legAngle);
-        const milliseconds = Math.max(0, timestamp - previousFrame);
+        const milliseconds = previousFrame === null ? null : Math.max(0, timestamp - previousFrame);
         // 呼吸动作在两秒内转动两度、抬高一像素；上限给缓动和矩阵精度留余量。
         const angleChange = Math.abs(angle - previousAngle), yChange = Math.abs(matrix.f - previousY);
-        if (angleChange > milliseconds * 0.003 + 0.03 || yChange > milliseconds * 0.002 + 0.03) {
+        if (milliseconds !== null && (angleChange > milliseconds * 0.003 + 0.03 || yChange > milliseconds * 0.002 + 0.03)) {
           poseJumps.push({ angle: angleChange, y: yChange, milliseconds,
             reordered: current.previousElementSibling !== previousSibling, zoneChanged: zone !== previousZone });
         }

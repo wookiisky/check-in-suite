@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none" stroke="#715945" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<g id="character-body">
+    <path d="M133 205 131 253 132 285Q143 289 153 285L157 241 160 216 163 241 167 285Q177 289 188 285L189 253 187 205Z" fill="#efc39c"/>
+    <path d="M135 230 134 273m51-43 1 43" stroke="#f7d6b6" stroke-width="4"/>
+    <path d="M125 135Q115 138 109 155L96 192Q91 200 94 209c2 7 10 9 15 4l7-14 16-42m63-22q10 3 16 20l13 37q5 8 2 17c-2 7-10 9-15 4l-7-14-16-42" fill="#efc39c"/>
+    <path d="m102 202 4 2m108-2 4 2" stroke="#d5a07b" stroke-width="1.5"/>
+    <path d="M132 135q28-11 56 0l6 68q-34 12-68 0Z" fill="#fbefdb"/>
+    <path d="M130 200q30 10 60 0l-1 23-23 1-6-11-6 11-23-1Z" fill="#f3e4cd"/>
+    <path d="M149 119v17q11 15 22 0v-17" fill="#efc39c"/>
+    <path d="M151 124q9 6 18 0" stroke="#d7a17d" stroke-width="2"/>
+  </g>
+
+  <g id="character-head">
+    <path d="M120 80c-9-6-15 0-13 9 1 8 6 12 14 10m78-19c9-6 15 0 13 9-1 8-6 12-14 10" fill="#efc39c"/>
+    <path d="m112 86 5 5m91-5-5 5" stroke="#d7a17d" stroke-width="2"/>
+    <path d="M120 66q1-29 40-29t40 29v25c0 22-16 37-40 37s-40-15-40-37Z" fill="#efc39c"/>
+    <path d="M131 79q7-4 14-1m30 0q7-3 14 1" stroke="#8a6449" stroke-width="2"/>
+    <ellipse cx="138" cy="91" rx="3.6" ry="5" fill="#534638" stroke="none"/>
+    <ellipse cx="182" cy="91" rx="3.6" ry="5" fill="#534638" stroke="none"/>
+    <circle cx="137" cy="89.5" r="1.15" fill="#fff9ed" stroke="none"/>
+    <circle cx="181" cy="89.5" r="1.15" fill="#fff9ed" stroke="none"/>
+    <path d="m160 94-2 8h4" stroke="#d19c76" stroke-width="1.8"/>
+    <path d="M150 112q10 9 20 0" fill="#ce8b72" stroke-width="1.7"/>
+    <path d="M153 113h14" stroke="#fff6e6" stroke-width="2"/>
+    <ellipse cx="128" cy="105" rx="6.5" ry="3.4" fill="#dd9b83" opacity=".55" stroke="none"/>
+    <ellipse cx="192" cy="105" rx="6.5" ry="3.4" fill="#dd9b83" opacity=".55" stroke="none"/>
+    <path d="m128 100 2 1m4 0 2 1m48 0 2-1m4 0 2-1" stroke="#ba896b" stroke-width="1.3"/>
+  </g>
+</svg>

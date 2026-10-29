@@ -5,11 +5,14 @@ import { Modal } from '../../components/Modal';
 import { FieldError } from '../../components/FormFeedback';
 import type { Asset, Product, ProductInput, ShopProps } from './types';
 import { pendingProducts } from './pending';
-import { assetURL, shopError, uncertainResult } from './helpers';
+import { shopError, uncertainResult } from './helpers';
 import { Price } from './Price';
 import { createIdempotencyKey } from '../../api/idempotency-key';
 import content from './content.json';
 import { CurrencyIcon } from '../../components/CurrencyAmount';
+import { categoryLabel, categoryPurchaseType, matchesAssetCategory, shopCategories } from './shop-categories';
+import type { ShopCategory } from './shop-categories';
+import { ShopItemArtwork } from './ShopItemArtwork';
 
 // 商品表单只提交可编辑字段，不将id、owned等只读属性回传。
 function draftFor(product: Product | null, assets: Asset[]): ProductInput {
@@ -53,6 +56,7 @@ export function ProductEditor({
   const original = product ? undefined : pendingProducts.get(client);
   const [initial] = useState(() => original?.body ?? draftFor(product, assets));
   const [draft, setDraft] = useState<ProductInput>(initial);
+  const [category, setCategory] = useState<ShopCategory>(() => assets.find((item) => item.key === initial.asset_key)?.wearable_slot ?? initial.type);
   const [pending, setPending] = useState(original ?? null);
   const [version, setVersion] = useState(product?.version ?? 0);
   const [latest, setLatest] = useState<Product | null>(null);
@@ -60,6 +64,7 @@ export function ProductEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [discarding, setDiscarding] = useState(false);
+  const selectedAsset = assets.find((item) => item.key === draft.asset_key);
   function update(change: Partial<ProductInput>) {
     setDraft((value) => ({ ...value, ...change }));
   }
@@ -162,18 +167,19 @@ export function ProductEditor({
           <label htmlFor="product-type">{content.typeFilter}</label>
           <select
             id="product-type"
-            value={draft.type}
+            value={category}
             onChange={(event) => {
-              const next = event.target.value as ProductInput['type'];
+              const next = event.target.value as ShopCategory;
+              setCategory(next);
               update({
-                type: next,
-                asset_key: assets.find((item) => item.kind === next)?.key ?? '',
+                type: categoryPurchaseType(next) as ProductInput['type'],
+                asset_key: assets.find((item) => matchesAssetCategory(item, next))?.key ?? '',
               });
             }}
           >
-            {Object.entries(content.types).map(([value, label]) => (
+            {shopCategories.map((value) => (
               <option key={value} value={value}>
-                {label}
+                {categoryLabel(value)}
               </option>
             ))}
           </select>
@@ -186,7 +192,7 @@ export function ProductEditor({
           >
             <option value="">{content.chooseAsset}</option>
             {assets
-              .filter((item) => item.kind === draft.type)
+              .filter((item) => matchesAssetCategory(item, category))
               .map((item) => (
                 <option key={item.key} value={item.key}>
                   {item.name}
@@ -194,9 +200,7 @@ export function ProductEditor({
               ))}
           </select>
           <FieldError error={error} field="asset_key" />
-          {draft.asset_key && (
-            <img className="shop-item-art" src={assetURL(draft.asset_key, draft.type === 'effect')} alt="" />
-          )}
+          {selectedAsset && <ShopItemArtwork item={selectedAsset} />}
           <label htmlFor="product-description">{content.description}</label>
           <textarea
             id="product-description"

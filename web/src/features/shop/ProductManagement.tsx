@@ -4,9 +4,11 @@ import type { Asset, Product, ShopProps } from './types';
 import { ProductEditor } from './ProductEditor';
 import { Price } from './Price';
 import { pendingProducts } from './pending';
-import { assetURL, shopError } from './helpers';
+import { shopError } from './helpers';
 import content from './content.json';
 import './shop.css';
+import { categoryLabel, itemCategory } from './shop-categories';
+import { ShopItemArtwork } from './ShopItemArtwork';
 
 // 管理商品读取包括下架配置，删除只移除销售入口，历史所有权保留。
 export function ProductManagement({ client, session }: ShopProps) {
@@ -114,11 +116,11 @@ export function ProductManagement({ client, session }: ShopProps) {
           {products.length === 0 && <p>{content.emptyProducts}</p>}
           {products.map((item) => (
             <article key={item.id} className="shop-product-row">
-              <img src={assetURL(item.asset_key, item.type === 'effect')} alt="" />
+              <ShopItemArtwork item={item} />
               <div>
                 <h3>{item.name}</h3>
                 <p>
-                  {content.types[item.type]}
+                  {categoryLabel(itemCategory(item)!)}
                   {!item.enabled && <strong> · {content.unavailable}</strong>}
                 </p>
                 <Price coins={item.coin_price} diamonds={item.diamond_price} />

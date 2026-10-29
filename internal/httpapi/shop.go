@@ -126,6 +126,26 @@ func (app *App) RegisterShop(service *shop.Service) {
 		}
 		WriteJSON(w, 200, result)
 	})
+	app.Mux.HandleFunc("PUT /api/v1/equipment/base-avatar", func(w http.ResponseWriter, r *http.Request) {
+		p, err := app.authenticatedWrite(r)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		var input struct {
+			AssetKey string `json:"asset_key"`
+		} // One free base character, no purchase required.
+		if err = decodeRequiredJSON(w, r, &input, []string{"asset_key"}); err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		result, err := service.SetBaseAvatar(r.Context(), p, input.AssetKey)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		WriteJSON(w, 200, result)
+	})
 	app.Mux.HandleFunc("PUT /api/v1/equipment/{slot}", func(w http.ResponseWriter, r *http.Request) {
 		p, err := app.authenticatedWrite(r)
 		if err != nil {

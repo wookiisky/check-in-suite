@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none" stroke="#715945" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<g id="wearable-shoes">
+    <path d="m132 277 20 1v11h-21Zm36 1 20-1 1 12h-21Z" fill="#fff2d7"/>
+    <path d="m132 285 21 1 1 12q-18 5-34 0c-2-6 3-10 12-13Zm35 1 21-1c9 3 14 7 12 13q-16 5-34 0Z" fill="#ba8965"/>
+    <path d="m124 295 26 1m20 0 26-1" stroke="#f2d5a3" stroke-width="3"/>
+    <path d="m136 288 10 1m28 0 10-1" stroke="#ead0aa" stroke-width="1.6"/>
+  </g>
+</svg>

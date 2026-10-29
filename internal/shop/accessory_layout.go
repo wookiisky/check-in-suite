@@ -2,6 +2,7 @@ package shop
 
 import (
 	"context"
+	"errors"
 	"math"
 	"sort"
 
@@ -44,6 +45,17 @@ func (s *Service) SetAccessoryLayout(ctx context.Context, p account.Principal, p
 	defer tx.Rollback()
 	if err = account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
 		return Equipment{}, err
+	}
+	item, err := readPurchase(ctx, tx, purchaseID)
+	if err != nil {
+		var failure *core.Error
+		if errors.As(err, &failure) && failure.Code == "NOT_FOUND" {
+			return Equipment{}, core.Fail(409, "EQUIPMENT_CHANGED")
+		}
+		return Equipment{}, err
+	}
+	if item.WearableSlot != "" {
+		return Equipment{}, core.Fail(422, "INVALID_EQUIPMENT")
 	}
 	if err = validateAccessoryLayout(purchaseID, input); err != nil {
 		return Equipment{}, err

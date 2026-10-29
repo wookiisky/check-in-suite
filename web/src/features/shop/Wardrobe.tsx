@@ -1,6 +1,8 @@
 import type { Equipment, Purchase } from './types';
-import { assetURL, portraitAssetKey, portraitType } from './helpers';
+import { portraitType } from './helpers';
 import content from './content.json';
+import { categoryLabel, itemCategory } from './shop-categories';
+import { ShopItemArtwork } from './ShopItemArtwork';
 
 // 每次仅修改一个槽位或一个饰品，永久所有权来自订单快照。
 export function Wardrobe({
@@ -30,6 +32,7 @@ export function Wardrobe({
           const kind = portraitType(item);
           if (!kind) return null;
           const equipped =
+            (item.wearable_slot && equipment.wearables[item.wearable_slot]?.id === item.id) ||
             equipment.title?.id === item.id ||
             equipment.avatar?.id === item.id ||
             equipment.background?.id === item.id ||
@@ -37,14 +40,16 @@ export function Wardrobe({
             equipment.accessories.some((accessory) => accessory.id === item.id);
           const limitReached =
             kind === 'accessory' &&
+            !item.wearable_slot &&
             !equipped &&
             equipment.accessories.length >= content.equipmentLimit;
           return (
             <article className="shop-card" key={item.id}>
-              <img className="shop-item-art" src={assetURL(portraitAssetKey(item), kind === 'effect')} alt="" />
+              <ShopItemArtwork item={item} />
               <h3>{item.name_snapshot}</h3>
-              <p className="shop-hint">{content.types[kind]}</p>
+              <p className="shop-hint">{categoryLabel(itemCategory(item, true)!)}</p>
               <p>{item.description_snapshot}</p>
+              {item.wearable_slot && <p className="shop-hint">{content.wearableHint}</p>}
               {kind === 'effect' && <p className="shop-hint">{content.effectHint}</p>}
               {kind === 'background' && <p className="shop-hint">{content.backgroundHint}</p>}
               {equipped && <p>{content.equipped}</p>}

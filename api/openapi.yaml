@@ -341,12 +341,21 @@ paths:
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PurchaseList"}}}}
         default: {"$ref": "#/components/responses/Error"}
+  "/api/v1/equipment/base-avatar":
+    put:
+      operationId: "setBaseAvatar"
+      summary: "选择免费的基础人物，保留发型和服装"
+      parameters: [{"$ref": "#/components/parameters/CSRF"}]
+      requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/BaseAvatarUpdate"}}}}
+      responses:
+        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Equipment"}}}}
+        default: {"$ref": "#/components/responses/Error"}
   "/api/v1/equipment/{slot}":
     put:
       operationId: "setEquipmentSlot"
-      summary: "设置称号、形象或背景槽位"
+      summary: "设置称号、形象、背景或固定穿戴部位"
       parameters:
-        - {"name": "slot", "in": "path", "required": true, "schema": {"type": "string", "enum": ["title", "avatar", "background"]}}
+        - {"name": "slot", "in": "path", "required": true, "schema": {"type": "string", "enum": ["title", "avatar", "background", "hair", "top", "bottom", "shoes"]}}
         - {"$ref": "#/components/parameters/CSRF"}
       requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SlotUpdate"}}}}
       responses:
@@ -988,6 +997,8 @@ components:
       additionalProperties: false
       required: ["id", "type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled", "version", "owned"]
       properties:
+        wearable_slot: {"$ref": "#/components/schemas/WearableSlot"}
+        back_asset_key: {"type": "string", "description": "同一穿戴物的后层素材，穿戴时随前层整体切换。"}
         portrait_type: {"type": "string", "enum": ["title", "avatar", "accessory", "background", "effect"], "description": "当前物品定义授予的画像用途，独立于成交商品类型。"}
         portrait_asset_key: {"type": "string", "minLength": 1, "description": "当前画像展示素材；物品能力后续追加时已购者也可使用。"}
         id: {"type": "string", "minLength": 1}
@@ -1053,6 +1064,8 @@ components:
         - "version"
         - "created_at"
       properties:
+        wearable_slot: {"$ref": "#/components/schemas/WearableSlot"}
+        back_asset_key: {"type": "string", "description": "同一穿戴物的后层素材，穿戴时随前层整体切换。"}
         portrait_type: {"type": "string", "enum": ["title", "avatar", "accessory", "background", "effect"], "description": "当前物品定义授予的画像用途，独立于成交商品类型。"}
         portrait_asset_key: {"type": "string", "minLength": 1, "description": "当前画像展示素材；物品能力后续追加时已购者也可使用。"}
         id: {"type": "string", "minLength": 1}
@@ -1091,14 +1104,35 @@ components:
     Equipment:
       type: "object"
       additionalProperties: false
-      required: ["title", "avatar", "background", "accessories", "effects", "accessory_layouts"]
+      required: ["base_avatar_key", "wearables", "title", "avatar", "background", "accessories", "effects", "accessory_layouts"]
       properties:
+        base_avatar_key: {"type": "string", "description": "当前免费基础形象；装备动物时仍保存此选择。"}
+        wearables: {"$ref": "#/components/schemas/Wearables"}
         title: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
         avatar: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
         background: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
         accessories: {"type": "array", "maxItems": 10, "items": {"$ref": "#/components/schemas/Purchase"}}
         effects: {"type": "array", "items": {"$ref": "#/components/schemas/Purchase"}}
         accessory_layouts: {"type": "object", "additionalProperties": {"$ref": "#/components/schemas/AccessoryLayout"}}
+    WearableSlot:
+      type: "string"
+      enum: ["hair", "top", "bottom", "shoes"]
+      description: "固定穿戴部位，不接受位置、大小和层级编辑。"
+    Wearables:
+      type: "object"
+      additionalProperties: false
+      required: ["hair", "top", "bottom", "shoes"]
+      properties:
+        hair: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
+        top: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
+        bottom: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
+        shoes: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
+    BaseAvatarUpdate:
+      type: "object"
+      additionalProperties: false
+      required: ["asset_key"]
+      properties:
+        asset_key: {"type": "string", "minLength": 1, "description": "免费基础人物的受控素材 key。"}
     AccessoryLayout:
       type: "object"
       additionalProperties: false
@@ -1149,6 +1183,9 @@ components:
       additionalProperties: false
       required: ["key", "name", "kind", "url"]
       properties:
+        free: {"type": "boolean", "description": "无需购买即可选择的基础人物。"}
+        wearable_slot: {"$ref": "#/components/schemas/WearableSlot"}
+        back_asset_key: {"type": "string", "description": "同一发型的后层素材。"}
         key: {"type": "string", "minLength": 1}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
         kind: {"type": "string", "enum": ["icon", "avatar", "background", "accessory", "effect", "title", "reward", "badge", "island"]}

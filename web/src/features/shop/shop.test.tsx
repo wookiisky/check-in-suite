@@ -214,10 +214,7 @@ describe('所有权、装扮与兑现', () => {
   it('十个饰品都使用实际SVG展示，默认角色仍可见', () => {
     const full = fullEquipment;
     render(<CharacterPanel equipment={full} displayName="小朋友" />);
-    expect(screen.getByAltText(content.defaultAvatar)).toHaveAttribute(
-      'src',
-      '/api/v1/assets/fox-v1',
-    );
+    expect(screen.getByRole('img', { name: content.baseAvatarNames['avatar-boy-v2'] })).toHaveAttribute('data-base-avatar', 'avatar-boy-v2');
     for (const item of full.accessories)
       expect(screen.getByAltText(item.name_snapshot)).toHaveAttribute(
         'src',

@@ -30,7 +30,7 @@ export const purchase: Purchase = {
   version: 1,
   created_at: '2026-10-29T00:00:00Z',
 };
-export const equipment: Equipment = { title: null, avatar: null, accessories: [], background: null, effects: [], accessory_layouts: {} };
+export const equipment: Equipment = { base_avatar_key: 'avatar-boy-v2', wearables: { hair: null, top: null, bottom: null, shoes: null }, title: null, avatar: null, accessories: [], background: null, effects: [], accessory_layouts: {} };
 // 满额装备的测试数据同时包含每件饰品的服务端布局。
 export const fullEquipment: Equipment = {
   ...equipment,

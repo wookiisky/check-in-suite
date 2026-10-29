@@ -90,7 +90,6 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   const [checkinsOpen, setCheckinsOpen] = useState(true);
   const checkins = useRef<HTMLElement>(null);
   const [hudTop, setHudTop] = useState(100);
-  const [avatar, setAvatar] = useState('fox-v1');
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState<unknown>(null);
@@ -110,6 +109,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   const [hidden, setHidden] = useState(() => document.visibilityState === 'hidden');
   const [actor, setActor] = useState(createActor);
   const reduced = useReducedMotion(session.account.preferences.reduce_motion);
+  const avatar = camp?.equipment.avatar ? portraitAssetKey(camp.equipment.avatar) : camp?.equipment.base_avatar_key;
   const editing = draft !== null;
   const dirty = Boolean(draft && state && JSON.stringify(draft) !== JSON.stringify(state.placements));
   const placements = draft ?? state?.placements ?? [];
@@ -165,7 +165,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
       return camp;
     })]).then(([next, camp]) => {
       if (controller.signal.aborted) return;
-      setState(next); setCamp(camp); setAvatar(camp.equipment.avatar ? portraitAssetKey(camp.equipment.avatar) : 'fox-v1');
+      setState(next); setCamp(camp);
       setActor(createActor(next.placements, next.catalog)); setConflict(false); setUnconfirmedSave(false);
     }).catch((reason: unknown) => { if (!controller.signal.aborted) setError(reason); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
@@ -311,11 +311,11 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     </section>}
     {message.text && <p className={`island-notice ${message.success ? 'feedback-success' : ''}`} role="status">{message.text}</p>}
     {conflict && <div className="island-notice island-error" role="alert"><p>{content.conflict}</p><button onClick={cancel}>{content.reloadAfterCancel}</button></div>}
-    {state && <>
+    {state && camp && avatar && <>
       {editing && <div ref={dock} className="island-edit-bar"><button disabled={saving || conflict} onClick={() => void save()}>{saving ? content.saving : content.save}</button><button className="secondary" disabled={saving} onClick={cancel}>{content.cancel}</button><button className="secondary" aria-pressed={showIndoor} disabled={saving} onClick={() => setShowIndoor((value) => !value)}>{showIndoor ? content.showOutdoor : content.showIndoor}</button><button className="secondary" aria-expanded={panelOpen} aria-controls="island-inventory-panel" onClick={() => setPanelOpen((value) => !value)}>{panelOpen ? content.closeInventory : content.openInventory}</button></div>}
       <div className={`island-workspace ${editing ? 'island-is-editing' : ''}`} aria-busy={saving}>
         <div className="island-main-scene" inert={saving}>
-          <IslandScene insets={insets} placements={placements} catalog={state.catalog} actor={actor} avatar={avatar} editing={editing} indoor={showIndoor} selected={selected} staticMotion={reduced || editing} motionPaused={paused || hidden} onSelect={setSelected} onMove={move} onActivity={interact} onBlocked={() => showMessage(content.blockedPlacement)} />
+          <IslandScene insets={insets} placements={placements} catalog={state.catalog} actor={actor} avatar={avatar} wearables={camp.equipment.wearables} editing={editing} indoor={showIndoor} selected={selected} staticMotion={reduced || editing} motionPaused={paused || hidden} onSelect={setSelected} onMove={move} onActivity={interact} onBlocked={() => showMessage(content.blockedPlacement)} />
 
         </div>
         {editing && panelOpen && <aside ref={panel} id="island-inventory-panel" className="island-editor island-editor-shell" inert={saving} aria-label={content.inventory}>

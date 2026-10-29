@@ -7,6 +7,7 @@ import type { IslandDefinition, IslandPlacement, IslandPoint, IslandView } from 
 import { fitIslandView } from './island-camera';
 import type { IslandInsets } from './island-camera';
 import content from './content.json';
+import type { Equipment } from '../shop/types';
 
 // 场景只接收当前草稿，所有保存和所有权判断由页面及服务端完成。
 interface SceneProps {
@@ -15,6 +16,7 @@ interface SceneProps {
   catalog: IslandDefinition[]; // 物品展示和互动能力。
   actor: IslandActor; // 单一角色活动状态。
   avatar: string; // 当前画像对应的受控角色素材。
+  wearables?: Equipment['wearables'] | undefined; // 与营地一致的固定穿戴，不参与岛上物件摆放。
   editing: boolean; // 区分拖动画布和摆放。
   indoor: boolean; // 布置时主动展开室内。
   selected: string | null; // 当前调整的实例。
@@ -45,7 +47,7 @@ function scenePoint(point: IslandPoint, indoor: boolean, house: IslandPlacement 
 }
 
 // SVG整体变换仅影响显示，物件保存地面坐标。
-export function IslandScene({ insets, placements, catalog, actor, avatar, editing, indoor, selected, staticMotion, motionPaused = false, onSelect, onMove, onActivity, onBlocked }: SceneProps) {
+export function IslandScene({ insets, placements, catalog, actor, avatar, wearables, editing, indoor, selected, staticMotion, motionPaused = false, onSelect, onMove, onActivity, onBlocked }: SceneProps) {
   const [view, setView] = useState<IslandView>(initialView);
   const svg = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ width: 1000, height: 760 });
@@ -180,7 +182,7 @@ export function IslandScene({ insets, placements, catalog, actor, avatar, editin
       <g transform={`translate(${view.x} ${view.y}) scale(${view.zoom})`}>
         <GroundArtwork />
         {layers.map((entry) => {
-          if (entry.actor) return <g key="actor" transform={`translate(${entry.point.x} ${entry.point.y})`} data-actor-zone={actor.zone} data-actor-action={actor.action} aria-hidden="true" pointerEvents="none"><CharacterArtwork avatar={avatar} moving={actor.phase === 'walking'} activity={actor.action} facing={actor.facing} staticMotion={staticMotion} motionElapsed={actor.motionElapsed} /></g>;
+          if (entry.actor) return <g key="actor" transform={`translate(${entry.point.x} ${entry.point.y})`} data-actor-zone={actor.zone} data-actor-action={actor.action} aria-hidden="true" pointerEvents="none"><CharacterArtwork avatar={avatar} wearables={wearables} moving={actor.phase === 'walking'} activity={actor.action} facing={actor.facing} staticMotion={staticMotion} motionElapsed={actor.motionElapsed} /></g>;
           const placement = entry.placement!;
           const definition = catalog.find((item) => item.key === placement.item_key)!;
           const interactive = editing || Boolean(definition.activity);
