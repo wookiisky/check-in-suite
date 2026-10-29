@@ -7,23 +7,33 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/idempotency"
+	"github.com/wookiisky/check-in-suite/internal/island"
 	"github.com/wookiisky/check-in-suite/internal/wallet"
 )
 
-const purchaseColumns = `p.id,p.product_id,p.type_snapshot,p.name_snapshot,p.asset_key_snapshot,p.description_snapshot,p.coin_price,p.diamond_price,p.status,p.redeemed_at,p.version,p.created_at`
+const purchaseColumns = `p.id,p.product_id,p.type_snapshot,p.name_snapshot,p.asset_key_snapshot,p.description_snapshot,p.coin_price,p.diamond_price,p.status,p.redeemed_at,p.version,p.created_at,p.item_key_snapshot`
 
 // scanPurchase formats actual instants while preserving nullable redemption time.
 func scanPurchase(row rowScanner) (Purchase, error) {
 	var p Purchase
 	var redeemed sql.NullInt64
 	var created int64
-	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created)
+	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created, &p.ItemKeySnapshot)
 	p.CreatedAt = core.Timestamp(created)
+	item, ok := island.Find(p.ItemKeySnapshot)
+	if p.ItemKeySnapshot == "" {
+		item, ok = island.ForAsset(p.AssetKeySnapshot)
+	}
+	if ok {
+		p.IslandItemKey = item.Key
+		p.PortraitType, p.PortraitAssetKey = portraitCapability(item)
+	}
 	if redeemed.Valid {
 		value := core.Timestamp(redeemed.Int64)
 		p.RedeemedAt = &value
@@ -99,14 +109,14 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 	if product.Stock != nil && *product.Stock == 0 {
 		return result, core.Fail(409, "OUT_OF_STOCK")
 	}
-	if product.Owned {
+	if product.Owned && !product.Repeatable {
 		return result, core.Fail(409, "ALREADY_OWNED")
 	}
 	id, status := core.ID(), StatusOwned
 	if product.Type == TypeReward {
 		status = StatusPending
 	}
-	_, err = tx.ExecContext(ctx, "INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)", id, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli())
+	_, err = tx.ExecContext(ctx, "INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,repeatable,item_key_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli(), product.Repeatable, product.IslandItemKey)
 	if err != nil {
 		return result, err
 	}
@@ -159,8 +169,16 @@ func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input 
 	query := "SELECT " + purchaseColumns + " FROM purchases p WHERE 1=1"
 	args := []any{}
 	if input.Type != "" {
-		query += " AND p.type_snapshot=?"
+		keys, itemKeys := portraitSourceKeys(input.Type)
+		if len(keys) == 0 {
+			query += " AND p.type_snapshot=?"
+		} else {
+			query += " AND (p.type_snapshot=? OR p.asset_key_snapshot IN (" + strings.TrimSuffix(strings.Repeat("?,", len(keys)), ",") + ") OR p.item_key_snapshot IN (" + strings.TrimSuffix(strings.Repeat("?,", len(itemKeys)), ",") + "))"
+		}
 		args = append(args, input.Type)
+		for _, key := range append(keys, itemKeys...) {
+			args = append(args, key)
+		}
 	}
 	if input.Status != "" {
 		query += " AND p.status=?"

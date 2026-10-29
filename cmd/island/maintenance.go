@@ -12,6 +12,7 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/account"
 	"github.com/wookiisky/check-in-suite/internal/content"
 	"github.com/wookiisky/check-in-suite/internal/core"
+	"github.com/wookiisky/check-in-suite/internal/shop"
 	"golang.org/x/term"
 )
 
@@ -91,6 +92,10 @@ func maintain(ctx context.Context, command, kind string, service *account.Servic
 	managementPassword, err := terminal.password("management_password_prompt")
 	if err != nil {
 		return err
+	}
+	// Seed first so a failed catalog write leaves account initialization retryable.
+	if err := shop.SeedIslandProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {
+		return maintenanceError(err)
 	}
 	if err := service.Initialize(ctx, username, displayName, loginPassword, managementPassword); err != nil {
 		return maintenanceError(err)

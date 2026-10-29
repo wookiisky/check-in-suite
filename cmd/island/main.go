@@ -22,6 +22,7 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/config"
 	"github.com/wookiisky/check-in-suite/internal/content"
 	"github.com/wookiisky/check-in-suite/internal/httpapi"
+	"github.com/wookiisky/check-in-suite/internal/island"
 	"github.com/wookiisky/check-in-suite/internal/media"
 	"github.com/wookiisky/check-in-suite/internal/message"
 	"github.com/wookiisky/check-in-suite/internal/shop"
@@ -116,6 +117,7 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 	application.RegisterCheckins(checkins)
 	application.RegisterAchievements(achievement.New(db, accounts, cfg))
 	application.RegisterShop(shop.New(db, cfg, accounts))
+	application.RegisterIsland(island.New(db, accounts.Now))
 	application.RegisterQueries(checkins)
 	application.RegisterMessages(message.New(db, cfg))
 	attachments := media.New(db, accounts, cfg)

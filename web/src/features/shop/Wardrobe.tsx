@@ -1,5 +1,5 @@
 import type { Equipment, Purchase } from './types';
-import { assetURL } from './helpers';
+import { assetURL, portraitAssetKey, portraitType } from './helpers';
 import content from './content.json';
 
 // 每次仅修改一个槽位或一个饰品，永久所有权来自订单快照。
@@ -8,10 +8,12 @@ export function Wardrobe({
   equipment,
   busy,
   onToggle,
+  hasMore = false,
 }: {
   items: Purchase[];
   equipment: Equipment;
   busy: boolean;
+  hasMore?: boolean; // 尚有未读订单时不宣称库存为空。
   onToggle: (item: Purchase, equip: boolean) => void;
 }) {
   return (
@@ -22,9 +24,11 @@ export function Wardrobe({
       {equipment.accessories.length >= content.equipmentLimit && (
         <p className="shop-hint">{content.accessoryLimit}</p>
       )}
-      {items.length === 0 && <p>{content.emptyPurchases}</p>}
+      {items.length === 0 && !hasMore && !busy && <p>{content.emptyPurchases}</p>}
       <div className="shop-grid">
         {items.map((item) => {
+          const kind = portraitType(item);
+          if (!kind) return null;
           const equipped =
             equipment.title?.id === item.id ||
             equipment.avatar?.id === item.id ||
@@ -32,17 +36,17 @@ export function Wardrobe({
             equipment.effects.some((effect) => effect.id === item.id) ||
             equipment.accessories.some((accessory) => accessory.id === item.id);
           const limitReached =
-            item.type_snapshot === 'accessory' &&
+            kind === 'accessory' &&
             !equipped &&
             equipment.accessories.length >= content.equipmentLimit;
           return (
             <article className="shop-card" key={item.id}>
-              <img className="shop-item-art" src={assetURL(item.asset_key_snapshot, item.type_snapshot === 'effect')} alt="" />
+              <img className="shop-item-art" src={assetURL(portraitAssetKey(item), kind === 'effect')} alt="" />
               <h3>{item.name_snapshot}</h3>
-              <p className="shop-hint">{content.types[item.type_snapshot]}</p>
+              <p className="shop-hint">{content.types[kind]}</p>
               <p>{item.description_snapshot}</p>
-              {item.type_snapshot === 'effect' && <p className="shop-hint">{content.effectHint}</p>}
-              {item.type_snapshot === 'background' && <p className="shop-hint">{content.backgroundHint}</p>}
+              {kind === 'effect' && <p className="shop-hint">{content.effectHint}</p>}
+              {kind === 'background' && <p className="shop-hint">{content.backgroundHint}</p>}
               {equipped && <p>{content.equipped}</p>}
               <button
                 className={equipped ? 'secondary' : ''}

@@ -1,0 +1,42 @@
+.island-character-art .island-character-head { transform-origin: 0 -29px; animation: island-head-breathe 4s ease-in-out infinite; }
+.island-character-art .island-character-tail { transform-origin: 10px -15px; animation: island-tail-sway 3.5s ease-in-out infinite; }
+.island-character-art .island-character-leg-left { transform-origin: -7px -12px; }
+.island-character-art .island-character-leg-right { transform-origin: 9px -12px; }
+.island-character-art .island-character-arm-left { transform-origin: -14px -24px; }
+.island-character-art .island-character-arm-right { transform-origin: 14px -24px; }
+.island-character-art[data-moving="true"] .island-character-body { animation: island-walk-bob .45s ease-in-out infinite; }
+.island-character-art[data-moving="true"] .island-character-leg-left { animation: island-leg-step .45s ease-in-out infinite; }
+.island-character-art[data-moving="true"] .island-character-leg-right { animation: island-leg-step .45s ease-in-out -.225s infinite; }
+.island-character-art[data-moving="true"] .island-character-arm-left { animation: island-arm-step .45s ease-in-out -.225s infinite; }
+.island-character-art[data-moving="true"] .island-character-arm-right { animation: island-arm-step .45s ease-in-out infinite; }
+.island-character-art[data-activity="run"] .island-character-leg-left,
+.island-character-art[data-activity="run"] .island-character-leg-right,
+.island-character-art[data-activity="run"] .island-character-body { animation-duration: .3s; }
+.island-character-art[data-activity="read"] .island-character-head { animation: island-reading-nod 3s ease-in-out infinite; }
+.island-character-art[data-activity="read"] .island-character-arm-left { transform: rotate(-17deg); }
+.island-character-art[data-activity="read"] .island-character-arm-right { transform: rotate(17deg); }
+.island-character-art[data-activity="rest"] .island-character-body { transform: translateY(5px) scale(1, .91); }
+.island-character-art[data-activity="ball"] .island-character-leg-right { animation: island-kick 1.5s ease-in-out infinite; }
+.island-character-ball { animation: island-ball-hop 1.5s ease-in-out infinite; }
+.island-tree-crown { transform-origin: 0 -30px; }
+.island-item-art[data-animation="sway"] .island-tree-crown { animation: island-tree-breeze 6s ease-in-out infinite; }
+.island-item-art[data-animation="flutter"] .island-butterfly-float { animation: island-butterfly-drift 4s ease-in-out infinite; }
+.island-item-art[data-animation="flutter"] .island-butterfly-wings { animation: island-butterfly-flutter .75s ease-in-out infinite; }
+.island-character-art[data-static="true"] *,
+[data-static="true"] .island-tree-crown,
+[data-static="true"] .island-butterfly-float,
+[data-static="true"] .island-butterfly-wings { animation: none !important; }
+@keyframes island-head-breathe { 0%, 100% { transform: rotate(-1deg); } 50% { transform: translateY(-1px) rotate(1deg); } }
+@keyframes island-tail-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(5deg); } }
+@keyframes island-walk-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes island-leg-step { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(14deg); } }
+@keyframes island-arm-step { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
+@keyframes island-reading-nod { 0%, 100% { transform: rotate(0); } 50% { transform: translateY(1px) rotate(4deg); } }
+@keyframes island-kick { 0%, 65%, 100% { transform: rotate(0); } 35% { transform: rotate(-32deg); } }
+@keyframes island-ball-hop { 0%, 100% { transform: translate(0, 0); } 40% { transform: translate(12px, -14px); } 65% { transform: translate(16px, 0); } }
+@keyframes island-tree-breeze { 0%, 100% { transform: rotate(-.8deg); } 50% { transform: rotate(.8deg); } }
+@keyframes island-butterfly-drift { 0%, 100% { transform: translate(-2px, 0); } 50% { transform: translate(3px, -7px); } }
+@keyframes island-butterfly-flutter { 0%, 100% { transform: scaleX(.65); } 50% { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .island-character-art *, .island-tree-crown, .island-butterfly-float, .island-butterfly-wings { animation: none !important; }
+}

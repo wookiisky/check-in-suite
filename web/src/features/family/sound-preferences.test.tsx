@@ -5,6 +5,7 @@ import { testSession } from '../../test/account-fixtures';
 import { setRecordingActive } from '../media/recordingActivity';
 import { CHECKIN_SUCCESS_EVENT } from '../checkin/events';
 import { SoundPreferences } from './SoundPreferences';
+import content from './content.json';
 
 const sound = vi.hoisted(() => ({ activate: vi.fn(async () => true), start: vi.fn(), stop: vi.fn(), success: vi.fn(), dispose: vi.fn() }));
 vi.mock('./sound', () => ({ SoundEngine: class {
@@ -64,4 +65,24 @@ it('离开页面后迟到的偏好响应不更新新页面账户', async () => {
   view.unmount();
   await act(async () => { resolve({ ...session.account.preferences, reduce_motion: true }); });
   expect(changed).not.toHaveBeenCalled();
+});
+
+
+it('全屏设置关闭和切换展示方式不重建声音运行实例', async () => {
+  const request = vi.fn();
+  const props = { client: { request }, session, onPreferencesChange: vi.fn() };
+  const view = render(<SoundPreferences {...props} />);
+  fireEvent.pointerDown(document.body);
+  await waitFor(() => expect(sound.activate).toHaveBeenCalledTimes(1));
+  view.rerender(<SoundPreferences {...props} presentation="dialog" open={false} onClose={() => {}} />);
+  expect(screen.queryByRole('heading', { name: content.sounds })).not.toBeInTheDocument();
+  expect(sound.dispose).not.toHaveBeenCalled();
+  view.rerender(<SoundPreferences {...props} presentation="dialog" open onClose={() => {}} />);
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  view.rerender(<SoundPreferences {...props} />);
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(sound.activate).toHaveBeenCalledTimes(1);
+  expect(sound.dispose).not.toHaveBeenCalled();
+  view.unmount();
+  expect(sound.dispose).toHaveBeenCalledTimes(1);
 });

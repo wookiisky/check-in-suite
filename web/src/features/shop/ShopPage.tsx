@@ -7,14 +7,14 @@ import { PurchaseDialog } from './PurchaseDialog';
 import { RedeemDialog } from './RedeemDialog';
 import { Wardrobe } from './Wardrobe';
 import { pendingPurchases } from './pending';
-import { assetURL, canBuy, purchaseTime, shopError } from './helpers';
+import { assetURL, canBuy, portraitType, purchaseTime, shopError } from './helpers';
 import content from './content.json';
 import './shop.css';
 
-type ShopTab = 'browse' | 'wardrobe' | 'rewards';
+type ShopTab = 'browse' | 'construction' | 'wardrobe' | 'islandInventory' | 'rewards';
 
 // 页面进入、筛选和写成功才加载，结果未知时始终先恢复原购买。
-export function ShopPage({ client, session }: ShopProps) {
+export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?: () => void }) {
   const [tab, setTab] = useState<ShopTab>('browse');
   const [type, setType] = useState('');
   const [status, setStatus] = useState('pending');
@@ -32,6 +32,7 @@ export function ShopPage({ client, session }: ShopProps) {
   const [editingOutfit, setEditingOutfit] = useState(false);
   const generation = useRef(0);
   const pending = pendingPurchases.get(client);
+  const browsing = tab === 'browse' || tab === 'construction';
   const query = new URLSearchParams(
     tab === 'rewards' ? { type: 'reward', status } : { status: 'owned', ...(type ? { type } : {}) },
   ).toString();
@@ -47,13 +48,13 @@ export function ShopPage({ client, session }: ShopProps) {
       try {
         const [camp, result] = await Promise.all([
           client.request<Camp>('/camp', { signal: controller.signal }),
-          tab === 'browse'
+          browsing
             ? client.request<{ items: Product[] }>('/products', { signal: controller.signal })
             : client.request<PurchaseList>(`/purchases?${query}`, { signal: controller.signal }),
         ]);
         if (controller.signal.aborted || generation.current !== current) return;
         setSnapshot(camp);
-        if (tab === 'browse') setProducts(result.items as Product[]);
+        if (browsing) setProducts(result.items as Product[]);
         else {
           setPurchases(result.items as Purchase[]);
           setCursor((result as PurchaseList).next_cursor);
@@ -65,7 +66,7 @@ export function ShopPage({ client, session }: ShopProps) {
       }
     })();
     return () => controller.abort();
-  }, [client, tab, query, revision]);
+  }, [client, tab, query, revision, browsing]);
 
   async function more() {
     if (!cursor || loading) return;
@@ -95,23 +96,25 @@ export function ShopPage({ client, session }: ShopProps) {
   }
   function purchased(item: Purchase) {
     setSelected(null);
-    setMessage(item.type_snapshot === 'reward' ? content.rewardPurchased : content.purchaseSuccess);
-    setTab(item.type_snapshot === 'reward' ? 'rewards' : 'wardrobe');
+    setMessage(item.type_snapshot === 'reward' ? content.rewardPurchased : item.island_item_key ? content.islandPurchased : content.purchaseSuccess);
+    setTab(item.type_snapshot === 'reward' ? 'rewards' : item.island_item_key ? 'islandInventory' : 'wardrobe');
     setType('');
     setStatus('pending');
     refresh((value) => value + 1);
   }
   async function toggle(item: Purchase, equip: boolean) {
+    const kind = portraitType(item);
+    if (!kind) return;
     setWriting(true);
     setError(null);
     setMessage('');
     try {
-      if (item.type_snapshot === 'accessory' || item.type_snapshot === 'effect')
-        await client.request(`/equipment/${item.type_snapshot === 'effect' ? 'effects' : 'accessories'}/${item.id}`, {
+      if (kind === 'accessory' || kind === 'effect')
+        await client.request(`/equipment/${kind === 'effect' ? 'effects' : 'accessories'}/${item.id}`, {
           method: equip ? 'PUT' : 'DELETE',
         });
       else
-        await client.request(`/equipment/${item.type_snapshot}`, {
+        await client.request(`/equipment/${kind}`, {
           method: 'PUT',
           body: { purchase_id: equip ? item.id : null },
         });
@@ -123,13 +126,15 @@ export function ShopPage({ client, session }: ShopProps) {
       setWriting(false);
     }
   }
-  const visibleProducts = products.filter((item) => !type || item.type === type);
+  const visibleProducts = products.filter((item) => (tab !== 'construction' || item.island_item_key) && (!type || item.type === type));
+  const wardrobeItems = purchases.filter((item) => portraitType(item) !== null && (!type || portraitType(item) === type));
+  const islandItems = purchases.filter((item) => item.island_item_key);
   const confirmationWallet = pending?.wallet ?? snapshot?.wallet;
   return (
     <div className="shop-workspace">
       <h1>{content.title}</h1>
       <div className="shop-tabs">
-        {(['browse', 'wardrobe', 'rewards'] as const).map((item) => (
+        {(['browse', 'construction', 'wardrobe', 'islandInventory', 'rewards'] as const).map((item) => (
           <button
             type="button"
             key={item}
@@ -190,13 +195,13 @@ export function ShopPage({ client, session }: ShopProps) {
             </button>
           ))}
         </div>
-      ) : (
+      ) : (tab === 'browse' || tab === 'wardrobe') && (
         <label>
           {content.typeFilter}
           <select value={type} onChange={(event) => setType(event.target.value)}>
             <option value="">{content.allTypes}</option>
             {(tab === 'browse'
-              ? (['title', 'avatar', 'accessory', 'background', 'effect', 'reward'] as const)
+              ? (['title', 'avatar', 'accessory', 'background', 'effect', 'reward', 'island'] as const)
               : (['title', 'avatar', 'accessory', 'background', 'effect'] as const)
             ).map((item) => (
               <option value={item} key={item}>
@@ -207,7 +212,7 @@ export function ShopPage({ client, session }: ShopProps) {
         </label>
       )}
       {loading && <p role="status">{content.loading}</p>}
-      {tab === 'browse' && !loading && snapshot && (
+      {browsing && !loading && snapshot && (
         <>
           {visibleProducts.length === 0 && <p>{content.emptyProducts}</p>}
           <div className="shop-grid">
@@ -217,6 +222,9 @@ export function ShopPage({ client, session }: ShopProps) {
                 <h3>{item.name}</h3>
                 <p className="shop-hint">{content.types[item.type]}</p>
                 <p>{item.description}</p>
+                {item.island_item_key && portraitType(item) && <p className="shop-hint">{content.dualUseHint}</p>}
+                {item.repeatable && <p className="shop-hint">{content.repeatableHint}</p>}
+                {item.owned_count !== undefined && <p>{content.ownedCount} {item.owned_count}</p>}
                 <Price coins={item.coin_price} diamonds={item.diamond_price} />
                 <p>
                   {content.stock} {item.stock ?? content.unlimited}
@@ -230,13 +238,13 @@ export function ShopPage({ client, session }: ShopProps) {
                   }}
                   aria-label={`${content.buy} ${item.name}`}
                 >
-                  {item.owned
+                  {item.owned && !item.repeatable
                     ? content.owned
                     : item.stock === 0
                       ? content.soldOut
                       : !canBuy(item, snapshot.wallet)
                         ? content.insufficient
-                        : content.buy}
+                        : item.owned && item.repeatable ? content.buyAnother : content.buy}
                 </button>
               </article>
             ))}
@@ -247,7 +255,8 @@ export function ShopPage({ client, session }: ShopProps) {
         <div className="shop-wardrobe-layout">
           <section>
             <Wardrobe
-              items={purchases}
+              items={wardrobeItems}
+              hasMore={Boolean(cursor)}
               equipment={snapshot.equipment}
               busy={writing || loading}
               onToggle={(item, equip) => void toggle(item, equip)}
@@ -262,6 +271,22 @@ export function ShopPage({ client, session }: ShopProps) {
             <button type="button" className="secondary shop-edit-outfit" disabled={writing || loading || snapshot.equipment.accessories.length === 0} onClick={() => setEditingOutfit(true)}>{content.editOutfit}</button>
           </aside>
         </div>
+      )}
+      {tab === 'islandInventory' && !loading && (
+        <section className="shop-stack">
+          <p className="shop-hint">{content.islandInventoryHint}</p>
+          {onIsland && <button type="button" onClick={onIsland}>{content.goToIsland}</button>}
+          {islandItems.length === 0 && !cursor && <p>{content.emptyPurchases}</p>}
+          <div className="shop-grid">
+            {islandItems.map((item) => <article className="shop-card" key={item.id}>
+              <img className="shop-item-art" src={assetURL(item.asset_key_snapshot, item.type_snapshot === 'effect')} alt="" />
+              <h3>{item.name_snapshot}</h3>
+              <p>{item.description_snapshot}</p>
+              {portraitType(item) && <p className="shop-hint">{content.dualUseHint}</p>}
+              <p className="shop-hint">{content.purchasedAt} {purchaseTime(item.created_at)}</p>
+            </article>)}
+          </div>
+        </section>
       )}
       {editingOutfit && snapshot && <AccessoryEditor equipment={snapshot.equipment} displayName={session.account.display_name} reduceMotion={session.account.preferences.reduce_motion} client={client} onClose={() => setEditingOutfit(false)} onSaved={(next) => setSnapshot((current) => current ? { ...current, equipment: next } : current)} />}
       {tab === 'rewards' && !loading && (

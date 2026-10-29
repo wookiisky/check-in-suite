@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { ApiClient, ApiFailure } from './api/client';
 import type { Account, Preferences, Session } from './api/types';
 import { FormFeedback } from './components/FormFeedback';
@@ -18,8 +18,12 @@ import { AchievementManagement } from './features/achievements/AchievementManage
 import { AchievementStrip } from './features/achievements/AchievementStrip';
 import { SoundPreferences } from './features/family/SoundPreferences';
 import content from './content/zh-CN.json';
+import islandContent from './features/island/content.json';
 
-type Page = 'camp' | 'calendar' | 'stats' | 'shop' | 'achievements';
+// 小岛素材与活动代码只在进入页面时加载。
+const IslandPage = lazy(() => import('./features/island/IslandPage').then((module) => ({ default: module.IslandPage })));
+
+type Page = 'island' | 'camp' | 'calendar' | 'stats' | 'shop' | 'achievements';
 type ManagementSection = 'account' | 'tasks' | 'records' | 'products' | 'achievements';
 
 // 应用仅保存当前会话与页面状态，业务草稿归各功能组件所有。
@@ -30,6 +34,8 @@ export function IslandApp() {
   const [error, setError] = useState<unknown>(null);
   const [notice, setNotice] = useState('');
   const [page, setPage] = useState<Page>('camp');
+  const [islandReturnPage, setIslandReturnPage] = useState<Exclude<Page, 'island'>>('camp');
+  const [soundOpen, setSoundOpen] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [management, setManagement] = useState(false);
   const [managementSection, setManagementSection] = useState<ManagementSection>('account');
@@ -42,6 +48,14 @@ export function IslandApp() {
     if (status === 401) { setSession(null); setNotice(content.account.sessionExpired); }
     else setNotice(content.account.managementExpired);
   }), []);
+
+  const immersive = session !== null && page === 'island' && !management;
+
+  // 全屏页使用独立视口，返回时恢复普通页面滚动。
+  useEffect(() => {
+    document.body.classList.toggle('island-immersive', immersive);
+    return () => document.body.classList.remove('island-immersive');
+  }, [immersive]);
 
   // 页面进入时读取会话；取消请求后不接受迟到响应。
   useEffect(() => {
@@ -79,7 +93,11 @@ export function IslandApp() {
     try { await client.request<void>('/management/lock', { method: 'POST' }); setLockPending(false); }
     catch (reason) { if (reason instanceof ApiFailure && reason.status === 401) setLockPending(false); }
   }
-  function navigate(next: Page) { setPage(next); if (management) void lock(); }
+  function navigate(next: Page) {
+    if (next === 'island' && page !== 'island') setIslandReturnPage(management ? 'camp' : page);
+    setSoundOpen(false); setPage(next);
+    if (management) void lock();
+  }
   async function logout() {
     setBusy(true); setError(null); setManagement(false); setUnlocking(false);
     try {
@@ -92,12 +110,12 @@ export function IslandApp() {
     setSession(null); setManagement(false); setExpiresAt(null); client.setCsrfToken(''); setNotice(content.account.passwordChanged);
   }
 
-  return <div className="application">
-    <header className="site-header"><div className="header-inner">
+  return <div className={`application ${immersive ? 'application-island' : ''}`}>
+    {!immersive && <header className="site-header"><div className="header-inner">
       <a className="brand" href="#" onClick={(event) => { event.preventDefault(); navigate('camp'); }}><svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg><strong>{content.appName}</strong></a>
-      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}>{content.navigation[item]}</button>)}</nav><div className="account-tools"><span className="name-chip">{session.account.display_name}</span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button></div></>}
-    </div></header>
-    <main className="app-shell">
+      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}>{content.navigation[item]}</button>)}</nav><div className="account-tools"><span className="name-chip">{session.account.display_name}</span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button></div></>}
+    </div></header>}
+    <main className={immersive ? 'island-app-shell' : 'app-shell'}>
       {notice && <p className="notice" role="status">{notice}</p>}
       {loading ? <p role="status">{content.common.loading}</p> : error && !session ? <section className="panel"><FormFeedback error={error} /><button onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{content.common.retry}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <>
         <FormFeedback error={error} />
@@ -122,13 +140,14 @@ export function IslandApp() {
               <FamilyPanel client={client} session={session} />
             </>} />
           </>}
-          {page === 'shop' && <ShopPage client={client} session={session} />}
+          {page === 'island' && <Suspense fallback={<section className="island-loading"><button className="secondary" onClick={() => navigate(islandReturnPage)}>{islandContent.back}</button><p role="status">{content.common.loading}</p></section>}><IslandPage client={client} session={session} onCamp={() => navigate('camp')} onShop={() => navigate('shop')} onBack={() => navigate(islandReturnPage)} onSettings={() => setSoundOpen(true)} /></Suspense>}
+          {page === 'shop' && <ShopPage client={client} session={session} onIsland={() => navigate('island')} />}
           {page === 'achievements' && <AchievementPage client={client} session={session} />}
           {page === 'calendar' && <CalendarPage client={client} session={session} />}
           {page === 'stats' && <StatsPage client={client} session={session} />}
-          <div className="management-entry"><button className="secondary" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button></div>
+          {!immersive && <div className="management-entry"><button className="secondary" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button></div>}
         </>}
-        <SoundPreferences client={client} session={session} onPreferencesChange={acceptPreferences} />
+        <SoundPreferences client={client} session={session} onPreferencesChange={acceptPreferences} presentation={immersive ? 'dialog' : 'panel'} open={soundOpen} onClose={() => setSoundOpen(false)} />
         {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setManagementSection('account'); setExpiresAt(expiry); setNotice(''); }} />}
       </>}
     </main>

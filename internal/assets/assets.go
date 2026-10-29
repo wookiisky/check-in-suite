@@ -20,6 +20,7 @@ import (
 type Kind string
 
 const (
+	KindIsland     Kind = "island"     // Controlled island construction thumbnail.
 	KindIcon       Kind = "icon"       // Task icon rendered in current and historical records.
 	KindAvatar     Kind = "avatar"     // Full character illustration.
 	KindAccessory  Kind = "accessory"  // Decoration rendered around the current character.

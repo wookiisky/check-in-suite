@@ -1,0 +1,144 @@
+/* 小岛独立铺满可用屏幕，浮层保持真实文字尺寸，不随镜头缩放。 */
+.island-page { --island-ink:#40513b; --island-soft:#f6f2df; --island-line:#c9d2b8; color:var(--island-ink); }
+.island-fullscreen { position:relative; width:100%; height:100dvh; overflow:hidden; background:#d3eae2; }
+.island-page-header { position:absolute; z-index:4; top:max(16px,env(safe-area-inset-top)); left:max(20px,env(safe-area-inset-left)); right:max(20px,env(safe-area-inset-right)); display:flex; justify-content:space-between; align-items:flex-start; gap:16px; pointer-events:none; }
+.island-heading,.island-actions { display:flex; align-items:center; gap:12px; pointer-events:auto; }
+.island-heading h1 { font-size:36px; line-height:1.3; text-shadow:0 2px 0 #fff8; }
+.island-page button { font-size:22px; min-height:56px; min-width:56px; }
+.island-page .secondary { background:#fffdf3f5; border-color:#becbae; box-shadow:0 3px 0 #7e97752b; }
+.island-workspace,.island-main-scene,.island-scene-shell { position:absolute; inset:0; }
+.island-scene-shell { overflow:hidden; background:#d3eae2; }
+.island-dusk .island-scene { filter:sepia(.16) saturate(.88); }
+.island-scene { display:block; width:100%; height:100%; touch-action:none; user-select:none; cursor:grab; }
+.island-scene:active { cursor:grabbing; }
+.island-scene:focus-visible { outline:4px solid #7d914f; outline-offset:-6px; }
+.island-object-interactive { cursor:pointer; outline:none; }
+.island-object-interactive:focus-visible { filter:drop-shadow(0 0 4px #244f46); }
+.island-object-interactive:hover { filter:brightness(1.04); }
+.island-view-controls { position:absolute; top:105px; right:max(20px,env(safe-area-inset-right)); display:flex; flex-direction:row; align-items:center; gap:8px; z-index:2; }
+.island-view-controls button { padding:10px 14px; }
+.island-view-controls button[aria-label] { font-size:28px; }
+/* 编辑抽屉与短屏工具栏会占用下方空间，相机操作保持一行可点击。 */
+.island-scene-editing .island-view-controls { flex-direction:row; align-items:center; }
+.island-view-controls button { white-space:nowrap; flex-shrink:0; }
+.island-view-help { position:absolute; top:100px; left:24px; margin:0; pointer-events:none; font-size:18px; color:#405d53; max-width:50%; }
+.island-game-dock { position:absolute; z-index:3; bottom:max(16px,env(safe-area-inset-bottom)); right:max(20px,env(safe-area-inset-right)); width:380px; max-width:calc(100% - 32px); border:2px solid #becbae; background:#fffdf0f5; border-radius:26px; padding:12px 16px; box-shadow:0 8px 30px #34594324; }
+.island-character-status { display:flex; justify-content:center; align-items:center; gap:12px; margin:0 0 10px; font-size:22px; }
+.island-status-dot { width:12px; height:12px; border-radius:50%; background:#8da762; box-shadow:0 0 0 5px #e5ecd8; flex-shrink:0; }
+.island-activities { display:flex; align-items:center; gap:18px; min-width:0; }
+.island-activity-buttons { display:flex; gap:10px; overflow-x:auto; min-width:0; max-width:50vw; padding:4px; overscroll-behavior:contain; }
+.island-activity-buttons button { display:flex; align-items:center; gap:6px; padding:4px 14px 4px 6px; flex-shrink:0; }
+.island-dock-actions { display:flex; gap:10px; flex-shrink:0; }
+.island-item-preview { width:56px; height:56px; flex:0 0 56px; overflow:visible; }
+.island-edit-bar { position:absolute; z-index:5; bottom:max(16px,env(safe-area-inset-bottom)); left:max(20px,env(safe-area-inset-left)); display:flex; gap:10px; flex-wrap:wrap; padding:12px; max-width:calc(100% - 400px); border:2px solid #becbae; border-radius:20px; background:#fffdf0f5; }
+.island-editor-shell { position:absolute; z-index:3; right:max(16px,env(safe-area-inset-right)); top:var(--island-hud-top); bottom:max(16px,env(safe-area-inset-bottom)); width:360px; max-width:calc(100% - 32px); display:flex; flex-direction:column; border:2px solid var(--island-line); border-radius:24px; background:#fffdf3f5; box-shadow:0 8px 30px #34594324; overflow:hidden; }
+.island-editor-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:16px 20px; border-bottom:1px solid #d7ddc9; }
+.island-editor-heading h2 { font-size:32px; white-space:nowrap; flex-shrink:0; }
+.island-editor-scroll { padding:16px 20px; overflow:auto; min-height:0; overscroll-behavior:contain; }
+.island-editor h3 { font-size:22px; margin:20px 0 12px; }
+.island-selection { border:1px dashed #b5c197; background:#f1f2df; border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:10px; }
+.island-selection p { margin:0; }
+.island-move-buttons { display:flex; flex-wrap:wrap; gap:6px; }
+.island-move-buttons button { flex:1; padding:4px; font-size:24px; }
+.island-inventory-list,.island-placed-list { display:flex; flex-direction:column; gap:10px; }
+.island-inventory-item { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #e4e5d1; }
+.island-inventory-item>div { min-width:0; flex:1; }
+.island-inventory-item strong { display:block; font-size:22px; overflow-wrap:anywhere; }
+.island-inventory-item span { display:block; font-size:18px; color:#69745e; }
+.island-inventory-item button { padding:8px; flex-shrink:0; }
+.island-placed-list button[aria-pressed=true] { background:#dbe8c1; border-color:#789b4e; }
+.island-notice,.island-fullscreen>p[role=status] { position:absolute; z-index:6; top:100px; left:50%; transform:translateX(-50%); max-width:calc(100% - 32px); width:max-content; padding:14px 20px; border:2px solid #becbae; border-radius:16px; background:#fffdf3; box-shadow:0 4px 16px #34594320; }
+.island-error { background:#fff0df; border-color:#cfaa80; }
+.island-hint { font-size:18px; color:#626e56; }
+.island-sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+@media(max-width:1050px) and (min-height:500px), (max-width:700px) {
+ .island-editor-shell { top:auto; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 148px); left:12px; right:12px; width:auto; max-width:none; height:42dvh; }
+ .island-editor-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 16px; }
+ .island-editor-heading h2 { font-size:32px; }
+ .island-editor-scroll { padding:12px 16px; }
+ .island-edit-bar { left:12px; right:12px; max-width:none; bottom:max(12px,env(safe-area-inset-bottom)); display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:10px; }
+ .island-edit-bar button { padding:8px; }
+ .island-view-controls { top:96px; right:12px; }
+}
+@media(max-width:650px) {
+ .island-page-header { top:max(12px,env(safe-area-inset-top)); left:12px; right:12px; gap:8px; }
+ .island-heading { gap:10px; }
+ .island-heading h1 { font-size:32px; }
+ .island-page-header button { padding:10px 12px; }
+ .island-actions { gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+ .island-actions button { max-width:120px; }
+ .island-view-help { display:none; }
+ .island-game-dock { left:auto; right:12px; width:300px; max-width:calc(100% - 24px); padding:10px; bottom:max(12px,env(safe-area-inset-bottom)); border-radius:20px; }
+ .island-activities { flex-direction:column; align-items:stretch; gap:8px; }
+ .island-activity-buttons { max-width:none; }
+ .island-activity-buttons button { padding:4px 10px; }
+ .island-activity-buttons .island-item-preview { width:40px; height:40px; flex-basis:40px; }
+ .island-dock-actions { display:grid; grid-template-columns:1fr 1fr; }
+ .island-dock-actions button { padding:8px; }
+ .island-character-status { margin-bottom:8px; justify-content:space-between; gap:8px; }
+ .island-character-status button { padding:8px; }
+}
+@media(max-height:500px) and (min-width:701px) {
+ .island-page-header { top:8px; }
+ .island-game-dock { padding:10px; bottom:8px; right:12px; width:340px; }
+ .island-character-status { margin:0; }
+
+ .island-activity-buttons { max-width:100%; }
+ .island-view-controls { top:80px; }
+ .island-view-help { display:none; }
+ .island-editor-shell { top:var(--island-hud-top); width:340px; bottom:8px; }
+ .island-edit-bar { bottom:8px; left:12px; max-width:calc(100% - 370px); padding:8px; gap:8px; }
+ .island-edit-bar button { padding:8px; }
+}
+/* 钱包与打卡入口是屏幕浮层，保持与应用一致的字级。 */
+.island-wallet { display:flex; align-items:center; gap:18px; margin-left:auto; padding:10px 16px; border:2px solid var(--island-line); border-radius:20px; background:#fffdf3f5; pointer-events:auto; min-height:56px; }
+.island-wallet>span { display:flex; align-items:center; gap:6px; font-size:22px; white-space:nowrap; }
+.island-wallet img { width:32px; height:32px; }
+.island-checkin-panel { position:absolute; z-index:4; top:var(--island-hud-top); left:max(12px,env(safe-area-inset-left)); width:136px; border:2px solid var(--island-line); border-radius:20px; overflow:hidden; background:#fffdf3f5; }
+.island-checkin-toggle { display:flex; align-items:center; justify-content:space-between; gap:6px; width:100%; padding:8px 10px; border:0; border-radius:0; white-space:nowrap; }
+.island-checkin-toggle strong { font-size:18px; }
+.island-checkin-list { display:grid; grid-template-columns:repeat(2,56px); gap:4px; max-height:min(220px,30dvh); overflow:auto; padding:6px; overscroll-behavior:contain; }
+.island-checkin-list button { display:flex; align-items:center; justify-content:center; padding:6px; width:56px; height:56px; }
+
+.island-checkin-list img { width:40px; height:40px; flex:0 0 40px; }
+.island-checkin-list p { font-size:18px; margin:4px; }
+.island-reset-view { display:flex; align-items:center; justify-content:center; }
+.island-view-help { display:none; }
+@media(max-width:1050px) {
+ .island-currency-name { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+ .island-wallet { gap:10px; padding:8px; }
+ .island-wallet img { width:28px; height:28px; }
+}
+@media(max-width:700px) {
+ .island-heading h1 { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+ .island-page-header { gap:8px; align-items:center; }
+ .island-wallet { margin-left:0; gap:8px; flex-wrap:wrap; justify-content:center; min-width:0; padding:8px 4px; }
+ .island-wallet>span { gap:4px; font-size:22px; }
+ .island-wallet strong { overflow-wrap:anywhere; white-space:normal; }
+ .island-page-header button { padding:8px 10px; }
+
+ .island-checkin-list { max-height:136px; }
+ .island-checkin-list img { width:32px; height:32px; flex-basis:32px; }
+ .island-editor-shell { height:36dvh; }
+}
+@media(max-height:500px) and (min-width:701px) {
+ .island-heading h1 { font-size:32px; }
+
+ .island-checkin-list { max-height:88px; }
+}
+
+/* 主入口在右上角，活动控制在右下角；窄屏顶部换行保持字号。 */
+.island-actions { flex-shrink:0; }
+.island-actions button { white-space:nowrap; }
+.island-checkin-panel.is-collapsed { width:76px; }
+.island-checkin-toggle { justify-content:center; gap:8px; }
+.island-checkin-list:has(>p:only-child) { padding:0; }
+.island-character-status { justify-content:space-between; }
+.island-activity-buttons { width:100%; max-width:100%; }
+.island-activities { width:100%; }
+@media(max-width:1050px) {
+ .island-page-header { display:grid; grid-template-columns:auto 1fr; align-items:center; gap:8px 12px; }
+ .island-wallet { justify-self:end; }
+ .island-actions { grid-column:1 / -1; justify-self:end; gap:8px; }
+ .island-actions button { max-width:none; }
+}

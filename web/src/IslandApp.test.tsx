@@ -6,6 +6,8 @@ import { testSession } from './test/account-fixtures';
 import { campFixture } from './features/checkin/test-fixtures';
 import checkinContent from './features/checkin/content.json';
 import shopContent from './features/shop/content.json';
+import islandContent from './features/island/content.json';
+import { state as islandState } from './features/island/island-test-fixtures';
 
 // 测试响应按真实账户协议组织，不复用演示账户。
 function installServer(loggedIn = false, managementExpiry: string | null = null) {
@@ -14,6 +16,7 @@ function installServer(loggedIn = false, managementExpiry: string | null = null)
     const path = String(input);
     if (path.endsWith('/session')) return active ? Response.json({ ...testSession, management_expires_at: managementExpiry }) : Response.json({ code: 'SESSION_REQUIRED', field_errors: {}, request_id: 'r1' }, { status: 401 });
     if (path.endsWith('/camp')) return Response.json(campFixture);
+    if (path.endsWith('/island')) return Response.json(islandState);
     if (path.includes('/checkins?')) return Response.json({ items: [], next_cursor: null });
     if (path.includes('/messages')) return Response.json({ items: [], next_cursor: null });
     if (path.includes('/products')) return Response.json({ items: [] });
@@ -40,6 +43,29 @@ async function unlock() {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('账户页面与管理授权', () => {
+  it('进入小岛隐藏普通页框，独立返回回到进入前页面', async () => {
+    installServer(true);
+    render(<IslandApp />);
+    fireEvent.click(await screen.findByRole('button', { name: content.navigation.shop }));
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.island }));
+    await screen.findByRole('group', { name: islandContent.scene });
+    expect(screen.queryByRole('navigation', { name: content.navigation.label })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: content.navigation.management })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: islandContent.back }));
+    await screen.findByRole('button', { name: shopContent.wardrobe });
+    expect(screen.getByRole('button', { name: content.navigation.shop })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('小岛入口随会话展示，未进入时不读取岛屿布局', async () => {
+    const server = installServer(true);
+    render(<IslandApp />);
+    await screen.findByRole('button', { name: content.navigation.island });
+    expect(server.mock.calls.some(([path]) => String(path).endsWith('/island'))).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: content.account.logout }));
+    await screen.findByRole('heading', { name: content.account.loginTitle });
+    expect(screen.queryByRole('button', { name: content.navigation.island })).not.toBeInTheDocument();
+  });
+
   it('未登录时填写真实凭据，登录成功后显示账户，退出后清除内容', async () => {
     const server = installServer();
     render(<IslandApp />);

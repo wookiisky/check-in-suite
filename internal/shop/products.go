@@ -11,9 +11,26 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/idempotency"
+	"github.com/wookiisky/check-in-suite/internal/island"
 )
 
-const productColumns = `p.id,p.type,p.name,p.asset_key,p.description,p.coin_price,p.diamond_price,p.stock,p.enabled,p.version,p.deleted_at,EXISTS(SELECT 1 FROM purchases x WHERE x.product_id=p.id AND x.type_snapshot!='reward')`
+// ownershipMatch retains existing portrait ownership while island items share identity across offers.
+func ownershipMatch() string {
+	matches := []string{"x.product_id=p.id"}
+	for _, item := range island.Catalog() {
+		if item.AssetKey == "" {
+			continue
+		}
+		keys := "'" + strings.ReplaceAll(item.AssetKey, "'", "''") + "'"
+		if item.PortraitAssetKey != "" {
+			keys += ",'" + strings.ReplaceAll(item.PortraitAssetKey, "'", "''") + "'"
+		}
+		matches = append(matches, "(p.asset_key IN ("+keys+") AND (x.item_key_snapshot='"+strings.ReplaceAll(item.Key, "'", "''")+"' OR (x.item_key_snapshot='' AND x.asset_key_snapshot IN ("+keys+"))))")
+	}
+	return "(" + strings.Join(matches, " OR ") + ")"
+}
+
+var productColumns = "p.id,p.type,p.name,p.asset_key,p.description,p.coin_price,p.diamond_price,p.stock,p.enabled,p.version,p.deleted_at,EXISTS(SELECT 1 FROM purchases x WHERE " + ownershipMatch() + " AND x.type_snapshot!='reward'),(SELECT COUNT(*) FROM purchases x WHERE " + ownershipMatch() + " AND x.status='owned')"
 
 // rowScanner is the common Scan boundary shared by database rows and one-row queries.
 type rowScanner interface{ Scan(...any) error }
@@ -22,11 +39,16 @@ type rowScanner interface{ Scan(...any) error }
 func scanProduct(row rowScanner) (Product, error) {
 	var p Product
 	var stock, deleted sql.NullInt64
-	err := row.Scan(&p.ID, &p.Type, &p.Name, &p.AssetKey, &p.Description, &p.CoinPrice, &p.DiamondPrice, &stock, &p.Enabled, &p.Version, &deleted, &p.Owned)
+	err := row.Scan(&p.ID, &p.Type, &p.Name, &p.AssetKey, &p.Description, &p.CoinPrice, &p.DiamondPrice, &stock, &p.Enabled, &p.Version, &deleted, &p.Owned, &p.OwnedCount)
 	if stock.Valid {
 		p.Stock = &stock.Int64
 	}
 	p.Deleted = deleted.Valid
+	if item, ok := island.ForAsset(p.AssetKey); ok {
+		p.IslandItemKey = item.Key
+		p.PortraitType, p.PortraitAssetKey = portraitCapability(item)
+		p.Repeatable = item.Repeatable
+	}
 	return p, err
 }
 
@@ -41,7 +63,7 @@ func readProduct(ctx context.Context, tx *sql.Tx, id string, includeDeleted bool
 
 // validType uses the declared product behaviors, never inferred display text.
 func validType(kind string) bool {
-	return kind == TypeTitle || kind == TypeAvatar || kind == TypeBackground || kind == TypeAccessory || kind == TypeEffect || kind == TypeReward
+	return kind == TypeIsland || kind == TypeTitle || kind == TypeAvatar || kind == TypeBackground || kind == TypeAccessory || kind == TypeEffect || kind == TypeReward
 }
 
 // validateProduct applies configured numeric and Unicode bounds before any product write.
@@ -172,6 +194,17 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 	}
 	if err = s.validateProduct(input.ProductInput); err != nil {
 		return Product{}, err
+	}
+	oldItem, oldIsland := island.ForAsset(current.AssetKey)
+	newItem, newIsland := island.ForAsset(input.AssetKey)
+	if (oldIsland || newIsland) && oldItem.Key != newItem.Key {
+		var sold bool
+		if err = tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM purchases WHERE product_id=?)", id).Scan(&sold); err != nil {
+			return Product{}, err
+		}
+		if sold {
+			return Product{}, core.Fail(409, "PRODUCT_ITEM_LOCKED")
+		}
 	}
 	if input.Type != current.Type {
 		var sold bool

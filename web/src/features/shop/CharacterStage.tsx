@@ -3,7 +3,7 @@ import type { CSSProperties, PointerEvent } from 'react';
 import type { Equipment } from './types';
 import { accessoryLayout, accessoryOrder, avatarLayerID, clampLayout } from './accessory-layout';
 import type { AccessoryLayout } from './accessory-layout';
-import { assetURL } from './helpers';
+import { assetURL, portraitAssetKey } from './helpers';
 import { useReducedMotion } from './useReducedMotion';
 import content from './content.json';
 
@@ -65,10 +65,10 @@ export function CharacterStage({ equipment, reduceMotion = false, editor }: {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
   return <div className="shop-character-stage" ref={stage} data-editing={editor ? 'true' : undefined}>
-    {equipment.background && <img className="shop-background-art" src={assetURL(equipment.background.asset_key_snapshot)} alt={equipment.background.name_snapshot} draggable={false} />}
-    {equipment.accessories.map((item) => <img key={item.id} className="shop-accessory-art" data-purchase-id={item.id} style={layoutStyle(accessoryLayout(equipment, item.id), order.indexOf(item.id) + 1)} src={assetURL(item.asset_key_snapshot)} alt={item.name_snapshot} title={item.name_snapshot} draggable={false} />)}
-    <img className="shop-avatar-art" style={{ zIndex: order.indexOf(avatarLayerID) + 1 }} src={assetURL(equipment.avatar?.asset_key_snapshot ?? 'fox-v1')} alt={equipment.avatar?.name_snapshot ?? content.defaultAvatar} draggable={false} />
-    {equipment.effects.map((item) => <img key={item.id} className="shop-effect-art" style={{ zIndex: effectLayer }} src={assetURL(item.asset_key_snapshot, staticMotion)} alt={item.name_snapshot} draggable={false} />)}
+    {equipment.background && <img className="shop-background-art" src={assetURL(portraitAssetKey(equipment.background))} alt={equipment.background.name_snapshot} draggable={false} />}
+    {equipment.accessories.map((item) => <img key={item.id} className="shop-accessory-art" data-purchase-id={item.id} style={layoutStyle(accessoryLayout(equipment, item.id), order.indexOf(item.id) + 1)} src={assetURL(portraitAssetKey(item))} alt={item.name_snapshot} title={item.name_snapshot} draggable={false} />)}
+    <img className="shop-avatar-art" style={{ zIndex: order.indexOf(avatarLayerID) + 1 }} src={assetURL(equipment.avatar ? portraitAssetKey(equipment.avatar) : 'fox-v1')} alt={equipment.avatar?.name_snapshot ?? content.defaultAvatar} draggable={false} />
+    {equipment.effects.map((item) => <img key={item.id} className="shop-effect-art" style={{ zIndex: effectLayer }} src={assetURL(portraitAssetKey(item), staticMotion)} alt={item.name_snapshot} draggable={false} />)}
     {editor && equipment.accessories.map((item) => <button
       type="button" key={item.id} className="shop-accessory-handle"
       style={layoutStyle(accessoryLayout(equipment, item.id), handleLayer + (editor.selectedID === item.id ? order.length : order.indexOf(item.id)))}

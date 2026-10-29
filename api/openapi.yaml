@@ -1,11 +1,27 @@
 openapi: "3.1.0"
 info:
-  title: "小小成长岛服务接口"
+  title: "成长岛服务接口"
   version: "0.2.0"
   description: "已批准的首版接口契约；端点实现和验收状态见tasks.md。单账户、同源Cookie认证；写请求校验Origin和CSRF。未知字段拒绝，整数不超过JavaScript安全范围。"
 servers: [{"url": "/"}]
 security: [{"sessionCookie": []}]
 paths:
+  "/api/v1/island":
+    get:
+      operationId: "getIsland"
+      summary: "读取小岛布局、已拥有物品与当前物品能力"
+      responses:
+        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandState"}}}}
+        default: {"$ref": "#/components/responses/Error"}
+    put:
+      operationId: "saveIsland"
+      summary: "按已读取版本原子保存完整小岛布局"
+      parameters: [{"$ref": "#/components/parameters/CSRF"}]
+      description: "仅需登录，无需管理授权。验证真实所有权、每件实例唯一、室内外范围与房屋环境单选；冲突返回 VERSION_CONFLICT。"
+      requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandSave"}}}}
+      responses:
+        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandState"}}}}
+        default: {"$ref": "#/components/responses/Error"}
   "/health/live":
     get:
       operationId: "getLiveness"
@@ -291,10 +307,12 @@ paths:
       operationId: "updateProduct"
       summary: "编辑配置并检查版本"
       x-management-required: true
+      description: "已出售商品不能改为另一物品身份，返回 PRODUCT_ITEM_LOCKED；成交类型变更受 PRODUCT_TYPE_LOCKED 约束。展示与互动能力通过资源定义追加，不改写成交事实。"
       parameters: [{"name": "id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}, {"$ref": "#/components/parameters/CSRF"}]
       requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ProductUpdate"}}}}
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Product"}}}}
+        "409": {"description": "VERSION_CONFLICT、PRODUCT_ITEM_LOCKED 或 PRODUCT_TYPE_LOCKED；保留当前配置。", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ApiError"}}}}
         default: {"$ref": "#/components/responses/Error"}
     delete:
       operationId: "deleteProduct"
@@ -318,7 +336,7 @@ paths:
       parameters:
         - {"name": "cursor", "in": "query", "required": false, "schema": {"type": "string"}}
         - {"name": "limit", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1, "maximum": 100}}
-        - {"name": "type", "in": "query", "required": false, "schema": {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward"]}}
+        - {"name": "type", "in": "query", "required": false, "schema": {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward", "island"]}}
         - {"name": "status", "in": "query", "required": false, "schema": {"type": "string", "enum": ["owned", "pending", "redeemed"]}}
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PurchaseList"}}}}
@@ -885,13 +903,68 @@ components:
       additionalProperties: false
       required: ["items", "next_cursor"]
       properties: {"items": {"type": "array", "items": {"$ref": "#/components/schemas/Checkin"}}, "next_cursor": {"anyOf": [{"type": "string"}, {"type": "null"}]}}
+    IslandPlacement:
+      type: "object"
+      additionalProperties: false
+      required: ["id", "item_key", "x", "y", "rotation", "zone"]
+      properties:
+        id: {"type": "string", "minLength": 1, "description": "基础物品身份或一笔购买对应的实例身份。"}
+        item_key: {"type": "string", "minLength": 1}
+        x: {"type": "number", "minimum": -8, "maximum": 8}
+        y: {"type": "number", "minimum": -8, "maximum": 8}
+        rotation: {"type": "integer", "enum": [0, 90, 180, 270]}
+        zone: {"type": "string", "enum": ["outdoor", "indoor"], "description": "室内坐标限制为 -2 至 2；室外为 -8 至 8。"}
+    IslandOwnedItem:
+      type: "object"
+      additionalProperties: false
+      required: ["id", "item_key"]
+      properties:
+        id: {"type": "string", "minLength": 1}
+        item_key: {"type": "string", "minLength": 1}
+    IslandDefinition:
+      type: "object"
+      additionalProperties: false
+      required: ["key", "name", "category", "model", "width", "depth", "movable", "repeatable"]
+      properties:
+        key: {"type": "string", "minLength": 1}
+        name: {"type": "string", "minLength": 1}
+        category: {"type": "string", "enum": ["decoration", "house", "creature", "environment", "equipment"]}
+        model: {"type": "string", "minLength": 1}
+        width: {"type": "number", "exclusiveMinimum": 0}
+        depth: {"type": "number", "exclusiveMinimum": 0}
+        movable: {"type": "boolean"}
+        repeatable: {"type": "boolean"}
+        activity: {"type": "string", "enum": ["read", "run", "ball"]}
+        animation: {"type": "string", "enum": ["sway", "flutter"], "description": "独立于互动的常驻视觉动作。"}
+        portrait_asset_key: {"type": "string", "minLength": 1}
+        asset_key: {"type": "string", "minLength": 1, "description": "商品缩略图和当前受控素材身份。"}
+        coin_price: {"type": "integer", "minimum": 0, "description": "资源默认价格；实际购买以商品价格为准。"}
+        diamond_price: {"type": "integer", "minimum": 0, "description": "资源默认钻石价格；实际购买以商品价格为准。"}
+    IslandState:
+      type: "object"
+      additionalProperties: false
+      required: ["version", "placements", "inventory", "catalog"]
+      properties:
+        version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+        placements: {"type": "array", "items": {"$ref": "#/components/schemas/IslandPlacement"}}
+        inventory: {"type": "array", "items": {"$ref": "#/components/schemas/IslandOwnedItem"}}
+        catalog: {"type": "array", "items": {"$ref": "#/components/schemas/IslandDefinition"}}
+    IslandSave:
+      type: "object"
+      additionalProperties: false
+      required: ["expected_version", "placements"]
+      properties:
+        expected_version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+        placements: {"type": "array", "items": {"$ref": "#/components/schemas/IslandPlacement"}}
     Product:
       type: "object"
       additionalProperties: false
       required: ["id", "type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled", "version", "owned"]
       properties:
+        portrait_type: {"type": "string", "enum": ["title", "avatar", "accessory", "background", "effect"], "description": "当前物品定义授予的画像用途，独立于成交商品类型。"}
+        portrait_asset_key: {"type": "string", "minLength": 1, "description": "当前画像展示素材；物品能力后续追加时已购者也可使用。"}
         id: {"type": "string", "minLength": 1}
-        type: {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward"]}
+        type: {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward", "island"]}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
         asset_key: {"type": "string", "minLength": 1}
         description: {"type": "string", "maxLength": 2000}
@@ -900,13 +973,16 @@ components:
         stock: {"anyOf": [{"type": "integer", "minimum": 0, "maximum": 1000000}, {"type": "null"}]}
         enabled: {"type": "boolean"}
         version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+        island_item_key: {"type": "string", "description": "当前资源定义关联的稳定小岛物品标识；不支持小岛时省略。"}
+        repeatable: {"type": "boolean", "description": "由资源定义决定是否允许按件重复购买。"}
+        owned_count: {"type": "integer", "minimum": 0, "description": "按稳定物品身份统计已拥有的数量。"}
         owned: {"type": "boolean", "description": "当前是否已拥有该永久商品；reward始终为false。"}
     ProductCreate:
       type: "object"
       additionalProperties: false
       required: ["type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled"]
       properties:
-        type: {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward"]}
+        type: {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward", "island"]}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
         asset_key: {"type": "string", "minLength": 1}
         description: {"type": "string", "maxLength": 2000}
@@ -919,7 +995,7 @@ components:
       additionalProperties: false
       required: ["type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled", "expected_version"]
       properties:
-        type: {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward"]}
+        type: {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward", "island"]}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
         asset_key: {"type": "string", "minLength": 1}
         description: {"type": "string", "maxLength": 2000}
@@ -950,9 +1026,12 @@ components:
         - "version"
         - "created_at"
       properties:
+        portrait_type: {"type": "string", "enum": ["title", "avatar", "accessory", "background", "effect"], "description": "当前物品定义授予的画像用途，独立于成交商品类型。"}
+        portrait_asset_key: {"type": "string", "minLength": 1, "description": "当前画像展示素材；物品能力后续追加时已购者也可使用。"}
         id: {"type": "string", "minLength": 1}
+        island_item_key: {"type": "string", "description": "根据稳定物品身份读取的当前小岛能力，可随资源更新增加。"}
         product_id: {"type": "string", "minLength": 1}
-        type_snapshot: {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward"]}
+        type_snapshot: {"type": "string", "enum": ["title", "avatar", "background", "accessory", "effect", "reward", "island"]}
         name_snapshot: {"type": "string", "minLength": 1, "maxLength": 40}
         asset_key_snapshot: {"type": "string", "minLength": 1}
         description_snapshot: {"type": "string"}
@@ -1045,7 +1124,7 @@ components:
       properties:
         key: {"type": "string", "minLength": 1}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
-        kind: {"type": "string", "enum": ["icon", "avatar", "background", "accessory", "effect", "title", "reward", "badge"]}
+        kind: {"type": "string", "enum": ["icon", "avatar", "background", "accessory", "effect", "title", "reward", "badge", "island"]}
         url: {"type": "string"}
         format: {"type": "string", "enum": ["svg", "png", "webp"], "description": "省略时为 svg。"}
     AssetList:

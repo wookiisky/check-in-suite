@@ -114,7 +114,7 @@ func (s *Service) SetSlot(ctx context.Context, p account.Principal, slot string,
 		if err != nil {
 			return Equipment{}, err
 		}
-		if item.TypeSnapshot != slot || item.Status != StatusOwned {
+		if equipmentType(item) != slot || item.Status != StatusOwned {
 			return Equipment{}, core.Fail(422, "INVALID_EQUIPMENT")
 		}
 	}
@@ -159,7 +159,7 @@ func (s *Service) setDecoration(ctx context.Context, p account.Principal, purcha
 	if err != nil {
 		return result, err
 	}
-	if item.TypeSnapshot != kind || item.Status != StatusOwned {
+	if equipmentType(item) != kind || item.Status != StatusOwned {
 		return result, core.Fail(422, "INVALID_EQUIPMENT")
 	}
 	if !equipped {

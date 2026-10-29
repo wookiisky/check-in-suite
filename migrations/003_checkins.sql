@@ -17,7 +17,7 @@ CREATE INDEX media_cleanup ON media_files(state,unreferenced_at);
 
 CREATE TABLE products (
     id TEXT PRIMARY KEY,
-    type TEXT NOT NULL CHECK(type IN ('title','avatar','accessory','background','effect','reward')),
+    type TEXT NOT NULL CHECK(type IN ('title','avatar','accessory','background','effect','reward','island')),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     asset_key TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
@@ -35,7 +35,9 @@ CREATE INDEX products_visible ON products(enabled,deleted_at,type);
 CREATE TABLE purchases (
     id TEXT PRIMARY KEY,
     product_id TEXT NOT NULL REFERENCES products(id),
-    type_snapshot TEXT NOT NULL CHECK(type_snapshot IN ('title','avatar','accessory','background','effect','reward')),
+    repeatable INTEGER NOT NULL DEFAULT 0 CHECK(repeatable IN (0,1)),
+    item_key_snapshot TEXT NOT NULL DEFAULT '',
+    type_snapshot TEXT NOT NULL CHECK(type_snapshot IN ('title','avatar','accessory','background','effect','reward','island')),
     name_snapshot TEXT NOT NULL,
     description_snapshot TEXT NOT NULL,
     asset_key_snapshot TEXT NOT NULL,
@@ -48,7 +50,7 @@ CREATE TABLE purchases (
     CHECK((type_snapshot='reward' AND status IN ('pending','redeemed')) OR (type_snapshot!='reward' AND status='owned')),
     CHECK((status='redeemed' AND redeemed_at IS NOT NULL) OR (status!='redeemed' AND redeemed_at IS NULL))
 ) STRICT;
-CREATE UNIQUE INDEX purchases_permanent ON purchases(product_id) WHERE type_snapshot IN ('title','avatar','accessory','background','effect');
+CREATE UNIQUE INDEX purchases_permanent ON purchases(product_id) WHERE type_snapshot!='reward' AND repeatable=0;
 CREATE INDEX purchases_date ON purchases(created_at,id);
 
 CREATE TABLE equipped_accessories (
@@ -193,4 +195,11 @@ CREATE TABLE idempotency_requests (
     response_json TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     PRIMARY KEY(account_id,operation,key)
+) STRICT;
+
+-- Layout is independent from portrait equipment; version protects concurrent edits.
+CREATE TABLE island_state (
+    id INTEGER PRIMARY KEY CHECK(id=1),
+    version INTEGER NOT NULL CHECK(version>0),
+    placements TEXT NOT NULL CHECK(json_valid(placements))
 ) STRICT;

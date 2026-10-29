@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
 import family from '../src/features/family/content.json' with { type: 'json' };
+import island from '../src/features/island/content.json' with { type: 'json' };
 
 // 自动化检查实际布局和键盘焦点；手机项目只是WebKit仿真，不是真机验收。
 test('全页面大字触控、键盘焦点、减少动效和无横向溢出', async ({ page }, testInfo) => {
@@ -17,7 +18,12 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
       return {
         width: document.documentElement.scrollWidth, viewport: innerWidth,
         smallText: [...document.querySelectorAll('body *')].filter((element) => visible(element) && [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) && parseFloat(getComputedStyle(element).fontSize) < 18).map((element) => element.tagName),
-        smallControls: [...document.querySelectorAll('button,input,select,textarea,a')].filter(visible).filter((element) => { const box = element.getBoundingClientRect(); return box.width < 56 || box.height < 56; }).map((element) => `${element.tagName}:${element.getAttribute('type') ?? ''}:${element.getBoundingClientRect().width}x${element.getBoundingClientRect().height}`),
+        // 复选框与单选框的关联label也是实际点击区域，不能只测方框的视觉尺寸。
+        smallControls: [...document.querySelectorAll('button,input,select,textarea,a')].filter(visible).filter((element) => {
+          const targets: Element[] = [element];
+          if (element instanceof HTMLInputElement && ['checkbox', 'radio'].includes(element.type)) targets.push(...Array.from(element.labels ?? []).filter(visible));
+          return !targets.some((target) => { const box = target.getBoundingClientRect(); return box.width >= 56 && box.height >= 56; });
+        }).map((element) => `${element.tagName}:${element.getAttribute('type') ?? ''}:${element.getBoundingClientRect().width}x${element.getBoundingClientRect().height}`),
         animated: [...document.querySelectorAll('body *')].filter(visible).filter((element) => getComputedStyle(element).animationName !== 'none').map((element) => element.className),
       };
     });
@@ -26,9 +32,10 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
     expect(layout.smallControls, label).toEqual([]);
     expect(layout.animated, label).toEqual([]);
   };
-  for (const route of ['camp', 'calendar', 'stats', 'shop'] as const) {
+  for (const route of ['camp', 'island', 'calendar', 'stats', 'shop'] as const) {
     await page.getByRole('button', { name: content.navigation[route], exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    if (route === 'island') await expect(page.locator('.island-scene')).toBeVisible();
     if (route === 'calendar') await expect(page.locator('.calendar-day').first()).toBeVisible();
     if (route === 'camp') { await expect(page.getByRole('heading', { name: checkin.todayTasks })).toBeVisible(); await expect(page.getByRole('heading', { name: family.title })).toBeVisible(); }
     if (route === 'stats') await expect(page.locator('.reports-summary')).toBeVisible();
@@ -48,6 +55,7 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
       await page.getByRole('button', { name: checkin.dayView, exact: true }).click();
     }
     if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.screenshot({ path: `.local/previews/${route}-layout-${testInfo.project.name}.png`, fullPage: false });
+    if (route === 'island') await page.getByRole('button', { name: island.back, exact: true }).click();
   }
   const opener = page.getByRole('button', { name: content.navigation.management, exact: true });
   await opener.focus();

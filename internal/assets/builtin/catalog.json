@@ -286,5 +286,41 @@
     "name": "星光闪烁",
     "kind": "effect",
     "url": "/api/v1/assets/effect-sparkle-v1"
+  },
+  {
+    "key": "island-tree-v1",
+    "name": "圆冠小树",
+    "kind": "island",
+    "url": "/api/v1/assets/island-tree-v1"
+  },
+  {
+    "key": "island-cottage-v1",
+    "name": "暖红屋顶小屋",
+    "kind": "island",
+    "url": "/api/v1/assets/island-cottage-v1"
+  },
+  {
+    "key": "island-butterfly-v1",
+    "name": "花园蝴蝶",
+    "kind": "island",
+    "url": "/api/v1/assets/island-butterfly-v1"
+  },
+  {
+    "key": "island-dusk-v1",
+    "name": "温柔暮色",
+    "kind": "island",
+    "url": "/api/v1/assets/island-dusk-v1"
+  },
+  {
+    "key": "island-ball-v1",
+    "name": "彩色皮球",
+    "kind": "island",
+    "url": "/api/v1/assets/island-ball-v1"
+  },
+  {
+    "key": "accessory-tree-v1",
+    "name": "小树饰品",
+    "kind": "accessory",
+    "url": "/api/v1/assets/accessory-tree-v1"
   }
 ]

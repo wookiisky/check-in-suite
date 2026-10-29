@@ -1,5 +1,5 @@
 {
-  "appName": "小小成长岛",
+  "appName": "成长岛",
   "common": {
     "loading": "正在加载……",
     "saving": "正在保存……",
@@ -13,6 +13,7 @@
   "navigation": {
     "label": "主要导航",
     "camp": "成长营地",
+    "island": "小岛",
     "calendar": "月历",
     "stats": "统计",
     "shop": "商店",

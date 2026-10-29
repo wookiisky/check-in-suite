@@ -3,7 +3,7 @@ import { Modal } from '../../components/Modal';
 import { ApiFailure } from '../../api/client';
 import type { Camp, Product, Purchase, PurchaseResult, ShopClient, Wallet } from './types';
 import { pendingPurchases } from './pending';
-import { assetURL, canBuy, shopError, uncertainResult } from './helpers';
+import { assetURL, canBuy, portraitType, shopError, uncertainResult } from './helpers';
 import { Price } from './Price';
 import content from './content.json';
 
@@ -113,10 +113,12 @@ export function PurchaseDialog({
         coins={wallet.coins - product.coin_price}
         diamonds={wallet.diamonds - product.diamond_price}
       />
-      <p className="shop-hint">{content.noAutoEquip}</p>
+      <p className="shop-hint">{product.island_item_key ? content.islandPurchaseHint : content.noAutoEquip}</p>
+      {product.island_item_key && portraitType(product) && <p className="shop-hint">{content.dualUseHint}</p>}
+      {product.repeatable && <p className="shop-hint">{content.repeatableHint}</p>}
       {!canBuy(product, wallet) && !pending && (
         <p className="shop-hint">
-          {product.owned
+          {product.owned && !product.repeatable
             ? content.owned
             : product.stock === 0
               ? content.soldOut

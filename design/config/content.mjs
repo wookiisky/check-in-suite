@@ -1,6 +1,6 @@
 /** 界面文案集中配置，便于调整语气和后续本地化。 */
 export const copy = {
-  brand: '小小成长岛', brandSub: '每天一小步，成长一大步', camp: '成长营地', calendar: '打卡月历', stats: '成长统计', shop: '奖励商店',
+  brand: '成长岛', brandSub: '每天一小步，成长一大步', camp: '成长营地', calendar: '打卡月历', stats: '成长统计', shop: '奖励商店',
   prototype: '静态交互原型 · 示例数据保存在当前浏览器', prototypeShort: '设计预览', reset: '重置演示', resetQuestion: '恢复初始示例数据？当前浏览器中的演示修改将被清除。',
   hello: '你好，{name}！', heroTitle: '今天，也要闪闪发光呀！', heroSub: '每完成一个小任务，就离更棒的自己近一点。', adventure: '新的一天 · 新的冒险',
   todayCompleted: '今天已完成 {count} 次打卡', activeDays: '本月已坚持 {count} 天', recordHeading: '我的成长足迹', recordSub: '每一份努力，都值得被记住',

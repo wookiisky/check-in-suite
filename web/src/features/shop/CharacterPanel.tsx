@@ -1,5 +1,5 @@
 import type { Equipment } from './types';
-import { assetURL } from './helpers';
+import { assetURL, portraitAssetKey } from './helpers';
 import content from './content.json';
 import { CharacterStage } from './CharacterStage';
 import type { StageEditor } from './CharacterStage';
@@ -22,7 +22,7 @@ export function CharacterPanel({
       <h3>{displayName}</h3>
       {equipment.title ? (
         <p className="shop-character-title">
-          <img src={assetURL(equipment.title.asset_key_snapshot)} alt="" />
+          <img src={assetURL(portraitAssetKey(equipment.title))} alt="" />
           {equipment.title.name_snapshot}
         </p>
       ) : (

@@ -1,12 +1,12 @@
 import { ApiFailure, errorMessage } from '../../api/client';
-import type { Product, Wallet } from './types';
+import type { Product, Purchase, Wallet } from './types';
 import content from './content.json';
 
 // 两种余额都必须达到价格，负余额不能购买免费商品。
 export function canBuy(product: Product, wallet: Wallet): boolean {
   return (
     product.enabled &&
-    !product.owned &&
+    (!product.owned || product.repeatable === true) &&
     product.stock !== 0 &&
     wallet.coins >= product.coin_price &&
     wallet.diamonds >= product.diamond_price
@@ -48,4 +48,16 @@ export function purchaseTime(value: string): string {
     minute: '2-digit',
     hour12: false,
   }).format(new Date(value));
+}
+
+// 画像能力由当前物品定义提供；未关联定义的既有装扮保留成交用途。
+export function portraitType(item: Product | Purchase): Exclude<Purchase['type_snapshot'], 'reward' | 'island'> | null {
+  if (item.portrait_type) return item.portrait_type;
+  const original = 'type_snapshot' in item ? item.type_snapshot : item.type;
+  return original === 'island' || original === 'reward' ? null : original;
+}
+
+// 画像使用专属素材，成交缩略图只作为未扩展装扮的默认表现。
+export function portraitAssetKey(item: Purchase): string {
+  return item.portrait_asset_key ?? item.asset_key_snapshot;
 }

@@ -45,6 +45,10 @@ func TestMaintenanceCommands(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
+	var initialOffers int
+	if err := db.QueryRowContext(ctx, "SELECT count(*) FROM products WHERE type='island' AND enabled=1").Scan(&initialOffers); err != nil || initialOffers < 5 {
+		t.Fatalf("initial island offers=%d error=%v", initialOffers, err)
+	}
 	cfg, err := config.Load(configuration)
 	if err != nil {
 		t.Fatal(err)

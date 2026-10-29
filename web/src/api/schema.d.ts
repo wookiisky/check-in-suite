@@ -4,6 +4,27 @@
  */
 
 export interface paths {
+    "/api/v1/island": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取小岛布局、已拥有物品与当前物品能力 */
+        get: operations["getIsland"];
+        /**
+         * 按已读取版本原子保存完整小岛布局
+         * @description 仅需登录，无需管理授权。验证真实所有权、每件实例唯一、室内外范围与房屋环境单选；冲突返回 VERSION_CONFLICT。
+         */
+        put: operations["saveIsland"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health/live": {
         parameters: {
             query?: never;
@@ -477,7 +498,10 @@ export interface paths {
         delete: operations["deleteProduct"];
         options?: never;
         head?: never;
-        /** 编辑配置并检查版本 */
+        /**
+         * 编辑配置并检查版本
+         * @description 已出售商品不能改为另一物品身份，返回 PRODUCT_ITEM_LOCKED；成交类型变更受 PRODUCT_TYPE_LOCKED 约束。展示与互动能力通过资源定义追加，不改写成交事实。
+         */
         patch: operations["updateProduct"];
         trace?: never;
     };
@@ -1018,10 +1042,70 @@ export interface components {
             items: components["schemas"]["Checkin"][];
             next_cursor: string | null;
         };
+        IslandPlacement: {
+            /** @description 基础物品身份或一笔购买对应的实例身份。 */
+            id: string;
+            item_key: string;
+            x: number;
+            y: number;
+            /** @enum {integer} */
+            rotation: 0 | 90 | 180 | 270;
+            /**
+             * @description 室内坐标限制为 -2 至 2；室外为 -8 至 8。
+             * @enum {string}
+             */
+            zone: "outdoor" | "indoor";
+        };
+        IslandOwnedItem: {
+            id: string;
+            item_key: string;
+        };
+        IslandDefinition: {
+            key: string;
+            name: string;
+            /** @enum {string} */
+            category: "decoration" | "house" | "creature" | "environment" | "equipment";
+            model: string;
+            width: number;
+            depth: number;
+            movable: boolean;
+            repeatable: boolean;
+            /** @enum {string} */
+            activity?: "read" | "run" | "ball";
+            /**
+             * @description 独立于互动的常驻视觉动作。
+             * @enum {string}
+             */
+            animation?: "sway" | "flutter";
+            portrait_asset_key?: string;
+            /** @description 商品缩略图和当前受控素材身份。 */
+            asset_key?: string;
+            /** @description 资源默认价格；实际购买以商品价格为准。 */
+            coin_price?: number;
+            /** @description 资源默认钻石价格；实际购买以商品价格为准。 */
+            diamond_price?: number;
+        };
+        IslandState: {
+            version: number;
+            placements: components["schemas"]["IslandPlacement"][];
+            inventory: components["schemas"]["IslandOwnedItem"][];
+            catalog: components["schemas"]["IslandDefinition"][];
+        };
+        IslandSave: {
+            expected_version: number;
+            placements: components["schemas"]["IslandPlacement"][];
+        };
         Product: {
+            /**
+             * @description 当前物品定义授予的画像用途，独立于成交商品类型。
+             * @enum {string}
+             */
+            portrait_type?: "title" | "avatar" | "accessory" | "background" | "effect";
+            /** @description 当前画像展示素材；物品能力后续追加时已购者也可使用。 */
+            portrait_asset_key?: string;
             id: string;
             /** @enum {string} */
-            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
+            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
             name: string;
             asset_key: string;
             description: string;
@@ -1030,12 +1114,18 @@ export interface components {
             stock: number | null;
             enabled: boolean;
             version: number;
+            /** @description 当前资源定义关联的稳定小岛物品标识；不支持小岛时省略。 */
+            island_item_key?: string;
+            /** @description 由资源定义决定是否允许按件重复购买。 */
+            repeatable?: boolean;
+            /** @description 按稳定物品身份统计已拥有的数量。 */
+            owned_count?: number;
             /** @description 当前是否已拥有该永久商品；reward始终为false。 */
             owned: boolean;
         };
         ProductCreate: {
             /** @enum {string} */
-            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
+            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
             name: string;
             asset_key: string;
             description: string;
@@ -1046,7 +1136,7 @@ export interface components {
         };
         ProductUpdate: {
             /** @enum {string} */
-            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
+            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
             name: string;
             asset_key: string;
             description: string;
@@ -1060,10 +1150,19 @@ export interface components {
             items: components["schemas"]["Product"][];
         };
         Purchase: {
+            /**
+             * @description 当前物品定义授予的画像用途，独立于成交商品类型。
+             * @enum {string}
+             */
+            portrait_type?: "title" | "avatar" | "accessory" | "background" | "effect";
+            /** @description 当前画像展示素材；物品能力后续追加时已购者也可使用。 */
+            portrait_asset_key?: string;
             id: string;
+            /** @description 根据稳定物品身份读取的当前小岛能力，可随资源更新增加。 */
+            island_item_key?: string;
             product_id: string;
             /** @enum {string} */
-            type_snapshot: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
+            type_snapshot: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
             name_snapshot: string;
             asset_key_snapshot: string;
             description_snapshot: string;
@@ -1139,7 +1238,7 @@ export interface components {
             key: string;
             name: string;
             /** @enum {string} */
-            kind: "icon" | "avatar" | "background" | "accessory" | "effect" | "title" | "reward" | "badge";
+            kind: "icon" | "avatar" | "background" | "accessory" | "effect" | "title" | "reward" | "badge" | "island";
             url: string;
             /**
              * @description 省略时为 svg。
@@ -1296,6 +1395,54 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getIsland: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IslandState"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    saveIsland: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IslandSave"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IslandState"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getLiveness: {
         parameters: {
             query?: never;
@@ -2194,6 +2341,15 @@ export interface operations {
                     "application/json": components["schemas"]["Product"];
                 };
             };
+            /** @description VERSION_CONFLICT、PRODUCT_ITEM_LOCKED 或 PRODUCT_TYPE_LOCKED；保留当前配置。 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
             default: components["responses"]["Error"];
         };
     };
@@ -2202,7 +2358,7 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
-                type?: "title" | "avatar" | "background" | "accessory" | "effect" | "reward";
+                type?: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
                 status?: "owned" | "pending" | "redeemed";
             };
             header?: never;

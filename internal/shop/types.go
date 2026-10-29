@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	TypeIsland        = "island"          // Controlled island construction item.
 	TypeTitle         = "title"           // One equipped title, permanently owned after purchase.
 	TypeAvatar        = "avatar"          // One equipped character; nil restores the default.
 	TypeBackground    = "background"      // One equipped scene behind the character and accessories.
@@ -41,18 +42,23 @@ func New(db *sql.DB, cfg config.Config, accounts *account.Service) *Service {
 
 // Product describes the current offer; its fields never rewrite existing purchase snapshots.
 type Product struct {
-	ID           string `json:"id"`            // Stable merchandise identity.
-	Type         string `json:"type"`          // One of the declared product behaviors.
-	Name         string `json:"name"`          // Current display name.
-	AssetKey     string `json:"asset_key"`     // Controlled immutable artwork identity.
-	Description  string `json:"description"`   // Plain product description.
-	CoinPrice    int64  `json:"coin_price"`    // Current nonnegative coin price.
-	DiamondPrice int64  `json:"diamond_price"` // Current nonnegative diamond price.
-	Stock        *int64 `json:"stock"`         // Nil means unlimited; zero means sold out.
-	Enabled      bool   `json:"enabled"`       // Whether new purchases are offered.
-	Version      int64  `json:"version"`       // Confirmation version, including finite stock changes.
-	Owned        bool   `json:"owned"`         // Whether the sole account already owns this permanent product.
-	Deleted      bool   `json:"-"`             // Internal soft-deletion marker, never a client authorization flag.
+	PortraitType     string `json:"portrait_type,omitempty"`      // Current optional portrait equipment role.
+	PortraitAssetKey string `json:"portrait_asset_key,omitempty"` // Current optional portrait artwork, independent from sale thumbnail.
+	IslandItemKey    string `json:"island_item_key,omitempty"`    // Optional current island capability identity.
+	Repeatable       bool   `json:"repeatable"`                   // Additional purchases create independent instances.
+	OwnedCount       int64  `json:"owned_count"`                  // Total instances of this controlled item.
+	ID               string `json:"id"`                           // Stable merchandise identity.
+	Type             string `json:"type"`                         // One of the declared product behaviors.
+	Name             string `json:"name"`                         // Current display name.
+	AssetKey         string `json:"asset_key"`                    // Controlled immutable artwork identity.
+	Description      string `json:"description"`                  // Plain product description.
+	CoinPrice        int64  `json:"coin_price"`                   // Current nonnegative coin price.
+	DiamondPrice     int64  `json:"diamond_price"`                // Current nonnegative diamond price.
+	Stock            *int64 `json:"stock"`                        // Nil means unlimited; zero means sold out.
+	Enabled          bool   `json:"enabled"`                      // Whether new purchases are offered.
+	Version          int64  `json:"version"`                      // Confirmation version, including finite stock changes.
+	Owned            bool   `json:"owned"`                        // Whether the sole account already owns this permanent product.
+	Deleted          bool   `json:"-"`                            // Internal soft-deletion marker, never a client authorization flag.
 }
 
 // ProductInput is the complete mutable merchandise configuration.
@@ -80,18 +86,22 @@ type ProductList struct {
 
 // Purchase is a permanent transaction snapshot plus the independent redemption state.
 type Purchase struct {
-	ID                  string  `json:"id"`                   // Stable order and ownership identity.
-	ProductID           string  `json:"product_id"`           // Source product, retained after soft deletion.
-	TypeSnapshot        string  `json:"type_snapshot"`        // Purchased behavior cannot change later.
-	NameSnapshot        string  `json:"name_snapshot"`        // Name at purchase time.
-	AssetKeySnapshot    string  `json:"asset_key_snapshot"`   // Persistent versioned artwork.
-	DescriptionSnapshot string  `json:"description_snapshot"` // Description at purchase time.
-	CoinPrice           int64   `json:"coin_price"`           // Coins actually paid.
-	DiamondPrice        int64   `json:"diamond_price"`        // Diamonds actually paid.
-	Status              string  `json:"status"`               // owned, pending or redeemed.
-	RedeemedAt          *string `json:"redeemed_at"`          // Actual confirmation instant, or null.
-	Version             int64   `json:"version"`              // Increases only when redemption changes status.
-	CreatedAt           string  `json:"created_at"`           // Actual UTC purchase instant.
+	ItemKeySnapshot     string  `json:"-"`                            // Stable item identity retained independently from versioned sale artwork.
+	PortraitType        string  `json:"portrait_type,omitempty"`      // Current optional portrait equipment role.
+	PortraitAssetKey    string  `json:"portrait_asset_key,omitempty"` // Current optional portrait artwork, independent from sale thumbnail.
+	IslandItemKey       string  `json:"island_item_key,omitempty"`    // Current capability identity resolved independently of sale facts.
+	ID                  string  `json:"id"`                           // Stable order and ownership identity.
+	ProductID           string  `json:"product_id"`                   // Source product, retained after soft deletion.
+	TypeSnapshot        string  `json:"type_snapshot"`                // Purchased behavior cannot change later.
+	NameSnapshot        string  `json:"name_snapshot"`                // Name at purchase time.
+	AssetKeySnapshot    string  `json:"asset_key_snapshot"`           // Persistent versioned artwork.
+	DescriptionSnapshot string  `json:"description_snapshot"`         // Description at purchase time.
+	CoinPrice           int64   `json:"coin_price"`                   // Coins actually paid.
+	DiamondPrice        int64   `json:"diamond_price"`                // Diamonds actually paid.
+	Status              string  `json:"status"`                       // owned, pending or redeemed.
+	RedeemedAt          *string `json:"redeemed_at"`                  // Actual confirmation instant, or null.
+	Version             int64   `json:"version"`                      // Increases only when redemption changes status.
+	CreatedAt           string  `json:"created_at"`                   // Actual UTC purchase instant.
 }
 
 // BuyInput binds the final confirmation to the displayed merchandise and balance versions.
