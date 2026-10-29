@@ -27,7 +27,7 @@ go run ./cmd/island reset-password -kind management -config config/app.example.y
 
 修改或重置任一密码会撤销全部会话。账户及授权边界见 [账户专题](spec/FEATURES/ACCOUNT.md)。
 
-默认配置为 [config/app.example.yaml](config/app.example.yaml)，数据写入被 Git 忽略的 `.local/`。相对路径以启动时的工作目录为基准；SQLite 应放在本机磁盘。服务启动只校验结构，升级需显式运行迁移；只有历史脚本名称和校验值一致时才能追加迁移。
+默认配置为 [config/app.example.yaml](config/app.example.yaml)，数据写入被 Git 忽略的 `.local/`。相对路径以启动时的工作目录为基准；SQLite 应放在本机磁盘。服务启动只校验结构。项目尚未上线，破坏性结构更新后重置开发数据库并重新导入测试数据，见下方命令；阶段约定见 [迁移与兼容](spec/SYSTEM/STORAGE.md#迁移与兼容)。
 
 需要自定义端口或目录时：
 
@@ -53,6 +53,15 @@ npm start
 测试用户名为 `user`，登录密码和管理密码均为 `pass`，短密码只在该初始化入口允许。种子提供任务、商品、成就、近期打卡、交易、装扮、营地和留言；内容由 `internal/demo/settings.json` 及当前素材目录生成。
 
 重复执行会保留后续编辑，已有正式账户或业务数据时拒绝导入，不会自动清空数据库。`npm run db:status` 可只读检查数据库状态。更多操作见 [测试数据初始化](spec/ENGINEERING/OPERATIONS.md#测试数据初始化)。
+
+破坏性结构更新后，先按 Ctrl+C 停止开发服务，再重建数据库：
+
+```sh
+npm run db:reset
+npm start
+```
+
+`db:reset` 直接清空配置指定的数据库及其 WAL、SHM 文件，按当前结构建库并写入测试数据，不再询问确认。原有账户和业务记录会丢失；媒体、素材及临时目录保留。自定义配置及失败处理见 [数据库迁移与不兼容处理](spec/ENGINEERING/OPERATIONS.md#数据库迁移与不兼容处理)。
 
 ## 检查与构建
 

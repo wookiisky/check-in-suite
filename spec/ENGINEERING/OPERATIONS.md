@@ -11,12 +11,14 @@ source:
 - deploy/island.service
 - cmd/island/maintenance.go
 - cmd/island/database_status.go
+- cmd/island/database_reset.go
 - internal/demo/settings.json
 tests:
 - scripts/release.test.mjs
 - scripts/deploy.test.mjs
 - scripts/publish.test.mjs
 - cmd/island/deployment_test.go
+- cmd/island/database_reset_test.go
 - internal/demo/seed_test.go
 ---
 # 成长营地运行手册
@@ -200,9 +202,26 @@ sudo -u island /srv/island/current/island reset-password -kind management -confi
 
 ## 数据库迁移与不兼容处理
 
-新增结构使用追加编号迁移；已应用的 SQL 文件必须保持不变。历史较早且一致的数据库可以追加迁移，旧建表脚本发生过变化的数据库无法自动转换。使用新的数据库和数据目录，按上面的 `migrate`、`init` 步骤初始化，再启动服务并验证登录、读取和写入。
+项目未上线阶段的处理约定见 [迁移与兼容](../SYSTEM/STORAGE.md#迁移与兼容)。破坏性结构更新后，先按 Ctrl+C 停止开发服务，再从仓库根目录执行：
 
-`migrate` 是显式建库和升级命令；建表 SQL 与版本记录在同一事务提交，失败时不记录成功。应用启动只检查 schema，不自动改库。已有数据库的版本或脚本校验与程序不匹配时仍会拒绝启动；不能通过删除版本记录绕过检查；不兼容时由维护者明确选择重置或另行处理数据。
+```sh
+npm run db:reset
+npm run db:status
+npm start
+```
+
+`db:reset` 调用 `reset-demo`，使用 `config/app.example.yaml`。它直接删除配置指向的数据库及同路径的 `-wal`、`-shm`，再按当前 SQL 建库并导入测试数据，不询问确认。原有账户、记录、购买、余额和会话都会清空；媒体、素材及临时目录保留。测试账户仍为上文的 `user` / `pass`。不要在服务仍持有数据库连接时运行该命令。
+
+使用自定义配置时执行：
+
+```sh
+go run ./cmd/island reset-demo -config config/app.local.yaml
+go run ./cmd/island db-status -config config/app.local.yaml
+```
+
+删除、建库或测试初始化任一步失败，命令立即返回错误，不报告重置完成；不会恢复旧数据。排查输出后可重新执行重置，成功后确认状态为 `current` 再启动服务。
+
+`migrate` 仍是显式建库和兼容升级命令；建表 SQL 与版本记录在同一事务提交，失败时不记录成功。历史较早且一致的数据库可以追加迁移，历史脚本发生过变化时不能靠再次运行 `migrate` 解决。应用启动只检查 schema，不自动改库；不能通过删除版本记录绕过检查。`db:seed` 仍只初始化空库或跳过已经完成的测试初始化，不代替重置。
 
 ## 媒体清理与日常检查
 

@@ -56,7 +56,7 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 		}
 		return printVersion(output)
 	}
-	if len(args) == 0 || (args[0] != "serve" && args[0] != "migrate" && args[0] != "init" && args[0] != "reset-password" && args[0] != "seed-demo" && args[0] != "db-status") {
+	if len(args) == 0 || (args[0] != "serve" && args[0] != "migrate" && args[0] != "init" && args[0] != "reset-password" && args[0] != "seed-demo" && args[0] != "reset-demo" && args[0] != "db-status") {
 		return errors.New(content.Text("usage"))
 	}
 	flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
@@ -83,6 +83,11 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 	if args[0] == "db-status" {
 		return databaseStatus(ctx, cfg, output, format)
 	}
+	if args[0] == "reset-demo" {
+		if err := removeDatabaseFiles(cfg.DatabasePath); err != nil {
+			return err
+		}
+	}
 	if err := os.MkdirAll(filepath.Dir(cfg.DatabasePath), 0700); err != nil {
 		return fmt.Errorf("create database directory: %w", err)
 	}
@@ -93,17 +98,19 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 		return err
 	}
 	defer db.Close()
-	if args[0] == "migrate" {
+	if args[0] == "migrate" || args[0] == "reset-demo" {
 		if err := storage.Migrate(startupContext, db, migrations.Files); err != nil {
 			return err
 		}
-		slog.Info("数据库迁移完成")
-		return nil
+		if args[0] == "migrate" {
+			slog.Info("数据库迁移完成")
+			return nil
+		}
 	}
 	if err := storage.CheckSchema(startupContext, db, migrations.Files); err != nil {
 		return err
 	}
-	if args[0] == "seed-demo" {
+	if args[0] == "seed-demo" || args[0] == "reset-demo" {
 		result, err := demo.Seed(ctx, db, cfg)
 		if err != nil {
 			return maintenanceError(err)

@@ -8,6 +8,7 @@ source:
 - internal/storage/sqlite.go
 - internal/storage/migrations.go
 - internal/storage/database_status.go
+- cmd/island/database_reset.go
 - internal/core/values.go
 - internal/wallet/wallet.go
 - internal/idempotency/idempotency.go
@@ -17,6 +18,7 @@ tests:
 - internal/storage/migrations_test.go
 - internal/storage/task_island_migration_test.go
 - internal/storage/database_status_test.go
+- cmd/island/database_reset_test.go
 - internal/core/values_test.go
 - internal/checkin/storage_faults_test.go
 ---
@@ -68,7 +70,9 @@ SQL 文件按连续编号加载，每个已应用版本保存文件名和内容�
 
 服务启动只运行结构检查，要求历史与当前程序完全匹配。缺少新版本时提示显式迁移；文件名、校验值不匹配或数据库比程序更新时拒绝启动。禁止通过删除迁移记录绕过检查。
 
-新增结构通常通过追加编号迁移演进。迁移能力的前提是已应用文件完全相同，不能据此承诺所有旧数据库均可升级：项目早期曾直接调整基础建表，使用不同基础脚本初始化的数据目录仍会被拒绝。需要重置还是另行转换数据，由维护者明确决定；程序不自动清空或修复。
+项目尚未上线，当前阶段不要求兼容旧数据库。破坏性结构更新可以调整现有建表脚本，更新后由开发者显式重置数据库，并按当前结构重新写入测试数据；不为旧数据增加转换逻辑。正常启动仍严格核对历史，不自动清空或修复。迁移器只对已应用文件完全相同的数据库执行追加迁移，不能据此承诺旧库可升级。
+
+开发重置命令删除配置指定的数据库及其 WAL、SHM 文件，再复用当前建表和测试初始化流程。原有账户、业务记录和会话全部清空；媒体、素材及临时目录保留，旧媒体的数据库引用随重置丢失。执行前必须停止使用该数据库的服务；命令不做交互确认，只有建库和测试初始化都成功才报告完成。操作步骤见 [数据库迁移与不兼容处理](../ENGINEERING/OPERATIONS.md#数据库迁移与不兼容处理)。
 
 回退程序前同样核对迁移兼容性，不能只换二进制掩盖数据库差异。只读结构状态检查不创建缺失数据库，也不证明业务数据正确。具体命令及发布处理见 [运行手册](../ENGINEERING/OPERATIONS.md)。
 

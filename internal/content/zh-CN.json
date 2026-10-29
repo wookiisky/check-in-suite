@@ -1,5 +1,5 @@
 {
-  "usage": "用法：island version；或 island <serve|migrate|init|reset-password|seed-demo|db-status> [-config 配置路径]；重置密码还需 -kind login 或 management；数据库状态支持 -format json 或 tsv。",
+  "usage": "用法：island version；或 island <serve|migrate|init|reset-password|seed-demo|reset-demo|db-status> [-config 配置路径]；reset-demo 清空数据库并写入测试数据，执行前须停服；重置密码还需 -kind login 或 management；数据库状态支持 -format json 或 tsv。",
   "unexpected_arguments": "不接受额外参数；密码必须通过交互输入。",
   "username_prompt": "用户名：",
   "display_name_prompt": "姓名或昵称：",
