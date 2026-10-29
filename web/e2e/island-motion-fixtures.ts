@@ -1,13 +1,20 @@
 import { expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { testSession } from '../src/test/account-fixtures';
-import { camp } from '../src/features/shop/test-fixtures';
+import { camp, purchase } from '../src/features/shop/test-fixtures';
 import { state } from '../src/features/island/island-test-fixtures';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import island from '../src/features/island/content.json' with { type: 'json' };
 
 // 只替换接口数据，运动、SVG、CSS 和交互仍运行正式页面代码。
-export async function openMotionIsland(page: Page) {
+export async function openMotionIsland(page: Page, avatar?: string) {
+  const equippedCamp = avatar ? { ...camp, equipment: { ...camp.equipment, avatar: { ...purchase, type_snapshot: 'avatar' as const, asset_key_snapshot: avatar } } } : camp;
+  const activityState = avatar ? {
+    ...state,
+    catalog: [...state.catalog, { key: 'ball', name: '皮球', category: 'equipment', model: 'ball', width: 1, depth: 1, movable: true, repeatable: false, activity: 'ball' }],
+    inventory: [...state.inventory, { id: 'test:ball', item_key: 'ball' }],
+    placements: [...state.placements, { id: 'test:ball', item_key: 'ball', x: 5, y: 5, rotation: 0, zone: 'outdoor' }],
+  } : state;
   await page.route('**/api/v1/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
     if (path.startsWith('/assets/')) {
@@ -17,7 +24,7 @@ export async function openMotionIsland(page: Page) {
       return;
     }
     const responses: Record<string, unknown> = {
-      '/session': testSession, '/camp': camp, '/island': state,
+      '/session': testSession, '/camp': equippedCamp, '/island': activityState,
       '/checkins': { items: [], next_cursor: null }, '/messages': { items: [], next_cursor: null },
     };
     expect(path in responses, `未模拟的接口：${path}`).toBeTruthy();
@@ -87,4 +94,22 @@ export async function sampleMotion(page: Page, frames = 180) {
     return { movingFrames, positionChanges, animationResets, reorderedFrames, nodeReplacements, resets,
       poseJumps, zoneChanges, legAngleRange: maximumLegAngle - minimumLegAngle };
   }, frames);
+}
+
+// 到达后采样多帧的真实绘制姿势，避免周期动作恰好在同一姿势时误判。
+export async function sampleActivityPose(page: Page, selectors: string[], frames = 30) {
+  return page.evaluate(async ({ selectors, frames }) => {
+    const actor = document.querySelector<SVGGElement>('[data-actor-zone]')!;
+    const positions = new Set<string>();
+    const poses = selectors.map(() => new Set<string>());
+    for (let frame = 0; frame < frames; frame += 1) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      positions.add(actor.getAttribute('transform')!);
+      selectors.forEach((selector, index) => {
+        const part = actor.querySelector(selector);
+        poses[index]!.add(part ? getComputedStyle(part).transform : 'missing');
+      });
+    }
+    return { positions: positions.size, parts: selectors.map((selector, index) => ({ selector, poses: [...poses[index]!] })) };
+  }, { selectors, frames });
 }

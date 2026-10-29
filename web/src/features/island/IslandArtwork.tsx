@@ -154,18 +154,24 @@ export function ItemArtwork({ model, indoor = false, selected = false, rotation 
   </g>;
 }
 
-// 动画只改变身体部位，角色世界位置由活动模块控制。
+// 动画只改变局部姿势，角色世界位置与朝向由外层控制。
 export function CharacterArtwork({ avatar, moving, activity, facing = 1, staticMotion = false, motionElapsed = 0 }: CharacterArtworkProps) {
   const bunny = avatar === 'bunny' || avatar === 'bunny-v1';
-  // 新角色复用已装备的受控图片，已有活动仍决定世界位置和状态。
+  const motionStyle = { '--island-motion-delay': `${-motionElapsed}s` } as CSSProperties;
+  const book = activity === 'read' && <g className="island-character-book"><path d="m-16-21 16 5 15-6 1 17L0 1-15-4Z" fill="#fff0c4" /><path d="M0-16V1m-11-17 6 2m-6 3 6 2m11-7 5-2m-5 7 5-2" stroke="#c7a77a" strokeWidth="1" /></g>;
+  const ball = activity === 'ball' && <g className="island-character-ball"><circle cx="25" cy="-4" r="9" fill="#f0c17e" /><path d="M16-4h18m-9-9q-7 9 0 18m0-18q7 9 0 18" fill="none" strokeWidth="1" /></g>;
+  // 图片角色共用活动时钟与道具；动作放在镜像内层，避免覆盖朝向和地面位置。
   if (!bunny && avatar !== 'fox' && avatar !== 'fox-v1') {
-    return <g className="island-character-art" data-moving={moving} data-activity={activity} data-static={staticMotion}>
-      <g transform={`scale(${facing < 0 ? -1 : 1} 1)`}><image href={assetURL(avatar)} x={-50} y={-93.75} width={100} height={100} /></g>
+    return <g className="island-character-art" data-moving={moving} data-activity={activity} data-static={staticMotion} style={motionStyle}>
+      <g transform={`scale(${facing < 0 ? -1 : 1} 1)`} stroke="#7b6550" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">
+        <g className="island-character-image-body"><image href={assetURL(avatar)} x={-50} y={-93.75} width={100} height={100} />{book}</g>
+        {ball}
+      </g>
     </g>;
   }
   const fur = bunny ? '#f7efd9' : '#e4a06a';
   const outline = bunny ? '#647151' : '#7b6550';
-  return <g className="island-character-art" data-moving={moving} data-activity={activity} data-static={staticMotion} style={{ '--island-motion-delay': `${-motionElapsed}s` } as CSSProperties}>
+  return <g className="island-character-art" data-moving={moving} data-activity={activity} data-static={staticMotion} style={motionStyle}>
     <ellipse cy="3" rx="20" ry="7" fill="#496943" opacity=".23" />
     <g transform={`scale(${facing < 0 ? -1 : 1} 1)`} stroke={outline} strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">
       <g className="island-character-body">
@@ -186,10 +192,10 @@ export function CharacterArtwork({ avatar, moving, activity, facing = 1, staticM
         {!bunny && <><path d="m-12-28 12 5 14-5 2 6-16 6-13-5Z" fill="#8aa9a0" /><path d="m1-17 8 3-1 14-6-4-3 1Z" fill="#8aa9a0" /></>}
         <g className="island-character-arm island-character-arm-left"><path d="M-15-24q-13 3-10 10 4 5 12-2" fill={fur} /></g>
         <g className="island-character-arm island-character-arm-right"><path d="M15-24q12 3 9 10-5 4-12-3" fill={fur} /></g>
-        {activity === 'read' && <g className="island-character-book"><path d="m-16-21 16 5 15-6 1 17L0 1-15-4Z" fill="#fff0c4" /><path d="M0-16V1m-11-17 6 2m-6 3 6 2m11-7 5-2m-5 7 5-2" stroke="#c7a77a" strokeWidth="1" /></g>}
+        {book}
         {activity === 'rest' && <path d="M-12-44h5m14 0h5" stroke={outline} strokeWidth="3" />}
       </g>
-      {activity === 'ball' && <g className="island-character-ball"><circle cx="25" cy="-4" r="9" fill="#f0c17e" /><path d="M16-4h18m-9-9q-7 9 0 18m0-18q7 9 0 18" fill="none" strokeWidth="1" /></g>}
+      {ball}
     </g>
   </g>;
 }

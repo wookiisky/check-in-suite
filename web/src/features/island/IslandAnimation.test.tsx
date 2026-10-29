@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { testSession } from '../../test/account-fixtures';
-import { camp } from '../shop/test-fixtures';
+import { camp, purchase } from '../shop/test-fixtures';
 import { IslandPage } from './IslandPage';
 import { state } from './island-test-fixtures';
 import { IslandAnimationTestClock } from './island-animation-test-clock';
@@ -16,8 +16,9 @@ function actorX() {
 }
 
 // 手动选择一段室外行走，避免随机活动影响时钟断言。
-async function renderWalking() {
-  const client = { request: vi.fn().mockImplementation(async (path) => path === '/camp' ? camp : state) };
+async function renderWalking(avatar?: string) {
+  const equippedCamp = avatar ? { ...camp, equipment: { ...camp.equipment, avatar: { ...purchase, type_snapshot: 'avatar', asset_key_snapshot: avatar } } } : camp;
+  const client = { request: vi.fn().mockImplementation(async (path) => path === '/camp' ? equippedCamp : state) };
   const view = render(<IslandPage client={client} session={session} />);
   const activities = await screen.findByRole('region', { name: content.activitiesTitle });
   fireEvent.click(within(activities).getByRole('button', { name: `${content.activities.run} 运动区` }));
@@ -25,6 +26,28 @@ async function renderWalking() {
 }
 
 describe('小岛动画时钟', () => {
+  it.each(['pause', 'hidden'] as const)('图片角色在%s时冻结姿势，恢复后继续取样且不补算时间', async (mode) => {
+    const clock = new IslandAnimationTestClock();
+    await renderWalking('avatar-boy-short-v1');
+    const pose = () => document.querySelector<SVGGElement>('.island-character-art')!.style.getPropertyValue('--island-motion-delay');
+    clock.frame(1000);
+    const initial = pose();
+    clock.frame(1016);
+    const moving = pose();
+    expect(moving).not.toBe(initial);
+    if (mode === 'pause') fireEvent.click(screen.getByRole('button', { name: content.pause }));
+    else clock.setVisibility('hidden');
+    clock.frame(60000);
+    expect(pose()).toBe(moving);
+    if (mode === 'pause') fireEvent.click(screen.getByRole('button', { name: content.resume }));
+    else clock.setVisibility('visible');
+    clock.frame(61000);
+    expect(pose()).toBe(moving);
+    clock.frame(61016);
+    expect(pose()).not.toBe(moving);
+    expect(clock.callbacks.size).toBe(1);
+  });
+
   it('物件暂停和后台冻结保留动画，布置与减少动效使用静态画面', async () => {
     const clock = new IslandAnimationTestClock();
     const view = await renderWalking();

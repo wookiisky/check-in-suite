@@ -1,23 +1,26 @@
 /* 由活动帧的累计时间取样姿势；SVG深度重排后仍显示同一时刻，不重新起步。 */
+.island-character-art { --island-step-duration: .45s; }
+.island-character-art[data-activity="run"] { --island-step-duration: .3s; }
 .island-character-art .island-character-head { transform-origin: 0 -29px; animation: island-head-breathe 4s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
 .island-character-art .island-character-tail { transform-origin: 10px -15px; animation: island-tail-sway 3.5s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
 .island-character-art .island-character-leg-left { transform-origin: -7px -12px; }
 .island-character-art .island-character-leg-right { transform-origin: 9px -12px; }
 .island-character-art .island-character-arm-left { transform-origin: -14px -24px; }
 .island-character-art .island-character-arm-right { transform-origin: 14px -24px; }
-.island-character-art[data-moving="true"] .island-character-body { animation: island-walk-bob .45s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
-.island-character-art[data-moving="true"] .island-character-leg-left { animation: island-leg-step .45s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
-.island-character-art[data-moving="true"] .island-character-leg-right { animation: island-leg-step .45s ease-in-out calc(var(--island-motion-delay, 0s) - .225s) infinite paused; }
-.island-character-art[data-moving="true"] .island-character-arm-left { animation: island-arm-step .45s ease-in-out calc(var(--island-motion-delay, 0s) - .225s) infinite paused; }
-.island-character-art[data-moving="true"] .island-character-arm-right { animation: island-arm-step .45s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
-.island-character-art[data-activity="run"] .island-character-leg-left,
-.island-character-art[data-activity="run"] .island-character-leg-right,
-.island-character-art[data-activity="run"] .island-character-body { animation-duration: .3s; }
+.island-character-art:is([data-moving="true"], [data-activity="run"]) :is(.island-character-body, .island-character-image-body) { animation: island-walk-bob var(--island-step-duration) ease-in-out var(--island-motion-delay, 0s) infinite paused; }
+.island-character-art:is([data-moving="true"], [data-activity="run"]) .island-character-leg-left { animation: island-leg-step var(--island-step-duration) ease-in-out var(--island-motion-delay, 0s) infinite paused; }
+.island-character-art:is([data-moving="true"], [data-activity="run"]) .island-character-leg-right { animation: island-leg-step var(--island-step-duration) ease-in-out calc(var(--island-motion-delay, 0s) - var(--island-step-duration) / 2) infinite paused; }
+.island-character-art:is([data-moving="true"], [data-activity="run"]) .island-character-arm-left { animation: island-arm-step var(--island-step-duration) ease-in-out calc(var(--island-motion-delay, 0s) - var(--island-step-duration) / 2) infinite paused; }
+.island-character-art:is([data-moving="true"], [data-activity="run"]) .island-character-arm-right { animation: island-arm-step var(--island-step-duration) ease-in-out var(--island-motion-delay, 0s) infinite paused; }
 .island-character-art[data-activity="read"] .island-character-head { animation: island-reading-nod 3s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
 .island-character-art[data-activity="read"] .island-character-arm-left { transform: rotate(-17deg); }
 .island-character-art[data-activity="read"] .island-character-arm-right { transform: rotate(17deg); }
 .island-character-art[data-activity="rest"] .island-character-body { transform: translateY(5px) scale(1, .91); }
 .island-character-art[data-activity="ball"] .island-character-leg-right { animation: island-kick 1.5s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
+.island-character-image-body { transform-origin: 0 -29px; }
+.island-character-art[data-activity="read"] .island-character-image-body { animation: island-reading-nod 3s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
+.island-character-art[data-activity="ball"] .island-character-image-body { animation: island-image-ball 1.5s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
+.island-character-art[data-activity="rest"] .island-character-image-body { transform: translateY(3px) scale(1, .96); }
 .island-character-ball { animation: island-ball-hop 1.5s ease-in-out var(--island-motion-delay, 0s) infinite paused; }
 .island-tree-crown { transform-origin: 0 -30px; }
 .island-item-art[data-animation="sway"] .island-tree-crown { animation: island-tree-breeze 6s ease-in-out infinite; }
@@ -35,6 +38,7 @@
 @keyframes island-arm-step { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
 @keyframes island-reading-nod { 0%, 100% { transform: rotate(0); } 50% { transform: translateY(1px) rotate(4deg); } }
 @keyframes island-kick { 0%, 65%, 100% { transform: rotate(0); } 35% { transform: rotate(-32deg); } }
+@keyframes island-image-ball { 0%, 65%, 100% { transform: rotate(0); } 35% { transform: translateY(-2px) rotate(-4deg); } }
 @keyframes island-ball-hop { 0%, 100% { transform: translate(0, 0); } 40% { transform: translate(12px, -14px); } 65% { transform: translate(16px, 0); } }
 @keyframes island-tree-breeze { 0%, 100% { transform: rotate(-.8deg); } 50% { transform: rotate(.8deg); } }
 @keyframes island-butterfly-drift { 0%, 100% { transform: translate(-2px, 0); } 50% { transform: translate(3px, -7px); } }
