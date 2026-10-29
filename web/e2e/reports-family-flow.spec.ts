@@ -5,6 +5,7 @@ import family from '../src/features/family/content.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
 import media from '../src/features/media/content.json' with { type: 'json' };
 import type { components } from '../src/api/schema';
+import { closeConfigurationSettings, openConfigurationSettings } from './configuration-navigation';
 
 // 只在临时测试服务创建数据，随后通过实际页面完成查询、留言与媒体闭环。
 test('真实日月统计、留言恢复、偏好持久与照片附件', async ({ page, context }, testInfo) => {
@@ -65,9 +66,11 @@ test('真实日月统计、留言恢复、偏好持久与照片附件', async ({
   expect((await page.request.get(photoURL)).status()).toBe(404);
   if (record.audio_media_id) { expect(replaced.audio_media_id).not.toBe(record.audio_media_id); expect((await page.request.get(`/api/v1/media/${record.audio_media_id}`)).status()).toBe(404); }
 
+  await openConfigurationSettings(page);
   if (!await page.getByLabel(family.music, { exact: true }).isChecked()) await page.getByLabel(family.music, { exact: true }).click();
   else await page.getByRole('button', { name: family.playMusic, exact: true }).click();
   await expect(page.getByRole('button', { name: family.pauseMusic, exact: true })).toBeVisible();
+  await closeConfigurationSettings(page);
 
   // 列表迟到成功时保留后续输入，并在跨页面返回后仍可继续编辑。
   let finishMessage!: () => void;
@@ -87,9 +90,11 @@ test('真实日月统计、留言恢复、偏好持久与照片附件', async ({
   await expect(page.locator('.family-messages')).toContainText(message);
   await expect(page.getByLabel(family.input)).toHaveValue('后续草稿不会被清空');
   await page.unroute('**/api/v1/messages');
+  await openConfigurationSettings(page);
   if (!await page.getByLabel(family.reduceMotion, { exact: true }).isChecked()) await page.getByLabel(family.reduceMotion, { exact: true }).click();
   await expect(page.getByLabel(family.reduceMotion, { exact: true })).toBeChecked();
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'true');
+  await closeConfigurationSettings(page);
 
   await page.getByRole('button', { name: content.navigation.calendar, exact: true }).click();
   await page.locator('.calendar-day[data-today=true]').click();
@@ -108,12 +113,14 @@ test('真实日月统计、留言恢复、偏好持久与照片附件', async ({
   const stats = await (await page.request.get(`/api/v1/stats?start_date=${session.today}&end_date=${session.today}`)).json() as components['schemas']['StatsResponse'];
   expect(stats.items.find((item) => item.task_id === task.id)?.count).toBe(1);
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'true');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.screenshot({ path: `.local/previews/stats-${testInfo.project.name}.png`, fullPage: true });
+  await openConfigurationSettings(page);
   await expect(page.getByRole('button', { name: family.pauseMusic, exact: true })).toBeVisible();
   await page.getByRole('button', { name: family.pauseMusic, exact: true }).click();
   await page.getByLabel(family.music, { exact: true }).click();
   await expect(page.getByLabel(family.music, { exact: true })).not.toBeChecked();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.screenshot({ path: `.local/previews/stats-${testInfo.project.name}.png`, fullPage: true });
+  await closeConfigurationSettings(page);
   await page.getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await expect(page.getByLabel(family.input)).toHaveValue('后续草稿不会被清空');
   await page.locator('.family-messages li').filter({ hasText: message }).getByRole('button', { name: family.remove, exact: true }).click();
@@ -128,7 +135,10 @@ test('真实日月统计、留言恢复、偏好持久与照片附件', async ({
   expect((await page.request.get(`/api/v1/media/${replaced.photo_media_id}`)).status()).toBe(404);
   if (replaced.audio_media_id) expect((await page.request.get(`/api/v1/media/${replaced.audio_media_id}`)).status()).toBe(404);
   await page.reload();
+  await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'true');
+  await openConfigurationSettings(page);
   await expect(page.getByLabel(family.reduceMotion, { exact: true })).toBeChecked();
+  await closeConfigurationSettings(page);
   await page.getByRole('button', { name: content.account.logout, exact: true }).click();
   await expect(page.getByRole('heading', { name: content.account.loginTitle })).toBeVisible();
   expect((await page.request.get(photoURL)).status()).toBe(401);

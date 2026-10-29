@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Modal } from '../../components/Modal';
 import type { IslandInsets } from './island-camera';
 import { ApiFailure, errorMessage } from '../../api/client';
@@ -16,8 +16,64 @@ import content from './content.json';
 import './island-page.css';
 
 // 一件物品的预览共用场景模型，避免商店式小图与岛上形态不一致。
-function ItemPreview({ definition }: { definition: IslandDefinition }) {
-  return <svg className="island-item-preview" viewBox="-95 -150 190 200" aria-hidden="true"><ItemArtwork model={definition.model} houseScale={1} staticMotion /></svg>;
+function ItemPreview({ definition, fit = false }: { definition: IslandDefinition; fit?: boolean }) {
+  const artwork = useRef<SVGSVGElement>(null);
+  const [viewBox, setViewBox] = useState('-95 -150 190 200');
+  // 图标按实际素材边界留白，小球等小物品也能看清；库存预览保持原有比例。
+  useLayoutEffect(() => {
+    if (!fit || !artwork.current?.getBBox) return;
+    const bounds = artwork.current.getBBox();
+    const padding = Math.max(bounds.width, bounds.height) * 0.12;
+    if (padding > 0) setViewBox(`${bounds.x - padding} ${bounds.y - padding} ${bounds.width + padding * 2} ${bounds.height + padding * 2}`);
+  }, [definition.model, fit]);
+  return <svg ref={artwork} className="island-item-preview" viewBox={viewBox} aria-hidden="true"><ItemArtwork model={definition.model} houseScale={1} staticMotion /></svg>;
+}
+
+// 滚动与边界测量留在活动列表内，不改变角色活动或场景镜头。
+function IslandActivityList({ state, reduced, onActivity }: { state: IslandState; reduced: boolean; onActivity: (id: string) => void }) {
+  const id = useId();
+  const section = useRef<HTMLElement>(null);
+  const list = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
+  const [scroll, setScroll] = useState({ overflow: false, start: true, end: true });
+
+  useLayoutEffect(() => {
+    const container = section.current!;
+    const viewport = list.current!;
+    const items = track.current!;
+    // 按全部可用宽度判断是否需要箭头，避免箭头占位导致临界宽度反复切换。
+    const measure = () => {
+      const next = {
+        overflow: items.getBoundingClientRect().width > container.clientWidth + 1,
+        start: viewport.scrollLeft <= 1,
+        end: viewport.scrollLeft + viewport.clientWidth >= viewport.scrollWidth - 1,
+      };
+      setScroll((current) => current.overflow === next.overflow && current.start === next.start && current.end === next.end ? current : next);
+    };
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    [container, viewport, items].forEach((element) => observer?.observe(element));
+    viewport.addEventListener('scroll', measure);
+    window.addEventListener('resize', measure);
+    measure();
+    return () => { observer?.disconnect(); viewport.removeEventListener('scroll', measure); window.removeEventListener('resize', measure); };
+  }, [state]);
+
+  // 每次移动一个可见列表宽度，系统减少动效时立即定位。
+  function browse(direction: number) {
+    const viewport = list.current!;
+    viewport.scrollBy({ left: direction * viewport.clientWidth, behavior: reduced ? 'instant' : 'smooth' });
+  }
+
+  return <section ref={section} className="island-activities" aria-label={content.activitiesTitle}>
+    {scroll.overflow && <button className="secondary island-activity-arrow" aria-label={content.previousActivities} title={content.previousActivities} aria-controls={id} disabled={scroll.start} onClick={() => browse(-1)}><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="m15 5-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}
+    <div ref={list} id={id} className="island-activity-buttons"><div ref={track} className="island-activity-track">{state.placements.map((item) => {
+      const definition = state.catalog.find((entry) => entry.key === item.item_key);
+      if (!definition?.activity) return null;
+      const label = `${content.activities[definition.activity]} ${definition.name}`;
+      return <button key={item.id} className="secondary" aria-label={label} title={label} onFocus={(event) => event.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' })} onClick={() => onActivity(item.id)}><ItemPreview definition={definition} fit/></button>;
+    })}</div></div>
+    {scroll.overflow && <button className="secondary island-activity-arrow" aria-label={content.nextActivities} title={content.nextActivities} aria-controls={id} disabled={scroll.end} onClick={() => browse(1)}><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}
+  </section>;
 }
 
 // 页面管理持久草稿，随机活动只在内存运行，不产生钱包或打卡写入。
@@ -215,7 +271,6 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     const next = clampPlacement({ ...selectedPlacement, zone, x: 0, y: zone === 'indoor' ? 0 : 3 }, selectedDefinition);
     if (canPlace(next, placements, state.catalog)) { move(next); setShowIndoor(zone === 'indoor'); } else showMessage(content.blockedPlacement);
   }
-  const activeObjects = state?.placements.filter((item) => state.catalog.find((entry) => entry.key === item.item_key)?.activity) ?? [];
   return <div className="island-page island-fullscreen" style={{ '--island-hud-top': `${hudTop}px` } as CSSProperties}>
     <header ref={header} className="island-page-header"><div className="island-heading"><button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); leave('back'); }}>{content.back}</button><h1>{content.title}</h1></div>
       {camp && <section className="island-wallet" aria-label={content.balance}><span><img src="/api/v1/assets/coin-v1" alt=""/><span className="island-currency-name">{content.coins}</span><strong aria-label={`${content.coins} ${camp.wallet.coins}`}>{camp.wallet.coins}</strong></span><span><img src="/api/v1/assets/gem-v1" alt=""/><span className="island-currency-name">{content.diamonds}</span><strong aria-label={`${content.diamonds} ${camp.wallet.diamonds}`}>{camp.wallet.diamonds}</strong></span></section>}
@@ -261,10 +316,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
       </div>
       {!editing && <div ref={dock} className="island-game-dock">
         <div className="island-character-status"><span className="island-status-dot"/><span aria-live="polite">{paused ? content.paused : content.actorStatus[actor.action]}</span><button className="secondary" onClick={() => setPaused((value) => !value)}>{paused ? content.resume : content.pause}</button></div>
-        <section className="island-activities" aria-label={content.activitiesTitle}><div className="island-activity-buttons">{activeObjects.map((item) => {
-          const definition = state.catalog.find((entry) => entry.key === item.item_key)!;
-          return <button key={item.id} className="secondary" aria-label={`${content.activities[definition.activity!]} ${definition.name}`} onClick={() => interact(item.id)}><ItemPreview definition={definition}/><span>{content.activities[definition.activity!]}</span></button>;
-        })}</div></section>
+        <IslandActivityList state={state} reduced={reduced} onActivity={interact}/>
       </div>}
 
     </>}

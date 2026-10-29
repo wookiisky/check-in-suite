@@ -4,6 +4,7 @@ import type { components } from '../src/api/schema';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import family from '../src/features/family/content.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
+import { closeConfigurationSettings, openConfigurationSettings } from './configuration-navigation';
 
 type Camp = components['schemas']['CampResponse'];
 type Product = components['schemas']['Product'];
@@ -183,8 +184,10 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
   const reduceMotion = page.getByLabel(family.reduceMotion, { exact: true });
+  await openConfigurationSettings(page);
   await reduceMotion.click();
   await expect(reduceMotion).toBeChecked();
+  await closeConfigurationSettings(page);
   await expect(character.getByRole('img', { name: snow.name_snapshot, exact: true })).toHaveAttribute('src', '/api/v1/assets/effect-snow-v1?motion=static');
   await expect(character.getByRole('img', { name: sparkle.name_snapshot, exact: true })).toHaveAttribute('src', '/api/v1/assets/effect-sparkle-v1?motion=static');
   await expect.poll(() => character.locator('img').evaluateAll((images) => images.every((image) =>
@@ -200,8 +203,11 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await expectAccessoryAligned(starHandle, starArt);
   await page.mouse.up();
   await editor.getByRole('button', { name: shop.close, exact: true }).first().click();
+  await openConfigurationSettings(page);
   await reduceMotion.click();
   await expect(reduceMotion).not.toBeChecked();
+  await closeConfigurationSettings(page);
+  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(character.getByRole('img', { name: snow.name_snapshot, exact: true })).toHaveAttribute('src', '/api/v1/assets/effect-snow-v1?motion=static');
   await page.emulateMedia({ reducedMotion: 'no-preference' });

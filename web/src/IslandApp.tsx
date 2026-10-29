@@ -113,7 +113,7 @@ export function IslandApp() {
   return <div className={`application ${immersive ? 'application-island' : ''}`}>
     {!immersive && <header className="site-header"><div className="header-inner">
       <a className="brand" href="#" onClick={(event) => { event.preventDefault(); navigate('camp'); }}><svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg><strong>{content.appName}</strong></a>
-      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}>{content.navigation[item]}</button>)}</nav><div className="account-tools"><span className="name-chip">{session.account.display_name}</span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button></div></>}
+      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}>{content.navigation[item]}</button>)}</nav><div className="account-tools"><span className="name-chip">{session.account.display_name}</span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button>{!management && <button className="secondary header-management-entry" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button>}</div></>}
     </div></header>}
     <main className={immersive ? 'island-app-shell' : 'app-shell'}>
       {notice && <p className="notice" role="status">{notice}</p>}
@@ -146,10 +146,10 @@ export function IslandApp() {
           {page === 'achievements' && <AchievementPage client={client} session={session} />}
           {page === 'calendar' && <CalendarPage client={client} session={session} />}
           {page === 'stats' && <StatsPage client={client} session={session} />}
-          {!immersive && <div className="management-entry"><button className="secondary" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}>{content.navigation.management}</button></div>}
         </>}
         </div>
-        <SoundPreferences client={client} session={session} onPreferencesChange={acceptPreferences} presentation={immersive ? 'dialog' : 'panel'} open={soundOpen} onClose={() => setSoundOpen(false)} />
+        {/* 设置隐藏时保留声音实例，普通页面只在进入配置后显示控件。 */}
+        <SoundPreferences client={client} session={session} onPreferencesChange={acceptPreferences} presentation={management ? 'panel' : 'dialog'} open={immersive && soundOpen} onClose={() => setSoundOpen(false)} />
         {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setManagementSection('account'); setExpiresAt(expiry); setNotice(''); }} />}
       </>}
     </main>

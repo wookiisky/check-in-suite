@@ -43,6 +43,8 @@
   "viewHelp": "拖动查看小岛 · 滚轮或双指缩放",
   "keyboardHelp": "方向键平移视图，+ / − 缩放，Home 恢复视图。",
   "activitiesTitle": "和伙伴一起",
+  "previousActivities": "向左浏览动作",
+  "nextActivities": "向右浏览动作",
   "freeActivities": "活动可以自由体验，打卡关联将逐步加入。",
   "activityUnavailable": "暂时走不到这里，请调整物品或房门附近的位置。",
   "blockedPlacement": "这里放不下，请留出物品和房门的空间。",

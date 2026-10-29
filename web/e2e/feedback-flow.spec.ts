@@ -4,6 +4,7 @@ import checkin from '../src/features/checkin/content.json' with { type: 'json' }
 import family from '../src/features/family/content.json' with { type: 'json' };
 import type { components } from '../src/api/schema';
 import { feedbackAudioState, observeFeedbackAudio } from './feedback-audio-observer';
+import { closeConfigurationSettings, openConfigurationSettings } from './configuration-navigation';
 
 // 真实API确认奖励，浏览器验证动画、系统偏好和音频节点的实际调度。
 test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, testInfo) => {
@@ -48,8 +49,10 @@ test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, 
   const bounds = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: innerWidth }));
   expect(bounds.width).toBeLessThanOrEqual(bounds.viewport);
 
+  await openConfigurationSettings(page);
   await page.getByLabel(family.reduceMotion, { exact: true }).click();
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'true');
+  await closeConfigurationSettings(page);
   await task.click();
   await expect(dialog).toHaveCSS('animation-name', 'none');
   const close = dialog.getByRole('button', { name: checkin.close, exact: true });
@@ -58,8 +61,10 @@ test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, 
   await expect(close).toHaveCSS('translate', 'none');
   await expect(close).toHaveCSS('scale', 'none');
   await close.click();
+  await openConfigurationSettings(page);
   await page.getByLabel(family.reduceMotion, { exact: true }).click();
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'false');
+  await closeConfigurationSettings(page);
   await expect(page.getByLabel(checkin.balance).locator('strong.feedback-pop')).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'true');
@@ -75,8 +80,10 @@ test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, 
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'false');
   await expect(page.getByLabel(checkin.balance).locator('strong.feedback-pop')).toHaveCount(0);
 
+  await openConfigurationSettings(page);
   await page.getByLabel(family.effects, { exact: true }).click();
   await expect(page.getByLabel(family.effects, { exact: true })).not.toBeChecked();
+  await closeConfigurationSettings(page);
   await task.click();
   await dialog.getByRole('button', { name: checkin.checkin, exact: true }).click();
   await expect(dialog).toHaveCount(0);

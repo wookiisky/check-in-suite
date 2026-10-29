@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
+import family from '../src/features/family/content.json' with { type: 'json' };
 
 // 浏览器连接真实临时服务，不复用原型或本地用户数据。
 test('浏览器通过开发代理连接真实后端并显示登录页', async ({ page, request }) => {
@@ -26,11 +27,30 @@ test('真实登录、管理再次验证、姓名保存和退出', async ({ page 
   await page.getByLabel(content.account.loginPassword).fill('Island-Test-2026');
   await page.getByRole('button', { name: content.account.login, exact: true }).click();
   await expect(page.getByRole('heading', { name: content.navigation.camp, exact: true })).toBeVisible();
-  const openManagement = page.getByRole('button', { name: content.navigation.management, exact: true });
+  const sounds = page.getByRole('heading', { name: family.sounds, exact: true });
+  await expect(sounds).toHaveCount(0);
+  await expect(page.getByLabel(family.music, { exact: true })).toHaveCount(0);
+  if (process.env.ISLAND_CAPTURE_PREVIEWS) {
+    await expect(page.getByRole('heading', { name: family.title, exact: true })).toBeVisible();
+    await page.screenshot({ path: `.local/previews/camp-settings-hidden-${testInfo.project.name}.png`, fullPage: true });
+  }
+  const openManagement = page.getByRole('banner').getByRole('button', { name: content.navigation.management, exact: true });
+  await expect(page.getByRole('main').getByRole('button', { name: content.navigation.management, exact: true })).toHaveCount(0);
+  const entryBounds = await openManagement.boundingBox();
+  expect(entryBounds).not.toBeNull();
+  expect(entryBounds!.x + entryBounds!.width / 2).toBeGreaterThan(page.viewportSize()!.width / 2);
+  expect(entryBounds!.width).toBeGreaterThanOrEqual(56);
+  expect(entryBounds!.height).toBeGreaterThanOrEqual(56);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await openManagement.click();
+  await expect(page.getByLabel(content.account.managementPassword, { exact: true })).toBeVisible();
+  await expect(sounds).toHaveCount(0);
+  await expect(page.getByLabel(family.music, { exact: true })).toHaveCount(0);
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
   await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+  await expect(sounds).toBeVisible();
+  await expect(page.getByLabel(family.music, { exact: true })).toBeVisible();
   await expect(page.getByLabel(content.account.displayName)).toHaveValue('测试小朋友');
   if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.screenshot({ path: `.local/previews/account-${testInfo.project.name}.png`, fullPage: true });
   await page.getByRole('button', { name: content.account.saveName, exact: true }).click();
@@ -38,6 +58,8 @@ test('真实登录、管理再次验证、姓名保存和退出', async ({ page 
   await expect(page.getByText(content.account.nameSaved).or(page.getByText(content.errors.VERSION_CONFLICT))).toBeVisible();
   await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
   await expect(openManagement).toBeEnabled();
+  await expect(sounds).toHaveCount(0);
+  await expect(page.getByLabel(family.music, { exact: true })).toHaveCount(0);
   await openManagement.click();
   await expect(page.getByLabel(content.account.managementPassword, { exact: true })).toHaveValue('');
   await page.getByRole('button', { name: content.common.cancel, exact: true }).click();

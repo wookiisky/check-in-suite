@@ -11,6 +11,24 @@ import { interactionPoint } from './island-geometry';
 import { campFixture } from '../checkin/test-fixtures';
 
 describe('小岛页面', () => {
+  it('活动只显示物品图标，保留名称提示，点击后恢复并执行活动', async () => {
+    const request = vi.fn().mockImplementation(async (path) => path === '/camp' ? camp : state);
+    const session = { ...testSession, timezone: 'Asia/Taipei' as const, account: { ...testSession.account, preferences: { ...testSession.account.preferences, reduce_motion: true } } };
+    render(<IslandPage client={{ request }} session={session} />);
+    const activities = await screen.findByRole('region', { name: content.activitiesTitle });
+    const buttons = within(activities).getAllByRole('button');
+    expect(buttons).toHaveLength(2);
+    for (const button of buttons) {
+      expect(button.textContent).toBe('');
+      expect(button).toHaveAttribute('title', button.getAttribute('aria-label'));
+      expect(button.querySelector('svg')).toBeInTheDocument();
+    }
+    fireEvent.click(screen.getByRole('button', { name: content.pause }));
+    fireEvent.click(within(activities).getByRole('button', { name: `${content.activities.run} 运动区` }));
+    expect(screen.getByText(content.actorStatus.run)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: content.pause })).toBeInTheDocument();
+    expect(request.mock.calls.some(([, options]) => options?.method)).toBe(false);
+  });
   it('保存已提交但响应丢失时，取消编辑会重新读取已保存布局', async () => {
     const feedback = vi.fn();
     window.addEventListener(FEEDBACK_EVENT, feedback);

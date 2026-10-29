@@ -1,5 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { IslandApp } from './IslandApp';
 import content from './content/zh-CN.json';
 import { testSession } from './test/account-fixtures';
@@ -8,6 +8,10 @@ import checkinContent from './features/checkin/content.json';
 import shopContent from './features/shop/content.json';
 import islandContent from './features/island/content.json';
 import { state as islandState } from './features/island/island-test-fixtures';
+import familyContent from './features/family/content.json';
+import { sound } from './features/family/sound-preferences-test-fakes';
+
+vi.mock('./features/family/sound', async () => ({ SoundEngine: (await import('./features/family/sound-preferences-test-fakes')).SoundEngineFake }));
 
 // 测试响应按真实账户协议组织，不复用演示账户。
 function installServer(loggedIn = false, managementExpiry: string | null = null) {
@@ -26,6 +30,7 @@ function installServer(loggedIn = false, managementExpiry: string | null = null)
     if (path.endsWith('/auth/logout')) { active = false; return new Response(null, { status: 204 }); }
     if (path.endsWith('/management/lock')) return new Response(null, { status: 204 });
     if (path.endsWith('/account/profile')) return Response.json({ ...testSession.account, ...JSON.parse(String(init?.body)), version: 2 });
+    if (path.endsWith('/account/preferences')) return Response.json({ ...testSession.account.preferences, ...JSON.parse(String(init?.body)) });
     return new Response(null, { status: 204 });
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -40,9 +45,67 @@ async function unlock() {
   await screen.findByRole('heading', { name: content.account.settingsTitle });
 }
 
+beforeEach(() => vi.clearAllMocks());
 afterEach(() => vi.unstubAllGlobals());
 
 describe('账户页面与管理授权', () => {
+  it('声音设置仅在配置解锁后显示，退出后隐藏并保留已保存偏好', async () => {
+    installServer(true);
+    render(<IslandApp />);
+    const opener = await screen.findByRole('button', { name: content.navigation.management });
+    expect(within(screen.getByRole('banner')).getByRole('button', { name: content.navigation.management })).toBe(opener);
+    expect(within(screen.getByRole('main')).queryByRole('button', { name: content.navigation.management })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: familyContent.sounds })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(familyContent.music)).not.toBeInTheDocument();
+    fireEvent.click(opener);
+    expect(screen.getByLabelText(content.account.managementPassword)).toBeInTheDocument();
+    expect(screen.queryByLabelText(familyContent.music)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: content.common.cancel }));
+    await unlock();
+    expect(screen.queryByRole('button', { name: content.navigation.management })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: familyContent.sounds })).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText(familyContent.reduceMotion));
+    await waitFor(() => expect(screen.getByLabelText(familyContent.reduceMotion)).toBeEnabled());
+    expect(screen.getByLabelText(familyContent.reduceMotion)).toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: content.account.leaveManagement }));
+    expect(screen.queryByLabelText(familyContent.music)).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: content.navigation.management })).toBeEnabled());
+    await unlock();
+    expect(screen.getByLabelText(familyContent.reduceMotion)).toBeChecked();
+  });
+
+  it('退出配置不停止已播放的音乐，也不重建声音实例', async () => {
+    const server = installServer(true);
+    server.mockResolvedValueOnce(Response.json({ ...testSession, account: { ...testSession.account, preferences: { ...testSession.account.preferences, music_enabled: true } } }));
+    render(<IslandApp />);
+    await unlock();
+    fireEvent.click(screen.getByRole('button', { name: familyContent.playMusic }));
+    await waitFor(() => expect(sound.start).toHaveBeenCalledTimes(1));
+    const stops = sound.stop.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: content.account.leaveManagement }));
+    expect(screen.queryByLabelText(familyContent.music)).not.toBeInTheDocument();
+    expect(sound.dispose).not.toHaveBeenCalled();
+    expect(sound.stop).toHaveBeenCalledTimes(stops);
+    await waitFor(() => expect(screen.getByRole('button', { name: content.navigation.management })).toBeEnabled());
+    await unlock();
+    expect(screen.getByRole('button', { name: familyContent.pauseMusic })).toBeInTheDocument();
+    expect(sound.activate).toHaveBeenCalledTimes(1);
+  });
+
+  it('小岛设置按按钮打开，返回营地后设置仍隐藏', async () => {
+    installServer(true);
+    render(<IslandApp />);
+    fireEvent.click(await screen.findByRole('button', { name: content.navigation.island }));
+    fireEvent.click(await screen.findByRole('button', { name: islandContent.settings }));
+    expect(screen.getByRole('dialog', { name: familyContent.sounds })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: content.common.close }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: islandContent.back }));
+    await screen.findByRole('button', { name: content.navigation.management });
+    expect(screen.queryByLabelText(familyContent.music)).not.toBeInTheDocument();
+    expect(sound.dispose).not.toHaveBeenCalled();
+  });
+
   it('进入小岛隐藏普通页框，独立返回回到进入前页面', async () => {
     installServer(true);
     render(<IslandApp />);
