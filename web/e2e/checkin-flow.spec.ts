@@ -68,7 +68,11 @@ test('真实打卡、编辑删除、响应丢失恢复和历史补录闭环', as
   expect((await (await page.request.get('/api/v1/camp')).json() as Camp).wallet).toEqual(afterGrant.wallet);
   await page.locator('.checkin-record').filter({ hasText: taskName }).click();
   await page.getByRole('dialog').getByRole('button', { name: checkin.delete, exact: true }).click();
-  await expect(page.getByRole('dialog')).toContainText(checkin.coins);
+  await expect(page.getByRole('dialog').getByRole('img', { name: checkin.coins })).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('img', { name: checkin.diamonds })).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('−7', { exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('−3', { exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog')).not.toContainText(/金币|钻石/);
   await page.getByRole('dialog').getByRole('button', { name: checkin.confirmDelete, exact: true }).click();
   await expect.poll(async () => (await records()).length).toBe(0);
 

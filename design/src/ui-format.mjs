@@ -27,7 +27,12 @@ export function weekdayLabel(date) {
   return new Intl.DateTimeFormat('zh-CN', { weekday: 'short', timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
 }
 
+// 图标用于可见标签，完整币种或字段名称保留给读屏。
+export function currencyLabel(currency, label = currency === 'coin' ? c.coins : c.gems) {
+  return `<span class="currency-label">${icon(currency)}<span class="sr-only">${esc(label)}</span></span>`;
+}
+
 // 两种货币同时展示，图像之外保留读屏可辨识的币种名称。
 export function rewards(coins, gems, plus = false) {
-  return `<span class="reward-inline"><span class="currency coin">${icon('coin')}<span class="sr-only">${c.coins}</span><span>${plus ? '+' : ''}${coins}</span></span><span class="currency gem">${icon('gem')}<span class="sr-only">${c.gems}</span><span>${plus ? '+' : ''}${gems}</span></span></span>`;
+  return `<span class="reward-inline"><span class="currency coin">${currencyLabel('coin')}<span>${plus ? '+' : ''}${coins}</span></span><span class="currency gem">${currencyLabel('gem')}<span>${plus ? '+' : ''}${gems}</span></span></span>`;
 }

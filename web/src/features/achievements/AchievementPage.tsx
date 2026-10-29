@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Achievement, AchievementProps } from './types';
-import { achievementError, achievementRule, achievementWindow, badgeURL } from './achievement-format';
+import { achievementError, achievementWindow, badgeURL } from './achievement-format';
+import { AchievementProgress, AchievementRule } from './AchievementRule';
 import { AchievementDetails } from './AchievementDetails';
 import content from './content.json';
 import './achievements.css';
@@ -49,8 +50,8 @@ export function AchievementPage({ client }: AchievementProps) {
       {shown.map((item) => <article className={`panel achievement-card ${item.qualified ? 'is-owned' : ''}`} key={item.id}>
         <button className="secondary achievement-preview" aria-label={`${content.details} ${item.name}`} onClick={(event) => { event.currentTarget.focus(); setSelected(item); }}><img className="achievement-art" src={badgeURL(item.asset_key)} alt="" /></button>
         <h2>{item.name}</h2><p className="achievement-state">{item.equipped ? content.equipped : item.qualified ? content.owned : content.unowned}</p>
-        <p>{achievementRule(item)}</p><p className="achievement-hint">{achievementWindow(item.window_days)}</p>
-        <label className="achievement-progress">{content.progress} {item.progress} / {item.target}<progress max={item.target} value={Math.min(item.progress, item.target)} /></label>
+        <p><AchievementRule item={item} /></p><p className="achievement-hint">{achievementWindow(item.window_days)}</p>
+        <label className="achievement-progress"><span>{content.progress} <AchievementProgress item={item} /></span><progress max={item.target} value={Math.min(item.progress, item.target)} /></label>
         {item.qualified && <button disabled={busy} className={item.equipped ? 'secondary' : undefined} onClick={() => void equip(item)}>{item.equipped ? content.unequip : content.equip}</button>}
       </article>)}
     </div>}

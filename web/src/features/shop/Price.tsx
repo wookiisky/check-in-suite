@@ -1,17 +1,11 @@
-import content from './content.json';
+import { CurrencyAmount } from '../../components/CurrencyAmount';
 
-// 金币与钻石同时呈现，并以文字标明币种，不仅依赖颜色。
+// 两种价格共用币种图标，数值保留原始金额。
 export function Price({ coins, diamonds }: { coins: number; diamonds: number }) {
   return (
     <span className="shop-price">
-      <span>
-        <img src="/api/v1/assets/coin-v1" alt="" />
-        {content.coins} <strong>{coins}</strong>
-      </span>
-      <span>
-        <img src="/api/v1/assets/gem-v1" alt="" />
-        {content.diamonds} <strong>{diamonds}</strong>
-      </span>
+      <CurrencyAmount currency="coins" amount={coins}><strong>{coins}</strong></CurrencyAmount>
+      <CurrencyAmount currency="diamonds" amount={diamonds}><strong>{diamonds}</strong></CurrencyAmount>
     </span>
   );
 }

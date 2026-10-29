@@ -24,7 +24,7 @@ async function createAchievementInPage(page: Page, name: string, taskName: strin
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel(achievement.name, { exact: true }).fill(name);
   await dialog.getByRole('combobox', { name: achievement.asset, exact: true }).selectOption(badgeKey);
-  await dialog.getByRole('combobox', { name: achievement.metric, exact: true }).selectOption(metric);
+  await dialog.getByRole('radio', { name: achievement.metrics[metric], exact: true }).check();
   await dialog.getByRole('combobox', { name: achievement.scope, exact: true }).selectOption('tasks');
   await dialog.getByRole('checkbox', { name: taskName, exact: true }).check();
   await dialog.getByLabel(achievement.target, { exact: true }).fill('1');

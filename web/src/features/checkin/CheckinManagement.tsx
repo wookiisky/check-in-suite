@@ -1,3 +1,4 @@
+import { CurrencyAmount } from '../../components/CurrencyAmount';
 import { useEffect, useRef, useState } from 'react';
 import type { components } from '../../api/schema';
 import { ApiFailure } from '../../api/client';
@@ -120,7 +121,7 @@ export function CheckinManagement({ client, session, section }: CheckinProps & {
         <label className="checkin-toggle"><input ref={visibilityControl} type="checkbox" checked={showDisabled} onChange={(event) => setShowDisabled(event.target.checked)} />{content.showDisabledTasks}</label>
         {visibleTasks.length === 0 && !loading && error === null && <p>{tasks.length === 0 ? content.emptyTasks : content.noActiveTasks}</p>}
         {visibleTasks.map((item) => <div className="checkin-config-row" key={item.id}>
-          <div><strong>{item.name}</strong>{!item.enabled && <p className="checkin-hint">{content.disabled}</p>}<p className="checkin-hint">{content.coins} {item.coin_reward} · {content.diamonds} {item.diamond_reward} · {content.dailyLimit} {item.daily_limit}</p></div>
+          <div><strong>{item.name}</strong>{!item.enabled && <p className="checkin-hint">{content.disabled}</p>}<p className="checkin-hint"><CurrencyAmount currency="coins" amount={item.coin_reward} /> · <CurrencyAmount currency="diamonds" amount={item.diamond_reward} /> · {content.dailyLimit} {item.daily_limit}</p></div>
           <div className="checkin-actions">
             <button className="secondary" disabled={actionsDisabled || Boolean(command)} aria-label={`${item.enabled ? content.disableTask : content.enableTask} ${item.name}`} aria-busy={changingTask === item.id} onClick={(event) => void changeTaskStatus(item, event.currentTarget)}>{changingTask === item.id ? content.saving : item.enabled ? content.disableTask : content.enableTask}</button>
             <button className="secondary" disabled={actionsDisabled} onClick={() => setEditing({ kind: 'task', item })}>{content.editConfig}</button>

@@ -1,0 +1,2 @@
+.currency-icon { width: 28px; height: 28px; flex-shrink: 0; object-fit: contain; vertical-align: middle; }
+.currency-amount { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; vertical-align: middle; font-variant-numeric: tabular-nums; }

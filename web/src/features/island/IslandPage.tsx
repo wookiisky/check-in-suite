@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Modal } from '../../components/Modal';
+import { CurrencyAmount } from '../../components/CurrencyAmount';
 import type { IslandInsets } from './island-camera';
 import { ApiFailure, errorMessage } from '../../api/client';
 import type { Camp } from '../shop/types';
@@ -292,7 +293,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
   }
   return <div className="island-page island-fullscreen" style={{ '--island-hud-top': `${hudTop}px` } as CSSProperties}>
     <header ref={header} className="island-page-header"><div className="island-heading"><button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); leave('back'); }}>{content.back}</button><h1>{content.title}</h1></div>
-      {camp && <section className="island-wallet" aria-label={content.balance}><span><img src="/api/v1/assets/coin-v1" alt=""/><span className="island-currency-name">{content.coins}</span><strong aria-label={`${content.coins} ${camp.wallet.coins}`}>{camp.wallet.coins}</strong></span><span><img src="/api/v1/assets/gem-v1" alt=""/><span className="island-currency-name">{content.diamonds}</span><strong aria-label={`${content.diamonds} ${camp.wallet.diamonds}`}>{camp.wallet.diamonds}</strong></span></section>}
+      {camp && <section className="island-wallet" aria-label={content.balance}><CurrencyAmount currency="coins" amount={camp.wallet.coins}><strong>{camp.wallet.coins}</strong></CurrencyAmount><CurrencyAmount currency="diamonds" amount={camp.wallet.diamonds}><strong>{camp.wallet.diamonds}</strong></CurrencyAmount></section>}
       <div className="island-actions">{state && <button disabled={editing || saving} aria-pressed={editing} onClick={() => { setDraft(state.placements.map((item) => ({ ...item }))); setCheckinsOpen(false); setPanelOpen(true); setError(null); showMessage(''); }}>{content.edit}</button>}{onShop && <button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); leave('shop'); }}>{content.shop}</button>}{onSettings && <button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); onSettings(); }}>{content.settings}</button>}</div>
     </header>
     {camp && onCamp && <aside ref={checkins} className={`island-checkin-panel ${checkinsOpen ? 'is-expanded' : 'is-collapsed'}`} aria-label={content.checkinTitle}>

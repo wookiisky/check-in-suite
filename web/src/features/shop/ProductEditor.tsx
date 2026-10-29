@@ -9,6 +9,7 @@ import { assetURL, shopError, uncertainResult } from './helpers';
 import { Price } from './Price';
 import { createIdempotencyKey } from '../../api/idempotency-key';
 import content from './content.json';
+import { CurrencyIcon } from '../../components/CurrencyAmount';
 
 // 商品表单只提交可编辑字段，不将id、owned等只读属性回传。
 function draftFor(product: Product | null, assets: Asset[]): ProductInput {
@@ -204,9 +205,10 @@ export function ProductEditor({
             onChange={(event) => update({ description: event.target.value })}
           />
           <FieldError error={error} field="description" />
-          <label htmlFor="product-coins">{content.coinPrice}</label>
+          <label htmlFor="product-coins"><CurrencyIcon currency="coins" label={content.coinPrice} /></label>
           <input
             id="product-coins"
+            aria-label={content.coinPrice}
             type="number"
             min={0}
             max={session.limits.price_max}
@@ -216,9 +218,10 @@ export function ProductEditor({
             onChange={(event) => update({ coin_price: Number(event.target.value) })}
           />
           <FieldError error={error} field="coin_price" />
-          <label htmlFor="product-diamonds">{content.diamondPrice}</label>
+          <label htmlFor="product-diamonds"><CurrencyIcon currency="diamonds" label={content.diamondPrice} /></label>
           <input
             id="product-diamonds"
+            aria-label={content.diamondPrice}
             type="number"
             min={0}
             max={session.limits.price_max}

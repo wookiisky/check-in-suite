@@ -3,7 +3,8 @@ import { ApiFailure } from '../../api/client';
 import { Modal } from '../../components/Modal';
 import type { Achievement, AchievementAsset, AchievementOptions, AchievementProps } from './types';
 import { AchievementEditor } from './AchievementEditor';
-import { achievementError, achievementRule, achievementWindow, badgeURL } from './achievement-format';
+import { achievementError, achievementWindow, badgeURL } from './achievement-format';
+import { AchievementRule } from './AchievementRule';
 import { pendingAchievements } from './achievement-pending';
 import content from './content.json';
 import './achievements.css';
@@ -62,7 +63,7 @@ export function AchievementManagement({ client, session }: AchievementProps) {
       {items.filter((item) => !item.deleted).length === 0 && <p>{content.emptyManagement}</p>}
       {items.filter((item) => !item.deleted).map((item) => <article className="panel achievement-management-row" key={item.id}>
         <img className="achievement-art" src={badgeURL(item.asset_key)} alt="" />
-        <div><h2>{item.name}</h2><p>{achievementRule(item)}</p><p className="achievement-hint">{achievementWindow(item.window_days)}</p><p>{item.enabled ? content.active : content.disabled}</p></div>
+        <div><h2>{item.name}</h2><p><AchievementRule item={item} /></p><p className="achievement-hint">{achievementWindow(item.window_days)}</p><p>{item.enabled ? content.active : content.disabled}</p></div>
         <div className="achievement-actions"><button className="secondary" disabled={Boolean(pending) || error !== null} aria-label={`${content.edit} ${item.name}`} onClick={(event) => { event.currentTarget.focus(); setEditing(item); }}>{content.edit}</button><button className="secondary" disabled={Boolean(pending) || error !== null} aria-label={`${content.delete} ${item.name}`} onClick={(event) => { event.currentTarget.focus(); setError(null); setDeleteConflict(false); setDeleting(item); }}>{content.delete}</button></div>
       </article>)}
     </div>}

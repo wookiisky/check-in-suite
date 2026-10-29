@@ -3,8 +3,10 @@ import type { FormEvent } from 'react';
 import { ApiFailure } from '../../api/client';
 import { Modal } from '../../components/Modal';
 import { FieldError } from '../../components/FormFeedback';
+import { CurrencyIcon } from '../../components/CurrencyAmount';
+import { AchievementRule } from './AchievementRule';
 import type { Achievement, AchievementAsset, AchievementInput, AchievementOptions, AchievementProps } from './types';
-import { achievementError, achievementRule, achievementTargetName, achievementWindow, badgeURL, isUncertainCreation } from './achievement-format';
+import { achievementError, achievementTargetName, achievementWindow, badgeURL, isUncertainCreation } from './achievement-format';
 import { pendingAchievements } from './achievement-pending';
 import { createIdempotencyKey } from '../../api/idempotency-key';
 import content from './content.json';
@@ -87,8 +89,8 @@ export function AchievementEditor({ client, session, item, assets, options, onCl
         <label>{content.name}<input value={draft.name} required maxLength={session.limits.name_max} onChange={(event) => update({ name: event.target.value })} /></label><FieldError error={error} field="name" />
         <label>{content.asset}<select value={draft.asset_key} required onChange={(event) => update({ asset_key: event.target.value })}><option value="">{content.chooseAsset}</option>{assets.filter((asset) => asset.kind === 'badge').map((asset) => <option key={asset.key} value={asset.key}>{asset.name}</option>)}</select></label><FieldError error={error} field="asset_key" />
         {draft.asset_key && <img className="achievement-form-art" src={badgeURL(draft.asset_key)} alt="" />}
-        <label>{content.metric}<select value={draft.metric} onChange={(event) => update({ metric: event.target.value as AchievementInput['metric'] })}>{Object.entries(content.metrics).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <label>{content.target}<input type="number" min={1} max={Number.MAX_SAFE_INTEGER} step={1} required value={draft.target} onChange={(event) => update({ target: Number(event.target.value) })} /></label><FieldError error={error} field="target" />
+        <fieldset className="achievement-metrics"><legend>{content.metric}</legend>{Object.entries(content.metrics).map(([value, label]) => <label key={value} className="achievement-metric-choice"><input type="radio" name="achievement-metric" value={value} checked={draft.metric === value} aria-label={label} onChange={() => update({ metric: value as AchievementInput['metric'] })} />{value === 'coins' || value === 'diamonds' ? <>{content.currencyMetricLabel} <CurrencyIcon currency={value} /></> : label}</label>)}</fieldset>
+        <label><span className="achievement-target-label">{content.target}{(draft.metric === 'coins' || draft.metric === 'diamonds') && <CurrencyIcon currency={draft.metric} />}</span><input aria-label={content.target} type="number" min={1} max={Number.MAX_SAFE_INTEGER} step={1} required value={draft.target} onChange={(event) => update({ target: Number(event.target.value) })} /></label><FieldError error={error} field="target" />
         <label>{content.scope}<select value={draft.scope} onChange={(event) => update({ scope: event.target.value as AchievementInput['scope'], category_id: null, task_ids: [] })}>{Object.entries(content.scopes).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         {draft.scope === 'category' && <><label>{content.category}<select value={draft.category_id ?? ''} required onChange={(event) => update({ category_id: event.target.value || null })}><option value="">{content.chooseCategory}</option>{targets.categories.map((category) => <option key={category.id} value={category.id} disabled={category.deleted && initial.category_id !== category.id}>{achievementTargetName(category)}</option>)}</select></label><FieldError error={error} field="category_id" /></>}
         {draft.scope === 'tasks' && <fieldset className="achievement-task-choices"><legend>{content.tasks}</legend>{targets.tasks.map((task) => <label key={task.id} className="achievement-check"><input type="checkbox" checked={draft.task_ids.includes(task.id)} disabled={task.deleted && !initial.task_ids.includes(task.id)} onChange={(event) => update({ task_ids: event.target.checked ? [...draft.task_ids, task.id] : draft.task_ids.filter((id) => id !== task.id) })} />{achievementTargetName(task)}</label>)}{invalid && <p role="status">{content.tasksRequired}</p>}<FieldError error={error} field="task_ids" /></fieldset>}
@@ -102,7 +104,7 @@ export function AchievementEditor({ client, session, item, assets, options, onCl
       {error !== null && <p role="alert">{achievementError(error)}</p>}
       {conflict && <p role="status">{content.conflict}</p>}
       {conflict && !latest && <button type="button" className="secondary" disabled={busy} onClick={() => void loadLatest()}>{content.reloadLatest}</button>}
-      {latest && <section className="achievement-latest" aria-label={content.latest}><h3>{content.latest}</h3><img className="achievement-form-art" src={badgeURL(latest.asset_key)} alt="" /><p>{latest.name}</p><p>{achievementRule(latest)}</p><p>{achievementWindow(latest.window_days)}</p><p>{latest.enabled ? content.active : content.disabled}</p>
+      {latest && <section className="achievement-latest" aria-label={content.latest}><h3>{content.latest}</h3><img className="achievement-form-art" src={badgeURL(latest.asset_key)} alt="" /><p>{latest.name}</p><p><AchievementRule item={latest} /></p><p>{achievementWindow(latest.window_days)}</p><p>{latest.enabled ? content.active : content.disabled}</p>
         {latest.category_id && <p>{targets.categories.find((category) => category.id === latest.category_id)?.name ?? content.unavailableTarget}</p>}
         {latest.task_ids.length > 0 && <ul>{latest.task_ids.map((id) => <li key={id}>{targets.tasks.find((task) => task.id === id)?.name ?? content.unavailableTarget}</li>)}</ul>}
         <div className="achievement-actions"><button type="button" className="secondary" disabled={busy} onClick={useLatest}>{content.useLatest}</button><button type="button" disabled={busy || invalid} onClick={() => void save(latest.version)}>{content.confirmDraft}</button></div></section>}

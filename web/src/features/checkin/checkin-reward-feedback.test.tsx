@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CheckinRewardFeedback } from './CheckinRewardFeedback';
 import content from './content.json';
@@ -10,8 +10,8 @@ describe('奖励数量动效', () => {
     const { container } = render(<CheckinRewardFeedback coins={amount} diamonds={amount} reduceMotion={false} />);
     expect(container.querySelectorAll('.checkin-reward-coins .checkin-reward-particle')).toHaveLength(Math.min(amount, 50));
     expect(container.querySelectorAll('.checkin-reward-diamonds .checkin-reward-particle')).toHaveLength(Math.min(amount, 50));
-    expect(screen.getByText(`${content.coins} +${amount}`)).toBeVisible();
-    expect(screen.getByText(`${content.diamonds} +${amount}`)).toBeVisible();
+    expect(within(screen.getByRole('img', { name: content.coins }).parentElement!).getByText(`+${amount}`)).toBeVisible();
+    expect(within(screen.getByRole('img', { name: content.diamonds }).parentElement!).getByText(`+${amount}`)).toBeVisible();
   });
 
   it('两种奖励分别计数，钻石有独立高亮展示且装饰不重复朗读', () => {
@@ -19,6 +19,9 @@ describe('奖励数量动效', () => {
     expect(container.querySelectorAll('.checkin-reward-coins .checkin-reward-particle')).toHaveLength(7);
     expect(container.querySelectorAll('.checkin-reward-diamonds .checkin-reward-particle')).toHaveLength(3);
     expect(container.querySelector('.checkin-reward-diamonds')).toHaveClass('checkin-reward-featured');
+    expect(container).not.toHaveTextContent(/金币|钻石/);
+    expect(screen.getByRole('img', { name: content.coins })).toBeVisible();
+    expect(screen.getByRole('img', { name: content.diamonds })).toBeVisible();
     for (const layer of container.querySelectorAll('.checkin-reward-particles')) expect(layer).toHaveAttribute('aria-hidden', 'true');
   });
 
@@ -32,7 +35,7 @@ describe('奖励数量动效', () => {
   it('减少动效时只保留准确金额与静态钻石展示，关闭偏好不补播旧奖励', () => {
     const { container, rerender } = render(<CheckinRewardFeedback coins={50} diamonds={3} reduceMotion />);
     expect(container.querySelectorAll('.checkin-reward-particle')).toHaveLength(0);
-    expect(screen.getByText(`${content.diamonds} +3`)).toBeVisible();
+    expect(screen.getByText('+3')).toBeVisible();
     expect(container.querySelector('.checkin-reward-diamonds')).toHaveClass('checkin-reward-featured');
     rerender(<CheckinRewardFeedback coins={50} diamonds={3} reduceMotion={false} />);
     expect(container.querySelectorAll('.checkin-reward-particle')).toHaveLength(0);
@@ -44,7 +47,7 @@ describe('奖励数量动效', () => {
     expect(container.querySelectorAll('.checkin-reward-particle')).toHaveLength(3);
     act(() => vi.advanceTimersByTime(2000));
     expect(container.querySelectorAll('.checkin-reward-particle')).toHaveLength(0);
-    expect(screen.getByText(`${content.coins} +2`)).toBeVisible();
+    expect(screen.getByText('+2')).toBeVisible();
     rerender(<CheckinRewardFeedback key="first" coins={2} diamonds={1} reduceMotion={false} />);
     expect(container.querySelectorAll('.checkin-reward-particle')).toHaveLength(0);
     rerender(<CheckinRewardFeedback key="second" coins={2} diamonds={1} reduceMotion={false} />);

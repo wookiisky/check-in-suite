@@ -56,7 +56,7 @@
   "operationTime": "操作时间",
   "recordDetail": "打卡详情",
   "success": "打卡完成！",
-  "rewardAmount": "{currency} +{amount}",
+  "rewardAmount": "+{amount}",
   "saved": "已保存",
   "deleted": "已删除记录并回收奖励",
   "categoriesTasks": "类别与项目",

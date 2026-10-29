@@ -32,6 +32,11 @@
 .achievement-management-row > div { display: grid; gap: 12px; }
 .achievement-task-choices { min-width: 0; border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; }
 .achievement-task-choices legend { font-weight: 700; padding: 0 8px; }
+.achievement-metrics { min-width: 0; margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 8px 16px; }
+.achievement-metrics legend { padding: 0; margin-bottom: 8px; }
+.achievement-metric-choice, .achievement-target-label { display: flex; align-items: center; gap: 8px; }
+.achievement-metric-choice { min-height: 56px; cursor: pointer; }
+.achievement-metric-choice input[type="radio"] { width: 24px; min-width: 24px; height: 24px; min-height: 24px; margin: 0; padding: 0; flex-shrink: 0; accent-color: var(--forest); }
 .achievement-latest { padding: 16px; border: 2px solid var(--focus); border-radius: 16px; display: grid; gap: 14px; }
 @media (max-width: 720px) {
   .achievement-management-row { grid-template-columns: 88px minmax(0, 1fr); gap: 16px; }

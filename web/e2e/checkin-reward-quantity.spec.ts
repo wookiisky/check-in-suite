@@ -32,8 +32,11 @@ test('奖励数量与钻石高亮在浏览器中正确展示', async ({ page }, 
     await task.click();
     await page.getByRole('dialog').getByRole('button', { name: checkin.checkin, exact: true }).click();
     const notice = page.locator('.checkin-notice');
-    await expect(notice.getByText(`${checkin.coins} +${amount}`, { exact: true })).toBeVisible();
-    await expect(notice.getByText(`${checkin.diamonds} +${amount}`, { exact: true })).toBeVisible();
+    await expect(notice.locator('.checkin-reward-coins').getByRole('img', { name: checkin.coins })).toBeVisible();
+    await expect(notice.locator('.checkin-reward-coins').getByText(`+${amount}`, { exact: true })).toBeVisible();
+    await expect(notice.locator('.checkin-reward-diamonds').getByRole('img', { name: checkin.diamonds })).toBeVisible();
+    await expect(notice.locator('.checkin-reward-diamonds').getByText(`+${amount}`, { exact: true })).toBeVisible();
+    await expect(notice).not.toContainText(/金币|钻石/);
     const beats = Math.min(amount, 8);
     await expect.poll(async () => (await feedbackAudioState(page)).notes).toBe(previousNotes + beats * 3 + 2);
     const notes = await page.evaluate((offset) => window.feedbackAudio.scheduled.slice(offset), previousNotes);
@@ -52,6 +55,7 @@ test('奖励数量与钻石高亮在浏览器中正确展示', async ({ page }, 
     await notice.screenshot({ path: testInfo.outputPath(`reward-${amount}.png`) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
     await expect(notice.locator('.checkin-reward-particle')).toHaveCount(0);
-    await expect(notice.getByText(`${checkin.diamonds} +${amount}`, { exact: true })).toBeVisible();
+    await expect(notice.locator('.checkin-reward-diamonds').getByRole('img', { name: checkin.diamonds })).toBeVisible();
+    await expect(notice.locator('.checkin-reward-diamonds').getByText(`+${amount}`, { exact: true })).toBeVisible();
   }
 });

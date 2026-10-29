@@ -1,3 +1,4 @@
+import { CurrencyIcon } from '../../components/CurrencyAmount';
 import { useEffect, useState } from 'react';
 import type { components } from '../../api/schema';
 import { ApiFailure } from '../../api/client';
@@ -128,8 +129,8 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
       {kind === 'category' ? <label>{content.sortOrder}<input type="number" step="1" value={sortOrder} disabled={unknown} onChange={(event) => setSortOrder(Number(event.target.value))} /></label> : <>
         <div className="checkin-form-grid"><label>{content.category}<select value={categoryID} disabled={unknown} onChange={(event) => setCategoryID(event.target.value)}><option value="">{content.uncategorized}</option>{categoryID && !categoryOptions.some((entry) => entry.id === categoryID) && <option value={categoryID}>{content.unavailableCategory}</option>}{categoryOptions.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
           <label>{content.icon}<select required value={icon} disabled={unknown} onChange={(event) => setIcon(event.target.value)}>{assets.map((asset) => <option key={asset.key} value={asset.key}>{asset.name}</option>)}</select></label>
-          <label>{content.coins}<input type="number" min="0" max={session.limits.reward_max} step="1" value={coins} disabled={unknown} onChange={(event) => setCoins(Number(event.target.value))} /></label>
-          <label>{content.diamonds}<input type="number" min="0" max={session.limits.reward_max} step="1" value={diamonds} disabled={unknown} onChange={(event) => setDiamonds(Number(event.target.value))} /></label>
+          <label><CurrencyIcon currency="coins" /><input aria-label={content.coins} type="number" min="0" max={session.limits.reward_max} step="1" value={coins} disabled={unknown} onChange={(event) => setCoins(Number(event.target.value))} /></label>
+          <label><CurrencyIcon currency="diamonds" /><input aria-label={content.diamonds} type="number" min="0" max={session.limits.reward_max} step="1" value={diamonds} disabled={unknown} onChange={(event) => setDiamonds(Number(event.target.value))} /></label>
           <label>{content.dailyLimit}<input type="number" min="1" max={session.limits.daily_limit_max} step="1" value={dailyLimit} disabled={unknown} onChange={(event) => setDailyLimit(Number(event.target.value))} /></label></div>
         <fieldset className="checkin-checks" disabled={unknown}><legend>{content.weekdaysLabel}</legend>{content.weekdays.map((label, index) => <label key={label}><input type="checkbox" checked={weekdays.includes(index + 1)} onChange={(event) => setWeekdays((values) => event.target.checked ? [...values, index + 1].sort() : values.filter((value) => value !== index + 1))} />{label}</label>)}</fieldset>
         {weekdays.length === 0 && <p role="alert">{content.weekdayRequired}</p>}<FieldError error={error} field="weekdays" />
@@ -148,8 +149,8 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
           {latestTask && <>
             <dt>{content.category}</dt><dd>{latestTask.category_id === null ? content.uncategorized : categoryOptions.find((entry) => entry.id === latestTask.category_id)?.name ?? content.unavailableCategory}</dd>
             <dt>{content.icon}</dt><dd>{assets.find((asset) => asset.key === latestTask.icon_key)?.name ?? content.unavailableIcon}</dd>
-            <dt>{content.coins}</dt><dd>{latestTask.coin_reward}</dd>
-            <dt>{content.diamonds}</dt><dd>{latestTask.diamond_reward}</dd>
+            <dt><CurrencyIcon currency="coins" /></dt><dd>{latestTask.coin_reward}</dd>
+            <dt><CurrencyIcon currency="diamonds" /></dt><dd>{latestTask.diamond_reward}</dd>
             <dt>{content.dailyLimit}</dt><dd>{latestTask.daily_limit}</dd>
             <dt>{content.weekdaysLabel}</dt><dd>{latestTask.weekdays.map((day) => content.weekdays[day - 1]).join(content.weekdaySeparator)}</dd>
             <dt>{content.unlockActivities}</dt><dd>{latestTask.unlock_activities.length ? latestTask.unlock_activities.map((activity) => content.activityLabels[activity]).join(content.weekdaySeparator) : content.noUnlockActivities}</dd>

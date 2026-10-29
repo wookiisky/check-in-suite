@@ -1,3 +1,4 @@
+import { CurrencyIcon } from '../../components/CurrencyAmount';
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from '../shop/useReducedMotion';
@@ -51,8 +52,8 @@ export function CheckinRewardFeedback({ coins, diamonds, reduceMotion }: Checkin
           })}
         </div>}
         <div className="checkin-reward-amount">
-          <img className="checkin-reward-icon" src={`/api/v1/assets/${asset}`} alt="" aria-hidden="true" />
-          <span>{content.rewardAmount.replace('{currency}', content[currency]).replace('{amount}', String(amount))}</span>
+          <CurrencyIcon currency={currency} className="checkin-reward-icon" />
+          <span>{content.rewardAmount.replace('{amount}', String(amount))}</span>
         </div>
       </div>;
     })}

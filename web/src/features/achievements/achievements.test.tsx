@@ -14,6 +14,16 @@ import content from './content.json';
 const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
 
 describe('成就浏览和佩戴', () => {
+  it.each(['coins', 'diamonds'] as const)('%s 的条件与零进度只展示图标和数量，读屏仍能识别币种', (metric) => {
+    render(<AchievementDetails item={{ ...achievementFixture, metric, target: 100, progress: 0 }} onClose={vi.fn()} />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.textContent).not.toMatch(/金币|钻石/);
+    const icons = within(dialog).getAllByRole('img', { name: metric === 'coins' ? '金币' : '钻石' });
+    expect(icons).toHaveLength(2);
+    expect(icons[0]?.parentElement).toHaveTextContent('100');
+    expect(icons[1]?.parentElement).toHaveTextContent('0 / 100');
+  });
+
   it('详情显示具体类别名称及已删除状态', () => {
     const item = { ...achievementFixture, scope: 'category' as const, category_id: 'reading', category: { id: 'reading', name: '历史阅读 $& 类别', deleted: true }, tasks: [] };
     render(<AchievementDetails item={item} onClose={vi.fn()} />);
@@ -67,6 +77,19 @@ describe('成就浏览和佩戴', () => {
 });
 
 describe('成就配置', () => {
+  it('金额指标以图标单选项呈现，切换后提交实际指标并保留目标数值', async () => {
+    const request = vi.fn().mockResolvedValue(achievementFixture);
+    render(<AchievementEditor client={{ request }} session={session} item={achievementFixture} options={achievementOptions} assets={badgeAssets} onClose={vi.fn()} onSaved={vi.fn()} />);
+    const metrics = screen.getByRole('group', { name: content.metric });
+    expect(within(metrics).getAllByRole('radio')).toHaveLength(5);
+    expect(metrics.textContent).not.toMatch(/金币|钻石/);
+    fireEvent.click(within(metrics).getByRole('radio', { name: content.metrics.diamonds }));
+    expect(within(metrics).getByRole('radio', { name: content.metrics.diamonds })).toBeChecked();
+    expect(within(metrics).getByRole('radio', { name: content.metrics.count })).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: content.save }));
+    await waitFor(() => expect(request).toHaveBeenCalledWith(`/management/achievements/${achievementFixture.id}`, expect.objectContaining({ body: expect.objectContaining({ metric: 'diamonds', target: achievementFixture.target }) })));
+  });
+
   it('新增响应丢失后重用原幂等键与原请求，禁用字段避免变更未决命令', async () => {
     const request = vi.fn().mockRejectedValueOnce(new TypeError('offline')).mockResolvedValueOnce(achievementFixture);
     const saved = vi.fn();
@@ -75,6 +98,8 @@ describe('成就配置', () => {
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await screen.findByText(content.pendingCreate);
     expect(screen.getByLabelText(content.name)).toBeDisabled();
+    expect(screen.getByRole('radio', { name: content.metrics.coins })).toBeDisabled();
+    expect(screen.getByRole('radio', { name: content.metrics.diamonds })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: content.retryCreate }));
     await waitFor(() => expect(saved).toHaveBeenCalled());
     expect(request.mock.calls[1]).toEqual(request.mock.calls[0]);

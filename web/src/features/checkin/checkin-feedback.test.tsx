@@ -29,11 +29,11 @@ describe('打卡奖励反馈', () => {
     try {
       const task = await screen.findByRole('button', { name: /阅读.*金币/ });
       await waitFor(() => expect(task).toBeEnabled());
-      expect(screen.queryByText(`${content.coins} +7`)).not.toBeInTheDocument();
+      expect(screen.queryByText('+7')).not.toBeInTheDocument();
       fireEvent.click(task);
       fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: content.checkin }));
-      expect(await screen.findByText(`${content.coins} +7`)).toBeVisible();
-      expect(screen.getByText(`${content.diamonds} +3`)).toBeVisible();
+      expect(await screen.findByText('+7')).toBeVisible();
+      expect(screen.getByText('+3')).toBeVisible();
       expect(view.container.querySelectorAll('.checkin-reward-coins .checkin-reward-particle')).toHaveLength(7);
       expect(view.container.querySelectorAll('.checkin-reward-diamonds .checkin-reward-particle')).toHaveLength(3);
       await waitFor(() => expect(within(screen.getByLabelText(content.balance)).getByText('500')).toHaveClass('feedback-pop'));
@@ -50,7 +50,7 @@ describe('打卡奖励反馈', () => {
       fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: content.checkin }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       expect(success).toHaveBeenCalledTimes(1);
-      expect(screen.queryByText(`${content.coins} +7`)).not.toBeInTheDocument();
+      expect(screen.queryByText('+7')).not.toBeInTheDocument();
       expect(view.container.querySelectorAll('.checkin-reward-particle')).toHaveLength(0);
       fireEvent.click(screen.getByRole('button', { name: content.previousDay }));
       await screen.findByText(content.historyReadOnly);
@@ -69,7 +69,7 @@ describe('打卡奖励反馈', () => {
     fireEvent.click(task);
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: content.checkin }));
     await screen.findByText(content.errors.TASK_CHANGED);
-    expect(screen.queryByText(`${content.coins} +2`)).not.toBeInTheDocument();
+    expect(screen.queryByText('+2')).not.toBeInTheDocument();
     view.unmount();
     const reducedSession = { ...session, account: { ...testSession.account, preferences: { ...testSession.account.preferences, reduce_motion: true } } };
     request.mockImplementation(async (path: string, options?: { method?: string }) => options?.method === 'POST'
@@ -80,7 +80,7 @@ describe('打卡奖励反馈', () => {
     await waitFor(() => expect(nextTask).toBeEnabled());
     fireEvent.click(nextTask);
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: content.checkin }));
-    expect(await screen.findByText(`${content.coins} +2`)).toBeVisible();
+    expect(await screen.findByText('+2')).toBeVisible();
     expect(screen.getByText(content.success).closest('[role=status]')).not.toHaveClass('checkin-celebrate');
   });
 });
