@@ -16,7 +16,11 @@ func TestHumanHairstylesPreserveCharacter(t *testing.T) {
 		name string
 		keys []string
 	}{
-		{"boy", []string{"avatar-boy-short-v1", "avatar-boy-curly-v1", "avatar-boy-sidepart-v1"}},
+		{"boy", []string{
+			"avatar-boy-short-v1", "avatar-boy-curly-v1", "avatar-boy-sidepart-v1",
+			"avatar-boy-mushroom-v1", "avatar-boy-afro-v1", "avatar-boy-bangs-v1",
+			"avatar-boy-tousled-v1", "avatar-boy-american-spiky-v1",
+		}},
 		{"girl", []string{"avatar-girl-long-v1", "avatar-girl-braids-v1", "avatar-girl-short-v1"}},
 	} {
 		t.Run(person.name, func(t *testing.T) {
@@ -45,20 +49,30 @@ func TestHumanHairstylesPreserveCharacter(t *testing.T) {
 				if err := xml.Unmarshal(body, &svg); err != nil || svg.ViewBox != "0 0 320 320" {
 					t.Fatalf("invalid human avatar canvas %s: %v", key, err)
 				}
-				var current string
+				var current, hairBack, hairFront string
 				for _, group := range svg.Groups {
-					if group.ID == "character-base" {
+					switch group.ID {
+					case "character-base":
 						current = group.Inner
+					case "hair-back":
+						hairBack = group.Inner
+					case "hair-front":
+						hairFront = group.Inner
 					}
 				}
 				if current == "" || base != "" && current != base {
 					t.Fatalf("face, clothing or pose changed with hairstyle: %s", key)
 				}
 				base = current
-				if drawings[string(body)] {
-					t.Fatalf("hairstyle is indistinguishable: %s", key)
+				if hairBack == "" || hairFront == "" {
+					t.Fatalf("missing hairstyle layers: %s", key)
 				}
-				drawings[string(body)] = true
+				// 比较头发图形，避免仅修改元数据或身体就被当作新发型。
+				hairstyle := hairBack + hairFront
+				if drawings[hairstyle] {
+					t.Fatalf("duplicate hairstyle layers: %s", key)
+				}
+				drawings[hairstyle] = true
 			}
 		})
 	}

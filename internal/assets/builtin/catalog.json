@@ -558,6 +558,36 @@
     "url": "/api/v1/assets/avatar-boy-sidepart-v1"
   },
   {
+    "key": "avatar-boy-mushroom-v1",
+    "name": "男孩·蘑菇头",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-boy-mushroom-v1"
+  },
+  {
+    "key": "avatar-boy-afro-v1",
+    "name": "男孩·爆炸头",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-boy-afro-v1"
+  },
+  {
+    "key": "avatar-boy-bangs-v1",
+    "name": "男孩·刘海",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-boy-bangs-v1"
+  },
+  {
+    "key": "avatar-boy-tousled-v1",
+    "name": "男孩·碎发",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-boy-tousled-v1"
+  },
+  {
+    "key": "avatar-boy-american-spiky-v1",
+    "name": "男孩·美式前刺",
+    "kind": "avatar",
+    "url": "/api/v1/assets/avatar-boy-american-spiky-v1"
+  },
+  {
     "key": "avatar-girl-long-v1",
     "name": "女孩·长发",
     "kind": "avatar",

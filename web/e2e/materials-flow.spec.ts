@@ -15,7 +15,7 @@ async function api<T>(page: Page, path: string, method = 'GET', data?: unknown):
   const session = await (await page.request.get('/api/v1/session')).json() as Session;
   const response = await page.request.fetch(`/api/v1${path}`, {
     method, data,
-    headers: { Origin: 'http://127.0.0.1:15173', 'X-CSRF-Token': session.csrf_token, 'Idempotency-Key': crypto.randomUUID() },
+    headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': session.csrf_token, 'Idempotency-Key': crypto.randomUUID() },
   });
   expect(response.ok(), `${method} ${path}: ${await response.text()}`).toBeTruthy();
   return response.status() === 204 ? undefined as T : response.json() as Promise<T>;
@@ -50,10 +50,11 @@ async function buyAndEquip(page: Page, product: Product) {
   await expect(page.getByRole('button', { name: `${shop.unequip} ${product.name}`, exact: true })).toBeEnabled();
 }
 
-// 两类角色共用完整流程，名称与角色标识保证共享数据库中的测试数据互不冲突。
+// 不同角色共用完整流程，名称与角色标识保证共享数据库中的测试数据互不冲突。
 for (const character of [
   { key: 'red-panda-v1', name: '小熊猫', preview: 'materials' },
   { key: 'avatar-girl-braids-v1', name: '双辫女孩', preview: 'human' },
+  { key: 'avatar-boy-afro-v1', name: '爆炸头男孩', preview: 'human-boy' },
 ]) {
   test(`${character.name}素材可在管理页选择并持久展示于画像和小岛`, async ({ page }, testInfo) => {
     test.setTimeout(90_000);
