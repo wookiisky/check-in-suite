@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import family from '../src/features/family/content.json' with { type: 'json' };
+import type { components } from '../src/api/schema';
 
 // 浏览器连接真实临时服务，不复用原型或本地用户数据。
 test('浏览器通过开发代理连接真实后端并显示登录页', async ({ page, request }) => {
@@ -14,6 +15,47 @@ test('浏览器通过开发代理连接真实后端并显示登录页', async ({
   await expect(page).toHaveTitle(content.appName);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(content.account.loginTitle);
   await expect(page.getByLabel(content.account.username)).toHaveValue('');
+});
+
+// API请求不携带Fetch Metadata，真实代理仍须保留Host以识别同源登录和写入。
+test('开发代理允许仅带 Origin 的同源登录和写入', async ({ request, baseURL }) => {
+  const origin = new URL(baseURL!).origin;
+  const login = await request.post('/api/v1/auth/login', {
+    headers: { Origin: origin },
+    data: { username: 'island-e2e', password: 'Island-Test-2026' },
+  });
+  expect(login.status(), await login.text()).toBe(200);
+  const session = await login.json() as components['schemas']['SessionResponse'];
+  const preferences = await request.patch('/api/v1/account/preferences', {
+    headers: { Origin: origin, 'X-CSRF-Token': session.csrf_token },
+    data: session.account.preferences,
+  });
+  expect(preferences.status(), await preferences.text()).toBe(200);
+  expect(await preferences.json()).toEqual(session.account.preferences);
+});
+
+// 保留Host不能放宽来源限制，未登录和已登录的跨来源写入都必须拒绝。
+test('开发代理拒绝仅带 Origin 的跨来源登录和写入', async ({ request }) => {
+  const headers = { Origin: 'https://other-origin.invalid' };
+  const rejectedLogin = await request.post('/api/v1/auth/login', {
+    headers,
+    data: { username: 'island-e2e', password: 'Island-Test-2026' },
+  });
+  expect(rejectedLogin.status()).toBe(403);
+  expect(await rejectedLogin.json()).toMatchObject({ code: 'ORIGIN_INVALID' });
+
+  // 无来源头的非浏览器登录建立独立会话，避免同源登录故障掩盖写入拒绝验证。
+  const login = await request.post('/api/v1/auth/login', {
+    data: { username: 'island-e2e', password: 'Island-Test-2026' },
+  });
+  expect(login.status(), await login.text()).toBe(200);
+  const session = await login.json() as components['schemas']['SessionResponse'];
+  const rejectedWrite = await request.patch('/api/v1/account/preferences', {
+    headers: { ...headers, 'X-CSRF-Token': session.csrf_token },
+    data: session.account.preferences,
+  });
+  expect(rejectedWrite.status()).toBe(403);
+  expect(await rejectedWrite.json()).toMatchObject({ code: 'ORIGIN_INVALID' });
 });
 
 // 真实Cookie和CSRF验证登录、锁定与退出；重开管理页必须再次输入密码。

@@ -2,8 +2,10 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { ApiClient, ApiFailure } from './api/client';
 import type { Account, Preferences, Session } from './api/types';
 import { FormFeedback } from './components/FormFeedback';
+import { Modal } from './components/Modal';
 import { LoginForm } from './features/account/LoginForm';
 import { ManagementPanel } from './features/account/ManagementPanel';
+import type { AccountFormState } from './features/account/ManagementPanel';
 import { UnlockDialog } from './features/account/UnlockDialog';
 import { CampPage } from './features/checkin/CampPage';
 import { CheckinManagement } from './features/checkin/CheckinManagement';
@@ -48,6 +50,8 @@ export function IslandApp() {
   const [unlocking, setUnlocking] = useState(false);
   const [management, setManagement] = useState(false);
   const [managementSection, setManagementSection] = useState<ManagementSection>('account');
+  const [accountForm, setAccountForm] = useState<AccountFormState>({ dirty: false, pending: false });
+  const [pendingLeave, setPendingLeave] = useState<(() => void) | null>(null);
   const [lockPending, setLockPending] = useState(false);
   const [busy, setBusy] = useState(false);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
@@ -59,6 +63,15 @@ export function IslandApp() {
   }), []);
 
   const immersive = session !== null && page === 'island' && !management;
+  const accountSaving = management && managementSection === 'account' && accountForm.pending;
+
+  // 强制撤销权限或密码修改成功不受草稿拦截，也不遗留旧的离开操作。
+  useEffect(() => {
+    if (!management || managementSection !== 'account') {
+      setAccountForm({ dirty: false, pending: false });
+      setPendingLeave(null);
+    }
+  }, [management, managementSection]);
 
   // 全屏页使用独立视口，返回时恢复普通页面滚动。
   useEffect(() => {
@@ -97,6 +110,18 @@ export function IslandApp() {
   }
   function acceptAccount(account: Account) { setSession((value) => value ? { ...value, account } : null); }
   function acceptPreferences(preferences: Preferences) { setSession((value) => value ? { ...value, account: { ...value.account, preferences } } : null); }
+  // 先确认账户草稿，再执行原始操作；保存期间保持表单挂载直到请求结束。
+  function leaveAccount(action: () => void) {
+    if (accountSaving) return;
+    if (management && managementSection === 'account' && accountForm.dirty) setPendingLeave(() => action);
+    else action();
+  }
+  // 只有明确放弃后才离开，继续编辑和关闭弹窗都保留当前输入。
+  function discardAccountDraft() {
+    const action = pendingLeave;
+    setPendingLeave(null);
+    action?.();
+  }
   async function lock() {
     setManagement(false); setUnlocking(false); setExpiresAt(null); setLockPending(true);
     try { await client.request<void>('/management/lock', { method: 'POST' }); setLockPending(false); }
@@ -121,8 +146,8 @@ export function IslandApp() {
 
   return <div className={`application ${immersive ? 'application-island' : ''}`}>
     {!immersive && <header className="site-header"><div className="header-inner">
-      <a className="brand" href="#" onClick={(event) => { event.preventDefault(); navigate('camp'); }}><svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg><strong>{content.appName}</strong></a>
-      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} onClick={() => navigate(item)}><img src={`/api/v1/assets/${navIcons[item]}`} alt="" aria-hidden="true" /><span>{content.navigation[item]}</span></button>)}</nav><div className="account-tools"><span className="name-chip"><img src="/api/v1/assets/user-v1" alt="" aria-hidden="true" /><span>{session.account.display_name}</span></span><button className="secondary" disabled={busy} onClick={() => void logout()}>{content.account.logout}</button>{!management && <button className="secondary header-management-entry" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}><img src="/api/v1/assets/settings-v1" alt="" aria-hidden="true" /><span>{content.navigation.management}</span></button>}</div></>}
+      <a className="brand" href="#" aria-disabled={accountSaving || undefined} onClick={(event) => { event.preventDefault(); leaveAccount(() => navigate('camp')); }}><svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg><strong>{content.appName}</strong></a>
+      {session && <><nav aria-label={content.navigation.label}>{(['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} disabled={accountSaving} onClick={() => leaveAccount(() => navigate(item))}><img src={`/api/v1/assets/${navIcons[item]}`} alt="" aria-hidden="true" /><span>{content.navigation[item]}</span></button>)}</nav><div className="account-tools"><span className="name-chip"><img src="/api/v1/assets/user-v1" alt="" aria-hidden="true" /><span>{session.account.display_name}</span></span><button className="secondary" disabled={busy || accountSaving} onClick={() => leaveAccount(() => void logout())}>{content.account.logout}</button>{!management && <button className="secondary header-management-entry" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}><img src="/api/v1/assets/settings-v1" alt="" aria-hidden="true" /><span>{content.navigation.management}</span></button>}</div></>}
     </div></header>}
     <main className={immersive ? 'island-app-shell' : 'app-shell'}>
       {notice && <p className="notice" role="status">{notice}</p>}
@@ -131,13 +156,13 @@ export function IslandApp() {
         {lockPending && <div className="notice" role="alert"><p>{content.account.lockUnconfirmed}</p><button type="button" onClick={() => void lock()}>{content.account.retryLock}</button></div>}
         <div key={management ? 'management' : page} className={immersive ? 'page-content page-content-island' : management ? 'page-content management-workspace' : 'page-content'}>
         {management ? <>
-          <div className="management-toolbar"><button className="secondary" onClick={() => void lock()}>{content.account.leaveManagement}</button></div>
+          <div className="management-toolbar"><button className="secondary" disabled={accountSaving} onClick={() => leaveAccount(() => void lock())}>{content.account.leaveManagement}</button></div>
           <nav className="management-sections" aria-label={content.navigation.management}>
             {(['account', 'tasks', 'records', 'products', 'achievements'] as const).map((section) =>
-              <button key={section} className="secondary" aria-pressed={managementSection === section} onClick={() => setManagementSection(section)}>{section === 'achievements' ? content.navigation.achievementManagement : content.navigation[section]}</button>
+              <button key={section} className="secondary" disabled={accountSaving} aria-pressed={managementSection === section} onClick={() => { if (section !== managementSection) leaveAccount(() => setManagementSection(section)); }}>{section === 'achievements' ? content.navigation.achievementManagement : content.navigation[section]}</button>
             )}
           </nav>
-          {managementSection === 'account' && <ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} />}
+          {managementSection === 'account' && <ManagementPanel client={client} session={session} onAccount={acceptAccount} onPasswordChanged={passwordChanged} onFormStateChange={setAccountForm} />}
           {managementSection === 'products' && <ProductManagement client={client} session={session} />}
           {managementSection === 'achievements' && <AchievementManagement client={client} session={session} />}
           {(managementSection === 'tasks' || managementSection === 'records') && <CheckinManagement key={managementSection} client={client} session={session} section={managementSection === 'tasks' ? 'configuration' : 'records'} />}
@@ -160,6 +185,7 @@ export function IslandApp() {
         {/* 设置隐藏时保留声音实例，普通页面只在进入配置后显示控件。 */}
         <SoundPreferences client={client} session={session} onPreferencesChange={acceptPreferences} presentation={management ? 'panel' : 'dialog'} open={immersive && soundOpen} onClose={() => setSoundOpen(false)} />
         {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setManagementSection('account'); setExpiresAt(expiry); setNotice(''); }} />}
+        {management && pendingLeave && <Modal title={content.account.discardTitle} onClose={() => setPendingLeave(null)}><div className="form-stack"><p>{content.account.discardHint}</p><div className="button-row"><button type="button" onClick={discardAccountDraft}>{content.account.discard}</button><button type="button" className="secondary" onClick={() => setPendingLeave(null)}>{content.account.keepEditing}</button></div></div></Modal>}
       </>}
     </main>
   </div>;

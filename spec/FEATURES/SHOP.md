@@ -27,6 +27,8 @@ tests:
 - internal/httpapi/wearable_routes_test.go
 - web/src/features/shop/FixedEquipment.test.tsx
 - web/e2e/shop-flow.spec.ts
+- web/e2e/management-catalog-flow.spec.ts
+- web/e2e/management-recovery-flow.spec.ts
 - web/e2e/outfit-layout-flow.spec.ts
 - web/e2e/fixed-equipment.spec.ts
 ---

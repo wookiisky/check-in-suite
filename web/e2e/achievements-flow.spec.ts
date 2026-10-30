@@ -71,7 +71,7 @@ test('成就管理、按计划完成、佩戴持久化与删除后的资格重�
   await page.getByRole('button', { name: achievement.viewAll, exact: true }).click();
   for (const name of [countName, streakName]) {
     const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
-    await expect(card.getByText(achievement.owned, { exact: true })).toBeVisible();
+    await expect(card.getByRole('button', { name: achievement.equip, exact: true })).toBeEnabled();
     await card.getByRole('button', { name: achievement.equip, exact: true }).click();
     await expect(card.getByRole('button', { name: achievement.unequip, exact: true })).toBeEnabled();
   }

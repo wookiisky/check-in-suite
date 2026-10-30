@@ -72,8 +72,10 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
   for (const section of ['account', 'tasks', 'records', 'products', 'achievements'] as const) {
-    await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation[section], exact: true }).click();
-    await expect(page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation[section], exact: true })).toHaveAttribute('aria-pressed', 'true');
+    const name = section === 'achievements' ? content.navigation.achievementManagement : content.navigation[section];
+    const tab = page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name, exact: true });
+    await tab.click();
+    await expect(tab).toHaveAttribute('aria-pressed', 'true');
     await audit(section, 18);
   }
 });

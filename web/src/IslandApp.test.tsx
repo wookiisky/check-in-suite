@@ -49,6 +49,103 @@ beforeEach(() => vi.clearAllMocks());
 afterEach(() => vi.unstubAllGlobals());
 
 describe('账户页面与管理授权', () => {
+  it.each(['section', 'navigation', 'brand', 'lock', 'logout'] as const)('账户姓名草稿在%s离开前确认，取消保留输入，放弃后再执行操作', async (target) => {
+    const server = installServer(true);
+    render(<IslandApp />);
+    await unlock();
+    fireEvent.change(screen.getByLabelText(content.account.displayName), { target: { value: '尚未保存的姓名' } });
+    if (target === 'section') fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    else if (target === 'navigation') fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
+    else if (target === 'brand') fireEvent.click(screen.getByRole('link', { name: content.appName }));
+    else fireEvent.click(screen.getByRole('button', { name: target === 'lock' ? content.account.leaveManagement : content.account.logout }));
+    const dialog = await screen.findByRole('dialog', { name: content.account.discardTitle });
+    expect(screen.getByLabelText(content.account.displayName)).toHaveValue('尚未保存的姓名');
+    expect(server.mock.calls.some(([path]) => /\/(management\/lock|auth\/logout)$/.test(String(path)))).toBe(false);
+    fireEvent.click(within(dialog).getByRole('button', { name: content.account.keepEditing }));
+    expect(screen.getByLabelText(content.account.displayName)).toHaveValue('尚未保存的姓名');
+    if (target === 'section') fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    else if (target === 'navigation') fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
+    else if (target === 'brand') fireEvent.click(screen.getByRole('link', { name: content.appName }));
+    else fireEvent.click(screen.getByRole('button', { name: target === 'lock' ? content.account.leaveManagement : content.account.logout }));
+    fireEvent.click(within(await screen.findByRole('dialog', { name: content.account.discardTitle })).getByRole('button', { name: content.account.discard }));
+    await waitFor(() => expect(screen.queryByLabelText(content.account.displayName)).not.toBeInTheDocument());
+    if (target === 'section') await screen.findByRole('button', { name: checkinContent.newTask });
+    if (target === 'logout') await screen.findByRole('heading', { name: content.account.loginTitle });
+  });
+
+  it.each(['login', 'management'] as const)('%s密码草稿关闭确认后保留，刷新保护在草稿放弃后解除', async (kind) => {
+    installServer(true);
+    render(<IslandApp />);
+    await unlock();
+    fireEvent.change(screen.getByLabelText(content.account.newPassword, { selector: `#${kind}-new` }), { target: { value: 'Unsaved-Password-2026' } });
+    const unload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(unload);
+    expect(unload.defaultPrevented).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    const dialog = await screen.findByRole('dialog', { name: content.account.discardTitle });
+    fireEvent.click(within(dialog).getByRole('button', { name: content.common.close }));
+    expect(screen.getByLabelText(content.account.newPassword, { selector: `#${kind}-new` })).toHaveValue('Unsaved-Password-2026');
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    fireEvent.click(within(await screen.findByRole('dialog', { name: content.account.discardTitle })).getByRole('button', { name: content.account.discard }));
+    await screen.findByRole('button', { name: checkinContent.newTask });
+    const cleanUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(cleanUnload);
+    expect(cleanUnload.defaultPrevented).toBe(false);
+  });
+
+  it('姓名保存进行中不能切换或退出，保存后直接离开而不要求放弃', async () => {
+    const server = installServer(true);
+    render(<IslandApp />);
+    await unlock();
+    fireEvent.change(screen.getByLabelText(content.account.displayName), { target: { value: '保存后的姓名' } });
+    let complete!: (response: Response) => void;
+    server.mockImplementationOnce(() => new Promise((resolve) => { complete = resolve; }));
+    fireEvent.click(screen.getByRole('button', { name: content.account.saveName }));
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
+    fireEvent.click(screen.getByRole('button', { name: content.account.leaveManagement }));
+    fireEvent.click(screen.getByRole('button', { name: content.account.logout }));
+    fireEvent.click(screen.getByRole('link', { name: content.appName }));
+    expect(screen.getByLabelText(content.account.displayName)).toHaveValue('保存后的姓名');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await act(async () => complete(Response.json({ ...testSession.account, display_name: '保存后的姓名', version: 2 })));
+    await screen.findByText(content.account.nameSaved);
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    await screen.findByRole('button', { name: checkinContent.newTask });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('密码提交期间保留表单，成功后即使有其他草稿也立即回到登录', async () => {
+    const server = installServer(true);
+    render(<IslandApp />);
+    await unlock();
+    fireEvent.change(screen.getByLabelText(content.account.displayName), { target: { value: '另一份未保存草稿' } });
+    for (const [field, value] of [['old', 'Island-Test-2026'], ['new', 'New-Island-2026'], ['confirm', 'New-Island-2026']] as const) {
+      fireEvent.change(document.querySelector(`#login-${field}`)!, { target: { value } });
+    }
+    let complete!: (response: Response) => void;
+    server.mockImplementationOnce(() => new Promise((resolve) => { complete = resolve; }));
+    fireEvent.click(screen.getByRole('button', { name: content.account.changeLoginPassword }));
+    expect(screen.getByRole('button', { name: content.navigation.tasks })).toBeDisabled();
+    expect(screen.getByRole('button', { name: content.account.leaveManagement })).toBeDisabled();
+    await act(async () => complete(new Response(null, { status: 204 })));
+    await screen.findByRole('heading', { name: content.account.loginTitle });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(content.account.displayName)).not.toBeInTheDocument();
+  });
+
+  it('保存时管理权限失效仍立即隐藏草稿，不显示离开确认', async () => {
+    const server = installServer(true);
+    render(<IslandApp />);
+    await unlock();
+    fireEvent.change(screen.getByLabelText(content.account.displayName), { target: { value: '未保存的姓名' } });
+    server.mockResolvedValueOnce(Response.json({ code: 'MANAGEMENT_REQUIRED', field_errors: {}, request_id: 'expired' }, { status: 403 }));
+    fireEvent.click(screen.getByRole('button', { name: content.account.saveName }));
+    await screen.findByText(content.account.managementExpired);
+    expect(screen.queryByLabelText(content.account.displayName)).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('声音设置仅在配置解锁后显示，退出后隐藏并保留已保存偏好', async () => {
     installServer(true);
     render(<IslandApp />);

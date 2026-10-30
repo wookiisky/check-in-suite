@@ -10,8 +10,9 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      '/api/v1': apiTarget,
-      '/health': apiTarget,
+      // 保留浏览器访问的Host，让后端能在没有Fetch Metadata时核对Origin。
+      '/api/v1': { target: apiTarget, changeOrigin: false },
+      '/health': { target: apiTarget, changeOrigin: false },
     },
   },
   test: {

@@ -16,6 +16,8 @@ tests:
 - internal/httpapi/achievements_test.go
 - web/src/features/achievements/achievements.test.tsx
 - web/e2e/achievements-flow.spec.ts
+- web/e2e/management-catalog-flow.spec.ts
+- web/e2e/management-recovery-flow.spec.ts
 ---
 # 成就与徽章
 

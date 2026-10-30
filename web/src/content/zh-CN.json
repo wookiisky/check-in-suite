@@ -63,7 +63,11 @@
     "currentSavedName": "当前已保存的姓名",
     "confirmNameDraft": "确认保存当前草稿",
     "nameConflictHint": "姓名已发生变化。你的输入已保留，请先加载最新资料。",
-    "nameReviewHint": "请核对当前已保存的姓名，确认后再保存你的草稿。"
+    "nameReviewHint": "请核对当前已保存的姓名，确认后再保存你的草稿。",
+    "discardTitle": "放弃尚未保存的修改？",
+    "discardHint": "姓名或密码还有未保存的内容。",
+    "keepEditing": "继续编辑",
+    "discard": "放弃修改"
   },
   "errors": {
     "NETWORK_ERROR": "网络连接失败，请重试。",

@@ -102,6 +102,9 @@ test('二维小岛支持多件购买、视图操作、布置恢复与室内活�
   await expect(page.getByRole('heading', { name: island.title, exact: true })).toBeVisible();
   const scene = page.getByRole('group', { name: island.scene, exact: true });
   await expect(scene).toBeVisible();
+  // 手机打卡浮层会覆盖场景左侧，先收起面板再验证场景本身的拖动。
+  await page.getByRole('button', { name: island.collapseCheckins, exact: true }).click();
+  await expect(page.getByRole('button', { name: island.expandCheckins, exact: true })).toBeVisible();
   const defaultZoom = Number(await scene.getAttribute('data-zoom'));
   const defaultPan = Number(await scene.getAttribute('data-pan-x'));
   await page.getByRole('button', { name: island.zoomIn, exact: true }).click();

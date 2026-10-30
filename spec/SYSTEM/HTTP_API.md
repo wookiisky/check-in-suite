@@ -20,6 +20,8 @@ tests:
 - internal/checkin/delete_replay_test.go
 - web/src/api/client.test.ts
 - web/e2e/config-conflict.spec.ts
+- web/e2e/environment.spec.ts
+- web/e2e/management-recovery-flow.spec.ts
 ---
 # HTTP API
 
@@ -36,6 +38,8 @@ JSON 使用 `snake_case`。普通请求必须是单个 JSON 对象并声明 `app
 登录建立不透明 Cookie 会话，浏览器不在 localStorage 保存密码或登录 token。Cookie 使用 `HttpOnly` 和 `SameSite=Lax`；TLS 请求或回环代理明确传入 HTTPS 时设置 `Secure`，普通远端客户端的转发协议头不能改变这一判断。
 
 服务通过 Fetch Metadata 或 Origin 与 Host 判断同源，不要求固定配置站点地址。登录同样检查来源；已登录写请求另需会话绑定的 `X-CSRF-Token`。缺少浏览器来源头不会免除密码、会话和 CSRF 校验。
+
+开发代理保留原请求的 Host，使只携带 Origin、没有 Fetch Metadata 的同源请求也能通过来源检查；不能将 Host 改为 API 的内部监听地址。
 
 普通与管理路由在服务端确定权限，客户端不能传入管理标志切换权限。会话有效期、凭据版本和管理授权的事务内复核见 [账户](../FEATURES/ACCOUNT.md)。权限校验先于幂等结果读取；过期会话或已撤销授权不能靠旧请求键取回受保护结果。
 

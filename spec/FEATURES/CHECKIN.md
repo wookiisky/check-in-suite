@@ -22,6 +22,8 @@ tests:
 - web/src/features/checkin/history-business-day.test.tsx
 - web/src/features/reports/reports.test.tsx
 - web/e2e/checkin-flow.spec.ts
+- web/e2e/management-checkin-flow.spec.ts
+- web/e2e/management-recovery-flow.spec.ts
 - web/e2e/reports-family-flow.spec.ts
 ---
 # 任务、打卡与查询
