@@ -510,10 +510,10 @@
     "url": "/api/v1/assets/badge-streak-v1"
   },
   {
-    "key": "badge-explorer-v1",
+    "key": "badge-explorer-v2",
     "name": "探索营地",
     "kind": "badge",
-    "url": "/api/v1/assets/badge-explorer-v1"
+    "url": "/api/v1/assets/badge-explorer-v2"
   },
   {
     "key": "toothbrush-v1",

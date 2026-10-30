@@ -23,6 +23,7 @@ tests:
 - internal/shop/accessory_layout_test.go
 - internal/shop/wearable_equipment_test.go
 - internal/assets/assets_test.go
+- internal/assets/badge_upgrade_test.go
 - internal/httpapi/wearable_routes_test.go
 - web/src/features/shop/FixedEquipment.test.tsx
 - web/e2e/shop-flow.spec.ts
@@ -89,7 +90,7 @@ tests:
 
 商品素材来自内置目录，不提供上传入口。内部人物组合层使用 `character-part` 类型，不出现在可选素材列表或商品配置中；免费基础人物也不能创建为商品。素材的文件格式、可用类型、免费属性和穿戴槽位由目录定义，管理页只能选择适用的素材。
 
-素材以不可覆写的版本标识安装到独立持久目录。发布目录被替换后，历史订单仍可读取已安装素材；同一标识的新内容不能覆盖旧内容，新增内容应采用新标识。已购物品可以通过稳定物品身份获得新增的营地能力，成交事实保持原样。
+素材以不可覆写的版本标识安装到独立持久目录。名称、类型、格式和穿戴属性等元数据与图片字节都属于该版本，修改其中任何内容都须采用新标识。发布目录被替换后，历史订单仍可读取已安装素材；退役素材可以从源码和当前可选目录移除，持久目录中的旧素材继续保留。已购物品可以通过稳定物品身份获得新增的营地能力，成交事实保持原样。
 
 2026-10-29 的人物与固定穿戴改造按新模型实施，明确不提供旧人物映射、旧订单权益转换或旧数据迁移。这是已确认的实施范围，不是待验证的兼容能力；素材持久化规则也不代表旧人物订单可以自动转换。数据库结构不兼容时的安装处置见 [运行手册](../ENGINEERING/OPERATIONS.md)。
 

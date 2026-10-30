@@ -18,6 +18,7 @@ tests:
 - scripts/deploy.test.mjs
 - scripts/publish.test.mjs
 - cmd/island/deployment_test.go
+- cmd/island/asset_upgrade_test.go
 - cmd/island/database_reset_test.go
 - internal/demo/seed_test.go
 ---
@@ -61,7 +62,7 @@ release.json            # 版本与文件校验值
 SHA256SUMS              # 包含 release.json 的文件校验清单
 ```
 
-基础建表脚本和受控图标、形象、饰品嵌入在二进制中。首次启动将受控素材安装到 `assets_directory`；已有素材标识的字节不同会拒绝启动，不能用新内容覆盖历史素材标识。
+基础建表脚本和受控图标、形象、饰品嵌入在二进制中。首次启动将受控素材安装到 `assets_directory`；已有素材标识的图片字节或元数据不同会拒绝启动，具体版本规则见[素材与兼容边界](../FEATURES/SHOP.md#素材与兼容边界)。
 
 ## 自动部署与远程发布
 
@@ -262,7 +263,7 @@ FROM wallets WHERE account_id = 1;
 | `STORAGE_UNAVAILABLE` | 检查磁盘空间、目录权限与文件系统状态；故障未解决前不要反复新建提交。 |
 | 启动报结构版本不匹配 | 核对配置和程序版本；历史匹配时执行迁移；历史不匹配时明确选择重置或另行处理数据。 |
 | `ffprobe` 就绪检查失败 | 核对路径、执行权限与该账户能否运行 `ffprobe -version`。 |
-| 素材标识内容冲突 | 保留持久化旧素材，为新内容提供新的版本标识。 |
+| 素材标识内容冲突 | 按[素材版本规则](../FEATURES/SHOP.md#素材与兼容边界)修正发布包；不要删除持久化旧素材。若失败发生在测试数据初始化阶段，修正包发布时检查数据库状态：`current` 且无账户时，可选 `auto` 和 `--seed yes` 继续初始化，无需再次 `reset`。 |
 | 写入结果未知 | 页面使用原幂等键核对；确认成功后的加载失败只重试读取。 |
 
 当前提供的 Caddy、systemd 文件是部署示例。生产 HTTPS、服务器权限和真实网络入口须在实际安装时检查；本次自动化与本机验证不替代这些运行环境事实。
