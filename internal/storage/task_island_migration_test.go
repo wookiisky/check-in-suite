@@ -25,7 +25,7 @@ func TestTaskIslandMigrationPreservesData(t *testing.T) {
 	}
 	previous := fstest.MapFS{}
 	for _, name := range files {
-		if name == "005_task_island_activities.sql" {
+		if name >= "005_task_island_activities.sql" {
 			continue
 		}
 		source, err := fs.ReadFile(migrations.Files, name)

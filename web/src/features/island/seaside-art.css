@@ -2,14 +2,31 @@
 .seaside-water-ripples { animation: seaside-water-drift 9s ease-in-out infinite; }
 .seaside-shore-wave { animation: seaside-shore-wash 7s ease-in-out infinite; }
 .seaside-shore-wave-follow { animation-delay:-3.5s; }
+.seaside-foam-lace { animation: seaside-shore-wash 7s ease-in-out -1.8s infinite; }
+.seaside-sparkle { animation: seaside-twinkle 4.2s ease-in-out infinite; }
+.seaside-rock-foam { animation: seaside-foam-pulse 5s ease-in-out infinite; }
+.seaside-buoy { animation: seaside-bob 3.4s ease-in-out infinite; }
+.seaside-palm-crown { animation: seaside-palm-sway 7s ease-in-out infinite; }
 .scene-cloud-drift { animation: seaside-cloud-drift 38s ease-in-out infinite alternate; }
 .scene-cloud-1 { animation-duration:52s; animation-delay:-17s; }
 .scene-cloud-2 { animation-duration:44s; animation-delay:-27s; }
+.scene-cloud-3 { animation-duration:47s; animation-delay:-8s; }
+.scene-sun-glow { animation: scene-sun-pulse 8s ease-in-out infinite; }
+.scene-birds { animation: scene-birds-glide 26s ease-in-out infinite alternate; }
+.scene-boat { animation: scene-boat-sail 70s ease-in-out infinite alternate; }
+.scene-boat-hull { animation: seaside-bob 4.6s ease-in-out infinite; }
 .scene-ambient[data-paused="true"] * { animation-play-state:paused !important; }
 .scene-ambient[data-static="true"] * { animation:none !important; }
 @keyframes seaside-water-drift { 0%,100% { transform:translate(-7px,0); } 50% { transform:translate(9px,3px); } }
 @keyframes seaside-shore-wash { 0%,100% { transform:translateY(-11px); opacity:.35; } 50% { transform:translateY(4px); opacity:.9; } }
+@keyframes seaside-twinkle { 0%,100% { opacity:0; } 50% { opacity:.95; } }
+@keyframes seaside-foam-pulse { 0%,100% { opacity:.35; } 50% { opacity:.85; } }
+@keyframes seaside-bob { 0%,100% { transform:translateY(0) rotate(-3deg); } 50% { transform:translateY(-3px) rotate(3deg); } }
+@keyframes seaside-palm-sway { 0%,100% { transform:rotate(-1.6deg); } 50% { transform:rotate(1.6deg); } }
 @keyframes seaside-cloud-drift { from { transform:translateX(-36px); } to { transform:translateX(46px); } }
+@keyframes scene-sun-pulse { 0%,100% { opacity:.75; } 50% { opacity:1; } }
+@keyframes scene-birds-glide { from { transform:translate(-30px,4px); } to { transform:translate(44px,-6px); } }
+@keyframes scene-boat-sail { from { transform:translateX(-40px); } to { transform:translateX(40px); } }
 @media(prefers-reduced-motion:reduce) {
  .scene-ambient * { animation:none !important; }
 }

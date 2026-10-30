@@ -2,7 +2,7 @@ import type { IslandDefinition, IslandState } from './island-types';
 
 // 测试目录与正式服务资源分离，覆盖单选、室内和重复购买。
 export const definitions: IslandDefinition[] = [
-  { key: 'house', name: '小木屋', category: 'house', model: 'house', width: 8, depth: 6, movable: true, repeatable: false },
+  { key: 'house', name: '小木屋', category: 'house', model: 'house', width: 13, depth: 9, movable: true, repeatable: false },
   { key: 'desk', name: '书桌', category: 'equipment', model: 'desk', width: 1, depth: 1, movable: true, repeatable: false, activity: 'read' },
   { key: 'run', name: '运动区', category: 'equipment', model: 'run', width: 2, depth: 2, movable: true, repeatable: false, activity: 'run' },
   { key: 'day', name: '晴日', category: 'environment', model: 'day', width: 0, depth: 0, movable: false, repeatable: false },
@@ -26,9 +26,9 @@ export const state: IslandState = {
     { id: 'tree-1', item_key: 'tree' }, { id: 'tree-2', item_key: 'tree' },
   ],
   placements: [
-    { id: 'base:house', item_key: 'house', x: -3, y: -2, rotation: 0, zone: 'outdoor' },
+    { id: 'base:house', item_key: 'house', x: -1.5, y: -2, rotation: 0, zone: 'outdoor' },
     { id: 'base:desk', item_key: 'desk', x: 0, y: 0, rotation: 0, zone: 'indoor' },
-    { id: 'base:run', item_key: 'run', x: 3, y: 2, rotation: 0, zone: 'outdoor' },
+    { id: 'base:run', item_key: 'run', x: 3.25, y: 4, rotation: 0, zone: 'outdoor' },
     { id: 'base:environment', item_key: 'day', x: 0, y: 0, rotation: 0, zone: 'outdoor' },
   ],
 };

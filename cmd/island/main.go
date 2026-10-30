@@ -135,6 +135,12 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 	if err := artwork.Install(); err != nil {
 		return err
 	}
+	if err := shop.SeedIslandProducts(startupContext, db, accounts.Now().UnixMilli()); err != nil {
+		return err
+	}
+	if err := island.UpgradeHousing(startupContext, db); err != nil {
+		return err
+	}
 	application.RegisterAssets(artwork)
 	checkins := checkin.New(db, accounts, cfg)
 	application.RegisterCheckins(checkins)

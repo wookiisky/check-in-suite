@@ -6,12 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/wookiisky/check-in-suite/internal/island"
 	"github.com/wookiisky/check-in-suite/internal/shop"
 	"github.com/wookiisky/check-in-suite/internal/storage"
 	"github.com/wookiisky/check-in-suite/migrations"
 )
 
-// 补充素材不改变全新安装已有的六项默认商品。
+// 全新安装只上架声明报价的物件，单纯扩充素材不能产生商品。
 func TestSupplementalArtworkDoesNotSeedOffers(t *testing.T) {
 	ctx := context.Background()
 	db, err := storage.Open(ctx, filepath.Join(t.TempDir(), "artwork.db"), time.Second)
@@ -25,11 +26,17 @@ func TestSupplementalArtworkDoesNotSeedOffers(t *testing.T) {
 	if err := shop.SeedIslandProducts(ctx, db, 1); err != nil {
 		t.Fatal(err)
 	}
-	var count int
-	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM products").Scan(&count); err != nil || count != 6 {
-		t.Fatalf("default offers changed: %d, %v", count, err)
-	}
-	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM products WHERE asset_key IN ('island-flowers-v1','island-tent-v1','island-windmill-v1')").Scan(&count); err != nil || count != 0 {
-		t.Fatalf("supplemental artwork was priced automatically: %d, %v", count, err)
+	for _, item := range island.Catalog() {
+		var count int
+		if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM products WHERE id=?", "island-offer-"+item.Key).Scan(&count); err != nil {
+			t.Fatal(err)
+		}
+		want := 1
+		if item.CatalogOnly || item.AssetKey == "" {
+			want = 0
+		}
+		if count != want {
+			t.Fatalf("offer %s count=%d want=%d", item.Key, count, want)
+		}
 	}
 }

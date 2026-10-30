@@ -97,5 +97,6 @@
   "accessRefreshFailed": "活动状态更新失败，请重试。布置修改已保留。",
   "retryAccess": "重试活动状态",
   "accessPending": "正在更新活动状态…",
-  "inactiveTask": "已停用"
+  "inactiveTask": "已停用",
+  "housingAdjusted": "房屋已扩建，已调整 {moved} 件物品的位置，{stored} 件物品已收回库存。可以在布置中查看和调整。"
 }

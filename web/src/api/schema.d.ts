@@ -1076,7 +1076,7 @@ export interface components {
             /** @enum {integer} */
             rotation: 0 | 90 | 180 | 270;
             /**
-             * @description 室内坐标限制为 -2 至 2；室外为 -8 至 8。
+             * @description 室内完整占地须位于房屋范围内（当前 x 为 -6 至 6，y 为 -4 至 4），且避开隔墙和门口；室外为 -8 至 8。
              * @enum {string}
              */
             zone: "outdoor" | "indoor";
@@ -1097,6 +1097,10 @@ export interface components {
             repeatable: boolean;
             /** @description 仅提供素材与摆放能力，不在初始化时自动创建商品；商品由管理页配置。 */
             catalog_only?: boolean;
+            /** @description 仅能摆放于房屋室内。 */
+            indoor_only?: boolean;
+            /** @description 升级时也为已有账户补入此商品；不覆盖已存在、下架或软删除的商品。 */
+            seed_existing?: boolean;
             /** @enum {string} */
             activity?: "read" | "run" | "ball";
             /**
@@ -1141,6 +1145,13 @@ export interface components {
             placements: components["schemas"]["IslandPlacement"][];
             inventory: components["schemas"]["IslandOwnedItem"][];
             catalog: components["schemas"]["IslandDefinition"][];
+            housing_adjustment?: components["schemas"]["HousingAdjustment"];
+        };
+        HousingAdjustment: {
+            /** @description 本次扩建为避让边界、房屋或门口而调整位置的物件数。 */
+            moved: number;
+            /** @description 扩建后无法放置而收回库存的物件数，所有权保留。保存布局后清除此提示。 */
+            stored: number;
         };
         IslandSave: {
             expected_version: number;

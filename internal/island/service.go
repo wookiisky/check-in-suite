@@ -36,6 +36,14 @@ func readState(ctx context.Context, tx *sql.Tx, now time.Time) (State, error) {
 			return state, err
 		}
 	}
+	var adjustment HousingAdjustment
+	err = tx.QueryRowContext(ctx, "SELECT moved,stored FROM island_housing_upgrade WHERE id=1").Scan(&adjustment.Moved, &adjustment.Stored)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return state, err
+	}
+	if adjustment.Moved > 0 || adjustment.Stored > 0 {
+		state.HousingAdjustment = &adjustment
+	}
 	rows, err := tx.QueryContext(ctx, "SELECT id,asset_key_snapshot,item_key_snapshot FROM purchases WHERE status='owned' ORDER BY created_at,id")
 	if err != nil {
 		return state, err
@@ -104,6 +112,10 @@ func (s *Service) Save(ctx context.Context, p account.Principal, input SaveInput
 	if err != nil {
 		return State{}, err
 	}
+	if _, err = tx.ExecContext(ctx, "UPDATE island_housing_upgrade SET moved=0,stored=0 WHERE id=1"); err != nil {
+		return State{}, err
+	}
+	state.HousingAdjustment = nil
 	state.Version++
 	state.Placements = input.Placements
 	return state, tx.Commit()
@@ -133,9 +145,10 @@ func validatePlacements(placements []Placement, state State) error {
 		if p.Rotation != 0 && p.Rotation != 90 && p.Rotation != 180 && p.Rotation != 270 {
 			return invalid()
 		}
-		limit := 8.0
+		limitX, limitY := 8.0, 8.0
 		if p.Zone == "indoor" {
-			limit = 2
+			layout := housingPlan()
+			limitX, limitY = layout.Width/2, layout.Depth/2
 		} else if p.Zone != "outdoor" {
 			return invalid()
 		}
@@ -143,7 +156,10 @@ func validatePlacements(placements []Placement, state State) error {
 		if p.Rotation == 90 || p.Rotation == 270 {
 			width, depth = depth, width
 		}
-		if math.Abs(p.X)+width/2 > limit || math.Abs(p.Y)+depth/2 > limit {
+		if math.Abs(p.X)+width/2 > limitX || math.Abs(p.Y)+depth/2 > limitY {
+			return invalid()
+		}
+		if p.Zone == "indoor" && !interiorPlacementClear(p, width, depth) {
 			return invalid()
 		}
 		if definition.Category == "house" {
@@ -157,6 +173,9 @@ func validatePlacements(placements []Placement, state State) error {
 			if p.Zone != "outdoor" || p.X != 0 || p.Y != 0 || p.Rotation != 0 {
 				return invalid()
 			}
+		}
+		if definition.IndoorOnly && p.Zone != "indoor" {
+			return invalid()
 		}
 		if definition.Model == "run" && p.Zone != "outdoor" {
 			return invalid()

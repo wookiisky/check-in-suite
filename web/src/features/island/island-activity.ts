@@ -1,3 +1,4 @@
+import { houseLayout } from './house-layout';
 import { findPath, interactionPoint, isWalkable } from './island-geometry';
 import type { IslandActivity, IslandDefinition, IslandPlacement, IslandPoint, IslandZone } from './island-types';
 
@@ -41,7 +42,7 @@ function routeTo(actor: IslandActor, end: ActivityStep, placements: IslandPlacem
   const houseDefinition = catalog.find((entry) => entry.key === house?.item_key);
   if (!house || !houseDefinition) return null;
   const outdoorDoor = { ...interactionPoint(house, houseDefinition), zone: 'outdoor' as const };
-  const indoorDoor = { x: 0, y: 1.5, zone: 'indoor' as const };
+  const indoorDoor = { ...houseLayout.entrance, zone: 'indoor' as const };
   const exit = actor.zone === 'outdoor' ? outdoorDoor : indoorDoor;
   const entrance = actor.zone === 'outdoor' ? indoorDoor : outdoorDoor;
   const first = routeWithin(actor, exit, actor.zone);

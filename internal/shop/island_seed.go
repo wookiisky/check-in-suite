@@ -3,11 +3,12 @@ package shop
 import (
 	"context"
 	"database/sql"
+
 	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/island"
 )
 
-// SeedIslandProducts inserts configured initial offers once without replacing managed values.
+// SeedIslandProducts adds eligible offers without replacing managed or soft-deleted rows.
 func SeedIslandProducts(ctx context.Context, db *sql.DB, now int64) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -18,11 +19,8 @@ func SeedIslandProducts(ctx context.Context, db *sql.DB, now int64) error {
 	if err = tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM accounts)").Scan(&initialized); err != nil {
 		return err
 	}
-	if initialized {
-		return tx.Commit()
-	}
 	for _, item := range island.Catalog() {
-		if item.AssetKey == "" || item.CatalogOnly {
+		if item.AssetKey == "" || item.CatalogOnly || (initialized && !item.SeedExisting) {
 			continue
 		}
 		kind := TypeIsland

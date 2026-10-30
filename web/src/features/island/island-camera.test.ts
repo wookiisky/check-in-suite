@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { fitIslandView } from './island-camera';
+import { fitIslandView, fitHouseView } from './island-camera';
 import { defaultScene } from './scene-definitions';
-import { zoomAt } from './island-geometry';
+import { zoomAt, project } from './island-geometry';
 
 describe('海边场景默认取景', () => {
   it.each([{ width: 1440, height: 900 }, { width: 768, height: 1024 }, { width: 390, height: 844 }])('在 $width × $height 视口保留天空，地面约六成在岸上', ({ width, height }) => {
@@ -42,5 +42,20 @@ describe('海边场景默认取景', () => {
     expect(view.y + camera.center.y * view.zoom).toBeCloseTo(280);
     const small = fitIslandView(100, 100, { top: 100, right: 200, bottom: 100, left: 0 }, camera);
     expect(Object.values(small).every(Number.isFinite)).toBe(true);
+  });
+});
+
+
+describe('室内取景', () => {
+  it.each([{ width: 1440, height: 900, right: 380, bottom: 140 }, { width: 390, height: 844, right: 12, bottom: 380 }, { width: 390, height: 664, right: 12, bottom: 440 }])('在 $width 宽视口完整显示地板与后墙并避开编辑面板', ({ width, height, right, bottom }) => {
+    const insets = { top: 100, left: 12, right, bottom };
+    const house = { x: -1.5, y: -2 };
+    const view = fitHouseView(width, height, insets, house, { width: 13, depth: 9 });
+    const origin = project(house);
+    const bounds = { left: origin.x - 276, right: origin.x + 276, top: origin.y - 224, bottom: origin.y + 148 };
+    expect(view.x + bounds.left * view.zoom).toBeGreaterThanOrEqual(insets.left - 1e-8);
+    expect(view.x + bounds.right * view.zoom).toBeLessThanOrEqual(width - insets.right + 1e-8);
+    expect(view.y + bounds.top * view.zoom).toBeGreaterThanOrEqual(insets.top - 1e-8);
+    expect(view.y + bounds.bottom * view.zoom).toBeLessThanOrEqual(height - insets.bottom + 1e-8);
   });
 });

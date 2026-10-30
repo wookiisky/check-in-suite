@@ -1,3 +1,5 @@
+import { FurnitureArtwork, supportsFurnitureArtwork } from './FurnitureArtwork';
+import { HouseArtwork } from './HouseArtwork';
 import type { CSSProperties } from 'react';
 import { assetURL } from '../shop/helpers';
 import type { IslandDefinition } from './island-types';
@@ -11,7 +13,8 @@ interface ItemArtworkProps {
   model: string; // 受控物品目录选择的模型名称。
   indoor?: boolean; // 房屋展开时只保留地板和后墙。
   selected?: boolean; // 选择环不参与地面占用判断。
-  houseScale?: number; // 房屋模型与服务端占地采用相同比例。
+  footprint?: Pick<IslandDefinition, 'width' | 'depth'>; // 用目录占地投影选择轮廓，不再复制房屋尺寸。
+  furniture?: boolean; // 家具SVG使用统一地面锚点与两种固定视角朝向。
   rotation?: number; // 固定视角下按朝向镜像，不旋转摄像机。
   animation?: IslandDefinition['animation']; // 可选动作能力，模型存在不代表必须播放动画。
   staticMotion?: boolean; // 编辑或减少动效时展示静态模型。
@@ -29,43 +32,14 @@ interface CharacterArtworkProps {
   motionElapsed?: number; // 累计动画时间决定姿势，遮挡重排不会重新开始动作。
 }
 
-// 房屋剖面保留后墙与地板，室内家具由场景按深度放入。
-function HouseArtwork({ indoor, cottage }: { indoor: boolean; cottage: boolean }) {
-  const roof = cottage ? '#b96655' : '#ca886b';
-  return <g stroke="#786c50" strokeWidth="2.3" strokeLinejoin="round">
-    <ellipse cy="10" rx="76" ry="34" fill="#50734a" opacity=".16" stroke="none" />
-    <path d="M-72-4 0-39 72-4 0 31Z" fill="#e4c7a0" />
-    <path d="M-72-4 0 31V37L-72 2Z" fill="#bda079" /><path d="M0 31 72-4V2L0 37Z" fill="#c9ae82" />
-    <path d="M-65-7V-66L0-96V-37Z" fill="#e9dec1" /><path d="M0-96 65-66V-7L0-37Z" fill="#f8efd6" />
-    <path d="M-65-7 0-37 65-7 0 24Z" fill="#dfc49c" />
-    <g stroke="#be9d77" strokeWidth="1" opacity=".7"><path d="m-48 1 64-31m-48 38 64-31m-48 38 64-31m-48 38 64-31" /></g>
-    <g transform="translate(33 -57)"><path d="M-12-14 12-3V19L-12 8Z" fill="#a9d2cc" /><path d="M0-9V14m-12-17L12 8" stroke="#f5edcf" strokeWidth="3" /></g>
-    <path d="m-46-59 20-9v22l-20 9Z" fill="#f4dfb1" stroke="#b59565" /><path d="m-41-53 10-5m-10 11 12-5" stroke="#c5a372" strokeWidth="1.4" />
-    {!indoor && <>
-      <path d="M-65-66 0-35V24L-65-7Z" fill="#f1e4bf" /><path d="M0-35 65-66V-7L0 24Z" fill="#d9c79d" />
-      <g transform="scale(-1 1)">
-      <path d="M18 15V-20Q18-35 32-40Q46-44 46-29V2Z" fill="#8caa9a" /><path d="M24 9V-20q0-10 8-13t8 9V1" fill="#a4beb0" strokeWidth="1.5" /><circle cx="38" cy="-11" r="2" fill="#edca6c" stroke="none" />
-      <path d="m-51-45 29 14v23l-29-14Z" fill="#b5d9d1" /><path d="m-37-38v24m-14-20 29 14" stroke="#faf1d5" strokeWidth="3" /><path d="m-55-20 38 18v5l-38-18Z" fill="#9d8361" />
-      </g>
-      <path d="M-78-68-22-119 9-105 0-31Z" fill={roof} /><path d="M-22-119 78-73 0-31 9-105Z" fill={cottage ? '#dc8971' : '#e4a17e'} />
-      <path d="m-78-68 78 37 78-42" fill="none" stroke="#79664e" strokeWidth="5" strokeLinecap="round" />
-      <path d="m-22-119 100 46" stroke={cottage ? '#f2b29a' : '#f1c09b'} strokeWidth="4" strokeLinecap="round" />
-      <g stroke={cottage ? '#a75b4c' : '#ba7f64'} strokeWidth="1.5" opacity=".65"><path d="m-7-112 1 68m23-57-4 47m27-36-7 24m-76-30 71 33m-85-19 64 30" /></g>
-      <path d="M38-98V-121L50-127 63-121V-86" fill="#e6cfab" /><path d="m50-127v24m-12-18 12 6 13-6" fill="none" /><path d="m36-122 14-8 16 8-15 8Z" fill="#f1dfbd" />
-      <g strokeWidth="1.4" transform="scale(-1 1)"><path d="m-43-11 16 7-3 10-12-6Z" fill="#bb8767" /><path d="m-37-11-6-9m6 9 4-13m-4 13 9-5" stroke="#618359" strokeWidth="4" strokeLinecap="round" /></g>
-    </>}
-    <g transform="scale(-1 1)"><path d="m18 22 25-12 11 5-26 13Z" fill="#cdb18a" /><path d="m28 28 26-13v5L28 33Z" fill="#bca17d" /></g>
-  </g>;
-}
-
 // 可选能力缺失时物品仍以静态模型完整展示。
-export function ItemArtwork({ model, indoor = false, selected = false, rotation = 0, houseScale = 2, animation, staticMotion = false, motionPaused = false }: ItemArtworkProps) {
-  const mirror = ((rotation % 360) + 360) % 360 >= 180 ? -1 : 1;
+export function ItemArtwork({ model, indoor = false, selected = false, rotation = 0, furniture = false, footprint, animation, staticMotion = false, motionPaused = false }: ItemArtworkProps) {
+  const mirror = furniture ? (rotation % 180 === 90 ? -1 : 1) : ((rotation % 360) + 360) % 360 >= 180 ? -1 : 1;
   return <g className="island-item-art" data-animation={animation} data-static={staticMotion} data-paused={motionPaused}>
-    {selected && <ellipse cy="6" rx={model === 'house' || model === 'cottage' ? 84 * houseScale : 35} ry={model === 'house' || model === 'cottage' ? 40 * houseScale : 17} fill="#fff8c5" fillOpacity=".45" stroke="#735c2d" strokeWidth="2" strokeDasharray="5 4" />}
+    {selected && <ellipse cy="6" rx={footprint ? (footprint.width + footprint.depth) * 12 + 10 : 35} ry={footprint ? (footprint.width + footprint.depth) * 6 + 8 : 17} pointerEvents="none" fill="#fff8c5" fillOpacity=".45" stroke="#735c2d" strokeWidth="2" strokeDasharray="5 4" />}
     <g transform={`scale(${mirror} 1)`}>
-      {supportsObjectArtwork(model) ? <IslandObjectArtwork model={model} /> : model.startsWith('island-') && <image href={assetURL(model)} x={-60} y={-99.375} width={120} height={120} />}
-      {(model === 'house' || model === 'cottage') && <g transform={`scale(${houseScale})`}><HouseArtwork indoor={indoor} cottage={model === 'cottage'} /></g>}
+      {supportsFurnitureArtwork(model) ? <FurnitureArtwork model={model} /> : supportsObjectArtwork(model) ? <IslandObjectArtwork model={model} /> : model.startsWith('island-') && <image href={assetURL(model)} x={furniture ? -80 : -60} y={furniture ? -120 : -99.375} width={furniture ? 160 : 120} height={furniture ? 160 : 120} />}
+      {(model === 'house' || model === 'cottage') && <HouseArtwork indoor={indoor} cottage={model === 'cottage'} />}
       {model === 'tree' && <g stroke="#67794b" strokeWidth="2" strokeLinejoin="round">
         <ellipse cy="3" rx="30" ry="12" fill="#527749" opacity=".2" stroke="none" />
         <path d="M-5 0-4-38 5-38 6 1Z" fill="#b89165" /><path d="M0-16 14-29m-14 6-12-10" fill="none" stroke="#997950" />

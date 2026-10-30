@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
+import { HousePartitionArtwork, bathroomPartitions } from './HouseArtwork';
+import type { BathroomPartition as HousePartitionSegment } from './HouseArtwork';
 import { CharacterArtwork, ItemArtwork } from './IslandArtwork';
 import type { IslandActor } from './island-activity';
-import { canPlace, clampPlacement, project, zoomAt, houseArtworkScale, projectInterior, unprojectInterior } from './island-geometry';
+import { canPlace, clampPlacement, project, zoomAt, projectInterior, unprojectInterior } from './island-geometry';
 import type { IslandDefinition, IslandPlacement, IslandPoint, IslandView } from './island-types';
-import { fitIslandView } from './island-camera';
+import { fitIslandView, fitHouseView } from './island-camera';
 import type { IslandInsets } from './island-camera';
 import content from './content.json';
 import type { Equipment } from '../shop/types';
@@ -55,14 +57,19 @@ export function IslandScene({ scene = defaultPresentation, insets, placements, c
   const camera = useMemo(() => editing ? { ...definition.camera, center: definition.camera.editingCenter, landRatio: .5 } : definition.camera, [definition, editing]);
   const [view, setView] = useState<IslandView>(initialView);
   const svg = useRef<SVGSVGElement>(null);
+  const controls = useRef<HTMLDivElement>(null);
+  const [controlsBottom, setControlsBottom] = useState(0);
   const [size, setSize] = useState({ width: 1000, height: 760 });
   const pointers = useRef(new Map<number, IslandPoint>());
   const drag = useRef<SceneDrag | null>(null);
   const suppressedClick = useRef(false);
   const house = placements.find((item) => catalog.find((entry) => entry.key === item.item_key)?.category === 'house');
   const houseDefinition = catalog.find((item) => item.key === house?.item_key);
-  const resetView = () => setView(fitIslandView(size.width, size.height, insets, camera));
   const houseOpen = editing ? indoor : actor.zone === 'indoor';
+  // 仅在进入室内、浮层尺寸变化或主动恢复视图时适配，不追随拖动物品重置镜头。
+  const houseX = house?.x ?? 0, houseY = house?.y ?? 0;
+  const roomInsets = useMemo(() => ({ ...insets, top: Math.max(insets.top, controlsBottom + 12) }), [insets, controlsBottom]);
+  const resetView = () => setView(houseOpen && houseDefinition ? fitHouseView(size.width, size.height, roomInsets, { x: houseX, y: houseY }, houseDefinition) : fitIslandView(size.width, size.height, insets, camera));
   const dusk = placements.some((item) => catalog.find((entry) => entry.key === item.item_key)?.model === 'dusk');
   // 视口使用实际像素，避免竖屏出现固定viewBox的上下留白。
   useEffect(() => {
@@ -76,7 +83,14 @@ export function IslandScene({ scene = defaultPresentation, insets, placements, c
     observer?.observe(element); window.addEventListener('resize', measure); measure();
     return () => { observer?.disconnect(); window.removeEventListener('resize', measure); };
   }, []);
-  useEffect(() => { setView(fitIslandView(size.width, size.height, insets, camera)); }, [size, insets, camera]);
+  useLayoutEffect(() => {
+    const measure = () => setControlsBottom(controls.current && svg.current ? controls.current.getBoundingClientRect().bottom - svg.current.getBoundingClientRect().top : 0);
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    if (controls.current) observer?.observe(controls.current);
+    measure();
+    return () => observer?.disconnect();
+  }, [size, insets]);
+  useEffect(() => { resetView(); }, [size, roomInsets, camera, houseOpen]);
 
   // DOM矩阵包括响应式缩放与留白，避免手机长宽比改变拖放比例。
   function svgPoint(clientX: number, clientY: number): IslandPoint {
@@ -166,18 +180,25 @@ export function IslandScene({ scene = defaultPresentation, insets, placements, c
     if (event.target !== event.currentTarget) return;
     const offset = { ArrowLeft: [40, 0], ArrowRight: [-40, 0], ArrowUp: [0, 40], ArrowDown: [0, -40] }[event.key];
     if (offset) { event.preventDefault(); setView((current) => ({ ...current, x: current.x + offset[0]!, y: current.y + offset[1]! })); }
-    else if (['+', '=', '-', 'Home'].includes(event.key)) { event.preventDefault(); setView((current) => event.key === 'Home' ? fitIslandView(size.width, size.height, insets, camera) : zoomAt(current, { x: size.width / 2, y: size.height / 2 }, event.key === '-' ? 0.85 : 1.15)); }
+    else if (['+', '=', '-', 'Home'].includes(event.key)) { event.preventDefault(); setView((current) => event.key === 'Home' ? (houseOpen && houseDefinition ? fitHouseView(size.width, size.height, roomInsets, { x: houseX, y: houseY }, houseDefinition) : fitIslandView(size.width, size.height, insets, camera)) : zoomAt(current, { x: size.width / 2, y: size.height / 2 }, event.key === '-' ? 0.85 : 1.15)); }
   }
   const visible = placements.filter((item) => catalog.find((entry) => entry.key === item.item_key)?.category !== 'environment' && (item.zone === 'outdoor' || houseOpen));
   const actorPoint = scenePoint(actor, actor.zone === 'indoor', house, houseDefinition);
-  const layers = [...visible.map((placement) => ({ placement: placement as IslandPlacement | null, point: scenePoint(placement, placement.zone === 'indoor', house, houseDefinition), actor: false })), ...(actor.zone === 'outdoor' || houseOpen ? [{ placement: null, point: actorPoint, actor: true }] : [])];
+  const layers: { placement: IslandPlacement | null; point: IslandPoint; actor: boolean; partition?: HousePartitionSegment }[] = [
+    ...visible.map((placement) => ({ placement, point: scenePoint(placement, placement.zone === 'indoor', house, houseDefinition), actor: false })),
+    ...(actor.zone === 'outdoor' || houseOpen ? [{ placement: null, point: actorPoint, actor: true }] : []),
+  ];
+  if (houseOpen && house) {
+    const origin = project(house);
+    for (const segment of bathroomPartitions) layers.push({ placement: null, point: { x: origin.x, y: origin.y + segment.depth }, actor: false, partition: segment.id });
+  }
   layers.sort((a, b) => {
-    const layer = (entry: typeof a) => entry.actor && actor.zone === 'indoor' || entry.placement?.zone === 'indoor' ? 1 : 0;
+    const layer = (entry: typeof a) => entry.partition || entry.actor && actor.zone === 'indoor' || entry.placement?.zone === 'indoor' ? 1 : 0;
     return layer(a) - layer(b) || a.point.y - b.point.y;
   });
   const worldTransform = `translate(${view.x} ${view.y}) scale(${view.zoom})`;
   return <div className={`island-scene-shell ${editing ? 'island-scene-editing' : ''} ${dusk ? 'island-dusk' : ''}`}>
-    <div className="island-view-controls" style={{ top: 'var(--island-hud-top, 100px)', right: Math.max(12, insets.right) }} aria-label={content.scene}>
+    <div ref={controls} className="island-view-controls" style={{ top: 'var(--island-hud-top, 100px)', right: Math.max(12, insets.right) }} aria-label={content.scene}>
       <button type="button" className="secondary" aria-label={content.zoomIn} onClick={() => setView((current) => zoomAt(current, { x: size.width / 2, y: size.height / 2 }, 1.2))}>＋</button>
       <button type="button" className="secondary" aria-label={content.zoomOut} onClick={() => setView((current) => zoomAt(current, { x: size.width / 2, y: size.height / 2 }, 1 / 1.2))}>−</button>
       <button type="button" className="secondary island-reset-view" aria-label={content.resetView} title={content.resetView} onClick={resetView}><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 10V4m0 0h6M4 4l4 4a7 7 0 1 1-2 8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
@@ -192,11 +213,15 @@ export function IslandScene({ scene = defaultPresentation, insets, placements, c
       <Sky scene={definition} width={size.width} height={size.height} staticMotion={staticMotion} motionPaused={motionPaused}/>
       <g transform={worldTransform}>
         {layers.map((entry) => {
+          if (entry.partition && house) {
+            const origin = project(house);
+            return <g key={`wall-${entry.partition}`} transform={`translate(${origin.x} ${origin.y})`} pointerEvents="none" aria-hidden="true"><HousePartitionArtwork segment={entry.partition}/></g>;
+          }
           if (entry.actor) return <g key="actor" transform={`translate(${entry.point.x} ${entry.point.y})`} data-actor-zone={actor.zone} data-actor-action={actor.action} aria-hidden="true" pointerEvents="none"><CharacterArtwork avatar={avatar} wearables={wearables} moving={actor.phase === 'walking'} activity={actor.action} facing={actor.facing} staticMotion={staticMotion} motionElapsed={actor.motionElapsed} /></g>;
           const placement = entry.placement!;
           const definition = catalog.find((item) => item.key === placement.item_key)!;
           const interactive = editing || Boolean(definition.activity);
-          return <g key={placement.id} transform={`translate(${entry.point.x} ${entry.point.y})`} data-placement-id={placement.id} data-house-open={definition.category === 'house' ? houseOpen : undefined}
+          return <g key={placement.id} transform={`translate(${entry.point.x} ${entry.point.y})`} data-placement-id={placement.id} data-selected={editing && placement.id === selected} data-house-open={definition.category === 'house' ? houseOpen : undefined}
             className={interactive ? 'island-object-interactive' : undefined} role={interactive ? 'button' : undefined} tabIndex={interactive ? 0 : undefined}
             aria-label={interactive ? `${editing ? content.select : content.activities[definition.activity!]} ${definition.name}` : undefined}
             onClick={(event) => { event.stopPropagation(); if (suppressedClick.current) { suppressedClick.current = false; return; } if (editing) onSelect(placement.id); else if (definition.activity) onActivity(placement.id); }}
@@ -205,7 +230,7 @@ export function IslandScene({ scene = defaultPresentation, insets, placements, c
               const delta = { ArrowLeft: [-0.25, 0], ArrowRight: [0.25, 0], ArrowUp: [0, -0.25], ArrowDown: [0, 0.25] }[event.key];
               if (editing && delta && definition.movable) { event.preventDefault(); event.stopPropagation(); const next = clampPlacement({ ...placement, x: placement.x + delta[0]!, y: placement.y + delta[1]! }, definition); if (canPlace(next, placements, catalog)) onMove(next); else onBlocked(); }
             }}>
-            <ItemArtwork houseScale={houseArtworkScale(definition)} model={definition.model} indoor={definition.category === 'house' && houseOpen} selected={editing && placement.id === selected} rotation={placement.rotation} {...(definition.animation ? { animation: definition.animation } : {})} staticMotion={staticMotion} motionPaused={motionPaused} />
+            <ItemArtwork model={definition.model} footprint={definition} furniture={definition.indoor_only ?? false} indoor={definition.category === 'house' && houseOpen} selected={editing && placement.id === selected} rotation={placement.rotation} {...(definition.animation ? { animation: definition.animation } : {})} staticMotion={staticMotion} motionPaused={motionPaused} />
           </g>;
         })}
       </g>

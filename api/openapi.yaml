@@ -926,7 +926,7 @@ components:
         x: {"type": "number", "minimum": -8, "maximum": 8}
         y: {"type": "number", "minimum": -8, "maximum": 8}
         rotation: {"type": "integer", "enum": [0, 90, 180, 270]}
-        zone: {"type": "string", "enum": ["outdoor", "indoor"], "description": "室内坐标限制为 -2 至 2；室外为 -8 至 8。"}
+        zone: {"type": "string", "enum": ["outdoor", "indoor"], "description": "室内完整占地须位于房屋范围内（当前 x 为 -6 至 6，y 为 -4 至 4），且避开隔墙和门口；室外为 -8 至 8。"}
     IslandOwnedItem:
       type: "object"
       additionalProperties: false
@@ -948,6 +948,8 @@ components:
         movable: {"type": "boolean"}
         repeatable: {"type": "boolean"}
         catalog_only: {"type": "boolean", "description": "仅提供素材与摆放能力，不在初始化时自动创建商品；商品由管理页配置。"}
+        indoor_only: {"type": "boolean", "description": "仅能摆放于房屋室内。"}
+        seed_existing: {"type": "boolean", "description": "升级时也为已有账户补入此商品；不覆盖已存在、下架或软删除的商品。"}
         activity: {"type": "string", "enum": ["read", "run", "ball"]}
         animation: {"type": "string", "enum": ["sway", "flutter", "spin", "flow", "swing", "glow"], "description": "独立于互动的常驻视觉动作。"}
         portrait_asset_key: {"type": "string", "minLength": 1}
@@ -985,6 +987,14 @@ components:
         placements: {"type": "array", "items": {"$ref": "#/components/schemas/IslandPlacement"}}
         inventory: {"type": "array", "items": {"$ref": "#/components/schemas/IslandOwnedItem"}}
         catalog: {"type": "array", "items": {"$ref": "#/components/schemas/IslandDefinition"}}
+        housing_adjustment: {"$ref": "#/components/schemas/HousingAdjustment"}
+    HousingAdjustment:
+      type: "object"
+      additionalProperties: false
+      required: ["moved", "stored"]
+      properties:
+        moved: {"type": "integer", "minimum": 0, "description": "本次扩建为避让边界、房屋或门口而调整位置的物件数。"}
+        stored: {"type": "integer", "minimum": 0, "description": "扩建后无法放置而收回库存的物件数，所有权保留。保存布局后清除此提示。"}
     IslandSave:
       type: "object"
       additionalProperties: false

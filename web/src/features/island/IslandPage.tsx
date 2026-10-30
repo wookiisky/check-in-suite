@@ -8,6 +8,7 @@ import { portraitAssetKey } from '../shop/helpers';
 import { useReducedMotion } from '../shop/useReducedMotion';
 import { advanceActor, createActor, startActivity } from './island-activity';
 import { allowedIslandActivities, useIslandActivityAccess } from './useIslandActivityAccess';
+import { houseLayout } from './house-layout';
 import { canPlace, clampPlacement, interactionPoint } from './island-geometry';
 import { TaskIcon } from '../checkin/TaskIcon';
 import { IslandScene } from './IslandScene';
@@ -20,15 +21,17 @@ import './island-page.css';
 // 一件物品的预览共用场景模型，避免商店式小图与岛上形态不一致。
 function ItemPreview({ definition, fit = false }: { definition: IslandDefinition; fit?: boolean }) {
   const artwork = useRef<SVGSVGElement>(null);
-  const [viewBox, setViewBox] = useState('-95 -150 190 200');
+  const halfWidth = (definition.width + definition.depth) * 12 + 12;
+  const floorDepth = (definition.width + definition.depth) * 6;
+  const [viewBox, setViewBox] = useState(definition.category === 'house' ? `${-halfWidth} ${-floorDepth - houseLayout.wallHeight - 72} ${halfWidth * 2} ${floorDepth * 2 + houseLayout.wallHeight + 96}` : '-95 -150 190 200');
   // 图标按实际素材边界留白，小球等小物品也能看清；库存预览保持原有比例。
   useLayoutEffect(() => {
-    if (!fit || !artwork.current?.getBBox) return;
+    if ((!fit && definition.category !== 'house') || !artwork.current?.getBBox) return;
     const bounds = artwork.current.getBBox();
     const padding = Math.max(bounds.width, bounds.height) * 0.12;
     if (padding > 0) setViewBox(`${bounds.x - padding} ${bounds.y - padding} ${bounds.width + padding * 2} ${bounds.height + padding * 2}`);
-  }, [definition.model, fit]);
-  return <svg ref={artwork} className="island-item-preview" viewBox={viewBox} aria-hidden="true"><ItemArtwork model={definition.model} houseScale={1} staticMotion /></svg>;
+  }, [definition.model, definition.category, fit]);
+  return <svg ref={artwork} className="island-item-preview" viewBox={viewBox} aria-hidden="true"><ItemArtwork model={definition.model} footprint={definition} furniture={definition.indoor_only ?? false} staticMotion /></svg>;
 }
 
 // 滚动与边界测量留在活动列表内，不改变角色活动或场景镜头。
@@ -231,6 +234,11 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     setDraft(null); setSelected(null); setError(null); showMessage(''); setShowIndoor(false); setPanelOpen(true);
     if (conflict || unconfirmedSave) { setConflict(false); setUnconfirmedSave(false); setState(null); setAttempt((value) => value + 1); }
   }
+  // 窄屏查看房间时先收起库存，选中物品仍可通过底栏微调。
+  function revealInterior(indoor: boolean) {
+    setShowIndoor(indoor);
+    if (indoor && (window.innerWidth <= 700 || window.innerWidth <= 1050 && window.innerHeight >= 500)) setPanelOpen(false);
+  }
   // 同一实例只在草稿中替换，不创建额外所有权。
   function move(next: IslandPlacement) {
     setDraft((current) => current?.map((item) => item.id === next.id ? next : item) ?? current);
@@ -245,11 +253,12 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     const single = definition.category === 'house' || definition.category === 'environment';
     const replacing = draft.find((item) => state.catalog.find((entry) => entry.key === item.item_key)?.category === definition.category);
     const remaining = single ? draft.filter((item) => state.catalog.find((entry) => entry.key === item.item_key)?.category !== definition.category) : draft;
-    const zone = definition.category === 'house' || definition.category === 'environment' || definition.category === 'creature' || definition.model === 'run' ? 'outdoor' : showIndoor ? 'indoor' : 'outdoor';
+    const zone = definition.indoor_only ? 'indoor' : definition.category === 'house' || definition.category === 'environment' || definition.category === 'creature' || definition.model === 'run' ? 'outdoor' : showIndoor ? 'indoor' : 'outdoor';
     const base: IslandPlacement = { ...owned, x: single ? replacing?.x ?? 0 : 0, y: single ? replacing?.y ?? 0 : 0, rotation: 0, zone };
     const candidates = [base];
-    const limit = zone === 'indoor' ? 2 : 7;
-    for (let y = -limit; y <= limit; y += 1) for (let x = -limit; x <= limit; x += 1) candidates.push({ ...base, x, y });
+    const limitX = zone === 'indoor' ? houseLayout.width / 2 : 7;
+    const limitY = zone === 'indoor' ? houseLayout.depth / 2 : 7;
+    for (let y = -limitY; y <= limitY; y += 0.5) for (let x = -limitX; x <= limitX; x += 0.5) candidates.push({ ...base, x, y });
     // 新增室外物品优先放在房门前的近处，避免放大屋顶挡住首次拖拽；空地不足再尝试全岛。
     const house = remaining.find((item) => state.catalog.find((entry) => entry.key === item.item_key)?.category === 'house');
     const houseDefinition = state.catalog.find((item) => item.key === house?.item_key);
@@ -259,7 +268,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     }
     const candidate = candidates.map((item) => clampPlacement(item, definition)).find((item) => canPlace(item, remaining, state.catalog));
     if (!candidate) { showMessage(content.blockedPlacement); return; }
-    setDraft([...remaining, candidate]); setSelected(id); showMessage('');
+    setDraft([...remaining, candidate]); setSelected(id); revealInterior(zone === 'indoor'); showMessage('');
   }
   // 主动互动与自主活动共享执行路径；减少动效时直接展示活动静态状态。
   function interact(id: string) {
@@ -284,12 +293,19 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
     const next = clampPlacement({ ...selectedPlacement, x: selectedPlacement.x + dx, y: selectedPlacement.y + dy }, selectedDefinition);
     if (canPlace(next, placements, state.catalog)) move(next); else showMessage(content.blockedPlacement);
   }
+  // 两种固定视角朝向与家具交换长宽的占地保持一致。
+  function rotateSelected() {
+    if (!selectedPlacement || !selectedDefinition || !state) return;
+    const rotation = selectedPlacement.rotation === 0 ? (selectedDefinition.indoor_only ? 90 as const : 180 as const) : 0 as const;
+    const next = { ...selectedPlacement, rotation };
+    if (canPlace(next, placements, state.catalog)) move(next); else showMessage(content.blockedPlacement);
+  }
   // 物品移入房屋后使用室内局部坐标，避免保存室外的大坐标。
   function changeZone() {
     if (!selectedPlacement || !selectedDefinition || !state) return;
     const zone = selectedPlacement.zone === 'indoor' ? 'outdoor' : 'indoor';
     const next = clampPlacement({ ...selectedPlacement, zone, x: 0, y: zone === 'indoor' ? 0 : 3 }, selectedDefinition);
-    if (canPlace(next, placements, state.catalog)) { move(next); setShowIndoor(zone === 'indoor'); } else showMessage(content.blockedPlacement);
+    if (canPlace(next, placements, state.catalog)) { move(next); revealInterior(zone === 'indoor'); } else showMessage(content.blockedPlacement);
   }
   return <div className="island-page island-fullscreen" style={{ '--island-hud-top': `${hudTop}px` } as CSSProperties}>
     <header ref={header} className="island-page-header"><div className="island-heading"><button className="secondary" disabled={saving} onClick={(event) => { event.currentTarget.focus(); leave('back'); }}>{content.back}</button><h1>{content.title}</h1></div>
@@ -309,10 +325,21 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
         <div className="button-row">{onCamp && <button disabled={saving} onClick={() => leave('camp')}>{content.goCheckin}</button>}<button className="secondary" onClick={() => setLockedActivity(null)}>{content.dismiss}</button></div>
       </>}
     </section>}
+    {state?.housing_adjustment && !message.text && <p className="island-notice" role="status">{content.housingAdjusted.replace('{moved}', String(state.housing_adjustment.moved)).replace('{stored}', String(state.housing_adjustment.stored))}</p>}
     {message.text && <p className={`island-notice ${message.success ? 'feedback-success' : ''}`} role="status">{message.text}</p>}
     {conflict && <div className="island-notice island-error" role="alert"><p>{content.conflict}</p><button onClick={cancel}>{content.reloadAfterCancel}</button></div>}
     {state && camp && avatar && <>
-      {editing && <div ref={dock} className="island-edit-bar"><button disabled={saving || conflict} onClick={() => void save()}>{saving ? content.saving : content.save}</button><button className="secondary" disabled={saving} onClick={cancel}>{content.cancel}</button><button className="secondary" aria-pressed={showIndoor} disabled={saving} onClick={() => setShowIndoor((value) => !value)}>{showIndoor ? content.showOutdoor : content.showIndoor}</button><button className="secondary" aria-expanded={panelOpen} aria-controls="island-inventory-panel" onClick={() => setPanelOpen((value) => !value)}>{panelOpen ? content.closeInventory : content.openInventory}</button></div>}
+      {editing && <div ref={dock} className="island-edit-bar">
+        {!panelOpen && selectedPlacement && selectedDefinition?.movable && <div className="island-compact-controls" role="group" aria-label={`${content.select} ${selectedDefinition.name}`}>
+          <span>{selectedDefinition.name}</span><div className="island-move-buttons">
+            <button className="secondary" aria-label={content.moveLeft} onClick={() => adjust(-0.25, 0)}>←</button>
+            <button className="secondary" aria-label={content.moveUp} onClick={() => adjust(0, -0.25)}>↑</button>
+            <button className="secondary" aria-label={content.moveDown} onClick={() => adjust(0, 0.25)}>↓</button>
+            <button className="secondary" aria-label={content.moveRight} onClick={() => adjust(0.25, 0)}>→</button>
+            {(selectedDefinition.category === 'decoration' || selectedDefinition.category === 'creature') && <button className="secondary" aria-label={content.rotate} title={content.rotate} onClick={rotateSelected}>↻</button>}
+          </div>
+        </div>}
+        <button disabled={saving || conflict} onClick={() => void save()}>{saving ? content.saving : content.save}</button><button className="secondary" disabled={saving} onClick={cancel}>{content.cancel}</button><button className="secondary" aria-pressed={showIndoor} disabled={saving} onClick={() => revealInterior(!showIndoor)}>{showIndoor ? content.showOutdoor : content.showIndoor}</button><button className="secondary" aria-expanded={panelOpen} aria-controls="island-inventory-panel" onClick={() => setPanelOpen((value) => !value)}>{panelOpen ? content.closeInventory : content.openInventory}</button></div>}
       <div className={`island-workspace ${editing ? 'island-is-editing' : ''}`} aria-busy={saving}>
         <div className="island-main-scene" inert={saving}>
           <IslandScene insets={insets} placements={placements} catalog={state.catalog} actor={actor} avatar={avatar} wearables={camp.equipment.wearables} editing={editing} indoor={showIndoor} selected={selected} staticMotion={reduced || editing} motionPaused={paused || hidden} onSelect={setSelected} onMove={move} onActivity={interact} onBlocked={() => showMessage(content.blockedPlacement)} />
@@ -325,8 +352,8 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
               <strong>{selectedDefinition.name}</strong>
               <p>{selectedPlacement.zone === 'indoor' ? content.indoor : content.outdoor}</p>
               {selectedDefinition.movable && <><div className="island-move-buttons"><button className="secondary" aria-label={content.moveLeft} onClick={() => adjust(-0.25, 0)}>←</button><button className="secondary" aria-label={content.moveUp} onClick={() => adjust(0, -0.25)}>↑</button><button className="secondary" aria-label={content.moveDown} onClick={() => adjust(0, 0.25)}>↓</button><button className="secondary" aria-label={content.moveRight} onClick={() => adjust(0.25, 0)}>→</button></div>
-                {selectedDefinition.category === 'decoration' || selectedDefinition.category === 'creature' ? <button className="secondary" onClick={() => { const next = { ...selectedPlacement, rotation: selectedPlacement.rotation === 0 ? 180 as const : 0 as const }; if (canPlace(next, placements, state.catalog)) move(next); else showMessage(content.blockedPlacement); }}>{content.rotate}</button> : null}
-                {selectedDefinition.category !== 'house' && selectedDefinition.category !== 'creature' && selectedDefinition.model !== 'run' && <button className="secondary" onClick={changeZone}>{selectedPlacement.zone === 'indoor' ? content.moveOutside : content.moveInside}</button>}
+                {selectedDefinition.category === 'decoration' || selectedDefinition.category === 'creature' ? <button className="secondary" onClick={rotateSelected}>{content.rotate}</button> : null}
+                {!selectedDefinition.indoor_only && selectedDefinition.category !== 'house' && selectedDefinition.category !== 'creature' && selectedDefinition.model !== 'run' && <button className="secondary" onClick={changeZone}>{selectedPlacement.zone === 'indoor' ? content.moveOutside : content.moveInside}</button>}
               </>}
               {selectedDefinition.category !== 'house' && selectedDefinition.category !== 'environment' && <button className="secondary" onClick={() => { setDraft(placements.filter((item) => item.id !== selectedPlacement.id)); setSelected(null); }}>{content.store}</button>}
             </> : <p>{content.nothingSelected}</p>}
@@ -337,7 +364,7 @@ export function IslandPage({ client, session, onShop, onBack, onSettings, onCamp
             return definition && <div className="island-inventory-item" key={item.id} data-inventory-id={item.id}><ItemPreview definition={definition} /><div><strong>{definition.name}</strong></div><button className="secondary" aria-label={`${content.place} ${definition.name}`} onClick={() => place(item.id)}>{content.place}</button></div>;
           })}{state.inventory.every((item) => placements.some((placed) => placed.id === item.id)) && <p className="island-hint">{content.emptyInventory}</p>}</div>
           <h3>{content.placed}</h3>
-          <div className="island-placed-list">{placements.map((item) => <button key={item.id} className="secondary" aria-pressed={item.id === selected} onClick={() => { setSelected(item.id); setShowIndoor(item.zone === 'indoor'); }}>{state.catalog.find((entry) => entry.key === item.item_key)?.name}</button>)}</div>
+          <div className="island-placed-list">{placements.map((item) => <button key={item.id} className="secondary" aria-pressed={item.id === selected} onClick={() => { setSelected(item.id); revealInterior(item.zone === 'indoor'); }}>{state.catalog.find((entry) => entry.key === item.item_key)?.name}</button>)}</div>
         </div></aside>}
       </div>
       {!editing && <div ref={dock} className="island-game-dock">

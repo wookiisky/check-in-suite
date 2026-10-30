@@ -3,6 +3,25 @@ import { describe, expect, it } from 'vitest';
 import { CharacterArtwork, ItemArtwork } from './IslandArtwork';
 
 describe('补充素材的场景展示', () => {
+  it('选中轮廓随房屋占地扩展且不会截获附近物品的点击', () => {
+    const footprint = { width: 13, depth: 9 };
+    const { container } = render(<svg><ItemArtwork model="house" selected footprint={footprint} /></svg>);
+    const outline = container.querySelector('.island-item-art > ellipse');
+    expect(Number(outline?.getAttribute('rx'))).toBeGreaterThan((footprint.width + footprint.depth) * 12);
+    expect(Number(outline?.getAttribute('ry'))).toBeGreaterThan((footprint.width + footprint.depth) * 6);
+    expect(outline).toHaveAttribute('pointer-events', 'none');
+  });
+
+  it('新家具按统一地面锚点绘制，横向镜像只对应交换长宽的朝向', () => {
+    const { container, rerender } = render(<svg><ItemArtwork model="island-bed-v1" furniture rotation={90} /></svg>);
+    const shape = container.querySelector('[data-furniture-model]');
+    expect(container.querySelector('image')).toBeNull();
+    expect(shape).not.toBeNull();
+    expect(shape?.parentElement).toHaveAttribute('transform', 'scale(-1 1)');
+    rerender(<svg><ItemArtwork model="island-bed-v1" furniture rotation={180} /></svg>);
+    expect(container.querySelector('[data-furniture-model]')?.parentElement).toHaveAttribute('transform', 'scale(1 1)');
+  });
+
   it.each(['mushrooms', 'rocks', 'fence', 'bench', 'tent'])('实际绘制 %s 的受控图片并保留镜像方向', (key) => {
     const model = `island-${key}-v1`;
     const { container } = render(<svg><ItemArtwork model={model} rotation={180} selected staticMotion /></svg>);

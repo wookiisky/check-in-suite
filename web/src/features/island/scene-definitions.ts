@@ -22,14 +22,22 @@ function groundPoint(horizontal: number, depth: number): IslandPoint {
   return { x: (horizontal + depth) / 2, y: (depth - horizontal) / 2 };
 }
 
-// 海岸用同一条折线绘制和判断地形，起伏留在旧活动范围以外。
-export const shoreline: readonly IslandPoint[] = Array.from({ length: 51 }, (_, index) => {
-  const horizontal = -100 + index * 4;
-  const depth = -18 + Math.sin(horizontal * 0.12) * 0.65 + Math.sin(horizontal * 0.29) * 0.2;
-  return groundPoint(horizontal, depth);
-});
+// 岸线纵深随横向缓慢起伏；最大值仍小于 -16，旧室外范围的最远角始终留在岸上。
+function shoreDepth(horizontal: number): number {
+  return -18 + Math.sin(horizontal * 0.09) * 1.1 + Math.sin(horizontal * 0.23 + 1) * 0.35;
+}
 
-export const grassline: readonly IslandPoint[] = shoreline.map((point) => ({ x: point.x + 2.25, y: point.y + 2.25 }));
+// 沙滩宽窄交替，让草坪边缘不与海岸平行；最窄处仍保留清楚的沙带。
+function beachWidth(horizontal: number): number {
+  return 5 + Math.sin(horizontal * 0.13 + 2) * 1.2;
+}
+
+const shoreHorizontals = Array.from({ length: 101 }, (_, index) => -100 + index * 2);
+
+// 海岸用同一条折线绘制和判断地形，起伏留在旧活动范围以外。
+export const shoreline: readonly IslandPoint[] = shoreHorizontals.map((horizontal) => groundPoint(horizontal, shoreDepth(horizontal)));
+
+export const grassline: readonly IslandPoint[] = shoreHorizontals.map((horizontal) => groundPoint(horizontal, shoreDepth(horizontal) + beachWidth(horizontal)));
 
 // 可布置范围有限；远处海面可继续绘制，但不会自动成为可用水域。
 export const seasideScene: SceneDefinition = {

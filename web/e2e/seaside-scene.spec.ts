@@ -77,7 +77,7 @@ test('布置和系统减少动效停用环境动画，并保留草坪、沙滩�
     expect(sample.poses, sample.selector).toBe(1);
   }
   for (const kind of ['grass', 'sand', 'water']) await expect(page.locator(`[data-terrain="${kind}"]`)).toHaveCount(1);
-  await expect(page.locator('.scene-cloud-drift')).toHaveCount(3);
+  await expect(page.locator('.scene-cloud-drift')).toHaveCount(4);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   for (const sample of await sampleAmbient(page, 10)) expect(sample.poses, sample.selector).toBeGreaterThan(1);
 });

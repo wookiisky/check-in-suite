@@ -144,3 +144,11 @@
 .island-access-notice { top:calc(var(--island-hud-top) + 12px); max-height:45dvh; overflow:auto; width:380px; }
 .island-access-notice p { margin:0 0 12px; }
 .island-access-notice ul { margin:0 0 16px; padding-inline-start:24px; }
+
+/* 收起库存后仍能微调选中家具，工具条实测高度计入相机可见区域。 */
+.island-compact-controls { display:flex; align-items:center; gap:8px; grid-column:1 / -1; flex-basis:100%; min-width:0; }
+.island-compact-controls>span { font-size:16px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.island-compact-controls .island-move-buttons { display:flex; flex-wrap:nowrap; gap:4px; }
+.island-compact-controls .island-move-buttons button { min-width:44px; min-height:44px; width:44px; height:44px; padding:2px; font-size:22px; }
+/* 室内切换沿用浅色按钮时，选中状态仍保留深色文字。 */
+.island-edit-bar .secondary[aria-pressed="true"] { color:var(--island-ink); background:#dbe8c1; border-color:#789b4e; }

@@ -1,3 +1,5 @@
+import resourceCatalog from '../../../../internal/island/catalog.json';
+import type { IslandDefinition } from './island-types';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
@@ -11,6 +13,35 @@ import { interactionPoint } from './island-geometry';
 import { campFixture } from '../checkin/test-fixtures';
 
 describe('小岛页面', () => {
+  it('新家具自动摆进屋内，切换长宽朝向后保存完整实例', async () => {
+    const bed = resourceCatalog.find((item) => item.key === 'bed') as IslandDefinition;
+    const ownedState = { ...state, catalog: [...state.catalog, bed], inventory: [...state.inventory, { id: 'bed-1', item_key: bed.key }] };
+    const request = vi.fn().mockImplementation(async (path, options) => path === '/camp' ? camp : options?.method === 'PUT' ? { ...ownedState, version: 2, placements: options.body.placements } : ownedState);
+    render(<IslandPage client={{ request }} session={{ ...testSession, timezone: 'Asia/Taipei' }} />);
+    fireEvent.click(await screen.findByRole('button', { name: content.edit }));
+    fireEvent.click(screen.getByRole('button', { name: `${content.place} ${bed.name}` }));
+    expect(screen.getByRole('button', { name: content.showOutdoor })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: content.openInventory })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('group', { name: `${content.select} ${bed.name}` })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: content.moveOutside })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: content.rotate }));
+    fireEvent.click(screen.getByRole('button', { name: content.save }));
+    await screen.findByText(content.saved);
+    const body = request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1].body;
+    expect(body.placements.find((item: { id: string }) => item.id === 'bed-1')).toMatchObject({ item_key: 'bed', rotation: 90, zone: 'indoor' });
+  });
+  it('扩建调整提示保留移动和收起数量，保存后以服务端结果清除', async () => {
+    const upgraded = { ...state, housing_adjustment: { moved: 2, stored: 1 } };
+    const request = vi.fn().mockImplementation(async (path, options) => path === '/camp' ? camp : options?.method === 'PUT' ? state : upgraded);
+    render(<IslandPage client={{ request }} session={{ ...testSession, timezone: 'Asia/Taipei' }} />);
+    const notice = content.housingAdjusted.replace('{moved}', '2').replace('{stored}', '1');
+    expect(await screen.findByText(notice)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: content.edit }));
+    fireEvent.click(screen.getByRole('button', { name: content.save }));
+    await screen.findByText(content.saved);
+    expect(screen.queryByText(notice)).not.toBeInTheDocument();
+  });
+
   it('活动只显示物品图标，保留名称提示，点击后恢复并执行活动', async () => {
     const request = vi.fn().mockImplementation(async (path) => path === '/camp' ? camp : state);
     const session = { ...testSession, timezone: 'Asia/Taipei' as const, account: { ...testSession.account, preferences: { ...testSession.account.preferences, reduce_motion: true } } };

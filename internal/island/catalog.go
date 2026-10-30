@@ -17,6 +17,8 @@ type Definition struct {
 	Movable          bool    `json:"movable"`                      // Whether user placement may change the position.
 	Repeatable       bool    `json:"repeatable"`                   // Whether each additional purchase grants another instance.
 	CatalogOnly      bool    `json:"catalog_only,omitempty"`       // Artwork requires a managed offer; initialization does not price it.
+	SeedExisting     bool    `json:"seed_existing,omitempty"`      // New offer may be introduced to existing households without replacing managed rows.
+	IndoorOnly       bool    `json:"indoor_only,omitempty"`        // Household furniture uses the home's local placement space.
 	Animation        string  `json:"animation,omitempty"`          // Optional ambient animation, independent from interaction.
 	Activity         string  `json:"activity,omitempty"`           // Optional activity available at this item.
 	PortraitAssetKey string  `json:"portrait_asset_key,omitempty"` // Optional existing portrait artwork.

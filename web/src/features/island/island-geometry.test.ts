@@ -26,7 +26,8 @@ describe('岛屿坐标与摆放', () => {
     }
     const old = projectInterior({ x: 1, y: -1 }, house, { ...definition, width: 4, depth: 3 });
     const enlarged = projectInterior({ x: 1, y: -1 }, house, definition);
-    expect(enlarged.x - center.x).toBeCloseTo((old.x - center.x) * 2);
+    // 房间扩容保持家具与人物的地面单位，不再把所有坐标整体放大。
+    expect(enlarged.x - center.x).toBeCloseTo(old.x - center.x);
   });
 
   it('固定斜俯视坐标可逆', () => {
@@ -50,8 +51,8 @@ describe('岛屿坐标与摆放', () => {
   });
   it('四分之一格对齐不把小尺寸物品推到室内边界之外', () => {
     const item = { ...definitions[1]!, width: 0.6, depth: 0.5 };
-    const result = clampPlacement({ id: 'book', item_key: 'desk', x: 2, y: 0, rotation: 0, zone: 'indoor' }, item);
-    expect(result.x + item.width / 2).toBeLessThanOrEqual(2);
+    const result = clampPlacement({ id: 'book', item_key: 'desk', x: 6, y: 0, rotation: 0, zone: 'indoor' }, item);
+    expect(result.x + item.width / 2).toBeLessThanOrEqual(6);
   });
   it('房屋的门口必须留在可行走的岛上范围内', () => {
     const result = clampPlacement({ ...state.placements[0]!, y: 8 }, definitions[0]!);
@@ -63,9 +64,9 @@ describe('岛屿坐标与摆放', () => {
     expect(canPlace({ ...tree, x: 6, y: -4 }, state.placements, definitions)).toBe(true);
   });
   it('路径绕过房屋并到达目标，无法进入障碍物中心', () => {
-    const path = findPath({ x: -7.5, y: -2 }, { x: 1.5, y: -2 }, state.placements, definitions);
+    const path = findPath({ x: -7.5, y: -7 }, { x: 5.5, y: -2 }, state.placements, definitions);
     expect(path.length).toBeGreaterThan(0);
-    expect(path.at(-1)).toEqual({ x: 1.5, y: -2 });
+    expect(path.at(-1)).toEqual({ x: 5.5, y: -2 });
     expect(path.every((point) => isWalkable(point, state.placements, definitions))).toBe(true);
     expect(findPath({ x: 0, y: 3 }, { x: -3, y: -2 }, state.placements, definitions)).toEqual([]);
   });

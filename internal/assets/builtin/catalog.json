@@ -701,5 +701,77 @@
     "name": "基础耳短发",
     "kind": "character-part",
     "url": "/api/v1/assets/default-girl-hair-v1"
+  },
+  {
+    "key": "island-bed-v1",
+    "name": "舒适木床",
+    "kind": "island",
+    "url": "/api/v1/assets/island-bed-v1"
+  },
+  {
+    "key": "island-dining-table-v1",
+    "name": "原木餐桌",
+    "kind": "island",
+    "url": "/api/v1/assets/island-dining-table-v1"
+  },
+  {
+    "key": "island-dining-chair-v1",
+    "name": "原木餐椅",
+    "kind": "island",
+    "url": "/api/v1/assets/island-dining-chair-v1"
+  },
+  {
+    "key": "island-sofa-v1",
+    "name": "柔软沙发",
+    "kind": "island",
+    "url": "/api/v1/assets/island-sofa-v1"
+  },
+  {
+    "key": "island-coffee-table-v1",
+    "name": "小圆角茶几",
+    "kind": "island",
+    "url": "/api/v1/assets/island-coffee-table-v1"
+  },
+  {
+    "key": "island-television-v1",
+    "name": "平板电视",
+    "kind": "island",
+    "url": "/api/v1/assets/island-television-v1"
+  },
+  {
+    "key": "island-cabinet-v1",
+    "name": "双门收纳柜",
+    "kind": "island",
+    "url": "/api/v1/assets/island-cabinet-v1"
+  },
+  {
+    "key": "island-refrigerator-v1",
+    "name": "双门冰箱",
+    "kind": "island",
+    "url": "/api/v1/assets/island-refrigerator-v1"
+  },
+  {
+    "key": "island-kitchen-counter-v1",
+    "name": "厨房操作台",
+    "kind": "island",
+    "url": "/api/v1/assets/island-kitchen-counter-v1"
+  },
+  {
+    "key": "island-toilet-v1",
+    "name": "陶瓷马桶",
+    "kind": "island",
+    "url": "/api/v1/assets/island-toilet-v1"
+  },
+  {
+    "key": "island-washbasin-v1",
+    "name": "镜面洗漱台",
+    "kind": "island",
+    "url": "/api/v1/assets/island-washbasin-v1"
+  },
+  {
+    "key": "island-shower-v1",
+    "name": "玻璃淋浴间",
+    "kind": "island",
+    "url": "/api/v1/assets/island-shower-v1"
   }
 ]

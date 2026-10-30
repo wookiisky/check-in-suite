@@ -151,7 +151,7 @@ func TestIslandPlacementValidation(t *testing.T) {
 	cases := map[string]func([]island.Placement) []island.Placement{
 		"duplicate":                     func(p []island.Placement) []island.Placement { p[2] = p[0]; return p },
 		"wrong identity":                func(p []island.Placement) []island.Placement { p[0].ItemKey = "cottage"; return p },
-		"indoor bound":                  func(p []island.Placement) []island.Placement { p[1].X = 2; return p },
+		"indoor bound":                  func(p []island.Placement) []island.Placement { p[1].X = 6; return p },
 		"outdoor bound":                 func(p []island.Placement) []island.Placement { p[0].X = 8; return p },
 		"missing home":                  func(p []island.Placement) []island.Placement { return p[1:] },
 		"door outside south":            func(p []island.Placement) []island.Placement { p[0].Y = 6.5; return p },

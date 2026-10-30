@@ -94,9 +94,9 @@ for (const character of [
     await api(page, '/island', 'PUT', {
       expected_version: initial.version,
       placements: [
-        { id: 'base:house', item_key: 'house', x: -3, y: -2, rotation: 0, zone: 'outdoor' },
+        { id: 'base:house', item_key: 'house', x: -1.5, y: -2, rotation: 0, zone: 'outdoor' },
         { id: 'base:desk', item_key: 'desk', x: 0, y: 0, rotation: 0, zone: 'indoor' },
-        { id: 'base:run', item_key: 'run', x: 3, y: 2, rotation: 0, zone: 'outdoor' },
+        { id: 'base:run', item_key: 'run', x: 3.25, y: 4, rotation: 0, zone: 'outdoor' },
         { id: 'base:environment', item_key: 'day', x: 0, y: 0, rotation: 0, zone: 'outdoor' },
       ],
     });

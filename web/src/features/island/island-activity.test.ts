@@ -33,7 +33,7 @@ describe('角色活动', () => {
     expect(next.motionElapsed).toBeCloseTo(actor.motionElapsed + 0.1);
   });
   it('全部活动锁定后仍可散步和休息，不选择锁定的器材', () => {
-    const walking = advanceActor({ ...createActor(), elapsed: 5 }, 0.1, state.placements, state.catalog, () => 0, []);
+    const walking = advanceActor({ ...createActor(), elapsed: 5 }, 0.1, state.placements, state.catalog, () => 0.95, []);
     expect(walking).toMatchObject({ phase: 'walking', action: 'walk', targetID: null, destination: 'idle' });
     const resting = advanceActor({ ...createActor(), x: 0, y: 0, elapsed: 5 }, 0.1, [], [], () => 0.5, []);
     expect(resting).toMatchObject({ phase: 'acting', action: 'rest', targetID: null });
@@ -87,7 +87,7 @@ describe('角色活动', () => {
     expect(advanceActor(walking, 0.02, state.placements, state.catalog).motionElapsed).toBeCloseTo(3.04);
   });
   it('房屋移到原出生点后，角色选择新的可行走位置', () => {
-    const placements = state.placements.map((item) => item.item_key === 'house' ? { ...item, x: 0, y: 3.5 } : item.item_key === 'run' ? { ...item, x: 5.5, y: -2 } : item);
+    const placements = state.placements.map((item) => item.item_key === 'house' ? { ...item, x: 0, y: 2.25 } : item.item_key === 'run' ? { ...item, x: 6.5, y: -4.5 } : item);
     expect(canPlace(placements[0]!, placements, state.catalog)).toBe(true);
     const actor = createActor(placements, state.catalog);
     expect(isWalkable(actor, placements, state.catalog)).toBe(true);

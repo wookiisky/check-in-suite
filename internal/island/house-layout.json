@@ -1,0 +1,10 @@
+{
+  "width": 12,
+  "depth": 8,
+  "wallThickness": 0.15,
+  "wallHeight": 80,
+  "bathroom": { "minX": 2.25, "maxX": 6, "minY": -4, "maxY": -1 },
+  "bathroomDoor": { "minX": 3, "maxX": 4.25, "y": -1 },
+  "entrance": { "x": 0, "y": 3.5 },
+  "passageClearance": 0.3
+}
