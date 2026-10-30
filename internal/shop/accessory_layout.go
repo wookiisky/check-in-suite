@@ -12,9 +12,9 @@ import (
 
 const avatarLayerID = "avatar" // Stable ordering anchor independent of the chosen character purchase.
 
-// validateAccessoryLayout keeps the complete square image box inside the normalized canvas.
+// validateAccessoryLayout keeps the complete rotated image box inside the normalized canvas.
 func validateAccessoryLayout(purchaseID string, input AccessoryLayoutInput) error {
-	for field, value := range map[string]float64{"x": input.X, "y": input.Y, "size": input.Size} {
+	for field, value := range map[string]float64{"x": input.X, "y": input.Y, "size": input.Size, "rotation": input.Rotation} {
 		if math.IsNaN(value) || math.IsInf(value, 0) {
 			return core.Invalid(field, "INVALID_VALUE")
 		}
@@ -22,11 +22,17 @@ func validateAccessoryLayout(purchaseID string, input AccessoryLayoutInput) erro
 	if input.Size < .05 || input.Size > 1 {
 		return core.Invalid("size", "INVALID_VALUE")
 	}
-	half := input.Size / 2
-	if input.X < half || input.X > 1-half {
+	if input.Rotation < 0 || input.Rotation >= 360 {
+		return core.Invalid("rotation", "INVALID_VALUE")
+	}
+	radians := input.Rotation * math.Pi / 180
+	half := input.Size * (math.Abs(math.Cos(radians)) + math.Abs(math.Sin(radians))) / 2
+	// Cardinal angles and exact edge contact can differ by a few floating-point bits.
+	const tolerance = 1e-9
+	if input.X < half-tolerance || input.X > 1-half+tolerance {
 		return core.Invalid("x", "INVALID_VALUE")
 	}
-	if input.Y < half || input.Y > 1-half {
+	if input.Y < half-tolerance || input.Y > 1-half+tolerance {
 		return core.Invalid("y", "INVALID_VALUE")
 	}
 	if input.BeforeID != nil && *input.BeforeID == purchaseID {
@@ -113,7 +119,7 @@ func (s *Service) SetAccessoryLayout(ctx context.Context, p account.Principal, p
 			return Equipment{}, err
 		}
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE accessory_layouts SET x=?,y=?,size=? WHERE purchase_id=?", input.X, input.Y, input.Size, purchaseID); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE accessory_layouts SET x=?,y=?,size=?,rotation=? WHERE purchase_id=?", input.X, input.Y, input.Size, input.Rotation, purchaseID); err != nil {
 		return Equipment{}, err
 	}
 	result, err := ReadEquipment(ctx, tx)

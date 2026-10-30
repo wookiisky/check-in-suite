@@ -158,10 +158,11 @@ type Wearables struct {
 
 // AccessoryLayout uses a square normalized canvas and a square image-contain box.
 type AccessoryLayout struct {
-	X     float64 `json:"x"`     // Horizontal center, with the image box entirely inside the canvas.
-	Y     float64 `json:"y"`     // Vertical center, with the image box entirely inside the canvas.
-	Size  float64 `json:"size"`  // Box side as a fraction of the canvas side, from .05 through 1.
-	Layer int     `json:"layer"` // Negative behind the character; positive in front; character is zero.
+	X        float64 `json:"x"`        // Horizontal center, with the image box entirely inside the canvas.
+	Y        float64 `json:"y"`        // Vertical center, with the image box entirely inside the canvas.
+	Size     float64 `json:"size"`     // Box side as a fraction of the canvas side, from .05 through 1.
+	Rotation float64 `json:"rotation"` // Clockwise angle in degrees, from zero up to but excluding 360.
+	Layer    int     `json:"layer"`    // Negative behind the character; positive in front; character is zero.
 }
 
 // AccessoryLayoutInput saves one accessory and its absolute ordering intent together.
@@ -169,6 +170,7 @@ type AccessoryLayoutInput struct {
 	X        float64 `json:"x"`         // Desired normalized horizontal center.
 	Y        float64 `json:"y"`         // Desired normalized vertical center.
 	Size     float64 `json:"size"`      // Desired normalized square image-contain box side.
+	Rotation float64 `json:"rotation"`  // Desired clockwise angle in degrees, in [0, 360).
 	BeforeID *string `json:"before_id"` // Another equipped purchase or "avatar"; null places it on top.
 }
 

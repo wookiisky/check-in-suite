@@ -1273,18 +1273,20 @@ export interface components {
             /** @description 免费基础人物的受控素材 key。 */
             asset_key: string;
         };
-        /** @description 以固定正方形画布为基准，x/y 为中心，size 为等比图片 contain 包围盒边长；整个包围盒必须位于画布内。layer 小于零在角色后，大于零在角色前。 */
+        /** @description 以固定正方形画布为基准，x/y 为中心，size 为等比图片 contain 包围盒边长；rotation 为顺时针角度，旋转后的整个包围盒必须位于画布内。layer 小于零在角色后，大于零在角色前。 */
         AccessoryLayout: {
             x: number;
             y: number;
             size: number;
+            rotation: number;
             layer: number;
         };
-        /** @description 原子保存单件位置、大小和排序。before_id 为另一件已装备饰品的购买ID、角色锚点 avatar，或 null（最前层）。失效排序目标返回 EQUIPMENT_CHANGED，不自动改为置顶。 */
+        /** @description 原子保存单件位置、大小、旋转角度和排序。before_id 为另一件已装备饰品的购买ID、角色锚点 avatar，或 null（最前层）。失效排序目标返回 EQUIPMENT_CHANGED，不自动改为置顶。 */
         AccessoryLayoutInput: {
             x: number;
             y: number;
             size: number;
+            rotation: number;
             before_id: string | null;
         };
         SlotUpdate: {

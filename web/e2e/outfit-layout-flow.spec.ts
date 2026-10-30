@@ -60,8 +60,41 @@ async function expectAccessoryAligned(handle: Locator, artwork: Locator) {
   }).toBeLessThan(1);
 }
 
-// 桌面用实际指针拖动，手机模拟器用微调按钮；两者共用真实保存和重载断言。
-test('背景、可编辑饰品和固定特效在保存刷新后保持组合', async ({ page, isMobile }, testInfo) => {
+// 拖动实际控件并跨过多个指针事件，验证捕获后的连续更新。
+async function dragControl(page: Page, control: Locator, dx: number, dy: number) {
+  await control.scrollIntoViewIfNeeded();
+  const box = await control.boundingBox();
+  expect(box).not.toBeNull();
+  const x = box!.x + box!.width / 2;
+  const y = box!.y + box!.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + dx, y + dy, { steps: 8 });
+  await page.mouse.up();
+}
+
+// 从旋转手柄的实际位置绕素材中心顺时针转动45°。
+async function rotateAccessory(page: Page, control: Locator, artwork: Locator) {
+  await control.scrollIntoViewIfNeeded();
+  const handle = await control.boundingBox();
+  const image = await artwork.boundingBox();
+  expect(handle).not.toBeNull();
+  expect(image).not.toBeNull();
+  const centerX = image!.x + image!.width / 2;
+  const centerY = image!.y + image!.height / 2;
+  const x = handle!.x + handle!.width / 2;
+  const y = handle!.y + handle!.height / 2;
+  const angle = Math.PI / 4;
+  const dx = x - centerX;
+  const dy = y - centerY;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(centerX + dx * Math.cos(angle) - dy * Math.sin(angle), centerY + dx * Math.sin(angle) + dy * Math.cos(angle), { steps: 8 });
+  await page.mouse.up();
+}
+
+// 两个浏览器项目都拖动素材与手柄，并通过真实保存、刷新和重装备核对结果。
+test('背景、可编辑饰品和固定特效在保存刷新后保持组合', async ({ page }, testInfo) => {
   test.setTimeout(90_000);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto('/');
@@ -116,6 +149,26 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   const stage = editor.locator('.shop-character-stage');
   const starArt = stage.locator(`[data-purchase-id="${star.id}"]`);
   const starHandle = stage.getByRole('button', { name: `${shop.selectAccessory} ${star.name_snapshot}`, exact: true });
+  const resizeHandle = stage.locator('[data-transform="resize"][data-corner="se"]');
+  const rotateHandle = stage.locator('[data-transform="rotate"]');
+  await expect(editor.getByRole('slider')).toHaveCount(0);
+  for (const name of [shop.moveLeft, shop.moveRight, shop.moveUp, shop.moveDown]) {
+    await expect(editor.getByRole('button', { name, exact: true })).toHaveCount(0);
+  }
+  // 最小饰品的中心仍须命中移动层，外侧缩放手柄不能遮住素材。
+  await resizeHandle.focus();
+  await resizeHandle.press('Home');
+  await expect.poll(() => starArt.evaluate((image) => image.style.width)).toBe('5%');
+  await expectAccessoryAligned(starHandle, starArt);
+  await expect.poll(() => starHandle.evaluate((handle) => {
+    const box = handle.getBoundingClientRect();
+    return document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === handle;
+  })).toBe(true);
+  const minimumLeft = await starArt.evaluate((image) => Number.parseFloat(image.style.left));
+  await dragControl(page, starHandle, 6, 6);
+  await expect.poll(() => starArt.evaluate((image) => Number.parseFloat(image.style.left))).toBeGreaterThan(minimumLeft);
+  await editor.getByRole('button', { name: shop.cancel, exact: true }).click();
+  await expect.poll(() => starArt.evaluate((image) => image.style.width)).toBe(`${equipped.accessory_layouts[star.id]!.size * 100}%`);
   await starHandle.hover();
   await expectAccessoryAligned(starHandle, starArt);
   await page.mouse.down();
@@ -124,24 +177,10 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expectAccessoryAligned(starHandle, starArt);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  if (isMobile) {
-    await editor.getByRole('button', { name: shop.moveRight, exact: true }).click();
-    await editor.getByRole('button', { name: shop.moveDown, exact: true }).click();
-  } else {
-    await starArt.scrollIntoViewIfNeeded();
-    const box = await starArt.boundingBox();
-    expect(box).not.toBeNull();
-    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(box!.x + box!.width / 2 + 40, box!.y + box!.height / 2 + 45, { steps: 5 });
-    await page.mouse.up();
-  }
-  const size = editor.getByLabel(shop.accessorySize);
-  const originalSize = Number(await size.inputValue());
-  await size.focus();
-  await size.press('ArrowRight');
-  await size.press('ArrowRight');
-  expect(Number(await size.inputValue())).toBeGreaterThan(originalSize);
+  await dragControl(page, starHandle, 30, 30);
+  await dragControl(page, resizeHandle, 12, 12);
+  await rotateAccessory(page, rotateHandle, starArt);
+  await expectAccessoryAligned(starHandle, starArt);
   await editor.getByRole('button', { name: shop.layerDown, exact: true }).click();
   await expect(stage).toBeInViewport({ ratio: 0.9 });
   await saveLayout(page, star.id);
@@ -151,10 +190,13 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   expect(behindLayout.x).toBeGreaterThan(equipped.accessory_layouts[star.id]!.x);
   expect(behindLayout.y).toBeGreaterThan(equipped.accessory_layouts[star.id]!.y);
   expect(behindLayout.size).toBeGreaterThan(equipped.accessory_layouts[star.id]!.size);
+  expect(behindLayout.rotation).toBeGreaterThan(40);
+  expect(behindLayout.rotation).toBeLessThan(50);
   expect(behind.accessory_layouts[hat.id]).toMatchObject({
     x: equipped.accessory_layouts[hat.id]!.x,
     y: equipped.accessory_layouts[hat.id]!.y,
     size: equipped.accessory_layouts[hat.id]!.size,
+    rotation: equipped.accessory_layouts[hat.id]!.rotation,
   });
 
   // 连续向上跨过角色和另一件饰品，再连续向下；不用置顶替代逐层行为。
@@ -163,6 +205,9 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await saveLayout(page, star.id);
   const front = (await api<Camp>(page, '/camp')).equipment;
   expect(front.accessory_layouts[star.id]!.layer).toBeGreaterThan(front.accessory_layouts[hat.id]!.layer);
+  expect(front.accessory_layouts[star.id]).toMatchObject({
+    x: behindLayout.x, y: behindLayout.y, size: behindLayout.size, rotation: behindLayout.rotation,
+  });
   await editor.getByRole('button', { name: shop.layerDown, exact: true }).click();
   await editor.getByRole('button', { name: shop.layerDown, exact: true }).click();
   await expect(stage).toBeInViewport({ ratio: 0.9 });
@@ -179,6 +224,11 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await expect(character.getByRole('img', { name: snow.name_snapshot, exact: true })).toHaveAttribute('src', '/api/v1/assets/effect-snow-v1');
   const homeStar = character.locator(`[data-purchase-id="${star.id}"]`);
   await expect(homeStar).toBeVisible();
+  const restoredRotation = await homeStar.evaluate((image) => {
+    const transform = new DOMMatrix(getComputedStyle(image).transform);
+    return (Math.atan2(transform.b, transform.a) * 180 / Math.PI + 360) % 360;
+  });
+  expect(restoredRotation).toBeCloseTo(behindLayout.rotation, 3);
   expect(await homeStar.evaluate((image) => Number(getComputedStyle(image).zIndex)))
     .toBeLessThan(await character.locator('.shop-avatar-art').evaluate((image) => Number(getComputedStyle(image).zIndex)));
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -218,7 +268,7 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await page.getByRole('button', { name: `${shop.equip} ${star.name_snapshot}`, exact: true }).click();
   await expect(page.getByRole('button', { name: `${shop.unequip} ${star.name_snapshot}`, exact: true })).toBeEnabled();
   const reequipped = (await api<Camp>(page, '/camp')).equipment;
-  expect(reequipped.accessory_layouts[star.id]).toMatchObject({ x: behindLayout.x, y: behindLayout.y, size: behindLayout.size });
+  expect(reequipped.accessory_layouts[star.id]).toMatchObject({ x: behindLayout.x, y: behindLayout.y, size: behindLayout.size, rotation: behindLayout.rotation });
   expect(reequipped.accessory_layouts[star.id]!.layer).toBeGreaterThan(reequipped.accessory_layouts[hat.id]!.layer);
   await page.getByRole('button', { name: `${shop.unequip} ${snow.name_snapshot}`, exact: true }).click();
   await expect(page.getByRole('button', { name: `${shop.equip} ${snow.name_snapshot}`, exact: true })).toBeEnabled();

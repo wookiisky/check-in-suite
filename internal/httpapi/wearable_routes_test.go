@@ -53,7 +53,7 @@ func TestFixedWearableHTTP(t *testing.T) {
 	if response := request("PUT", path, "", ""); response.Code != 422 {
 		t.Fatalf("hair equipped as movable decoration: %d %s", response.Code, response.Body)
 	}
-	if response := request("PATCH", path+"/layout", `{"x":0.5,"y":0.5,"size":0.2,"before_id":null}`, ""); response.Code != 422 {
+	if response := request("PATCH", path+"/layout", `{"x":0.5,"y":0.5,"size":0.2,"rotation":0,"before_id":null}`, ""); response.Code != 422 {
 		t.Fatalf("hair layout changed: %d %s", response.Code, response.Body)
 	}
 	for _, invalid := range []string{`{}`, `{"purchase_id":null,"x":0.5}`} {

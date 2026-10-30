@@ -97,7 +97,7 @@ describe('小岛商店与多件所有权', () => {
   it('画像画布使用后追加的画像素材，购买时的小岛缩略图保持成交记录用途', () => {
     const portrait = { ...treePurchase, portrait_type: 'accessory' as const, portrait_asset_key: 'accessory-leaf-v1' };
     const title = { ...treePurchase, id: 'title', portrait_type: 'title' as const, portrait_asset_key: 'title-crown-v1' };
-    const equipped = { ...camp.equipment, title, accessories: [portrait], accessory_layouts: { [portrait.id]: { x: 0.5, y: 0.5, size: 0.2, layer: 1 } } };
+    const equipped = { ...camp.equipment, title, accessories: [portrait], accessory_layouts: { [portrait.id]: { x: 0.5, y: 0.5, size: 0.2, rotation: 0, layer: 1 } } };
     const { container } = render(<CharacterPanel equipment={equipped} displayName="测试角色" />);
     expect(container.querySelector('.shop-accessory-art')).toHaveAttribute('src', '/api/v1/assets/accessory-leaf-v1');
     expect(container.querySelector('.shop-character-title img')).toHaveAttribute('src', '/api/v1/assets/title-crown-v1');

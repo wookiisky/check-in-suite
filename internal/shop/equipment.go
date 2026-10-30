@@ -37,7 +37,7 @@ func ReadEquipment(ctx context.Context, tx *sql.Tx) (Equipment, error) {
 	if err != nil {
 		return result, err
 	}
-	rows, err := tx.QueryContext(ctx, "SELECT l.purchase_id,l.x,l.y,l.size,l.layer FROM accessory_layouts l JOIN equipped_accessories e ON e.purchase_id=l.purchase_id")
+	rows, err := tx.QueryContext(ctx, "SELECT l.purchase_id,l.x,l.y,l.size,l.rotation,l.layer FROM accessory_layouts l JOIN equipped_accessories e ON e.purchase_id=l.purchase_id")
 	if err != nil {
 		return result, err
 	}
@@ -45,7 +45,7 @@ func ReadEquipment(ctx context.Context, tx *sql.Tx) (Equipment, error) {
 	for rows.Next() {
 		var id string
 		var layout AccessoryLayout
-		if err := rows.Scan(&id, &layout.X, &layout.Y, &layout.Size, &layout.Layer); err != nil {
+		if err := rows.Scan(&id, &layout.X, &layout.Y, &layout.Size, &layout.Rotation, &layout.Layer); err != nil {
 			return result, err
 		}
 		result.AccessoryLayouts[id] = layout

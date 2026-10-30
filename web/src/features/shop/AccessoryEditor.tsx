@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal } from '../../components/Modal';
 import type { Camp, Equipment, ShopClient } from './types';
 import { CharacterStage } from './CharacterStage';
-import { accessoryLayout, accessoryOrder, clampLayout, previewEquipment } from './accessory-layout';
+import { accessoryLayout, accessoryOrder, previewEquipment } from './accessory-layout';
 import type { AccessoryLayout, AccessoryLayoutInput } from './accessory-layout';
 import { shopError } from './helpers';
 import { dispatchFeedback } from '../../feedback/feedback-events';
@@ -11,7 +11,7 @@ import content from './content.json';
 // 单件编辑草稿，其他饰品仍以最近一次服务端结果为准。
 interface AccessoryDraft {
   id: string; // 当前选中的永久饰品订单。
-  layout: AccessoryLayout; // 当前单件的位置和大小。
+  layout: AccessoryLayout; // 当前单件的位置、大小和角度。
   order: string[]; // 含角色参照的本地预览顺序。
 }
 
@@ -22,7 +22,7 @@ function draftFor(equipment: Equipment, id: string): AccessoryDraft {
 
 // 保存绝对位置和邻接意图，重试不会再次执行一次“向上移动”。
 function layoutInput(draft: AccessoryDraft): AccessoryLayoutInput {
-  return { x: draft.layout.x, y: draft.layout.y, size: draft.layout.size, before_id: draft.order[draft.order.indexOf(draft.id) + 1] ?? null };
+  return { x: draft.layout.x, y: draft.layout.y, size: draft.layout.size, rotation: draft.layout.rotation, before_id: draft.order[draft.order.indexOf(draft.id) + 1] ?? null };
 }
 
 // 编辑只保存一个饰品，切换和关闭时显式处理尚未保存的草稿。
@@ -72,11 +72,6 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
       setMessage('');
     }
     setPendingAction(null);
-  }
-  // 大小改变后同步约束中心，避免部分图片越出画布。
-  function changeLayout(change: Partial<AccessoryLayout>) {
-    setDraft((current) => ({ ...current, layout: clampLayout({ ...current.layout, ...change }) }));
-    setMessage('');
   }
   // 草稿按层移动包含角色参照，实际保存使用稳定邻接目标。
   function moveLayer(target: number) {
@@ -158,15 +153,7 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
         {saved.accessories.map((item) => <option key={item.id} value={item.id}>{item.name_snapshot}</option>)}
       </select>
       <fieldset className="shop-fieldset shop-outfit-controls" disabled={busy || !available}>
-        <legend>{content.position}</legend>
-        <div className="shop-layout-actions">
-          <button type="button" className="secondary" onClick={() => changeLayout({ x: draft.layout.x - 0.01 })}>{content.moveLeft}</button>
-          <button type="button" className="secondary" onClick={() => changeLayout({ x: draft.layout.x + 0.01 })}>{content.moveRight}</button>
-          <button type="button" className="secondary" onClick={() => changeLayout({ y: draft.layout.y - 0.01 })}>{content.moveUp}</button>
-          <button type="button" className="secondary" onClick={() => changeLayout({ y: draft.layout.y + 0.01 })}>{content.moveDown}</button>
-        </div>
-        <div className="shop-size-label"><label htmlFor="outfit-size">{content.accessorySize}</label><output id="outfit-size-value" htmlFor="outfit-size">{Math.round(draft.layout.size * 100)}%</output></div>
-        <input id="outfit-size" aria-describedby="outfit-size-value" type="range" min="5" max="100" step="1" value={Math.round(draft.layout.size * 100)} onChange={(event) => changeLayout({ size: Number(event.target.value) / 100 })} />
+        <legend>{content.layers}</legend>
         <div className="shop-layout-actions" role="group" aria-label={content.layers}>
           <button type="button" className="secondary" disabled={index >= draft.order.length - 1} onClick={() => moveLayer(index + 1)}>{content.layerUp}</button>
           <button type="button" className="secondary" disabled={index <= 0} onClick={() => moveLayer(index - 1)}>{content.layerDown}</button>
@@ -177,6 +164,11 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
           {[...draft.order].reverse().map((id) => <li key={id} aria-current={id === draft.id ? 'true' : undefined}>{id === 'avatar' ? content.avatarLayer : saved.accessories.find((item) => item.id === id)?.name_snapshot}</li>)}
         </ol>
       </fieldset>
+      <div className="shop-layout-values">
+        <span>{content.accessorySize} <output aria-label={content.accessorySize}>{Math.round(draft.layout.size * 100)}%</output></span>
+        <span>{content.accessoryRotation} <output aria-label={content.accessoryRotation}>{Math.round(draft.layout.rotation)}°</output></span>
+      </div>
+      <p className="shop-layout-hint" id="outfit-layout-hint">{content.layoutHint}</p>
       {error !== null && <div role="alert"><p className="shop-error">{shopError(error)}</p><button type="button" className="secondary" disabled={busy} onClick={() => void reload()}>{content.reloadEquipment}</button></div>}
       {message && <p className={highlightCharacter ? 'feedback-success' : undefined} role="status">{message}</p>}
       <div className="button-row">

@@ -1,7 +1,7 @@
 import type { Equipment } from './types';
 
 export type AccessoryLayout = Equipment['accessory_layouts'][string];
-export type AccessoryLayoutInput = Pick<AccessoryLayout, 'x' | 'y' | 'size'> & {
+export type AccessoryLayoutInput = Pick<AccessoryLayout, 'x' | 'y' | 'size' | 'rotation'> & {
   before_id: string | null; // 放在该饰品或角色之前，null表示最前方。
 };
 
@@ -21,11 +21,14 @@ export function accessoryOrder(equipment: Equipment): string[] {
   );
 }
 
-// 坐标以画布为基准，正方形图片容器保持完全在画布内。
+// 旋转后的整个图片容器留在画布内，先约束尺寸再约束中心。
 export function clampLayout(layout: AccessoryLayout): AccessoryLayout {
-  const size = Math.min(1, Math.max(0.05, layout.size));
-  const half = size / 2;
-  return { ...layout, size, x: Math.max(half, Math.min(1 - half, layout.x)), y: Math.max(half, Math.min(1 - half, layout.y)) };
+  const rotation = ((layout.rotation % 360) + 360) % 360;
+  const radians = rotation * Math.PI / 180;
+  const extent = Math.abs(Math.cos(radians)) + Math.abs(Math.sin(radians));
+  const size = Math.min(1 / extent, Math.max(0.05, layout.size));
+  const half = Math.min(0.5, size * extent / 2);
+  return { ...layout, rotation, size, x: Math.max(half, Math.min(1 - half, layout.x)), y: Math.max(half, Math.min(1 - half, layout.y)) };
 }
 
 // 草稿仅替换选中饰品的位置尺寸，排序层号以角色为零重新分配。

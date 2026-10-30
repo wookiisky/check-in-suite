@@ -1136,22 +1136,24 @@ components:
     AccessoryLayout:
       type: "object"
       additionalProperties: false
-      description: "以固定正方形画布为基准，x/y 为中心，size 为等比图片 contain 包围盒边长；整个包围盒必须位于画布内。layer 小于零在角色后，大于零在角色前。"
-      required: ["x", "y", "size", "layer"]
+      description: "以固定正方形画布为基准，x/y 为中心，size 为等比图片 contain 包围盒边长；rotation 为顺时针角度，旋转后的整个包围盒必须位于画布内。layer 小于零在角色后，大于零在角色前。"
+      required: ["x", "y", "size", "rotation", "layer"]
       properties:
         x: {"type": "number", "minimum": 0, "maximum": 1}
         y: {"type": "number", "minimum": 0, "maximum": 1}
         size: {"type": "number", "minimum": 0.05, "maximum": 1}
+        rotation: {"type": "number", "minimum": 0, "exclusiveMaximum": 360}
         layer: {"type": "integer", "not": {"const": 0}}
     AccessoryLayoutInput:
       type: "object"
       additionalProperties: false
-      description: "原子保存单件位置、大小和排序。before_id 为另一件已装备饰品的购买ID、角色锚点 avatar，或 null（最前层）。失效排序目标返回 EQUIPMENT_CHANGED，不自动改为置顶。"
-      required: ["x", "y", "size", "before_id"]
+      description: "原子保存单件位置、大小、旋转角度和排序。before_id 为另一件已装备饰品的购买ID、角色锚点 avatar，或 null（最前层）。失效排序目标返回 EQUIPMENT_CHANGED，不自动改为置顶。"
+      required: ["x", "y", "size", "rotation", "before_id"]
       properties:
         x: {"type": "number", "minimum": 0, "maximum": 1}
         y: {"type": "number", "minimum": 0, "maximum": 1}
         size: {"type": "number", "minimum": 0.05, "maximum": 1}
+        rotation: {"type": "number", "minimum": 0, "exclusiveMaximum": 360}
         before_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
     SlotUpdate:
       type: "object"

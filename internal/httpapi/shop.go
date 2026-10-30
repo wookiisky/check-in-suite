@@ -201,7 +201,7 @@ func (app *App) RegisterShop(service *shop.Service) {
 			return
 		}
 		var input shop.AccessoryLayoutInput
-		if err = decodeRequiredJSON(w, r, &input, []string{"x", "y", "size", "before_id"}, "before_id"); err != nil {
+		if err = decodeRequiredJSON(w, r, &input, []string{"x", "y", "size", "rotation", "before_id"}, "before_id"); err != nil {
 			WriteError(w, r, err)
 			return
 		}

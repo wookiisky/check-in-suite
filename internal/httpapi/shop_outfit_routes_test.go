@@ -28,17 +28,23 @@ func TestAccessoryLayoutHTTP(t *testing.T) {
 	}
 	for _, body := range []string{
 		`{"x":0.5,"y":0.5,"size":0.2}`,
-		`{"x":0.5,"y":0.5,"size":null,"before_id":null}`,
-		`{"x":"0.5","y":0.5,"size":0.2,"before_id":null}`,
-		`{"x":0.5,"y":0.5,"size":0.2,"before_id":null,"layer":3}`,
-		`{"x":0,"y":0.5,"size":0.2,"before_id":null}`,
+		`{"x":0.5,"y":0.5,"size":0.2,"before_id":null}`,
+		`{"x":0.5,"y":0.5,"size":0.2,"rotation":null,"before_id":null}`,
+		`{"x":0.5,"y":0.5,"size":0.2,"rotation":360,"before_id":null}`,
+		`{"x":0.5,"y":0.5,"size":0.2,"rotation":-1,"before_id":null}`,
+		`{"x":0.5,"y":0.5,"size":0.8,"rotation":45,"before_id":null}`,
+		`{"x":0.1,"y":0.5,"size":0.2,"rotation":45,"before_id":null}`,
+		`{"x":0.5,"y":0.5,"size":null,"rotation":45,"before_id":null}`,
+		`{"x":"0.5","y":0.5,"size":0.2,"rotation":45,"before_id":null}`,
+		`{"x":0.5,"y":0.5,"size":0.2,"rotation":45,"before_id":null,"layer":3}`,
+		`{"x":0,"y":0.5,"size":0.2,"rotation":45,"before_id":null}`,
 	} {
 		if result := request("PATCH", path+"/layout", body, ""); result.Code != 400 {
 			t.Fatalf("invalid body accepted: %s %d %s", body, result.Code, result.Body)
 		}
 	}
 	for _, before := range []string{`"avatar"`, `null`} {
-		result := request("PATCH", path+"/layout", `{"x":0.4,"y":0.6,"size":0.3,"before_id":`+before+`}`, "")
+		result := request("PATCH", path+"/layout", `{"x":0.4,"y":0.6,"size":0.3,"rotation":45,"before_id":`+before+`}`, "")
 		var equipment shop.Equipment
 		if result.Code != 200 || json.Unmarshal(result.Body.Bytes(), &equipment) != nil {
 			t.Fatalf("save: %d %s", result.Code, result.Body)
@@ -47,6 +53,9 @@ func TestAccessoryLayoutHTTP(t *testing.T) {
 		if layout.X != .4 || layout.Y != .6 || layout.Size != .3 || (before == `"avatar"` && layout.Layer != -1) || (before == "null" && layout.Layer != 1) {
 			t.Fatalf("layout: %+v", layout)
 		}
+		if !strings.Contains(result.Body.String(), `"rotation":45`) {
+			t.Fatalf("rotation missing or not numeric: %s", result.Body)
+		}
 		if !strings.Contains(result.Body.String(), `"background":null`) || !strings.Contains(result.Body.String(), `"effects":[]`) {
 			t.Fatalf("new slots have incorrect JSON shape: %s", result.Body)
 		}
@@ -54,10 +63,10 @@ func TestAccessoryLayoutHTTP(t *testing.T) {
 	if removed := request("DELETE", path, "", ""); removed.Code != 200 {
 		t.Fatal(removed.Body)
 	}
-	if result := request("PATCH", path+"/layout", `{"x":0.4,"y":0.6,"size":0.3,"before_id":null}`, ""); result.Code != 409 || !strings.Contains(result.Body.String(), `"code":"EQUIPMENT_CHANGED"`) {
+	if result := request("PATCH", path+"/layout", `{"x":0.4,"y":0.6,"size":0.3,"rotation":45,"before_id":null}`, ""); result.Code != 409 || !strings.Contains(result.Body.String(), `"code":"EQUIPMENT_CHANGED"`) {
 		t.Fatalf("stale save: %d %s", result.Code, result.Body)
 	}
-	if result := apiRequest(app, "PATCH", path+"/layout", `{"x":0.4,"y":0.6,"size":0.3,"before_id":null}`, nil, ""); result.Code != 401 {
+	if result := apiRequest(app, "PATCH", path+"/layout", `{"x":0.4,"y":0.6,"size":0.3,"rotation":45,"before_id":null}`, nil, ""); result.Code != 401 {
 		t.Fatalf("anonymous save accepted: %d", result.Code)
 	}
 }

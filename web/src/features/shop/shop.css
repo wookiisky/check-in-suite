@@ -246,6 +246,60 @@
   outline: 2px solid var(--paper);
   outline-offset: 0;
 }
+.shop-accessory-selection {
+  position: absolute;
+  border: 2px solid var(--forest);
+  border-radius: 4px;
+  pointer-events: none;
+}
+/* 选框跟随素材旋转；手柄保留独立命中区域，主体仍可拖动。 */
+.shop-character-stage .shop-accessory-transform-handle {
+  width: 32px;
+  height: 32px;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  pointer-events: auto;
+  cursor: nwse-resize;
+}
+.shop-accessory-transform-handle::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  background: var(--paper);
+  border: 2px solid var(--forest);
+  border-radius: 3px;
+}
+.shop-character-stage .shop-accessory-transform-handle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -3px;
+}
+/* 角点命中区向外展开，最小尺寸的素材中心也必须能接收到移动手势。 */
+.shop-accessory-transform-handle[data-corner='nw'] { left: 0; top: 0; transform: translate(-100%, -100%); }
+.shop-accessory-transform-handle[data-corner='ne'] { left: 100%; top: 0; transform: translate(0, -100%); cursor: nesw-resize; }
+.shop-accessory-transform-handle[data-corner='sw'] { left: 0; top: 100%; transform: translate(-100%, 0); cursor: nesw-resize; }
+.shop-accessory-transform-handle[data-corner='se'] { left: 100%; top: 100%; transform: none; }
+.shop-accessory-selection::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -36px;
+  height: 36px;
+  border-left: 2px solid var(--forest);
+}
+.shop-character-stage .shop-accessory-transform-handle[data-transform='rotate'] {
+  left: 50%;
+  top: -36px;
+  width: 44px;
+  height: 44px;
+  cursor: crosshair;
+}
+.shop-accessory-transform-handle[data-transform='rotate']::after {
+  inset: 11px;
+  border-radius: 50%;
+  background: var(--forest);
+  box-shadow: inset 0 0 0 4px var(--paper);
+}
 .shop-edit-outfit {
   margin-top: 20px;
   width: 100%;
@@ -271,7 +325,7 @@
   justify-content: center;
   align-items: flex-start;
   min-width: 0;
-  padding: 4px;
+  padding: 60px 24px 24px;
 }
 .shop-outfit-settings {
   overflow-y: auto;
@@ -282,17 +336,15 @@
 .shop-outfit-controls legend {
   margin-bottom: 12px;
 }
-.shop-outfit-controls input[type='range'] {
-  width: 100%;
-  padding: 0;
-  accent-color: var(--forest);
-}
-.shop-size-label {
+.shop-layout-values {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
+.shop-layout-values output { font-variant-numeric: tabular-nums; }
+.shop-layout-hint { color: var(--muted); }
 .shop-layout-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -14,6 +14,8 @@ source:
 - internal/assets/builtin/catalog.json
 - web/src/features/shop/ShopPage.tsx
 - web/src/features/shop/AccessoryEditor.tsx
+- web/src/features/shop/CharacterStage.tsx
+- web/src/features/shop/accessory-layout.ts
 - web/src/features/character/HumanCharacterArtwork.tsx
 - web/src/features/character/character-artwork.json
 tests:
@@ -26,6 +28,9 @@ tests:
 - internal/assets/badge_upgrade_test.go
 - internal/httpapi/wearable_routes_test.go
 - web/src/features/shop/FixedEquipment.test.tsx
+- web/src/features/shop/AccessoryEditor.test.tsx
+- web/src/features/shop/CharacterStage.test.tsx
+- web/src/features/shop/accessory-layout.test.ts
 - web/e2e/shop-flow.spec.ts
 - web/e2e/management-catalog-flow.spec.ts
 - web/e2e/management-recovery-flow.spec.ts
@@ -74,13 +79,17 @@ tests:
 
 自由饰品最多同时装备十件，同一订单不能重复计数；数量限制不影响继续购买和持有。数量检查和装备写入在同一事务中完成，达到上限时保留原有装备。重复装备或重复卸下按目标状态成功返回，操作不影响其他饰品。
 
-饰品使用正方形画布中的归一化中心坐标和包围盒尺寸。图片保持原比例，整个包围盒必须留在画布内；手机和桌面由同一坐标得到相同布局。可用鼠标、触摸、微调按钮和键盘调整，角色是固定的排序参照，饰品可以移到角色后方。
+饰品使用正方形画布中的归一化中心坐标、包围盒尺寸和顺时针旋转角度。图片保持原比例，旋转后的整个包围盒必须留在画布内；手机和桌面由同一坐标得到相同布局。拖动素材移动，拖动选框角点等比缩放，拖动圆形手柄旋转；鼠标和触摸共用这些操作，方向键可微调对应位置、大小或角度。位置按钮和尺寸滑杆已移除，层级调整按钮保留，角色仍是固定的排序参照，饰品可以移到角色后方。
 
-编辑时在本地预览，保存一次提交选中饰品的位置、大小和相对排序意图。服务端据此重新排列层级，不接受整套布局覆盖；其他饰品的位置和大小不变。重复保存同一排序意图不能继续向前或向后移动。
+旋转时，过大的素材自动缩小，靠边的素材向内调整，以保持完整可见。一次手势始终以按下时的布局为基准，来回旋转不会累计缩小；取消手势恢复操作前的位置、大小和角度。保存期间冻结手势和键盘操作。
 
-保存失败保留草稿。选中饰品或排序目标已被卸下时，返回装备已变化，由用户读取当前状态后再调整；切换选中对象或离开时先处理未保存修改。卸下只移除装备关系，保留位置和大小；再次装备恢复位置与大小，并放在当前饰品最上层。
+编辑时在本地预览，保存一次提交选中饰品的位置、大小、角度和相对排序意图。服务端据此重新排列层级，不接受整套布局覆盖；其他饰品的位置、大小和角度不变。重复保存同一排序意图不能继续向前或向后移动。
 
-特效可同时佩戴多个，按稳定顺序叠放，不占饰品额度，也不能移动、缩放或调层。移除特效仅取消佩戴；账户或系统要求减少动效时，使用对应静态版本。
+保存失败保留草稿。选中饰品或排序目标已被卸下时，返回装备已变化，由用户读取当前状态后再调整；切换选中对象或离开时先处理未保存修改。卸下只移除装备关系，保留位置、大小和角度；再次装备恢复这些属性，并放在当前饰品最上层。
+
+特效可同时佩戴多个，按稳定顺序叠放，不占饰品额度，也不能移动、缩放、旋转或调层。移除特效仅取消佩戴；账户或系统要求减少动效时，使用对应静态版本。
+
+自由饰品旋转按重置数据库后的结构提供，不包含旧布局数据升级或旧客户端接口兼容；已有数据库需按 [运行手册](../ENGINEERING/OPERATIONS.md#数据库迁移与不兼容处理) 重建。
 
 ## 奖励兑现
 

@@ -64,6 +64,7 @@ CREATE TABLE accessory_layouts (
     x REAL NOT NULL,
     y REAL NOT NULL,
     size REAL NOT NULL CHECK(size BETWEEN 0.05 AND 1.0),
+    rotation REAL NOT NULL DEFAULT 0 CHECK(rotation >= 0 AND rotation < 360),
     layer INTEGER NOT NULL CHECK(layer != 0),
     CHECK(x BETWEEN size/2.0 AND 1.0-size/2.0),
     CHECK(y BETWEEN size/2.0 AND 1.0-size/2.0)

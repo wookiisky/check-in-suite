@@ -36,7 +36,7 @@ export const fullEquipment: Equipment = {
   ...equipment,
   accessories: Array.from({ length: 10 }, (_, index) => ({ ...purchase, id: `p${index}`, name_snapshot: `饰品${index}` })),
   accessory_layouts: Object.fromEntries(Array.from({ length: 10 }, (_, index) => [
-    `p${index}`, { x: ((index % 5) + 0.5) / 5, y: index < 5 ? 0.12 : 0.88, size: 0.18, layer: index + 1 },
+    `p${index}`, { x: ((index % 5) + 0.5) / 5, y: index < 5 ? 0.12 : 0.88, size: 0.18, rotation: 0, layer: index + 1 },
   ])),
 };
 // 编辑夹具覆盖角色前后的两个饰品及固定背景、特效。
@@ -44,8 +44,8 @@ export const outfit: Equipment = {
   ...equipment,
   accessories: [purchase, { ...purchase, id: 'second', name_snapshot: '帽子' }],
   accessory_layouts: {
-    [purchase.id]: { x: 0.5, y: 0.5, size: 0.2, layer: 1 },
-    second: { x: 0.2, y: 0.3, size: 0.15, layer: 2 },
+    [purchase.id]: { x: 0.5, y: 0.5, size: 0.2, rotation: 0, layer: 1 },
+    second: { x: 0.2, y: 0.3, size: 0.15, rotation: 0, layer: 2 },
   },
   background: { ...purchase, id: 'bg', type_snapshot: 'background', name_snapshot: '草地', asset_key_snapshot: 'background-meadow-v1' },
   effects: [{ ...purchase, id: 'snow', type_snapshot: 'effect', name_snapshot: '下雪', asset_key_snapshot: 'effect-snow-v1' }],
