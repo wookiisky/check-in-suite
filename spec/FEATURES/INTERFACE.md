@@ -17,6 +17,8 @@ source:
 - internal/account/profile.go
 tests:
 - web/src/IslandApp.test.tsx
+- web/src/components/Modal.test.tsx
+- web/e2e/modal-interaction.spec.ts
 - web/src/components/WalletContext.test.tsx
 - web/src/features/checkin/wallet-publishing.test.tsx
 - web/e2e/global-wallet.spec.ts
@@ -70,6 +72,8 @@ tests:
 桌面每日打卡页的日视图为记录、任务在左，角色及家庭留言在右；周记录可以跨宽度展示。手机先显示记录与任务，再显示角色和留言。月历和周记录的具体布局见打卡专题。
 
 键盘可操作，焦点可见，表单有可见标签，字段错误就近呈现。弹窗在可视高度内滚动，考虑安全区和软键盘；打开时焦点进入，关闭时回到触发元素。图表提供等价文字列表，状态不能只靠颜色区分；图标操作提供可访问名称。
+
+所有弹窗点击外部遮罩均无响应：不关闭弹窗、不触发放弃修改确认，也不操作背景页面。关闭、取消按钮和 Escape 仍按对应业务规则处理未保存内容与提交状态；叠加弹窗时，外部点击也不能操作下层弹窗。
 
 系统或账户要求减少动效时，移除位移、缩放、入场和常驻运动，保留静态文字、奖励数量及操作能力。动画不得阻挡下一步操作或要求用户等其结束。
 

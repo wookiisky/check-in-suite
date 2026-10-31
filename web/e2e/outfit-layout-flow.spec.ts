@@ -343,9 +343,21 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await starHandle.focus();
   await starHandle.press('ArrowRight');
   const unsavedLeft = await starArt.evaluate((image) => image.style.left);
+  // 编辑器嵌在衣柜中，外部点击既不能触发草稿确认，也不能操作下层衣柜。
+  expect((await editor.boundingBox())!.x).toBeGreaterThan(2);
+  if (testInfo.project.use.hasTouch) await page.touchscreen.tap(2, 100);
+  else await page.mouse.click(2, 100);
+  await expect(editor).toBeVisible();
+  await expect(page.locator('dialog[open]')).toHaveCount(2);
+  await expect(page.getByRole('dialog', { name: shop.discardChanges, exact: true })).toHaveCount(0);
+  await expect.poll(() => starArt.evaluate((image) => image.style.left)).toBe(unsavedLeft);
   await page.keyboard.press('Escape');
   const discard = page.getByRole('dialog', { name: shop.discardChanges, exact: true });
   await expect(discard).toBeVisible();
+  if (testInfo.project.use.hasTouch) await page.touchscreen.tap(2, 100);
+  else await page.mouse.click(2, 100);
+  await expect(discard).toBeVisible();
+  await expect(page.locator('dialog[open]')).toHaveCount(2);
   await discard.getByRole('button', { name: shop.keepEditing, exact: true }).click();
   await expect(editor).toBeVisible();
   await expect.poll(() => starArt.evaluate((image) => image.style.left)).toBe(unsavedLeft);

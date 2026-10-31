@@ -12,7 +12,8 @@ export function Modal({ title, children, onClose, closeDisabled = false }: { tit
     node?.showModal();
     return () => { node?.close(); opener.current?.focus(); };
   }, []);
-  return <dialog ref={dialog} className="island-dialog" aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); if (!closeDisabled) onClose(); }}>
+  // 外部轻触不产生关闭请求；关闭按钮与Escape继续交给业务处理草稿和提交状态。
+  return <dialog ref={dialog} className="island-dialog" closedby="closerequest" aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); if (!closeDisabled) onClose(); }}>
     <div className="dialog-header"><h2 id={titleId}>{title}</h2><button type="button" className="secondary" disabled={closeDisabled} onClick={onClose}>{content.common.close}</button></div>
     {children}
   </dialog>;
