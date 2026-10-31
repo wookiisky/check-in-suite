@@ -41,19 +41,24 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
   const [error, setError] = useState<unknown>(null);
   const [message, setMessage] = useState('');
   const [highlightCharacter, setHighlightCharacter] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{ kind: 'close' } | { kind: 'select'; id: string } | null>(null);
+  const [priorityID, setPriorityID] = useState<string | null>(null); // 下拉框优先权仅持续到下一次有效画布操作。
+  const [pendingAction, setPendingAction] = useState<{ kind: 'close' } | { kind: 'select'; id: string; prioritize: boolean } | null>(null);
   const available = saved.accessories.some((item) => item.id === draft.id);
   const dirty = available && JSON.stringify(layoutInput(draft)) !== JSON.stringify(layoutInput(draftFor(saved, draft.id)));
   const preview = available ? previewEquipment(saved, draft.id, draft.layout, draft.order) : saved;
   const index = draft.order.indexOf(draft.id);
   // 切换前先处理当前草稿，避免通过图层点击丢失尚未保存的修改。
-  function select(id: string): boolean {
-    if (id === draft.id) return true;
+  function select(id: string, prioritize = false): boolean {
+    if (id === draft.id) {
+      if (prioritize) setPriorityID(id);
+      return true;
+    }
     if (dirty) {
-      setPendingAction({ kind: 'select', id });
+      setPendingAction({ kind: 'select', id, prioritize });
       return false;
     }
     setDraft(draftFor(saved, id));
+    setPriorityID(prioritize ? id : null);
     setError(null);
     setMessage('');
     return true;
@@ -68,6 +73,7 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
     if (pendingAction?.kind === 'close') onClose();
     else if (pendingAction?.kind === 'select') {
       setDraft(draftFor(saved, pendingAction.id));
+      setPriorityID(pendingAction.prioritize ? pendingAction.id : null);
       setError(null);
       setMessage('');
     }
@@ -141,14 +147,19 @@ export function AccessoryEditor({ equipment, displayName, reduceMotion = false, 
       <section className={`shop-outfit-preview ${highlightCharacter ? 'feedback-pop' : ''}`} onAnimationEnd={(event) => { if (event.target === event.currentTarget) setHighlightCharacter(false); }} aria-label={`${displayName} ${content.character}`}>
       <CharacterStage equipment={preview} reduceMotion={reduceMotion} editor={{
         selectedID: draft.id,
+        priorityID,
         disabled: busy,
         onSelect: select,
+        onInteract: () => setPriorityID(null),
         onMove: (id, layout) => { setDraft((current) => ({ ...current, id, layout })); setMessage(''); },
       }} />
       </section>
       <section className="shop-outfit-settings" aria-label={content.editControls} tabIndex={0}>
       <label htmlFor="outfit-selected">{content.selectedAccessory}</label>
-      <select id="outfit-selected" value={available ? draft.id : ''} disabled={busy} onChange={(event) => select(event.target.value)}>
+      <select id="outfit-selected" value={available ? draft.id : ''} disabled={busy}
+        onPointerDown={(event) => { if (event.button === 0 && event.isPrimary !== false && available && !busy) setPriorityID(draft.id); }}
+        onKeyDown={(event) => { if (available && !busy && ['ArrowUp', 'ArrowDown', 'Home', 'End', 'Enter', ' '].includes(event.key)) setPriorityID(draft.id); }}
+        onChange={(event) => select(event.target.value, true)}>
         {!available && <option value="" disabled>{content.selectAccessory}</option>}
         {saved.accessories.map((item) => <option key={item.id} value={item.id}>{item.name_snapshot}</option>)}
       </select>

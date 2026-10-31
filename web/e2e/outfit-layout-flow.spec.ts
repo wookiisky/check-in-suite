@@ -94,6 +94,118 @@ async function rotateAccessory(page: Page, control: Locator, artwork: Locator) {
   await page.mouse.up();
 }
 
+// 坐标点击经过浏览器实际命中，手机项目同时检查触摸点击。
+async function clickStagePoint(page: Page, stage: Locator, x: number, y: number) {
+  await stage.scrollIntoViewIfNeeded();
+  const box = await stage.boundingBox();
+  expect(box).not.toBeNull();
+  const point = { x: box!.x + box!.width * x, y: box!.y + box!.height * y };
+  if (test.info().project.use.hasTouch) await page.touchscreen.tap(point.x, point.y);
+  else await page.mouse.click(point.x, point.y);
+}
+
+// 重选当前项不会产生 change，原生键盘操作仍须恢复一次优先操作。
+async function reselectCurrent(selection: Locator) {
+  const index = await selection.evaluate((element) => (element as HTMLSelectElement).selectedIndex);
+  await selection.focus();
+  await selection.press(index === 0 ? 'Home' : 'End');
+}
+
+test('点击切换饰品，下拉框为遮挡对象提供一次优先操作', async ({ page }, testInfo) => {
+  test.setTimeout(90_000);
+  await page.goto('/');
+  await page.getByLabel(content.account.username).fill('island-e2e');
+  await page.getByLabel(content.account.loginPassword).fill('Island-Test-2026');
+  await page.getByRole('button', { name: content.account.login, exact: true }).click();
+  await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
+  await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
+  await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
+  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+  const initial = await api<Camp>(page, '/camp');
+  for (const item of initial.equipment.accessories) await api(page, `/equipment/accessories/${item.id}`, 'DELETE');
+  for (const item of initial.equipment.effects) await api(page, `/equipment/effects/${item.id}`, 'DELETE');
+  const suffix = testInfo.project.name;
+  const earning = await api<{ id: string; version: number }>(page, '/management/tasks', 'POST', {
+    category_id: null, name: `饰品选择准备-${suffix}`, icon_key: 'book-v1',
+    coin_reward: Math.max(1, -initial.wallet.coins), diamond_reward: Math.max(1, -initial.wallet.diamonds),
+    daily_limit: 1, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true,
+  });
+  await api(page, '/checkins', 'POST', {
+    expected_today: initial.today, task_id: earning.id, expected_task_version: earning.version,
+    text: '', photo_media_id: null, audio_media_id: null,
+  });
+  const back = await buyFixture(page, { type: 'accessory', name: `后方饰品-${suffix}`, asset_key: 'accessory-star-v1' });
+  const front = await buyFixture(page, { type: 'accessory', name: `前方饰品-${suffix}`, asset_key: 'accessory-hat-v1' });
+  for (const item of [back, front]) await api(page, `/equipment/accessories/${item.id}`, 'PUT');
+  await api(page, `/equipment/accessories/${back.id}/layout`, 'PATCH', { x: 0.5, y: 0.5, size: 0.3, rotation: 0, before_id: null });
+  await api(page, `/equipment/accessories/${front.id}/layout`, 'PATCH', { x: 0.5, y: 0.5, size: 0.6, rotation: 0, before_id: null });
+  await page.reload();
+  await openWardrobe(page);
+  await page.getByRole('button', { name: shop.editOutfit, exact: true }).click();
+  const editor = page.getByRole('dialog', { name: shop.editOutfit, exact: true });
+  const selection = editor.getByLabel(shop.selectedAccessory, { exact: true });
+  const stage = editor.locator('.shop-character-stage');
+  const backHandle = stage.getByRole('button', { name: `${shop.selectAccessory} ${back.name_snapshot}`, exact: true });
+  const frontHandle = stage.getByRole('button', { name: `${shop.selectAccessory} ${front.name_snapshot}`, exact: true });
+  const backArt = stage.locator(`[data-purchase-id="${back.id}"]`);
+  const frontArt = stage.locator(`[data-purchase-id="${front.id}"]`);
+  await selection.selectOption(back.id);
+  await reselectCurrent(selection);
+  await clickStagePoint(page, stage, 0.5, 0.5);
+  await expect(selection).toHaveValue(back.id);
+  await expect(editor.getByRole('button', { name: shop.save, exact: true })).toBeDisabled();
+  // 消费一次优先后，已选后方饰品不能继续遮住前方饰品的点击区域。
+  await expect.poll(() => frontHandle.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === element;
+  })).toBe(true);
+  await clickStagePoint(page, stage, 0.5, 0.5);
+  await expect(selection).toHaveValue(front.id);
+
+  await selection.selectOption(back.id);
+  await reselectCurrent(selection);
+  // 优先只覆盖所选物体自己的范围，外侧仍能直接点击前方物体。
+  await clickStagePoint(page, stage, 0.75, 0.5);
+  await expect(selection).toHaveValue(front.id);
+  await selection.selectOption(back.id);
+  await clickStagePoint(page, stage, 0.5, 0.5);
+  await expect(selection).toHaveValue(back.id);
+  await expect.poll(() => frontHandle.evaluate((element) => Number(element.style.zIndex))).toBeGreaterThan(await backHandle.evaluate((element) => Number(element.style.zIndex)));
+  // 用真实指针打开原生下拉框后保持当前项，也能重新操作被遮挡的饰品。
+  await selection.click();
+  await page.keyboard.press('Enter');
+  await clickStagePoint(page, stage, 0.5, 0.5);
+  await expect(selection).toHaveValue(back.id);
+  await expect.poll(() => frontHandle.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === element;
+  })).toBe(true);
+  await reselectCurrent(selection);
+  await stage.scrollIntoViewIfNeeded();
+  await expect.poll(() => backHandle.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === element;
+  })).toBe(true);
+
+  // 拖动期间优先权已消费，但捕获必须让后续事件始终修改后方饰品。
+  await dragControl(page, backHandle, 12, 8);
+  await expect(selection).toHaveValue(back.id);
+  const movedLeft = await backArt.evaluate((element) => element.style.left);
+  expect(Number.parseFloat(movedLeft)).toBeGreaterThan(50);
+  await expect.poll(() => frontArt.evaluate((element) => element.style.left)).toBe('50%');
+  await clickStagePoint(page, stage, 0.5, 0.5);
+  const discard = page.getByRole('dialog', { name: shop.discardChanges, exact: true });
+  await expect(discard).toBeVisible();
+  await discard.getByRole('button', { name: shop.keepEditing, exact: true }).click();
+  await expect(selection).toHaveValue(back.id);
+  await expect.poll(() => backArt.evaluate((element) => element.style.left)).toBe(movedLeft);
+  await clickStagePoint(page, stage, 0.5, 0.5);
+  await expect(discard).toBeVisible();
+  await discard.getByRole('button', { name: shop.discard, exact: true }).click();
+  await expect(selection).toHaveValue(front.id);
+  await expect.poll(() => backArt.evaluate((element) => element.style.left)).toBe('50%');
+});
+
 // 两个浏览器项目都拖动素材与手柄，并通过真实保存、刷新和重装备核对结果。
 test('背景、可编辑饰品和固定特效在保存刷新后保持组合', async ({ page }, testInfo) => {
   test.setTimeout(90_000);

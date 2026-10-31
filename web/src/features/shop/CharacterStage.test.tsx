@@ -22,6 +22,88 @@ describe('饰品画布手势', () => {
   beforeEach(() => { restoreSurface = installAccessoryPointerSurface(); });
   afterEach(() => restoreSurface());
 
+  it('点击另一件饰品同步下拉框，但选中状态不改变主体命中顺序', () => {
+    const { move, image } = openEditor();
+    const other = screen.getByRole('button', { name: `${content.selectAccessory} 帽子` });
+    expect(Number(move.style.zIndex)).toBeLessThan(Number(other.style.zIndex));
+    fireEvent.click(other);
+    expect(screen.getByLabelText(content.selectedAccessory)).toHaveValue('second');
+    fireEvent.click(move);
+    expect(screen.getByLabelText(content.selectedAccessory)).toHaveValue(purchase.id);
+    expect(Number(move.style.zIndex)).toBeLessThan(Number(other.style.zIndex));
+    expect(image.style.left).toBe('50%');
+    expect(screen.getByRole('button', { name: content.save })).toBeDisabled();
+  });
+
+  it('下拉框给被遮挡饰品一次优先手势，恢复命中顺序后仍拖动原对象', () => {
+    const { move, image } = openEditor();
+    const selection = screen.getByLabelText(content.selectedAccessory);
+    const other = screen.getByRole('button', { name: `${content.selectAccessory} 帽子` });
+    fireEvent.change(selection, { target: { value: 'second' } });
+    fireEvent.change(selection, { target: { value: purchase.id } });
+    expect(Number(move.style.zIndex)).toBeGreaterThan(Number(other.style.zIndex));
+    dispatchAccessoryPointer(move, 'pointerdown', 150, 150);
+    expect(Number(move.style.zIndex)).toBeLessThan(Number(other.style.zIndex));
+    dispatchAccessoryPointer(move, 'pointermove', 180, 150);
+    dispatchAccessoryPointer(move, 'pointermove', 195, 150);
+    dispatchAccessoryPointer(move, 'pointerup', 195, 150);
+    fireEvent.click(move);
+    expect(selection).toHaveValue(purchase.id);
+    expect(image.style.left).toBe('65%');
+    expect(screen.getByAltText('帽子').style.left).toBe('20%');
+  });
+
+  it.each(['pointer', 'keyboard'])('通过下拉框%s操作同一项可以再次优先，空白操作不消耗', (input) => {
+    const { move, container } = openEditor();
+    const selection = screen.getByLabelText(content.selectedAccessory);
+    const other = screen.getByRole('button', { name: `${content.selectAccessory} 帽子` });
+    const activate = () => input === 'pointer'
+      ? dispatchAccessoryPointer(selection, 'pointerdown', 0, 0)
+      : fireEvent.keyDown(selection, { key: 'Enter' });
+    activate();
+    fireEvent.click(container.querySelector('.shop-character-stage')!);
+    expect(Number(move.style.zIndex)).toBeGreaterThan(Number(other.style.zIndex));
+    fireEvent.click(move);
+    expect(Number(move.style.zIndex)).toBeLessThan(Number(other.style.zIndex));
+    activate();
+    expect(Number(move.style.zIndex)).toBeGreaterThan(Number(other.style.zIndex));
+    fireEvent.click(other);
+    expect(selection).toHaveValue('second');
+    fireEvent.click(move);
+    expect(Number(move.style.zIndex)).toBeLessThan(Number(other.style.zIndex));
+  });
+
+  it('下拉框切换经草稿确认后才给目标优先，继续编辑保留原草稿', () => {
+    openEditor();
+    fireEvent.click(screen.getByRole('button', { name: `${content.selectAccessory} 帽子` }));
+    fireEvent.keyDown(screen.getByRole('button', { name: `${content.selectAccessory} 帽子` }), { key: 'ArrowRight' });
+    fireEvent.change(screen.getByLabelText(content.selectedAccessory), { target: { value: purchase.id } });
+    fireEvent.click(screen.getByRole('button', { name: content.keepEditing }));
+    expect(screen.getByLabelText(content.selectedAccessory)).toHaveValue('second');
+    expect(Number.parseFloat(screen.getByAltText('帽子').style.left)).toBeCloseTo(21);
+    fireEvent.change(screen.getByLabelText(content.selectedAccessory), { target: { value: purchase.id } });
+    fireEvent.click(screen.getByRole('button', { name: content.discard }));
+    const selected = screen.getByRole('button', { name: `${content.selectAccessory} ${purchase.name_snapshot}` });
+    const other = screen.getByRole('button', { name: `${content.selectAccessory} 帽子` });
+    expect(Number(selected.style.zIndex)).toBeGreaterThan(Number(other.style.zIndex));
+    expect(screen.getByAltText('帽子').style.left).toBe('20%');
+    fireEvent.click(selected);
+    expect(Number(selected.style.zIndex)).toBeLessThan(Number(other.style.zIndex));
+  });
+
+  it('取消首次手势恢复布局，但不恢复已用掉的优先机会', () => {
+    const { move, image } = openEditor();
+    dispatchAccessoryPointer(screen.getByLabelText(content.selectedAccessory), 'pointerdown', 0, 0);
+    const other = screen.getByRole('button', { name: `${content.selectAccessory} 帽子` });
+    expect(Number(move.style.zIndex)).toBeGreaterThan(Number(other.style.zIndex));
+    dispatchAccessoryPointer(move, 'pointerdown', 150, 150);
+    dispatchAccessoryPointer(move, 'pointermove', 180, 150);
+    dispatchAccessoryPointer(move, 'pointercancel', 180, 150);
+    expect(image.style.left).toBe('50%');
+    expect(Number(move.style.zIndex)).toBeLessThan(Number(other.style.zIndex));
+    expect(screen.getByRole('button', { name: content.save })).toBeDisabled();
+  });
+
   it('鼠标拖动主体、角点和旋转手柄，提交同一份几何与层级', async () => {
     const request = vi.fn().mockResolvedValue(outfit);
     const { image, move, resize, rotate } = openEditor(request);

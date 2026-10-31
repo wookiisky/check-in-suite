@@ -11,8 +11,10 @@ import { HumanCharacterArtwork, isHumanAvatar } from '../character/HumanCharacte
 // 编辑交互与图片展示共用同一画布，固定背景和特效不参与选择。
 export interface StageEditor {
   selectedID: string; // 当前编辑饰品。
+  priorityID: string | null; // 下拉框授予一次操作优先权的饰品。
   disabled: boolean; // 保存时冻结手势与键盘修改。
   onSelect: (id: string) => boolean; // 脏草稿切换需要确认时不启动拖动。
+  onInteract: () => void; // 有效画布操作开始后消耗下拉框优先权。
   onMove: (id: string, layout: AccessoryLayout) => void; // 仅更新本地草稿。
 }
 
@@ -69,7 +71,7 @@ export function CharacterStage({ equipment, reduceMotion = false, editor }: {
   }
   // 捕获当前手指或鼠标，未完成草稿确认时不开始新手势。
   function start(event: PointerEvent<HTMLButtonElement>, id: string, mode: TransformMode = 'move', corner: ResizeCorner = 'se') {
-    if (!editor || editor.disabled || event.button !== 0 || drag.current || !editor.onSelect(id)) return;
+    if (!editor || editor.disabled || event.button !== 0 || event.isPrimary === false || drag.current || !editor.onSelect(id)) return;
     const bounds = stage.current?.getBoundingClientRect();
     if (!bounds?.width) return;
     event.preventDefault();
@@ -77,6 +79,7 @@ export function CharacterStage({ equipment, reduceMotion = false, editor }: {
     const layout = accessoryLayout(equipment, id);
     event.currentTarget.setPointerCapture(event.pointerId);
     drag.current = { id, pointerID: event.pointerId, clientX: event.clientX, clientY: event.clientY, width: bounds.width, centerX: bounds.left + layout.x * bounds.width, centerY: bounds.top + layout.y * bounds.width, layout, mode, corner, element: event.currentTarget };
+    editor.onInteract();
   }
   // 屏幕位移换算为归一化坐标，不依赖设备像素密度。
   function move(event: PointerEvent<HTMLButtonElement>) {
@@ -108,12 +111,13 @@ export function CharacterStage({ equipment, reduceMotion = false, editor }: {
   }
   // 每种画布操作都保留键盘入口，Home和End提供缩放与角度的基准。
   function keyTransform(event: KeyboardEvent<HTMLButtonElement>, id: string, mode: TransformMode) {
-    if (!editor || editor.disabled) return;
+    if (!editor || editor.disabled || drag.current) return;
     const delta = { ArrowLeft: [-0.01, 0], ArrowRight: [0.01, 0], ArrowUp: [0, -0.01], ArrowDown: [0, 0.01] }[event.key];
     const reset = mode !== 'move' && event.key === 'Home';
     const maximum = mode === 'resize' && event.key === 'End';
     if ((!delta && !reset && !maximum) || !editor.onSelect(id)) return;
     event.preventDefault();
+    editor.onInteract();
     let layout = accessoryLayout(equipment, id);
     if (mode === 'move' && delta) layout = { ...layout, x: layout.x + delta[0]!, y: layout.y + delta[1]! };
     else if (mode === 'resize') layout = { ...layout, size: reset ? 0.05 : maximum ? 1 : layout.size + delta![0]! - delta![1]! };
@@ -129,9 +133,10 @@ export function CharacterStage({ equipment, reduceMotion = false, editor }: {
     {equipment.effects.map((item) => <img key={item.id} className="shop-effect-art" style={{ zIndex: effectLayer }} src={assetURL(portraitAssetKey(item), staticMotion)} alt={item.name_snapshot} draggable={false} />)}
     {editor && equipment.accessories.map((item) => <button
       type="button" key={item.id} className="shop-accessory-handle"
-      style={layoutStyle(accessoryLayout(equipment, item.id), handleLayer + (editor.selectedID === item.id ? order.length : order.indexOf(item.id)))}
+      style={layoutStyle(accessoryLayout(equipment, item.id), handleLayer + (editor.priorityID === item.id ? order.length : order.indexOf(item.id)))}
       aria-label={`${content.selectAccessory} ${item.name_snapshot}`} aria-pressed={editor.selectedID === item.id} disabled={editor.disabled}
-      onClick={() => editor.onSelect(item.id)}
+      // 指针已在按下时选中；忽略随后生成的click，防止优先权消耗后再次切换。
+      onClick={(event) => { if (event.detail === 0 && !editor.disabled && !drag.current && editor.onSelect(item.id)) editor.onInteract(); }}
       onPointerDown={(event) => start(event, item.id)} onPointerMove={move}
       onPointerUp={(event) => finish(event, false)} onPointerCancel={(event) => finish(event, true)}
       onLostPointerCapture={(event) => finish(event, true)}
