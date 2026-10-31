@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ShopPage } from './ShopPage';
+import { BackpackPage } from './BackpackPage';
+import { WardrobeDialog } from './WardrobeDialog';
 import { CharacterPanel } from './CharacterPanel';
 import { canBuy } from './helpers';
 import { camp, product, purchase, wallet } from './test-fixtures';
@@ -24,8 +26,8 @@ describe('小岛商店与多件所有权', () => {
     expect(canBuy({ ...tree, repeatable: false }, wallet)).toBe(false);
   });
 
-  it('小岛建设包含双用途商品，购买后进入小岛物品且不自动装备', async () => {
-    const onIsland = vi.fn();
+  it('营地分类包含双用途商品，购买后留在该分类且不自动装备', async () => {
+    const onBackpack = vi.fn();
     const request = vi.fn().mockImplementation(async (path: string) => {
       if (path === '/camp') return camp;
       if (path === '/products') return { items: [tree, book, product] };
@@ -33,17 +35,17 @@ describe('小岛商店与多件所有权', () => {
       if (path.startsWith('/purchases?')) return { items: [treePurchase], next_cursor: null };
       throw new Error(`Unexpected request ${path}`);
     });
-    render(<ShopPage client={{ request }} session={session} onIsland={onIsland} />);
-    fireEvent.click(screen.getByRole('button', { name: content.construction }));
+    render(<ShopPage client={{ request }} session={session} onBackpack={onBackpack} />);
+    fireEvent.click(screen.getByRole('tab', { name: content.categoryGroups.island }));
     await screen.findByRole('button', { name: `${content.buy} ${tree.name}` });
     expect(screen.getByRole('button', { name: `${content.buy} ${book.name}` })).toBeEnabled();
     expect(screen.queryByRole('button', { name: `${content.buy} ${product.name}` })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: `${content.buy} ${tree.name}` }));
     fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
-    await screen.findByRole('button', { name: content.goToIsland });
-    expect(screen.getByRole('button', { name: content.islandInventory })).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(screen.getByRole('button', { name: content.goToIsland }));
-    expect(onIsland).toHaveBeenCalledOnce();
+    await screen.findByText(content.islandPurchased);
+    expect(screen.getByRole('tab', { name: content.categoryGroups.island })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('button', { name: `${content.buy} ${tree.name}` })).toBeEnabled();
+    expect(onBackpack).not.toHaveBeenCalled();
     expect(request.mock.calls.some(([path]) => String(path).startsWith('/equipment'))).toBe(false);
   });
 
@@ -54,8 +56,7 @@ describe('小岛商店与多件所有权', () => {
       if (path.startsWith('/purchases?')) return { items: [treePurchase, bookPurchase], next_cursor: null };
       return {};
     });
-    render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
+    render(<WardrobeDialog client={{ request }} session={session} onClose={vi.fn()} />);
     await screen.findByRole('button', { name: `${content.equip} ${book.name}` });
     expect(screen.queryByRole('button', { name: `${content.equip} ${tree.name}` })).not.toBeInTheDocument();
   });
@@ -67,10 +68,10 @@ describe('小岛商店与多件所有权', () => {
       if (path.includes('cursor=')) return { items: [treePurchase], next_cursor: null };
       return { items: [purchase], next_cursor: 'next' };
     });
-    render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.islandInventory }));
+    render(<BackpackPage client={{ request }} session={session} onBack={vi.fn()} onIsland={vi.fn()} onWardrobe={vi.fn()} />);
+    fireEvent.click(screen.getByRole('tab', { name: content.categoryGroups.island }));
     const more = await screen.findByRole('button', { name: content.more });
-    expect(screen.queryByText(content.emptyPurchases)).not.toBeInTheDocument();
+    expect(screen.queryByText(content.emptyCategoryPurchases)).not.toBeInTheDocument();
     fireEvent.click(more);
     await screen.findByText(tree.name);
   });
@@ -83,8 +84,7 @@ describe('小岛商店与多件所有权', () => {
       if (path === `/equipment/accessories/${portrait.id}`) return {};
       throw new Error(`Unexpected request ${path}`);
     });
-    render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
+    render(<WardrobeDialog client={{ request }} session={session} onClose={vi.fn()} />);
     fireEvent.change(screen.getByRole('combobox', { name: content.typeFilter }), { target: { value: 'accessory' } });
     const equip = await screen.findByRole('button', { name: `${content.equip} ${portrait.name_snapshot}` });
     expect(screen.getByRole('img', { name: content.baseAvatarNames['avatar-boy-v2'] })).toHaveAttribute('data-base-avatar', 'avatar-boy-v2');

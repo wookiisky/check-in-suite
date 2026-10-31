@@ -39,7 +39,7 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
     if (route === 'calendar') await expect(page.locator('.calendar-day').first()).toBeVisible();
     if (route === 'camp') { await expect(page.getByRole('heading', { name: checkin.todayTasks })).toBeVisible(); await expect(page.getByRole('heading', { name: family.title })).toBeVisible(); }
     if (route === 'stats') await expect(page.locator('.reports-summary')).toBeVisible();
-    if (route === 'shop') await expect(page.locator('.shop-wallet')).toBeVisible();
+    if (route === 'shop') await expect(page.locator('.global-wallet')).toBeVisible();
     if (route === 'achievements') await expect(page.locator('.achievement-grid')).toBeVisible();
     await audit(route);
     if (route === 'camp') {

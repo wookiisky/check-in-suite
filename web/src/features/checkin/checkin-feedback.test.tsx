@@ -36,15 +36,11 @@ describe('打卡奖励反馈', () => {
       expect(screen.getByText('+3')).toBeVisible();
       expect(view.container.querySelectorAll('.checkin-reward-coins .checkin-reward-particle')).toHaveLength(7);
       expect(view.container.querySelectorAll('.checkin-reward-diamonds .checkin-reward-particle')).toHaveLength(3);
-      await waitFor(() => expect(within(screen.getByLabelText(content.balance)).getByText('500')).toHaveClass('feedback-pop'));
       expect(success).toHaveBeenCalledTimes(1);
       expect(success.mock.calls[0]![0].detail).toEqual({ recordId: confirmed.id, coins: 7, diamonds: 3 });
-      const balanceBeforeRefresh = within(screen.getByLabelText(content.balance)).getByText('500');
-      fireEvent.animationEnd(balanceBeforeRefresh);
       walletVersion = 3;
       fireEvent.click(screen.getByRole('button', { name: content.previousDay }));
       await waitFor(() => expect(task).toBeEnabled());
-      expect(within(screen.getByLabelText(content.balance)).getByText('500')).toBe(balanceBeforeRefresh);
       await waitFor(() => expect(task).toBeEnabled());
       fireEvent.click(task);
       fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: content.checkin }));

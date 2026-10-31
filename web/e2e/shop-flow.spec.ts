@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
+import { openBackpack, openWardrobe, selectShopCategory } from './shop-navigation';
 import type { components } from '../src/api/schema';
 
 type Camp = components['schemas']['CampResponse'];
@@ -88,6 +89,9 @@ test('真实商店购买恢复、十件装扮与逐次密码兑现', async ({ pa
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   if (process.env.ISLAND_CAPTURE_PREVIEWS) await avatarCard.screenshot({ path: `.local/previews/shop-card-${testInfo.project.name}.png` });
 
+  await page.getByRole('tablist', { name: shop.categoryGroupLabel, exact: true }).getByRole('tab', { name: shop.categoryGroups.appearance, exact: true }).click();
+  await page.getByRole('tablist', { name: shop.categoryDetailLabel, exact: true }).getByRole('tab', { name: shop.types.avatar, exact: true }).click();
+
   let dropped = false;
   const keys: string[] = [];
   await page.route('**/api/v1/purchases', async (route) => {
@@ -103,6 +107,10 @@ test('真实商店购买恢复、十件装扮与逐次密码兑现', async ({ pa
   await page.getByRole('button', { name: shop.recoverPurchase, exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: shop.recoverPurchase, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: shop.categoryGroups.appearance, exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tab', { name: shop.types.avatar, exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(avatarCard.getByRole('button', { name: `${shop.buy} ${name}`, exact: true })).toBeDisabled();
+  await expect(avatarCard.getByRole('img', { name: shop.ownedCount, exact: true }).locator('..')).toHaveText('1');
   expect(keys).toHaveLength(2);
   expect(keys[0]).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   expect(keys[0]).toBe(keys[1]);
@@ -113,6 +121,7 @@ test('真实商店购买恢复、十件装扮与逐次密码兑现', async ({ pa
   expect(purchasedCamp.wallet.diamonds).toBe(before.wallet.diamonds - 2);
   const purchases = await api(page, '/purchases?status=owned') as { items: Purchase[] };
   expect(purchases.items.filter((item) => item.product_id === avatar.id)).toHaveLength(1);
+  await openWardrobe(page);
   await page.getByRole('button', { name: `${shop.equip} ${name}`, exact: true }).click();
   await expect(page.getByRole('button', { name: `${shop.unequip} ${name}`, exact: true })).toBeEnabled();
   for (const item of accessories.slice(0, 10)) {
@@ -120,21 +129,24 @@ test('真实商店购买恢复、十件装扮与逐次密码兑现', async ({ pa
     await expect(page.getByRole('button', { name: `${shop.unequip} ${item.name_snapshot}`, exact: true })).toBeEnabled();
   }
   await expect(page.getByRole('button', { name: `${shop.equip} ${accessories[10]!.name_snapshot}`, exact: true })).toBeDisabled();
-  await expect(page.locator('.shop-character .shop-accessory-art')).toHaveCount(10);
+  await expect(page.getByRole('dialog', { name: shop.wardrobeTitle, exact: true }).locator('.shop-character .shop-accessory-art')).toHaveCount(10);
   const equipment = (await api(page, '/camp') as Camp).equipment;
   expect(equipment.accessories).toHaveLength(10);
   expect(equipment.avatar?.product_id).toBe(avatar.id);
-  const art = await page.locator('.shop-character img').evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0));
+  const art = await page.getByRole('dialog', { name: shop.wardrobeTitle, exact: true }).locator('.shop-character img').evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0));
   expect(art).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.locator('.shop-character').screenshot({ path: `.local/previews/wardrobe-${testInfo.project.name}.png` });
+  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.getByRole('dialog', { name: shop.wardrobeTitle, exact: true }).locator('.shop-character').screenshot({ path: `.local/previews/wardrobe-${testInfo.project.name}.png` });
 
   // 每次兑现打开空密码表单；购买及兑现都不自动获得管理授权。
   for (let index = 0; index < 2; index++) {
-    await page.getByRole('button', { name: shop.browse, exact: true }).click();
+    await selectShopCategory(page, 'reward');
     await page.getByRole('button', { name: `${shop.buy} ${reward.name}`, exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: shop.categoryGroups.reward, exact: true })).toHaveAttribute('aria-selected', 'true');
+    await openBackpack(page);
+    await page.getByRole('tablist', { name: shop.categoryGroupLabel, exact: true }).getByRole('tab', { name: shop.categoryGroups.reward, exact: true }).click();
     await page.getByRole('button', { name: `${shop.redeem} ${reward.name}`, exact: true }).click();
     await expect(page.getByLabel(shop.redeemPassword)).toHaveValue('');
     await page.getByLabel(shop.redeemPassword).fill('Manage-Test-2026');

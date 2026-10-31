@@ -62,7 +62,7 @@ test('币种只显示图标，表单与成就指标保留可访问名称', async
   await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
   for (const route of ['camp', 'shop', 'island'] as const) {
     await page.getByRole('button', { name: content.navigation[route], exact: true }).click();
-    const wallet = page.locator(route === 'island' ? '.island-wallet' : route === 'shop' ? '.shop-wallet' : '.checkin-wallet');
+    const wallet = page.locator(route === 'island' ? '.island-wallet' : '.global-wallet');
     await expect(wallet).toBeVisible();
     await expect(wallet).not.toContainText(/金币|钻石/);
     const images = wallet.locator('img');

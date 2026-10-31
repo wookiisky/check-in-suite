@@ -41,7 +41,7 @@ test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, 
   await expect(page.locator('.checkin-reward-coins .checkin-reward-particle')).toHaveCount(7);
   await expect(page.locator('.checkin-reward-diamonds .checkin-reward-particle')).toHaveCount(3);
   await expect(page.locator('.checkin-reward-diamonds')).toHaveClass(/checkin-reward-featured/);
-  await expect(page.getByLabel(checkin.balance).locator('strong.feedback-pop')).toHaveCount(2);
+  await expect(page.locator('.global-wallet strong.feedback-pop')).toHaveCount(2);
   await expect.poll(async () => (await feedbackAudioState(page)).notes).toBeGreaterThan(0);
   const playedAudio = await feedbackAudioState(page);
   expect(playedAudio.notes).toBe(7 + 3 * 2 + 2);
@@ -65,7 +65,7 @@ test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, 
   await page.getByLabel(family.reduceMotion, { exact: true }).click();
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'false');
   await closeConfigurationSettings(page);
-  await expect(page.getByLabel(checkin.balance).locator('strong.feedback-pop')).toHaveCount(0);
+  await expect(page.locator('.global-wallet strong.feedback-pop')).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'true');
   await task.click();
@@ -78,7 +78,7 @@ test('打卡动效、静态反馈和用户手势后的音效', async ({ page }, 
   expect(notesAfterReducedCheckin).toBe(playedAudio.notes * 2);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'false');
-  await expect(page.getByLabel(checkin.balance).locator('strong.feedback-pop')).toHaveCount(0);
+  await expect(page.locator('.global-wallet strong.feedback-pop')).toHaveCount(0);
 
   await openConfigurationSettings(page);
   await page.getByLabel(family.effects, { exact: true }).click();

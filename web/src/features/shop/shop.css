@@ -16,7 +16,7 @@
 }
 .shop-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 24px;
 }
 .shop-card {
@@ -108,26 +108,6 @@
 .shop-price img {
   width: 28px;
   height: 28px;
-}
-.shop-wallet {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  align-items: center;
-  padding: 20px;
-  border: 2px solid #e3d6ae;
-  border-radius: 20px;
-  background: var(--gold);
-  box-shadow: 0 6px 0 #dfcf9f;
-}
-.shop-wallet .shop-price {
-  font-size: 30px;
-  font-weight: 750;
-}
-.shop-wallet .shop-price img {
-  width: 34px;
-  height: 34px;
 }
 .shop-hint {
   color: var(--muted);
@@ -459,3 +439,102 @@
 .shop-base-avatar-art { display: block; width: 5rem; height: 5rem; }
 .shop-avatar-art[data-base-avatar] { width: 90%; height: 90%; }
 .shop-product-row > svg { width: 100px; height: 100px; }
+
+/* 两级分类只在各自栏内横向滚动，商品区始终跟随页面宽度。 */
+.shop-page-heading,
+.backpack-page-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.shop-categories,
+.shop-category-panel {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.shop-category-tabs {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 4px 4px 8px;
+  scroll-padding-inline: 4px;
+  overscroll-behavior-x: contain;
+}
+.shop-category-tabs [role='tab'] {
+  flex: 0 0 auto;
+  min-height: 56px;
+  padding: 12px 20px;
+  white-space: nowrap;
+  border-color: transparent;
+  border-radius: 16px 16px 4px 4px;
+  box-shadow: none;
+  background: transparent;
+  color: var(--muted);
+  transition: none;
+}
+.shop-category-groups {
+  border-bottom: 2px solid var(--line);
+}
+.shop-category-tabs [role='tab'][aria-selected='true'] {
+  color: var(--forest-dark);
+  background: var(--line);
+  border-bottom-color: var(--forest);
+}
+.shop-category-details [role='tab'] {
+  border-radius: 16px;
+}
+.shop-category-tabs.shop-category-details [role='tab'][aria-selected='true'] {
+  color: var(--paper);
+  background: var(--forest);
+}
+.camp-character-panel {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.camp-character-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.camp-character-actions button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 12px 8px;
+}
+.camp-character-actions img {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.camp-character-actions span {
+  white-space: nowrap;
+}
+.island-dialog:has(.shop-wardrobe-dialog) {
+  width: min(1120px, calc(100% - 32px));
+}
+.shop-wardrobe-dialog {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.shop-wardrobe-dialog .shop-wardrobe-layout > section {
+  min-width: 0;
+}
+.shop-wardrobe-dialog .shop-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+}
+@media (max-width: 600px) {
+  .shop-category-tabs [role='tab'] { padding-inline: 16px; }
+  .shop-wardrobe-dialog .shop-character-stage { width: min(100%, 240px); }
+  .shop-page-heading h1,
+  .backpack-page-heading h1 { flex: 1 1 auto; }
+}

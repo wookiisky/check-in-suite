@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
+import { openBackpack, openWardrobe } from './shop-navigation';
 import island from '../src/features/island/content.json' with { type: 'json' };
 import type { components } from '../src/api/schema';
 
@@ -67,22 +68,22 @@ test('二维小岛支持多件购买、视图操作、布置恢复与室内活�
   expect(book.type).toBe('accessory');
   await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
   for (let count = 0; count < 2; count += 1) {
-    await page.getByRole('button', { name: shop.construction, exact: true }).click();
+    await page.getByRole('tab', { name: shop.categoryGroups.island, exact: true }).click();
     await page.getByRole('button', { name: `${shop.buy} ${tree.name}`, exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: shop.islandInventory, exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('tab', { name: shop.categoryGroups.island, exact: true })).toHaveAttribute('aria-selected', 'true');
   }
   const owned = await api<IslandState>(page, '/island');
   const added = owned.inventory.filter((item) => !initial.inventory.some((previous) => previous.id === item.id));
   expect(added.filter((item) => item.item_key === 'tree')).toHaveLength(2);
   if (!owned.inventory.some((item) => item.item_key === 'book')) {
-    await page.getByRole('button', { name: shop.construction, exact: true }).click();
+    await page.getByRole('tab', { name: shop.categoryGroups.island, exact: true }).click();
     await page.getByRole('button', { name: `${shop.buy} ${book.name}`, exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
-  await page.getByRole('button', { name: shop.construction, exact: true }).click();
+  await page.getByRole('tab', { name: shop.categoryGroups.island, exact: true }).click();
   await page.getByRole('button', { name: `${shop.buy} ${ball.name}`, exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -94,10 +95,10 @@ test('二维小岛支持多件购买、视图操作、布置恢复与室内活�
   }
   await api(page, `/equipment/accessories/${ownedBook.id}`, 'PUT');
   expect((await api<Camp>(page, '/camp')).equipment.accessories.some((item) => item.id === ownedBook.id)).toBe(true);
-  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
+  await openWardrobe(page);
   await expect(page.getByRole('button', { name: `${shop.unequip} ${book.name}`, exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: `${shop.equip} ${ball.name}`, exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: shop.islandInventory, exact: true }).click();
+  await openBackpack(page);
   await page.getByRole('button', { name: shop.goToIsland, exact: true }).click();
   await expect(page.getByRole('heading', { name: island.title, exact: true })).toBeVisible();
   const scene = page.getByRole('group', { name: island.scene, exact: true });

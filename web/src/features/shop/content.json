@@ -5,7 +5,7 @@
   "construction": "营地建设",
   "islandInventory": "我的营地物品",
   "goToIsland": "前往营地布置",
-  "islandPurchased": "购买成功，物品已放入营地物品中。",
+  "islandPurchased": "购买成功，物品已放入背包，可前往营地布置。",
   "islandPurchaseHint": "购买后不会自动摆放，可到营地的布置模式中使用。",
   "dualUseHint": "可同时用于画像与营地，两处分别保存。",
   "repeatableHint": "每次购买增加一件，可分别摆放。",
@@ -53,8 +53,8 @@
   "purchasing": "正在购买……",
   "refreshOffer": "加载最新价格和余额",
   "reviewOffer": "价格、库存或余额已变化，请核对后重新确认。",
-  "purchaseSuccess": "购买成功，请到我的装扮选择装备。",
-  "rewardPurchased": "奖励购买成功，可在我的奖励中兑现。",
+  "purchaseSuccess": "购买成功，已放入背包，可在形象装扮中装备。",
+  "rewardPurchased": "奖励购买成功，可在背包中兑现。",
   "purchaseClosed": "该商品已不可购买。",
   "noAutoEquip": "购买后不会自动装备。",
   "equip": "装备",
@@ -160,5 +160,19 @@
   },
   "freeBaseAvatar": "免费使用",
   "wearableHint": "固定穿戴在对应部位，同部位装备新物品时会替换。",
-  "animalWearableHint": "发型和服装仅在人类形象上显示，切回人类后恢复。"
+  "animalWearableHint": "发型和服装仅在人类形象上显示，切回人类后恢复。",
+  "backpack": "背包",
+  "wardrobeTitle": "形象装扮",
+  "backHome": "返回首页",
+  "categoryGroups": {
+    "all": "全部",
+    "appearance": "角色装扮",
+    "island": "营地物品",
+    "reward": "奖励"
+  },
+  "categoryGroupLabel": "商品分类",
+  "categoryDetailLabel": "装扮分类",
+  "emptyCategoryProducts": "这个分类暂时没有商品。",
+  "emptyCategoryPurchases": "这个分类还没有已购买的物品。",
+  "equipmentRefreshFailed": "装扮已保存，首页形象暂未刷新，请重新打开形象装扮查看。"
 }

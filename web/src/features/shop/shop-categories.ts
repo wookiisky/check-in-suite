@@ -35,3 +35,19 @@ export function matchesAssetCategory(asset: Asset, category: ShopCategory): bool
 export function categoryPurchaseType(category: string): string {
   return isWearableSlot(category) ? 'accessory' : category;
 }
+
+// 展示分组按当前用途归类，订单类型继续保留成交事实。
+export interface CategoryFilter {
+  group: 'all' | 'appearance' | 'island' | 'reward'; // 一级用途。
+  category: ShopCategory | ''; // 装扮下的具体部位或类型。
+}
+
+// 双用途商品可同时出现在营地与装扮分类中。
+export function matchesCategory(item: Product | Purchase, filter: CategoryFilter): boolean {
+  if (filter.group === 'all') return true;
+  if (filter.group === 'island') return Boolean(item.island_item_key);
+  const originalType = 'type_snapshot' in item ? item.type_snapshot : item.type;
+  if (filter.group === 'reward') return originalType === 'reward';
+  const category = itemCategory(item, true);
+  return category !== null && (!filter.category || category === filter.category);
+}

@@ -4,7 +4,7 @@ import type { Session } from '../../api/types';
 import { testSession } from '../../test/account-fixtures';
 import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
 import { ShopPage } from './ShopPage';
-import { camp, equipment, product, purchase } from './test-fixtures';
+import { camp, product, purchase } from './test-fixtures';
 import content from './content.json';
 
 const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
@@ -70,7 +70,7 @@ describe('商店页面读取与动作边界', () => {
     expect(buy).not.toHaveTextContent(reason);
   });
 
-  it('购买成功切换我的装扮；后续读取失败只重试读取，不重复购买或自动装备', async () => {
+  it('购买后保留两级分类；读取失败只重读，不重复购买或自动装备', async () => {
     const feedback = vi.fn();
     window.addEventListener(FEEDBACK_EVENT, feedback);
     let purchased = false;
@@ -87,18 +87,21 @@ describe('商店页面读取与动作边界', () => {
         }
         return camp;
       }
-      if (path === '/products') return { items: [product] };
-      if (path.startsWith('/purchases?')) return { items: [purchase], next_cursor: null };
+      if (path === '/products') return { items: [{ ...product, owned: purchased, owned_count: purchased ? 1 : 0 }] };
       throw new Error(`Unexpected path ${path}`);
     });
     render(<ShopPage client={{ request }} session={session} />);
-    const buy = await screen.findByRole('button', { name: `${content.buy} ${product.name}` });
-    expect(feedback).not.toHaveBeenCalled();
-    fireEvent.click(buy);
+    await screen.findByRole('button', { name: `${content.buy} ${product.name}` });
+    fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
+    fireEvent.click(screen.getByRole('tab', { name: content.types.accessory }));
+    fireEvent.click(screen.getByRole('button', { name: `${content.buy} ${product.name}` }));
     fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
     await screen.findByText(content.purchaseSuccess);
     fireEvent.click(await screen.findByRole('button', { name: content.reload }));
-    await screen.findByRole('button', { name: `${content.equip} ${purchase.name_snapshot}` });
+    await waitFor(() => expect(screen.getByRole('button', { name: `${content.buy} ${product.name}` })).toBeDisabled());
+    expect(screen.getByRole('tab', { name: '角色装扮' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: content.types.accessory })).toHaveAttribute('aria-selected', 'true');
+    expect(within(screen.getByRole('article')).getByRole('img', { name: content.ownedCount }).parentElement).toHaveTextContent('1');
     expect(request.mock.calls.filter(([path]) => path === '/purchases')).toHaveLength(1);
     expect(feedback).toHaveBeenCalledTimes(1);
     expect(feedback.mock.calls[0]?.[0].detail).toBe('purchase');
@@ -107,107 +110,50 @@ describe('商店页面读取与动作边界', () => {
     expect(request.mock.calls.some(([path]) => String(path).startsWith('/equipment'))).toBe(false);
   });
 
-  it('奖励列表提示尚未加载完并按原筛选取下一页', async () => {
-    const reward = { ...purchase, type_snapshot: 'reward', status: 'pending' };
+  it.each([
+    { type: 'reward' as const, group: '奖励', message: content.rewardPurchased, island_item_key: undefined },
+    { type: 'island' as const, group: '营地物品', message: content.islandPurchased, island_item_key: 'book' },
+  ])('$group 购买后仍在当前商店分类', async ({ type, group, message, island_item_key }) => {
+    let purchased = false;
+    const item = { ...product, type, island_item_key, repeatable: true };
     const request = vi.fn().mockImplementation(async (path: string) => {
       if (path === '/camp') return camp;
-      if (path === '/products') return { items: [] };
-      if (path.includes('cursor='))
-        return { items: [{ ...reward, id: 'p2', name_snapshot: '第二个奖励' }], next_cursor: null };
-      return { items: [reward], next_cursor: 'next-page' };
-    });
-    render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.rewards }));
-    fireEvent.click(await screen.findByRole('button', { name: content.more }));
-    await screen.findByText('第二个奖励');
-    expect(
-      request.mock.calls.some(
-        ([path]) => path === '/purchases?type=reward&status=pending&cursor=next-page',
-      ),
-    ).toBe(true);
-    expect(screen.queryByRole('button', { name: content.more })).not.toBeInTheDocument();
-  });
-
-  it('饰品装备只写指定物品，失败后不移除其他装备', async () => {
-    const feedback = vi.fn();
-    window.addEventListener(FEEDBACK_EVENT, feedback);
-    const equipped = { ...purchase, id: 'existing', name_snapshot: '已有饰品' };
-    const extra = { ...purchase, id: 'extra', name_snapshot: '新饰品' };
-    const request = vi.fn().mockImplementation(async (path: string) => {
-      if (path === '/camp')
-        return { ...camp, equipment: { ...equipment, accessories: [equipped], accessory_layouts: { [equipped.id]: { x: 0.5, y: 0.5, size: 0.2, layer: 1 } } } };
-      if (path === '/products') return { items: [] };
-      if (path.startsWith('/purchases?')) return { items: [equipped, extra], next_cursor: null };
-      if (path === '/equipment/accessories/extra') throw new TypeError('offline');
+      if (path === '/products') return { items: [{ ...item, owned_count: purchased ? 1 : 0 }] };
+      if (path === '/purchases') {
+        purchased = true;
+        return { purchase: { ...purchase, type_snapshot: type, island_item_key }, wallet: camp.wallet };
+      }
       throw new Error(`Unexpected path ${path}`);
     });
     render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
-    fireEvent.click(await screen.findByRole('button', { name: `${content.equip} 新饰品` }));
-    await screen.findByRole('button', { name: content.reload });
-    expect(screen.getByRole('button', { name: `${content.unequip} 已有饰品` })).toBeEnabled();
-    expect(feedback).not.toHaveBeenCalled();
-    window.removeEventListener(FEEDBACK_EVENT, feedback);
-    expect(request.mock.calls.filter(([path]) => String(path).startsWith('/equipment'))).toEqual([
-      ['/equipment/accessories/extra', { method: 'PUT' }],
-    ]);
+    await screen.findByRole('heading', { name: item.name });
+    fireEvent.click(screen.getByRole('tab', { name: group }));
+    fireEvent.click(screen.getByRole('button', { name: `${content.buy} ${item.name}` }));
+    fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
+    await screen.findByText(message);
+    await waitFor(() => expect(within(screen.getByRole('article')).getByRole('img', { name: content.ownedCount }).parentElement).toHaveTextContent('1'));
+    expect(screen.getByRole('tab', { name: group })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(request.mock.calls.some(([path]) => String(path).startsWith('/purchases?'))).toBe(false);
   });
 
-  it('背景使用独立槽位，特效逐件装备并保留原饰品', async () => {
-    const feedback = vi.fn();
-    window.addEventListener(FEEDBACK_EVENT, feedback);
-    const background = { ...purchase, id: 'bg', type_snapshot: 'background' as const, name_snapshot: '草地背景' };
-    const effect = { ...purchase, id: 'effect', type_snapshot: 'effect' as const, name_snapshot: '雪花特效' };
-    const request = vi.fn().mockImplementation(async (path: string) => {
-      if (path === '/camp') return { ...camp, equipment: { ...equipment, accessories: [purchase], accessory_layouts: { [purchase.id]: { x: 0.5, y: 0.5, size: 0.2, layer: 1 } } } };
-      if (path === '/products') return { items: [] };
-      if (path.startsWith('/purchases?')) return { items: [background, effect], next_cursor: null };
-      return {};
-    });
+  it('商店分类只显示对应用途商品并保留双用途物品', async () => {
+    const hair = { ...product, id: 'hair', name: '短发', wearable_slot: 'hair' as const };
+    const dual = { ...product, id: 'dual', name: '两用星星', island_item_key: 'star' };
+    const reward = { ...product, id: 'reward', name: '家庭奖励', type: 'reward' as const };
+    const request = vi.fn().mockImplementation(async (path: string) => path === '/camp' ? camp : { items: [hair, dual, reward] });
     render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
-    fireEvent.click(await screen.findByRole('button', { name: `${content.equip} ${background.name_snapshot}` }));
-    await screen.findByText(content.equipmentSaved);
-    fireEvent.click(await screen.findByRole('button', { name: `${content.equip} ${effect.name_snapshot}` }));
-    await waitFor(() => expect(request.mock.calls.filter(([path]) => String(path).startsWith('/equipment'))).toEqual([
-      ['/equipment/background', { method: 'PUT', body: { purchase_id: 'bg' } }],
-      ['/equipment/effects/effect', { method: 'PUT' }],
-    ]));
-    await waitFor(() => expect(feedback).toHaveBeenCalledTimes(2));
-    expect(feedback.mock.calls.every(([event]) => event.detail === 'equip')).toBe(true);
-    window.removeEventListener(FEEDBACK_EVENT, feedback);
+    await screen.findByRole('heading', { name: hair.name });
+    fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
+    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.hair }));
+    expect(screen.getByRole('heading', { name: hair.name })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: dual.name })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: '营地物品' }));
+    expect(screen.getByRole('heading', { name: dual.name })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: hair.name })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
+    expect(within(screen.getByRole('tablist', { name: '装扮分类' })).getByRole('tab', { name: content.allTypes })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('heading', { name: dual.name })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: reward.name })).not.toBeInTheDocument();
   });
-
-  it('装备写成功后读取失败仍只反馈一次，读到新角色后才强调', async () => {
-    const feedback = vi.fn();
-    window.addEventListener(FEEDBACK_EVENT, feedback);
-    let equipped = false;
-    let failRead = true;
-    const request = vi.fn().mockImplementation(async (path: string) => {
-      if (path === `/equipment/accessories/${purchase.id}`) {
-        equipped = true;
-        return { purchase_id: purchase.id, equipped: true };
-      }
-      if (path === '/camp') {
-        if (equipped && failRead) throw new TypeError('read offline');
-        return equipped ? { ...camp, equipment: { ...equipment, accessories: [purchase], accessory_layouts: { [purchase.id]: { x: 0.5, y: 0.5, size: 0.2, layer: 1 } } } } : camp;
-      }
-      if (path === '/products') return { items: [] };
-      return { items: [purchase], next_cursor: null };
-    });
-    render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
-    fireEvent.click(await screen.findByRole('button', { name: `${content.equip} ${purchase.name_snapshot}` }));
-    await screen.findByRole('button', { name: content.reload });
-    expect(screen.getByText(content.equipmentSaved)).toBeInTheDocument();
-    expect(feedback).toHaveBeenCalledTimes(1);
-    expect(document.querySelector('.feedback-pop')).toBeNull();
-    failRead = false;
-    fireEvent.click(screen.getByRole('button', { name: content.reload }));
-    expect(await screen.findByAltText(purchase.name_snapshot)).toBeInTheDocument();
-    expect(document.querySelector('.feedback-pop')).not.toBeNull();
-    expect(feedback).toHaveBeenCalledTimes(1);
-    window.removeEventListener(FEEDBACK_EVENT, feedback);
-  });
-
 });

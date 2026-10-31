@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Modal } from '../../components/Modal';
+import { useWalletSync } from '../../components/WalletContext';
 import { ApiFailure } from '../../api/client';
 import { createIdempotencyKey } from '../../api/idempotency-key';
 import type { Camp, Product, Purchase, PurchaseResult, ShopClient, Wallet } from './types';
@@ -23,6 +24,7 @@ export function PurchaseDialog({
   onClose: () => void;
   onPurchased: (purchase: Purchase) => void;
 }) {
+  const publishWallet = useWalletSync();
   const original = pendingPurchases.get(client);
   const [product, setProduct] = useState(original?.product ?? initialProduct);
   const [wallet, setWallet] = useState(original?.wallet ?? initialWallet);
@@ -56,6 +58,7 @@ export function PurchaseDialog({
         body: command.body,
         idempotencyKey: command.key,
       });
+      publishWallet(result.wallet);
       pendingPurchases.delete(client);
       setPending(null);
       completed.current = true;
@@ -91,6 +94,7 @@ export function PurchaseDialog({
         client.request<{ items: Product[] }>('/products'),
         client.request<Camp>('/camp'),
       ]);
+      publishWallet(snapshot.wallet);
       const current = products.items.find((item) => item.id === product.id);
       if (!current) {
         setAvailable(false);

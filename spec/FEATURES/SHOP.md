@@ -13,6 +13,10 @@ source:
 - internal/assets/assets.go
 - internal/assets/builtin/catalog.json
 - web/src/features/shop/ShopPage.tsx
+- web/src/features/shop/BackpackPage.tsx
+- web/src/features/shop/WardrobeDialog.tsx
+- web/src/features/shop/CategoryTabs.tsx
+- web/src/features/shop/shop-categories.ts
 - web/src/features/shop/AccessoryEditor.tsx
 - web/src/features/shop/CharacterStage.tsx
 - web/src/features/shop/accessory-layout.ts
@@ -27,11 +31,16 @@ tests:
 - internal/assets/assets_test.go
 - internal/assets/badge_upgrade_test.go
 - internal/httpapi/wearable_routes_test.go
+- web/src/features/shop/ShopPage.test.tsx
+- web/src/features/shop/BackpackPage.test.tsx
+- web/src/features/shop/WardrobeDialog.test.tsx
+- web/src/features/shop/CategoryTabs.test.tsx
 - web/src/features/shop/FixedEquipment.test.tsx
 - web/src/features/shop/AccessoryEditor.test.tsx
 - web/src/features/shop/CharacterStage.test.tsx
 - web/src/features/shop/accessory-layout.test.ts
 - web/e2e/shop-flow.spec.ts
+- web/e2e/shop-navigation.spec.ts
 - web/e2e/management-catalog-flow.spec.ts
 - web/e2e/management-recovery-flow.spec.ts
 - web/e2e/outfit-layout-flow.spec.ts
@@ -45,6 +54,14 @@ tests:
 
 商品是当前报价，订单是成交快照。订单保存购买时的名称、类型、素材、说明和价格；下架、删除商品或删除原打卡记录，都不撤销已取得的所有权。首版不提供退货、转赠或审批。打卡回收与负余额规则见 [打卡](CHECKIN.md)，事务与流水一致性见 [存储](../SYSTEM/STORAGE.md)。
 
+## 页面与分类
+
+商店只负责浏览商品与确认购买，背包是查看已购物品的独立页面，形象装扮通过弹窗管理基础形象、装备与自由饰品布局。首页角色旁提供背包和形象装扮两个入口，背包也能打开同一个装扮弹窗或前往营地布置。关闭装扮弹窗保留原页面的分类、已加载订单和输入草稿；首页在装扮保存后只更新角色装备，不重新挂载任务与家庭留言。
+
+商店和背包共用两级 Tab。一级按全部、角色装扮、营地物品和奖励分组，角色装扮下再按发型、上装、下装、鞋子、饰品、动物形象、称号、背景和特效筛选，并可查看该组全部内容。切换一级分类会重置二级分类，背包的奖励组默认展示待兑现订单，并可切换已兑现。手机在分类栏内横向滑动，不让整个页面横向溢出；键盘方向键、Home 和 End 可切换同层 Tab。
+
+分类依据物品用途与穿戴槽位，不从名称猜测。兼有画像和营地用途的物品可以同时出现在两个分组中；历史订单获得新增画像能力后也能在对应装扮分类中找到。背包的全部分类包含永久物品、待兑现和已兑现奖励；筛选与分页沿用同一查询，切换时重新取得游标，迟到响应不能覆盖新筛选。当前订单页没有匹配物品且仍有后续页时，应提示继续加载，不能据此宣称库存为空。
+
 ## 购买与失败恢复
 
 商品、我的装扮、小岛物品与奖励兑换卡片统一将名称居中放在大图上方，标题和价格保持大字，不堆叠说明文字。商品卡片底部左侧的购买按钮只展示金币、钻石图标及价格，不展示购买文字；不需要钻石时隐藏钻石。右侧单独展示已有图标与数量，零数量仍显示。按钮的无障碍说明包含价格及不可购买的原因，购买条件不随布局变化。
@@ -57,7 +74,7 @@ tests:
 
 普通永久商品不能重复购买；文本奖励允许重复，每次产生独立待兑现订单。营地物品是否允许重复由物品定义决定，每次购买仍只取得一个实例，其摆放规则见 [营地](ISLAND.md)。
 
-购买成功不自动装备，装扮操作也不再次收费。已拥有列表按订单分页，切换筛选时不能沿用另一筛选的游标；营地所有权读取全部订单，不以当前商店页作为完整库存。
+所有商品购买成功后关闭确认框、显示结果并刷新余额、库存和已拥有数量，保留商店当前的一级与二级分类，不自动进入背包。购买成功不自动装备或摆放，装扮操作也不再次收费。已拥有列表按订单分页，切换筛选时不能沿用另一筛选的游标；营地所有权读取全部订单，不以当前商店页作为完整库存。
 
 ## 角色与装备
 
@@ -93,7 +110,7 @@ tests:
 
 ## 奖励兑现
 
-文本奖励购买后为待兑现，卡片展示名称、大图与兑现按钮（已兑现后显示已兑现状态）。每次兑现都必须重新输入管理密码，即使管理页已解锁也不能跳过；此次密码验证只授权本次兑现，不解锁管理页。
+文本奖励购买后为待兑现，在背包中查看和兑现，卡片展示名称、大图与兑现按钮（已兑现后显示已兑现状态）。每次兑现都必须重新输入管理密码，即使管理页已解锁也不能跳过；此次密码验证只授权本次兑现，不解锁管理页。
 
 服务端先校验密码，再在事务内复核凭据版本、会话和奖励类型，将待兑现条件更新为已兑现并记录时间。已兑现订单返回当前状态，不再次扣币、扣库存或产生兑现副作用。凭据撤销边界见 [账户](ACCOUNT.md)。
 

@@ -15,18 +15,15 @@ const session = testSession as Session;
 const result = { checkin: recordFixture, wallet: { coins: 2, diamonds: 1, version: 2 }, task_remaining: 1, today: '2026-10-29' };
 
 describe('打卡与记录界面', () => {
-  it('钱包和任务只显示图标及准确数量，保留负余额与零奖励', async () => {
+  it('任务只显示图标及准确数量，保留零奖励，余额由全局区域展示', async () => {
     const snapshot = { ...campFixture, wallet: { coins: -12, diamonds: 0, version: 2 }, tasks: [{ ...taskFixture, coin_reward: 0, diamond_reward: 3 }] };
     const request = vi.fn().mockImplementation(async (path: string) => path === '/camp' ? snapshot : { items: [], next_cursor: null });
     render(<CampPage client={{ request }} session={session} />);
     const task = await screen.findByRole('button', { name: /阅读.*金币/ });
     expect(within(task).getByRole('img', { name: content.coins }).parentElement).toHaveTextContent('0');
     expect(within(task).getByRole('img', { name: content.diamonds }).parentElement).toHaveTextContent('3');
-    const balance = screen.getByLabelText(content.balance);
-    expect(within(balance).getByRole('img', { name: content.coins }).parentElement).toHaveTextContent('-12');
-    expect(within(balance).getByRole('img', { name: content.diamonds }).parentElement).toHaveTextContent('0');
+    expect(screen.queryByLabelText(content.balance)).not.toBeInTheDocument();
     expect(task).not.toHaveTextContent(/金币|钻石/);
-    expect(balance).not.toHaveTextContent(/金币|钻石/);
   });
 
   it('管理记录显示原奖励图标与数量，普通记录继续隐藏奖励', () => {

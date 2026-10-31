@@ -4,6 +4,7 @@ import { mkdir } from 'node:fs/promises';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import island from '../src/features/island/content.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
+import { openBackpack } from './shop-navigation';
 import family from '../src/features/family/content.json' with { type: 'json' };
 import type { components } from '../src/api/schema';
 
@@ -83,11 +84,11 @@ test('全屏小岛保留大字触控、返回来源与设置，适配手机横�
   await page.getByRole('button', { name: island.back, exact: true }).click();
   await expect(page.getByRole('heading', { name: content.navigation.camp, exact: true })).toBeVisible();
   await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
-  await page.getByRole('button', { name: shop.islandInventory, exact: true }).click();
+  await openBackpack(page);
   await page.getByRole('button', { name: shop.goToIsland, exact: true }).click();
   await expect(page.locator('.island-scene')).toBeVisible();
   await page.getByRole('button', { name: island.back, exact: true }).click();
-  await expect(page.getByRole('heading', { name: shop.title, exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: shop.backpack, exact: true })).toBeVisible();
   await page.getByRole('button', { name: content.navigation.island, exact: true }).click();
   await expect(page.locator('.island-scene')).toBeVisible();
   await page.locator('.island-actions').getByRole('button', { name: island.shop, exact: true }).click();

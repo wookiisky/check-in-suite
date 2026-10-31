@@ -1,4 +1,9 @@
 {
   "coins": "金币",
-  "diamonds": "钻石"
+  "diamonds": "钻石",
+  "walletBalance": "可用余额",
+  "walletLoading": "正在读取余额",
+  "walletError": "余额暂时无法读取",
+  "walletRetry": "重新读取余额",
+  "unknownAmount": "—"
 }

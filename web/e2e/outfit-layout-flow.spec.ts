@@ -5,6 +5,7 @@ import content from '../src/content/zh-CN.json' with { type: 'json' };
 import family from '../src/features/family/content.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
 import { closeConfigurationSettings, openConfigurationSettings } from './configuration-navigation';
+import { closeWardrobe, openWardrobe } from './shop-navigation';
 
 type Camp = components['schemas']['CampResponse'];
 type Product = components['schemas']['Product'];
@@ -45,9 +46,9 @@ async function buyFixture(page: Page, input: Pick<Product, 'type' | 'name' | 'as
 async function saveLayout(page: Page, purchaseID: string) {
   const response = page.waitForResponse((item) =>
     item.url().endsWith(`/equipment/accessories/${purchaseID}/layout`) && item.request().method() === 'PATCH');
-  await page.getByRole('dialog').getByRole('button', { name: shop.save, exact: true }).click();
+  await page.getByRole('dialog', { name: shop.editOutfit, exact: true }).getByRole('button', { name: shop.save, exact: true }).click();
   expect((await response).ok()).toBeTruthy();
-  await expect(page.getByRole('dialog').getByRole('button', { name: shop.save, exact: true })).toBeDisabled();
+  await expect(page.getByRole('dialog', { name: shop.editOutfit, exact: true }).getByRole('button', { name: shop.save, exact: true })).toBeDisabled();
 }
 
 // 操作框须始终覆盖素材，悬停、按下或减少动效都不能改变中心和尺寸。
@@ -130,8 +131,7 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   const snow = await buyFixture(page, { type: 'effect', name: `下雪-${suffix}`, asset_key: 'effect-snow-v1' });
   const sparkle = await buyFixture(page, { type: 'effect', name: `闪光-${suffix}`, asset_key: 'effect-sparkle-v1' });
   await page.reload();
-  await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
-  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
+  await openWardrobe(page);
   for (const item of [background, star, hat, snow, sparkle]) {
     await page.getByRole('button', { name: `${shop.equip} ${item.name_snapshot}`, exact: true }).click();
     await expect(page.getByRole('button', { name: `${shop.unequip} ${item.name_snapshot}`, exact: true })).toBeEnabled();
@@ -142,7 +142,7 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   expect(equipped.effects.map((item) => item.id).sort()).toEqual([snow.id, sparkle.id].sort());
 
   await page.getByRole('button', { name: shop.editOutfit, exact: true }).click();
-  const editor = page.getByRole('dialog');
+  const editor = page.getByRole('dialog', { name: shop.editOutfit, exact: true });
   const selection = editor.getByLabel(shop.selectedAccessory, { exact: true });
   await selection.selectOption(star.id);
   await expect(selection.locator('option')).toHaveCount(2);
@@ -183,7 +183,22 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await expectAccessoryAligned(starHandle, starArt);
   await editor.getByRole('button', { name: shop.layerDown, exact: true }).click();
   await expect(stage).toBeInViewport({ ratio: 0.9 });
-  await saveLayout(page, star.id);
+  // 暂停实际保存请求，在写入期间按 Escape 不得绕过编辑器的关闭限制。
+  let resumeSave!: () => void;
+  const savingGate = new Promise<void>((resolve) => { resumeSave = resolve; });
+  const layoutPath = `**/equipment/accessories/${star.id}/layout`;
+  await page.route(layoutPath, async (route) => { await savingGate; await route.continue(); });
+  const saving = saveLayout(page, star.id);
+  try {
+    await expect(editor.getByRole('button', { name: shop.saving, exact: true })).toBeDisabled();
+    await page.keyboard.press('Escape');
+    await expect(editor).toBeVisible();
+    await expect(page.locator('dialog[open]')).toHaveCount(2);
+  } finally {
+    resumeSave();
+    await saving;
+    await page.unroute(layoutPath);
+  }
   const behind = (await api<Camp>(page, '/camp')).equipment;
   const behindLayout = behind.accessory_layouts[star.id]!;
   expect(behindLayout.layer).toBeLessThan(0);
@@ -212,14 +227,28 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await editor.getByRole('button', { name: shop.layerDown, exact: true }).click();
   await expect(stage).toBeInViewport({ ratio: 0.9 });
   await saveLayout(page, star.id);
+  // Escape 只处理最上层的饰品草稿，继续编辑后同一位置仍然保留。
+  await starHandle.focus();
+  await starHandle.press('ArrowRight');
+  const unsavedLeft = await starArt.evaluate((image) => image.style.left);
+  await page.keyboard.press('Escape');
+  const discard = page.getByRole('dialog', { name: shop.discardChanges, exact: true });
+  await expect(discard).toBeVisible();
+  await discard.getByRole('button', { name: shop.keepEditing, exact: true }).click();
+  await expect(editor).toBeVisible();
+  await expect.poll(() => starArt.evaluate((image) => image.style.left)).toBe(unsavedLeft);
+  await editor.getByRole('button', { name: shop.cancel, exact: true }).click();
   if (process.env.ISLAND_CAPTURE_PREVIEWS) await editor.screenshot({ path: `.local/previews/outfit-editor-${suffix}.png` });
-  await editor.getByRole('button', { name: shop.close, exact: true }).first().click();
-  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.locator('.shop-character').screenshot({ path: `.local/previews/outfit-wardrobe-${suffix}.png` });
+  await page.keyboard.press('Escape');
+  await expect(editor).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: shop.wardrobeTitle, exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: shop.editOutfit, exact: true })).toBeFocused();
+  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.getByRole('dialog', { name: shop.wardrobeTitle, exact: true }).locator('.shop-character').screenshot({ path: `.local/previews/outfit-wardrobe-${suffix}.png` });
 
   await page.reload();
   const restored = (await api<Camp>(page, '/camp')).equipment;
   expect(restored).toEqual(behind);
-  const character = page.locator('.shop-character');
+  const character = page.locator('.camp-character-panel > .shop-character');
   await expect(character.getByRole('img', { name: background.name_snapshot, exact: true })).toBeVisible();
   await expect(character.getByRole('img', { name: snow.name_snapshot, exact: true })).toHaveAttribute('src', '/api/v1/assets/effect-snow-v1');
   const homeStar = character.locator(`[data-purchase-id="${star.id}"]`);
@@ -234,6 +263,7 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
   const reduceMotion = page.getByLabel(family.reduceMotion, { exact: true });
+  await closeWardrobe(page);
   await openConfigurationSettings(page);
   await reduceMotion.click();
   await expect(reduceMotion).toBeChecked();
@@ -243,8 +273,7 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await expect.poll(() => character.locator('img').evaluateAll((images) => images.every((image) =>
     (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
   if (process.env.ISLAND_CAPTURE_PREVIEWS) await character.screenshot({ path: `.local/previews/outfit-${suffix}.png` });
-  await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
-  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
+  await openWardrobe(page);
   await page.getByRole('button', { name: shop.editOutfit, exact: true }).click();
   await selection.selectOption(star.id);
   await starHandle.hover();
@@ -253,17 +282,17 @@ test('背景、可编辑饰品和固定特效在保存刷新后保持组合', as
   await expectAccessoryAligned(starHandle, starArt);
   await page.mouse.up();
   await editor.getByRole('button', { name: shop.close, exact: true }).first().click();
+  await closeWardrobe(page);
   await openConfigurationSettings(page);
   await reduceMotion.click();
   await expect(reduceMotion).not.toBeChecked();
   await closeConfigurationSettings(page);
-  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
+  await openWardrobe(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(character.getByRole('img', { name: snow.name_snapshot, exact: true })).toHaveAttribute('src', '/api/v1/assets/effect-snow-v1?motion=static');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
 
-  await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
-  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
+  await openWardrobe(page);
   await page.getByRole('button', { name: `${shop.unequip} ${star.name_snapshot}`, exact: true }).click();
   await page.getByRole('button', { name: `${shop.equip} ${star.name_snapshot}`, exact: true }).click();
   await expect(page.getByRole('button', { name: `${shop.unequip} ${star.name_snapshot}`, exact: true })).toBeEnabled();

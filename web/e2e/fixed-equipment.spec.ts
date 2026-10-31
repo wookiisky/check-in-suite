@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import type { components } from '../src/api/schema';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
+import { closeWardrobe, openWardrobe, selectShopCategory } from './shop-navigation';
 
 type Camp = components['schemas']['CampResponse'];
 type Product = components['schemas']['Product'];
@@ -43,32 +44,31 @@ test('人类基础形象、独立发型和服装在衣柜主页与小岛一致',
     products.push({ slot, product });
   }
   await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-  await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
-  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
+  await openWardrobe(page);
   await page.getByRole('button', { name: shop.baseAvatarNames['avatar-girl-v2'], exact: true }).click();
   await expect(page.getByRole('button', { name: shop.baseAvatarNames['avatar-girl-v2'], exact: true })).toHaveAttribute('aria-pressed', 'true');
   expect((await api(page, '/session')).management_expires_at).toBeNull();
 
   for (const { slot, product } of products) {
-    await page.getByRole('button', { name: shop.browse, exact: true }).click();
-    await page.getByRole('combobox', { name: shop.typeFilter, exact: true }).selectOption(slot);
+    await selectShopCategory(page, 'appearance', shop.wearableSlots[slot]);
     await page.getByRole('button', { name: `${shop.buy} ${product.name}`, exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: shop.wearableSlots[slot], exact: true })).toHaveAttribute('aria-selected', 'true');
+    await openWardrobe(page);
     await page.getByRole('button', { name: `${shop.equip} ${product.name}`, exact: true }).click();
     await expect(page.getByRole('button', { name: `${shop.unequip} ${product.name}`, exact: true })).toBeEnabled();
   }
   const equipped = (await api(page, '/camp') as Camp).equipment;
   for (const { slot, product } of products) expect(equipped.wearables[slot]?.product_id).toBe(product.id);
-  const wardrobe = page.locator('.shop-character [data-base-avatar]');
+  const wardrobe = page.getByRole('dialog', { name: shop.wardrobeTitle, exact: true }).locator('.shop-character [data-base-avatar]');
   const layerAssets = await wardrobe.locator('image').evaluateAll((images) => images.map((image) => image.getAttribute('href')));
   expect(layerAssets).toContain('/api/v1/assets/hair-braids-back-v1');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.locator('.shop-character').screenshot({ path: `spec/assets/character-wardrobe-${testInfo.project.name === 'iphone14-webkit' ? 'mobile' : 'desktop'}.png` });
+  if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.getByRole('dialog', { name: shop.wardrobeTitle, exact: true }).locator('.shop-character').screenshot({ path: `spec/assets/character-wardrobe-${testInfo.project.name === 'iphone14-webkit' ? 'mobile' : 'desktop'}.png` });
 
   await page.reload();
-  await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
-  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
+  await openWardrobe(page);
   await expect(wardrobe).toHaveAttribute('data-base-avatar', 'avatar-girl-v2');
   expect((await api(page, '/camp') as Camp).equipment).toEqual(equipped);
   await page.getByRole('button', { name: shop.baseAvatarNames['avatar-boy-v2'], exact: true }).click();
@@ -76,6 +76,7 @@ test('人类基础形象、独立发型和服装在衣柜主页与小岛一致',
   expect((await api(page, '/camp') as Camp).equipment.wearables).toEqual(equipped.wearables);
   const boyAssets = await wardrobe.locator('image').evaluateAll((images) => images.map((image) => image.getAttribute('href')));
 
+  await closeWardrobe(page);
   await page.getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await expect(page.locator('.shop-character [data-base-avatar]')).toHaveAttribute('data-base-avatar', 'avatar-boy-v2');
   expect(await page.locator('.shop-character [data-base-avatar] image').evaluateAll((images) => images.map((image) => image.getAttribute('href')))).toEqual(boyAssets);
@@ -86,8 +87,7 @@ test('人类基础形象、独立发型和服装在衣柜主页与小岛一致',
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.locator('.island-scene').screenshot({ path: `spec/assets/character-island-${testInfo.project.name === 'iphone14-webkit' ? 'mobile' : 'desktop'}.png` });
 
-  await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
-  await page.getByRole('button', { name: shop.wardrobe, exact: true }).click();
+  await openWardrobe(page);
   const hair = products.find((item) => item.slot === 'hair')!.product;
   await page.getByRole('button', { name: `${shop.unequip} ${hair.name}`, exact: true }).click();
   await expect(wardrobe.locator('[data-character-layer="hair"]')).toHaveAttribute('href', '/api/v1/assets/default-boy-hair-v1');

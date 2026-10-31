@@ -1,4 +1,6 @@
 import { CurrencyAmount } from '../../components/CurrencyAmount';
+import { useWalletSync } from '../../components/WalletContext';
+import type { components } from '../../api/schema';
 import { useState } from 'react';
 import { ApiFailure } from '../../api/client';
 import { readCurrentRecord } from './records';
@@ -26,6 +28,7 @@ interface RecordDialogProps {
 
 /** 详情与普通编辑不展示奖励，只有删除确认显示回收金额。 */
 export function RecordDialog({ client, session, record: initialRecord, today, management = false, onClose, onSaved, onCorrect }: RecordDialogProps) {
+  const publishWallet = useWalletSync();
   const [record, setRecord] = useState(initialRecord);
   const pendingEdit = getPendingEdit(client, record.id);
   const draft = getDraft(client, record.id);
@@ -41,7 +44,8 @@ export function RecordDialog({ client, session, record: initialRecord, today, ma
     setBusy(true);
     setError(null);
     try {
-      await client.request(`${management ? '/management' : ''}/checkins/${record.id}`, { method: 'DELETE', body: { expected_version: record.version } });
+      const result = await client.request<components['schemas']['CheckinDeleteResult']>(`${management ? '/management' : ''}/checkins/${record.id}`, { method: 'DELETE', body: { expected_version: record.version } });
+      publishWallet(result.wallet);
       onSaved(mode === 'correct' ? content.correctionDeleted : content.deleted);
       onClose();
       if (mode === 'correct') onCorrect?.(record);

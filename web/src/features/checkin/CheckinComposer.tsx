@@ -1,4 +1,5 @@
 import { CurrencyAmount } from '../../components/CurrencyAmount';
+import { useWalletSync } from '../../components/WalletContext';
 import { useId, useRef, useState } from 'react';
 import { ApiFailure } from '../../api/client';
 import { Modal } from '../../components/Modal';
@@ -33,6 +34,7 @@ interface ComposerProps {
 
 /** 原请求与可编辑草稿分开保存，先确定原提交，再处理文字或附件差异。 */
 export function CheckinComposer({ client, session, task, date, management = false, record, initialText, onClose, onSaved }: ComposerProps) {
+  const publishWallet = useWalletSync();
   const storedDraft = getDraft(client, record?.id ?? CREATE_DRAFT_KEY);
   const existing = !record ? getPending(client) : null;
   const existingEdit = record ? getPendingEdit(client, record.id) : null;
@@ -163,6 +165,7 @@ export function CheckinComposer({ client, session, task, date, management = fals
         rememberPending(client, command); setPending(command);
       }
       const result = await replayCheckin(client, command);
+      publishWallet(result.wallet);
       rememberPending(client, null); setPending(null);
       if (result.checkin.deleted) {
         onSaved(content.resolvedDeleted); clearDraft(); onClose();

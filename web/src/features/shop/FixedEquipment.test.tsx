@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { ShopPage } from './ShopPage';
+import { WardrobeDialog } from './WardrobeDialog';
 import { camp, equipment, purchase } from './test-fixtures';
 import { testSession } from '../../test/account-fixtures';
 import type { Equipment, Purchase } from './types';
@@ -20,8 +20,7 @@ describe('免费形象与固定穿戴', () => {
       if (path === '/equipment/base-avatar') { current = { ...current, avatar: null }; return current; }
       throw new Error(`Unexpected path ${path}`);
     });
-    render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
+    render(<WardrobeDialog client={{ request }} session={session} onClose={vi.fn()} />);
     expect(await screen.findByRole('button', { name: `${content.unequip} ${hair.name_snapshot}` })).toBeEnabled();
     expect(screen.getByRole('button', { name: content.baseAvatarNames['avatar-boy-v2'] })).toHaveAttribute('aria-pressed', 'false');
     fireEvent.click(screen.getByRole('button', { name: content.baseAvatarNames['avatar-boy-v2'] }));
@@ -41,8 +40,7 @@ describe('免费形象与固定穿戴', () => {
       }
       throw new Error(`Unexpected path ${path}`);
     });
-    render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
+    render(<WardrobeDialog client={{ request }} session={session} onClose={vi.fn()} />);
     fireEvent.click(await screen.findByRole('button', { name: content.baseAvatarNames['avatar-girl-v2'] }));
     await waitFor(() => expect(screen.getByRole('button', { name: content.baseAvatarNames['avatar-girl-v2'] })).toHaveAttribute('aria-pressed', 'true'));
     expect(current.wearables.top).toEqual(top);
@@ -65,8 +63,7 @@ describe('免费形象与固定穿戴', () => {
       if (path.includes('type=accessory')) return { items: [purchase], next_cursor: 'page-2' };
       return { items: [], next_cursor: null };
     });
-    render(<ShopPage client={{ request }} session={session} />);
-    fireEvent.click(screen.getByRole('button', { name: content.wardrobe }));
+    render(<WardrobeDialog client={{ request }} session={session} onClose={vi.fn()} />);
     await screen.findByRole('button', { name: content.baseAvatarNames['avatar-boy-v2'] });
     fireEvent.change(screen.getByRole('combobox', { name: content.typeFilter }), { target: { value: 'hair' } });
     await screen.findByRole('button', { name: content.more });

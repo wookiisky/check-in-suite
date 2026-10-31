@@ -3,6 +3,7 @@ import type { Locator, Page } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
+import { openBackpack } from './shop-navigation';
 import island from '../src/features/island/content.json' with { type: 'json' };
 import catalog from '../../internal/island/catalog.json' with { type: 'json' };
 import { canPlace, findPath, interactionPoint } from '../src/features/island/island-geometry';
@@ -107,11 +108,11 @@ test('家庭家具可购买布置，透明素材完整且室内保存后保持',
   const chair = products.find((item) => item.island_item_key === 'dining-chair')!;
   await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
   for (let index = 0; index < 2; index += 1) {
-    await page.getByRole('button', { name: shop.construction, exact: true }).click();
+    await page.getByRole('tab', { name: shop.categoryGroups.island, exact: true }).click();
     await page.getByRole('button', { name: `${shop.buy} ${chair.name}`, exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: shop.islandInventory, exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('tab', { name: shop.categoryGroups.island, exact: true })).toHaveAttribute('aria-selected', 'true');
   }
   for (const product of products.filter((item) => item.id !== chair.id)) {
     const current = await api<Camp>(page, '/camp');
@@ -127,6 +128,7 @@ test('家庭家具可购买布置，透明素材完整且室内保存后保持',
   const addedChair = placements.filter((placement) => placement.item_key === 'dining-chair')[1]!;
   // 先准备其余家具，最后一把椅子通过页面库存真正加入场景。
   await api(page, '/island', 'PUT', { expected_version: owned.version, placements: placements.filter((item) => item.id !== addedChair.id) });
+  await openBackpack(page);
   await page.getByRole('button', { name: shop.goToIsland, exact: true }).click();
   await page.getByRole('button', { name: island.edit, exact: true }).click();
   await page.getByRole('button', { name: island.showIndoor, exact: true }).click();

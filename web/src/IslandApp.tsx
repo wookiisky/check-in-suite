@@ -3,6 +3,8 @@ import { ApiClient, ApiFailure } from './api/client';
 import type { Account, Preferences, Session } from './api/types';
 import { FormFeedback } from './components/FormFeedback';
 import { Modal } from './components/Modal';
+import { WalletProvider } from './components/WalletContext';
+import { GlobalWallet } from './components/GlobalWallet';
 import { LoginForm } from './features/account/LoginForm';
 import { ManagementPanel } from './features/account/ManagementPanel';
 import type { AccountFormState } from './features/account/ManagementPanel';
@@ -10,6 +12,9 @@ import { UnlockDialog } from './features/account/UnlockDialog';
 import { CampPage } from './features/checkin/CampPage';
 import { CheckinManagement } from './features/checkin/CheckinManagement';
 import { ShopPage } from './features/shop/ShopPage';
+import { BackpackPage } from './features/shop/BackpackPage';
+import { WardrobeDialog } from './features/shop/WardrobeDialog';
+import type { Camp as ShopCamp } from './features/shop/types';
 import { ProductManagement } from './features/shop/ProductManagement';
 import { CalendarPage } from './features/reports/CalendarPage';
 import { StatsPage } from './features/reports/StatsPage';
@@ -21,14 +26,15 @@ import { AchievementStrip } from './features/achievements/AchievementStrip';
 import { SoundPreferences } from './features/family/SoundPreferences';
 import content from './content/zh-CN.json';
 import islandContent from './features/island/content.json';
+import shopContent from './features/shop/content.json';
 
 // 小岛素材与活动代码只在进入页面时加载。
 const IslandPage = lazy(() => import('./features/island/IslandPage').then((module) => ({ default: module.IslandPage })));
 
-type Page = 'island' | 'camp' | 'calendar' | 'stats' | 'shop' | 'achievements';
+type Page = 'island' | 'camp' | 'calendar' | 'stats' | 'shop' | 'achievements' | 'backpack';
 type ManagementSection = 'account' | 'tasks' | 'records' | 'products' | 'achievements';
 
-const navIcons: Record<Page, string> = {
+const navIcons: Record<Exclude<Page, 'backpack'>, string> = {
   camp: 'book-v1',
   island: 'home-v1',
   calendar: 'calendar-v1',
@@ -47,6 +53,7 @@ export function IslandApp() {
   const [page, setPage] = useState<Page>('camp');
   const [islandReturnPage, setIslandReturnPage] = useState<Exclude<Page, 'island'>>('camp');
   const [soundOpen, setSoundOpen] = useState(false);
+  const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [management, setManagement] = useState(false);
   const [managementSection, setManagementSection] = useState<ManagementSection>('account');
@@ -56,6 +63,7 @@ export function IslandApp() {
   const [busy, setBusy] = useState(false);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const serverOffset = useRef(0);
+  const equipmentSync = useRef(0); // 新打开或新保存的装备优先于关闭弹窗后的补读。
   const client = useMemo(() => new ApiClient((status) => {
     setManagement(false); setUnlocking(false); setExpiresAt(null);
     if (status === 401) { setSession(null); setNotice(content.account.sessionExpired); }
@@ -105,6 +113,7 @@ export function IslandApp() {
   }, [management, expiresAt]);
 
   function acceptSession(value: Session) {
+    equipmentSync.current += 1;
     client.setCsrfToken(value.csrf_token); client.recordServerTime(value.server_now); serverOffset.current = Date.parse(value.server_now) - Date.now();
     setSession(value); setNotice(''); setManagement(false); setLockPending(false); setPage('camp');
   }
@@ -127,9 +136,16 @@ export function IslandApp() {
     try { await client.request<void>('/management/lock', { method: 'POST' }); setLockPending(false); }
     catch (reason) { if (reason instanceof ApiFailure && reason.status === 401) setLockPending(false); }
   }
+  // 打开新编辑会话后，旧的装备补读不能覆盖本次读取或保存。
+  function openWardrobe() {
+    equipmentSync.current += 1;
+    setNotice('');
+    setWardrobeOpen(true);
+  }
   function navigate(next: Page) {
+    equipmentSync.current += 1;
     if (next === 'island' && page !== 'island') setIslandReturnPage(management ? 'camp' : page);
-    setSoundOpen(false); setPage(next);
+    setSoundOpen(false); setWardrobeOpen(false); setPage(next);
     if (management) void lock();
   }
   async function logout() {
@@ -144,9 +160,12 @@ export function IslandApp() {
     setSession(null); setManagement(false); setExpiresAt(null); client.setCsrfToken(''); setNotice(content.account.passwordChanged);
   }
 
-  return <div className={`application ${immersive ? 'application-island' : ''}`}>
-    {!immersive && <header className="site-header"><div className="header-inner">
+  return <WalletProvider key={session?.csrf_token ?? 'signed-out'} client={client} active={session !== null}><div className={`application ${immersive ? 'application-island' : ''}`}>
+    {!immersive && <div className="global-wallet-bar"><div className="global-wallet-bar-inner">
       <a className="brand" href="#" aria-disabled={accountSaving || undefined} onClick={(event) => { event.preventDefault(); leaveAccount(() => navigate('camp')); }}><svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg><strong>{content.appName}</strong></a>
+      {session && <GlobalWallet reduceMotion={session.account.preferences.reduce_motion} />}
+    </div></div>}
+    {!immersive && session && <header className="site-header"><div className="header-inner">
       {session && <><nav aria-label={content.navigation.label}>{(['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} disabled={accountSaving} onClick={() => leaveAccount(() => navigate(item))}><img src={`/api/v1/assets/${navIcons[item]}`} alt="" aria-hidden="true" /><span>{content.navigation[item]}</span></button>)}</nav><div className="account-tools"><span className="name-chip"><img src="/api/v1/assets/user-v1" alt="" aria-hidden="true" /><span>{session.account.display_name}</span></span><button className="secondary" disabled={busy || accountSaving} onClick={() => leaveAccount(() => void logout())}>{content.account.logout}</button>{!management && <button className="secondary header-management-entry" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}><img src="/api/v1/assets/settings-v1" alt="" aria-hidden="true" /><span>{content.navigation.management}</span></button>}</div></>}
     </div></header>}
     <main className={immersive ? 'island-app-shell' : 'app-shell'}>
@@ -169,14 +188,31 @@ export function IslandApp() {
         </> : <>
           {page === 'camp' && <>
             <h1 className="page-heading">{content.navigation.camp}</h1>
-            <CampPage client={client} session={session} renderSidebar={(camp) => <>
-              <CharacterPanel equipment={camp.equipment} displayName={camp.account.display_name} reduceMotion={session.account.preferences.reduce_motion} />
+            <CampPage client={client} session={session} renderSidebar={(camp, updateEquipment) => <>
+              <section className="camp-character-panel">
+                <CharacterPanel equipment={camp.equipment} displayName={camp.account.display_name} reduceMotion={session.account.preferences.reduce_motion} />
+                <div className="camp-character-actions">
+                  <button type="button" className="secondary" onClick={() => navigate('backpack')}><img src="/api/v1/assets/accessory-backpack-v1" alt="" /><span>{shopContent.backpack}</span></button>
+                  <button type="button" className="secondary" onClick={(event) => { event.currentTarget.focus(); openWardrobe(); }}><img src="/api/v1/assets/accessory-brush-v1" alt="" /><span>{shopContent.wardrobeTitle}</span></button>
+                </div>
+              </section>
+              {wardrobeOpen && <WardrobeDialog client={client} session={session} onEquipmentSaved={(equipment) => { equipmentSync.current += 1; updateEquipment(equipment); }} onClose={(refreshEquipment) => {
+                setWardrobeOpen(false);
+                if (refreshEquipment) {
+                  const current = ++equipmentSync.current;
+                  void client.request<ShopCamp>('/camp').then((next) => {
+                    if (equipmentSync.current === current) updateEquipment(next.equipment);
+                  }).catch(() => { if (equipmentSync.current === current) setNotice(shopContent.equipmentRefreshFailed); });
+                }
+              }} />}
               <AchievementStrip items={camp.achievements} onViewAll={() => navigate('achievements')} />
               <FamilyPanel client={client} session={session} />
             </>} />
           </>}
           {page === 'island' && <Suspense fallback={<section className="island-loading"><button className="secondary" onClick={() => navigate(islandReturnPage)}>{islandContent.back}</button><p role="status">{content.common.loading}</p></section>}><IslandPage client={client} session={session} onCamp={() => navigate('camp')} onShop={() => navigate('shop')} onBack={() => navigate(islandReturnPage)} onSettings={() => setSoundOpen(true)} /></Suspense>}
-          {page === 'shop' && <ShopPage client={client} session={session} onIsland={() => navigate('island')} />}
+          {page === 'shop' && <ShopPage client={client} session={session} onBackpack={() => navigate('backpack')} />}
+          {page === 'backpack' && <BackpackPage client={client} session={session} onBack={() => navigate('camp')} onIsland={() => navigate('island')} onWardrobe={openWardrobe} />}
+          {page === 'backpack' && wardrobeOpen && <WardrobeDialog client={client} session={session} onClose={() => setWardrobeOpen(false)} />}
           {page === 'achievements' && <AchievementPage client={client} session={session} />}
           {page === 'calendar' && <CalendarPage client={client} session={session} />}
           {page === 'stats' && <StatsPage client={client} session={session} />}
@@ -188,5 +224,5 @@ export function IslandApp() {
         {management && pendingLeave && <Modal title={content.account.discardTitle} onClose={() => setPendingLeave(null)}><div className="form-stack"><p>{content.account.discardHint}</p><div className="button-row"><button type="button" onClick={discardAccountDraft}>{content.account.discard}</button><button type="button" className="secondary" onClick={() => setPendingLeave(null)}>{content.account.keepEditing}</button></div></div></Modal>}
       </>}
     </main>
-  </div>;
+  </div></WalletProvider>;
 }

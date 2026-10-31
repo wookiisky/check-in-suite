@@ -1,8 +1,10 @@
 import { CurrencyAmount } from '../../components/CurrencyAmount';
+import { useWalletSync } from '../../components/WalletContext';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { shiftDate, weekStart } from '../../api/dates';
 import type { Camp, Checkin, CheckinPage, CheckinProps, Task } from './types';
+import type { Equipment } from '../shop/types';
 import { CheckinComposer } from './CheckinComposer';
 import { RecordDialog } from './RecordDialog';
 import { RecordList } from './RecordList';
@@ -16,7 +18,8 @@ import content from './content.json';
 import './checkin.css';
 
 /** 日模式左侧记录和任务、右侧角色留言；周模式记录跨整页，侧栏保持挂载。 */
-export function CampPage({ client, session, renderSidebar }: CheckinProps & { renderSidebar?: (camp: Camp) => ReactNode }) {
+export function CampPage({ client, session, renderSidebar }: CheckinProps & { renderSidebar?: (camp: Camp, updateEquipment: (equipment: Equipment) => void) => ReactNode }) {
+  const publishWallet = useWalletSync();
   const [camp, setCamp] = useState<Camp | null>(null);
   const [view, setView] = useState<'day' | 'week'>('day');
   const [date, setDate] = useState<string | null>(null);
@@ -29,9 +32,7 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
   const [error, setError] = useState<unknown>(null);
   const [message, setMessage] = useState('');
   const [successID, setSuccessID] = useState('');
-  const [reward, setReward] = useState<{ record: Checkin; walletVersion: number | undefined } | null>(null);
-  const [walletFeedbackID, setWalletFeedbackID] = useState('');
-  const awaitingWalletFeedback = useRef(false);
+  const [reward, setReward] = useState<Checkin | null>(null);
   const [task, setTask] = useState<Task | null>(null);
   const [selected, setSelected] = useState<Checkin | null>(null);
   const generation = useRef(0);
@@ -53,6 +54,7 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
         if (!active || generation.current !== requestGeneration) return;
         client.recordServerTime?.(snapshot.server_now);
         setCamp(snapshot);
+        publishWallet(snapshot.wallet);
         const selectedDate = date ?? snapshot.today;
         const start = view === 'week' ? weekStart(selectedDate) : selectedDate;
         const end = view === 'week' ? shiftDate(start, 6) : start;
@@ -63,7 +65,7 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
       finally { if (active) setLoading(false); }
     })();
     return () => { active = false; };
-  }, [client, date, view, revision]);
+  }, [client, date, view, revision, publishWallet]);
 
   useEffect(() => {
     if (!camp) return;
@@ -79,13 +81,6 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
     document.addEventListener('visibilitychange', visible);
     return () => { window.clearTimeout(timer); document.removeEventListener('visibilitychange', visible); };
   }, [camp, client]);
-
-  // 首次读到打卡后的余额就消费强调机会，后续普通读取不会重新播放。
-  useEffect(() => {
-    if (!awaitingWalletFeedback.current || !reward || camp?.wallet.version === reward.walletVersion) return;
-    awaitingWalletFeedback.current = false;
-    setWalletFeedbackID(reward.record.id);
-  }, [camp, reward]);
 
   // 分页沿用当前日期范围，保留已加载内容，迟到响应不能混入新筛选。
   async function loadMore() {
@@ -106,20 +101,18 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
     setMessage(notice);
     if (created && record && !record.deleted && !animatedRecords.current.has(record.id)) {
       setSuccessID(record.id); animatedRecords.current.add(record.id);
-      setReward({ record, walletVersion: camp?.wallet.version });
-      awaitingWalletFeedback.current = true;
+      setReward(record);
       window.dispatchEvent(new CustomEvent<CheckinSuccessDetail>(CHECKIN_SUCCESS_EVENT, {
         detail: { recordId: record.id, coins: record.coin_reward_snapshot, diamonds: record.diamond_reward_snapshot },
       }));
-    } else { setSuccessID(''); setReward(null); awaitingWalletFeedback.current = false; setWalletFeedbackID(''); }
+    } else { setSuccessID(''); setReward(null); }
     refresh((value) => value + 1);
   }
 
   const visibleTasks = camp?.tasks.filter((item) => !category || item.category_id === category) ?? [];
   const showRecords = !loading && (error === null || records.length > 0);
-  const highlightWallet = walletFeedbackID !== '' && walletFeedbackID === successID && !session.account.preferences.reduce_motion;
   return <div className="checkin-workspace">
-    {message && <div key={successID} role="status" className={`checkin-notice ${successID && !session.account.preferences.reduce_motion ? 'checkin-celebrate' : ''}`}><p>{message}</p>{reward && <CheckinRewardFeedback key={reward.record.id} coins={reward.record.coin_reward_snapshot} diamonds={reward.record.diamond_reward_snapshot} reduceMotion={session.account.preferences.reduce_motion} />}</div>}
+    {message && <div key={successID} role="status" className={`checkin-notice ${successID && !session.account.preferences.reduce_motion ? 'checkin-celebrate' : ''}`}><p>{message}</p>{reward && <CheckinRewardFeedback key={reward.id} coins={reward.coin_reward_snapshot} diamonds={reward.diamond_reward_snapshot} reduceMotion={session.account.preferences.reduce_motion} />}</div>}
     {pending && <div className="checkin-warning"><p>{content.pendingBanner}</p>{pending.path.startsWith('/management') ? <p>{content.pendingManagement}</p> : <button onClick={() => setTask(pending.task)}>{content.recover}</button>}</div>}
     {!pending && draft && <div className="checkin-warning"><p>{content.draftAvailable}</p>{draft.management ? <p>{content.draftManagement}</p> : <button onClick={() => setTask(draft.task)}>{content.continueDraft}</button>}</div>}
     {error !== null && <div role="alert" className="checkin-error"><p>{checkinError(error)}</p><button className="secondary" onClick={() => refresh((value) => value + 1)}>{content.reload}</button></div>}
@@ -138,7 +131,7 @@ export function CampPage({ client, session, renderSidebar }: CheckinProps & { re
           {visibleTasks.length === 0 ? <p className="checkin-empty">{!camp.has_scheduled_tasks ? content.noTasks : camp.tasks.length === 0 ? content.allDone : content.categoryDone}</p> : <div className="checkin-task-grid">{visibleTasks.map((item) => <button key={item.id} className="checkin-task secondary" disabled={pending !== null || draft !== null || loading || error !== null} onClick={() => setTask(item)}><TaskIcon name={item.icon_key} /><strong>{item.name}</strong><span className="checkin-rewards"><CurrencyAmount currency="coins" amount={item.coin_reward} /><CurrencyAmount currency="diamonds" amount={item.diamond_reward} /></span></button>)}</div>}
         </>}
       </section>
-      <aside className="checkin-sidebar"><section className="checkin-panel checkin-wallet" aria-label={content.balance}>{camp && <><CurrencyAmount currency="coins" amount={camp.wallet.coins}><strong key={`coins-${successID}`} className={highlightWallet ? 'feedback-pop' : undefined} onAnimationEnd={() => setWalletFeedbackID('')}>{camp.wallet.coins}</strong></CurrencyAmount><CurrencyAmount currency="diamonds" amount={camp.wallet.diamonds}><strong key={`diamonds-${successID}`} className={highlightWallet ? 'feedback-pop' : undefined} onAnimationEnd={() => setWalletFeedbackID('')}>{camp.wallet.diamonds}</strong></CurrencyAmount></>}</section>{camp && renderSidebar?.(camp)}</aside>
+      <aside className="checkin-sidebar">{camp && renderSidebar?.(camp, (equipment) => setCamp((current) => current ? { ...current, equipment } : current))}</aside>
     </div>
     {task && <CheckinComposer client={client} session={session} task={task} date={camp?.today ?? session.today} onClose={() => setTask(null)} onSaved={saved} />}
     {selected && <RecordDialog client={client} session={session} record={selected} today={camp?.today ?? session.today} onClose={() => setSelected(null)} onSaved={saved} />}

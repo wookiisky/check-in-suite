@@ -1,74 +1,42 @@
-import { useEffect, useRef, useState } from 'react';
-import type { Camp, Product, Purchase, PurchaseList, ShopProps } from './types';
-import { CharacterPanel } from './CharacterPanel';
-import { AccessoryEditor } from './AccessoryEditor';
-import { Price } from './Price';
+import { useEffect, useState } from 'react';
+import type { Camp, Product, Purchase, ShopProps } from './types';
+import { useWalletSync } from '../../components/WalletContext';
 import { PurchaseDialog } from './PurchaseDialog';
-import { RedeemDialog } from './RedeemDialog';
-import { Wardrobe } from './Wardrobe';
-import { BaseAvatarPicker } from './BaseAvatarPicker';
 import { ShopItemArtwork } from './ShopItemArtwork';
-import { categoryLabel, categoryPurchaseType, itemCategory, shopCategories, wardrobeCategories } from './shop-categories';
+import { CategoryTabs } from './CategoryTabs';
+import { matchesCategory, type CategoryFilter } from './shop-categories';
 import { pendingPurchases } from './pending';
-import { assetURL, canBuy, portraitType, shopError } from './helpers';
-import { dispatchFeedback } from '../../feedback/feedback-events';
+import { canBuy, shopError } from './helpers';
 import content from './content.json';
 import './shop.css';
 
-type ShopTab = 'browse' | 'construction' | 'wardrobe' | 'islandInventory' | 'rewards';
-
-// 页面进入、筛选和写成功才加载，结果未知时始终先恢复原购买。
-export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?: () => void }) {
-  const [tab, setTab] = useState<ShopTab>('browse');
-  const [type, setType] = useState('');
-  const [status, setStatus] = useState('pending');
+// 商店只浏览与购买，分类属于当前页面，成交和恢复均不改变选择。
+export function ShopPage({ client, onBackpack }: ShopProps & { onBackpack?: () => void }) {
+  const publishWallet = useWalletSync();
+  const [filter, setFilter] = useState<CategoryFilter>({ group: 'all', category: '' });
   const [products, setProducts] = useState<Product[]>([]);
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [snapshot, setSnapshot] = useState<Camp | null>(null);
-  const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [writing, setWriting] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [message, setMessage] = useState('');
   const [revision, refresh] = useState(0);
   const [selected, setSelected] = useState<Product | null>(null);
-  const [reward, setReward] = useState<Purchase | null>(null);
-  const [editingOutfit, setEditingOutfit] = useState(false);
-  const [highlightCharacter, setHighlightCharacter] = useState(false);
-  const highlightAfterRefresh = useRef(false); // 装备写回执不总含完整布局，读取新角色后才强调。
-  const generation = useRef(0);
   const pending = pendingPurchases.get(client);
-  const browsing = tab === 'browse' || tab === 'construction';
-  const query = new URLSearchParams(
-    tab === 'rewards' ? { type: 'reward', status } : { status: 'owned', ...(type ? { type: categoryPurchaseType(type) } : {}) },
-  ).toString();
 
   useEffect(() => {
     const controller = new AbortController();
-    const current = ++generation.current;
     setLoading(true);
     setError(null);
-    setPurchases([]);
-    setCursor(null);
     void (async () => {
       try {
         const [camp, result] = await Promise.all([
           client.request<Camp>('/camp', { signal: controller.signal }),
-          browsing
-            ? client.request<{ items: Product[] }>('/products', { signal: controller.signal })
-            : client.request<PurchaseList>(`/purchases?${query}`, { signal: controller.signal }),
+          client.request<{ items: Product[] }>('/products', { signal: controller.signal }),
         ]);
-        if (controller.signal.aborted || generation.current !== current) return;
+        if (controller.signal.aborted) return;
         setSnapshot(camp);
-        if (highlightAfterRefresh.current) {
-          highlightAfterRefresh.current = false;
-          setHighlightCharacter(true);
-        }
-        if (browsing) setProducts(result.items as Product[]);
-        else {
-          setPurchases(result.items as Purchase[]);
-          setCursor((result as PurchaseList).next_cursor);
-        }
+        publishWallet(camp.wallet);
+        setProducts(result.items);
       } catch (reason) {
         if (!controller.signal.aborted) setError(reason);
       } finally {
@@ -76,313 +44,49 @@ export function ShopPage({ client, session, onIsland }: ShopProps & { onIsland?:
       }
     })();
     return () => controller.abort();
-  }, [client, tab, query, revision, browsing]);
+  }, [client, revision, publishWallet]);
 
-  async function more() {
-    if (!cursor || loading) return;
-    const current = generation.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await client.request<PurchaseList>(
-        `/purchases?${query}&cursor=${encodeURIComponent(cursor)}`,
-      );
-      if (generation.current !== current) return;
-      setPurchases((items) => [
-        ...items,
-        ...result.items.filter((item) => !items.some((known) => known.id === item.id)),
-      ]);
-      setCursor(result.next_cursor);
-    } catch (reason) {
-      if (generation.current === current) setError(reason);
-    } finally {
-      if (generation.current === current) setLoading(false);
-    }
-  }
-  function changeTab(next: ShopTab) {
-    setTab(next);
-    setType('');
-    setMessage('');
-  }
-  // 成交后显示结果，重新读取失败只重试读取，不重放购买反馈。
+  // 成功只刷新当前报价；读取失败通过重读恢复，不能重放购买反馈。
   function purchased(item: Purchase) {
-    setHighlightCharacter(true);
     setSelected(null);
     setMessage(item.type_snapshot === 'reward' ? content.rewardPurchased : item.island_item_key ? content.islandPurchased : content.purchaseSuccess);
-    setTab(item.type_snapshot === 'reward' ? 'rewards' : item.island_item_key ? 'islandInventory' : 'wardrobe');
-    setType('');
-    setStatus('pending');
     refresh((value) => value + 1);
   }
-  // 装备状态由服务端确认后再提示成功，失败保留当前角色。
-  async function toggle(item: Purchase, equip: boolean) {
-    const kind = portraitType(item);
-    if (!kind) return;
-    setWriting(true);
-    setHighlightCharacter(false);
-    setError(null);
-    setMessage('');
-    try {
-      if (item.wearable_slot)
-        await client.request(`/equipment/${item.wearable_slot}`, {
-          method: 'PUT', body: { purchase_id: equip ? item.id : null },
-        });
-      else if (kind === 'accessory' || kind === 'effect')
-        await client.request(`/equipment/${kind === 'effect' ? 'effects' : 'accessories'}/${item.id}`, {
-          method: equip ? 'PUT' : 'DELETE',
-        });
-      else
-        await client.request(`/equipment/${kind}`, {
-          method: 'PUT',
-          body: { purchase_id: equip ? item.id : null },
-        });
-      setMessage(content.equipmentSaved);
-      highlightAfterRefresh.current = true;
-      dispatchFeedback('equip');
-      refresh((value) => value + 1);
-    } catch (reason) {
-      setError(reason);
-    } finally {
-      setWriting(false);
-    }
-  }
-  // 基础形象直接选择，不产生订单；保存后的刷新沿用装备反馈规则。
-  async function selectBaseAvatar(key: string) {
-    setWriting(true);
-    setHighlightCharacter(false);
-    setError(null);
-    setMessage('');
-    try {
-      await client.request('/equipment/base-avatar', { method: 'PUT', body: { asset_key: key } });
-      setMessage(content.equipmentSaved);
-      highlightAfterRefresh.current = true;
-      dispatchFeedback('equip');
-      refresh((value) => value + 1);
-    } catch (reason) {
-      setError(reason);
-    } finally {
-      setWriting(false);
-    }
-  }
-  const visibleProducts = products.filter((item) => (tab !== 'construction' || item.island_item_key) && (!type || itemCategory(item) === type));
-  const wardrobeItems = purchases.filter((item) => portraitType(item) !== null && (!type || itemCategory(item, true) === type));
-  const islandItems = purchases.filter((item) => item.island_item_key);
+  const visibleProducts = products.filter((item) => matchesCategory(item, filter));
   const confirmationWallet = pending?.wallet ?? snapshot?.wallet;
-  return (
-    <div className="shop-workspace">
-      <h1>{content.title}</h1>
-      <div className="shop-tabs">
-        {(['browse', 'construction', 'wardrobe', 'islandInventory', 'rewards'] as const).map((item) => (
-          <button
-            type="button"
-            key={item}
-            className="secondary"
-            aria-pressed={tab === item}
-            onClick={() => changeTab(item)}
-          >
-            {content[item]}
-          </button>
-        ))}
-      </div>
-      {snapshot && (
-        <div className="shop-wallet" aria-label={content.balance}>
-          <Price coins={snapshot.wallet.coins} diamonds={snapshot.wallet.diamonds} />
-        </div>
-      )}
-      {message && (
-        <p className="shop-warning feedback-success" role="status">
-          {message}
-        </p>
-      )}
-      {pending && (
-        <div className="shop-warning">
-          <p>{content.purchasePending}</p>
-          <button
-            onClick={(event) => {
-              event.currentTarget.focus();
-              setSelected(pending.product);
-            }}
-          >
-            {content.recoverPurchase}
-          </button>
-        </div>
-      )}
-      {error !== null && (
-        <div role="alert">
-          <p className="shop-error">{shopError(error)}</p>
-          <button className="secondary" onClick={() => refresh((value) => value + 1)}>
-            {content.reload}
-          </button>
-        </div>
-      )}
-      {tab === 'rewards' ? (
-        <div className="shop-tabs">
-          {(['pending', 'redeemed'] as const).map((item) => (
-            <button
-              type="button"
-              className="secondary"
-              aria-pressed={status === item}
-              key={item}
-              onClick={() => setStatus(item)}
-            >
-              {content[item]}
-            </button>
-          ))}
-        </div>
-      ) : (tab === 'browse' || tab === 'wardrobe') && (
-        <select aria-label={content.typeFilter} value={type} onChange={(event) => setType(event.target.value)}>
-          <option value="">{content.allTypes}</option>
-          {(tab === 'browse' ? shopCategories : wardrobeCategories).map((item) => (
-            <option value={item} key={item}>
-              {categoryLabel(item)}
-            </option>
-          ))}
-        </select>
-      )}
+  return <div className="shop-workspace">
+    <div className="shop-page-heading"><h1>{content.title}</h1>{onBackpack && <button type="button" className="secondary" onClick={onBackpack}>{content.backpack}</button>}</div>
+    {message && <p className="shop-warning feedback-success" role="status">{message}</p>}
+    {pending && <div className="shop-warning"><p>{content.purchasePending}</p><button onClick={(event) => { event.currentTarget.focus(); setSelected(pending.product); }}>{content.recoverPurchase}</button></div>}
+    {error !== null && <div role="alert"><p className="shop-error">{shopError(error)}</p><button className="secondary" onClick={() => refresh((value) => value + 1)}>{content.reload}</button></div>}
+    <CategoryTabs value={filter} onChange={setFilter}>
       {loading && <p role="status">{content.loading}</p>}
-      {browsing && !loading && snapshot && (
-        <>
-          {visibleProducts.length === 0 && <p>{content.emptyProducts}</p>}
-          <div className="shop-grid">
-            {visibleProducts.map((item) => (
-              <article className="shop-card shop-product-card" key={item.id}>
-                <h3>{item.name}</h3>
-                <ShopItemArtwork className="shop-item-art shop-product-art" item={item} />
-                <div className="shop-product-footer">
-                  <button
-                    className="shop-product-buy"
-                    type="button"
-                    disabled={Boolean(pending) || !canBuy(item, snapshot.wallet)}
-                    onClick={(event) => {
-                      event.currentTarget.focus();
-                      setSelected(item);
-                    }}
-                    aria-label={`${content.buy} ${item.name}`}
-                    aria-description={[
-                      `${content.coins} ${item.coin_price}`,
-                      item.diamond_price > 0 ? `${content.diamonds} ${item.diamond_price}` : null,
-                      item.owned && !item.repeatable
-                        ? content.owned
-                        : item.stock === 0
-                          ? content.soldOut
-                          : !canBuy(item, snapshot.wallet) ? content.insufficient : null,
-                    ].filter(Boolean).join('，')}
-                  >
-                    <span>
-                      <img src="/api/v1/assets/coin-v1" alt={content.coins} />
-                      <strong>{item.coin_price}</strong>
-                    </span>
-                    {item.diamond_price > 0 && (
-                      <span>
-                        <img src="/api/v1/assets/gem-v1" alt={content.diamonds} />
-                        <strong>{item.diamond_price}</strong>
-                      </span>
-                    )}
-                  </button>
-                  <span className="shop-product-owned">
-                    <img src="/api/v1/assets/accessory-backpack-v1" alt={content.ownedCount} />
-                    <strong>{item.owned_count ?? (item.owned ? 1 : 0)}</strong>
-                  </span>
-                </div>
-              </article>
-            ))}
-          </div>
-        </>
-      )}
-      {tab === 'wardrobe' && snapshot && (
-        <div className="shop-wardrobe-layout">
-          <section>
-            <BaseAvatarPicker equipment={snapshot.equipment} busy={writing || loading} onSelect={(key) => void selectBaseAvatar(key)} />
-            <Wardrobe
-              items={wardrobeItems}
-              hasMore={Boolean(cursor)}
-              equipment={snapshot.equipment}
-              busy={writing || loading}
-              onToggle={(item, equip) => void toggle(item, equip)}
-            />
-          </section>
-          <aside className="panel">
-            <div className={highlightCharacter ? 'feedback-pop' : undefined} onAnimationEnd={(event) => { if (event.target === event.currentTarget) setHighlightCharacter(false); }}>
-              <CharacterPanel
-                equipment={snapshot.equipment}
-                displayName={session.account.display_name}
-                reduceMotion={session.account.preferences.reduce_motion}
-              />
+      {!loading && snapshot && <>
+        {visibleProducts.length === 0 && error === null && <p>{filter.group === 'all' ? content.emptyProducts : content.emptyCategoryProducts}</p>}
+        <div className="shop-grid">
+          {visibleProducts.map((item) => <article className="shop-card shop-product-card" key={item.id}>
+            <h3>{item.name}</h3>
+            <ShopItemArtwork className="shop-item-art shop-product-art" item={item} />
+            <div className="shop-product-footer">
+              <button className="shop-product-buy" type="button"
+                disabled={Boolean(pending) || error !== null || !canBuy(item, snapshot.wallet)}
+                onClick={(event) => { event.currentTarget.focus(); setSelected(item); }}
+                aria-label={`${content.buy} ${item.name}`}
+                aria-description={[
+                  `${content.coins} ${item.coin_price}`,
+                  item.diamond_price > 0 ? `${content.diamonds} ${item.diamond_price}` : null,
+                  item.owned && !item.repeatable ? content.owned : item.stock === 0 ? content.soldOut : !canBuy(item, snapshot.wallet) ? content.insufficient : null,
+                ].filter(Boolean).join('，')}>
+                <span><img src="/api/v1/assets/coin-v1" alt={content.coins} /><strong>{item.coin_price}</strong></span>
+                {item.diamond_price > 0 && <span><img src="/api/v1/assets/gem-v1" alt={content.diamonds} /><strong>{item.diamond_price}</strong></span>}
+              </button>
+              <span className="shop-product-owned"><img src="/api/v1/assets/accessory-backpack-v1" alt={content.ownedCount} /><strong>{item.owned_count ?? (item.owned ? 1 : 0)}</strong></span>
             </div>
-            <button type="button" className="secondary shop-edit-outfit" disabled={writing || loading || snapshot.equipment.accessories.length === 0} onClick={() => setEditingOutfit(true)}>{content.editOutfit}</button>
-          </aside>
+          </article>)}
         </div>
-      )}
-      {tab === 'islandInventory' && !loading && (
-        <section className="shop-stack">
-          {onIsland && <button type="button" onClick={onIsland}>{content.goToIsland}</button>}
-          {islandItems.length === 0 && !cursor && <p>{content.emptyPurchases}</p>}
-          <div className="shop-grid">
-            {islandItems.map((item) => <article className="shop-card shop-product-card" key={item.id}>
-              <h3>{item.name_snapshot}</h3>
-              <img className="shop-item-art shop-product-art" src={assetURL(item.asset_key_snapshot, item.type_snapshot === 'effect')} alt="" />
-            </article>)}
-          </div>
-        </section>
-      )}
-      {editingOutfit && snapshot && <AccessoryEditor equipment={snapshot.equipment} displayName={session.account.display_name} reduceMotion={session.account.preferences.reduce_motion} client={client} onClose={() => setEditingOutfit(false)} onSaved={(next) => setSnapshot((current) => current ? { ...current, equipment: next } : current)} />}
-      {tab === 'rewards' && !loading && (
-        <>
-          {purchases.length === 0 && <p>{content.emptyPurchases}</p>}
-          <div className="shop-grid">
-            {purchases.map((item) => (
-              <article className="shop-card shop-product-card" key={item.id}>
-                <h3>{item.name_snapshot}</h3>
-                <img className="shop-item-art shop-product-art" src={assetURL(item.asset_key_snapshot)} alt="" />
-                {item.status === 'pending' ? (
-                  <button
-                    onClick={(event) => {
-                      event.currentTarget.focus();
-                      setReward(item);
-                    }}
-                    aria-label={`${content.redeem} ${item.name_snapshot}`}
-                  >
-                    {content.redeem}
-                  </button>
-                ) : (
-                  <strong>{content.redeemed}</strong>
-                )}
-              </article>
-            ))}
-          </div>
-        </>
-      )}
-      {cursor && (
-        <div className="shop-stack">
-          <button className="secondary" disabled={loading} onClick={() => void more()}>
-            {content.more}
-          </button>
-        </div>
-      )}
-      {selected && confirmationWallet && (
-        <PurchaseDialog
-          client={client}
-          product={selected}
-          wallet={confirmationWallet}
-          onClose={() => {
-            setSelected(null);
-            refresh((value) => value + 1);
-          }}
-          onPurchased={purchased}
-        />
-      )}
-      {reward && (
-        <RedeemDialog
-          client={client}
-          purchase={reward}
-          onClose={() => setReward(null)}
-          onRedeemed={() => {
-            setReward(null);
-            setMessage(content.redeemSuccess);
-            refresh((value) => value + 1);
-          }}
-        />
-      )}
-    </div>
-  );
+      </>}
+    </CategoryTabs>
+    {selected && confirmationWallet && <PurchaseDialog client={client} product={selected} wallet={confirmationWallet}
+      onClose={() => { setSelected(null); refresh((value) => value + 1); }} onPurchased={purchased} />}
+  </div>;
 }

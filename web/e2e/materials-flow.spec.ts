@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import type { components } from '../src/api/schema';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
+import { openBackpack, openWardrobe, selectShopCategory } from './shop-navigation';
 import island from '../src/features/island/content.json' with { type: 'json' };
 
 type Camp = components['schemas']['CampResponse'];
@@ -41,10 +42,12 @@ async function createOffer(page: Page, type: Product['type'], assetKey: string, 
 
 // 购买与装备由页面执行，同时验证购买后不会自动装备。
 async function buyAndEquip(page: Page, product: Product) {
-  await page.getByRole('button', { name: shop.browse, exact: true }).click();
+  await selectShopCategory(page, 'all');
   await page.getByRole('button', { name: `${shop.buy} ${product.name}`, exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: shop.title, exact: true })).toBeVisible();
+  await openWardrobe(page);
   await expect(page.getByRole('button', { name: `${shop.equip} ${product.name}`, exact: true })).toBeEnabled();
   await page.getByRole('button', { name: `${shop.equip} ${product.name}`, exact: true }).click();
   await expect(page.getByRole('button', { name: `${shop.unequip} ${product.name}`, exact: true })).toBeEnabled();
@@ -111,20 +114,21 @@ for (const character of [
 
     await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
     for (const product of [avatar, background, accessory]) await buyAndEquip(page, product);
-    const stage = page.locator('.shop-character');
+    const stage = page.getByRole('dialog', { name: shop.wardrobeTitle, exact: true }).locator('.shop-character');
     for (const product of [avatar, background, accessory]) {
       await expect(stage.getByRole('img', { name: product.name, exact: true })).toBeVisible();
     }
     await expect.poll(() => stage.locator('img').evaluateAll((images) => images.every((image) =>
       (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
 
-    await page.getByRole('button', { name: shop.construction, exact: true }).click();
+    await selectShopCategory(page, 'island');
     await page.getByRole('button', { name: `${shop.buy} ${windmill.name}`, exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     const owned = await api<IslandState>(page, '/island');
     const added = owned.inventory.find((item) => item.item_key === 'windmill' && !initial.inventory.some((old) => old.id === item.id));
     expect(added).toBeDefined();
+    await openBackpack(page);
     await page.getByRole('button', { name: shop.goToIsland, exact: true }).click();
     const scene = page.getByRole('group', { name: island.scene, exact: true });
     await expect(scene).toBeVisible();

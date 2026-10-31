@@ -5,8 +5,6 @@
 .checkin-section-heading { justify-content: space-between; margin-bottom: 18px; }
 .checkin-composer-header { display: flex; align-items: center; gap: 14px; }
 .checkin-panel h2 { margin-bottom: 16px; }
-.checkin-wallet { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 24px; background: #eef2d9; }
-.checkin-wallet strong { display: inline-block; font-size: 32px; }
 .checkin-task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 16px; margin-top: 20px; }
 .checkin-task { display: grid; justify-items: center; gap: 12px; width: 100%; padding: 22px; background: #fff8df; color: var(--forest-dark); border-color: #d9bd72; }
 .checkin-task:hover { background: #fbefc7; }
