@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import fixture from '../../../../internal/island/testdata/spatial-geometry-cases.json';
-import { spatialFootprintCovered, spatialScene } from './spatial-geometry';
+import houseConfiguration from '../../../../internal/island/spatial-houses.json';
+import { spatialFootprintCovered, spatialRectCovered, spatialScene } from './spatial-geometry';
 
 describe('厘米空间规则，与 Go 共用样例', () => {
+  it('保留实际房屋派生通路的小数边界，越出地面仍拒绝',()=>{
+    const rect=houseConfiguration.houses.find(item=>item.house_key==='tiny-treats-cottage-v1')!.door_clearance;
+    expect(spatialRectCovered(rect,spatialScene.regions,['grass'])).toBe(true);
+    expect(spatialRectCovered({...rect,min_x_cm:1499.5,max_x_cm:1500.5},spatialScene.regions,['grass'])).toBe(false);
+    expect(spatialFootprintCovered({x_cm:0,z_cm:(rect.min_z_cm+rect.max_z_cm)/2,rotation:0},{width_cm:rect.max_x_cm-rect.min_x_cm,depth_cm:rect.max_z_cm-rect.min_z_cm},spatialScene.regions,['grass'])).toBe(false);
+  });
   for (const sample of fixture.cases) {
     it(sample.name, () => {
       const regions = fixture.regions[sample.regions as keyof typeof fixture.regions];

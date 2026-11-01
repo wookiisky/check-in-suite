@@ -11,24 +11,55 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/core"
 )
 
-// readSpatialState 在调用者快照中读取全部所有权，不连接可变商品或旧二维布局。
+// readSpatialState 保留初始海边读取入口，供既有调用继续使用。
 func readSpatialState(ctx context.Context, tx *sql.Tx) (SpatialState, error) {
-	configuration := spatialConfigurationData()
-	state := SpatialState{Version: 1, SceneKey: configuration.Scene.Key, EnvironmentKey: configuration.DefaultEnvironment, Placements: configuration.DefaultPlacements, Inventory: []SpatialOwnedItem{}, Catalog: configuration.Catalog, Scene: configuration.Scene}
-	for _, placement := range configuration.DefaultPlacements {
-		state.Inventory = append(state.Inventory, SpatialOwnedItem{placement.InstanceID, placement.ItemKey})
+	return readSpatialSceneState(ctx, tx, spatialIndex.configuration.Scene.Key)
+}
+
+// readSpatialSceneState 在同一快照读取目标布局、全量库存及跨场景占用。
+func readSpatialSceneState(ctx context.Context, tx *sql.Tx, key string) (SpatialState, error) {
+	definition, found := SpatialSceneFind(key)
+	if !found {
+		return SpatialState{}, core.Invalid("scene_key", "INVALID_VALUE")
 	}
-	var raw string
-	err := tx.QueryRowContext(ctx, "SELECT version,scene_key,environment_key,placements FROM island_spatial_state WHERE id=1").Scan(&state.Version, &state.SceneKey, &state.EnvironmentKey, &raw)
+	owned, err := spatialSceneOwned(ctx, tx, definition)
+	if err != nil {
+		return SpatialState{}, err
+	}
+	if !owned {
+		return SpatialState{}, core.Invalid("scene_key", "NOT_OWNED")
+	}
+	configuration := spatialConfigurationData()
+	state := SpatialState{Version: 1, SceneKey: key, EnvironmentKey: definition.DefaultEnvironment, Placements: []SpatialPlacement{}, Inventory: []SpatialOwnedItem{}, Catalog: configuration.Catalog, Scene: definition.Scene, Houses: SpatialHouseDefinitions()}
+	if key == configuration.Scene.Key {
+		state.Placements = configuration.DefaultPlacements
+	}
+	err = tx.QueryRowContext(ctx, `SELECT version,environment_key FROM island_scene_states WHERE scene_key=?`, key).Scan(&state.Version, &state.EnvironmentKey)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return state, err
 	}
 	if err == nil {
-		if err = json.Unmarshal([]byte(raw), &state.Placements); err != nil {
+		state.Placements, err = readSpatialPlacements(ctx, tx, key)
+		if err != nil {
+			return state, err
+		}
+	} else if key == configuration.Scene.Key {
+		if err = readLegacySpatialState(ctx, tx, &state); err != nil {
 			return state, err
 		}
 	}
-	rows, err := tx.QueryContext(ctx, "SELECT id,item_key_snapshot FROM purchases WHERE status='owned' ORDER BY created_at,id")
+	state.Scene, err = resolveSpatialHouse(state.Scene, state.Placements, state.Catalog)
+	if err != nil {
+		return state, err
+	}
+	locations, err := spatialLocations(ctx, tx, configuration)
+	if err != nil {
+		return state, err
+	}
+	for _, placement := range configuration.DefaultPlacements {
+		state.Inventory = append(state.Inventory, SpatialOwnedItem{InstanceID: placement.InstanceID, ItemKey: placement.ItemKey, PlacedSceneKey: locations[placement.InstanceID]})
+	}
+	rows, err := tx.QueryContext(ctx, `SELECT id,item_key_snapshot FROM purchases WHERE status='owned' ORDER BY created_at,id`)
 	if err != nil {
 		return state, err
 	}
@@ -39,14 +70,85 @@ func readSpatialState(ctx context.Context, tx *sql.Tx) (SpatialState, error) {
 			return state, err
 		}
 		if _, found := spatialFindDefinition(state.Catalog, item.ItemKey); found {
+			item.PlacedSceneKey = locations[item.InstanceID]
 			state.Inventory = append(state.Inventory, item)
 		}
 	}
 	return state, rows.Err()
 }
 
-// ReadSpatial 返回新版完整快照，空库只提供默认值而不在读取中写库。
+// readLegacySpatialState 兼容迁移后尚由旧初始化入口写入的海边布局。
+func readLegacySpatialState(ctx context.Context, tx *sql.Tx, state *SpatialState) error {
+	var raw string
+	err := tx.QueryRowContext(ctx, `SELECT version,environment_key,placements FROM island_spatial_state WHERE id=1`).Scan(&state.Version, &state.EnvironmentKey, &raw)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal([]byte(raw), &state.Placements)
+}
+
+// readSpatialPlacements 保留提交顺序，未知结果核对不会因存储顺序改变而误判。
+func readSpatialPlacements(ctx context.Context, tx *sql.Tx, key string) ([]SpatialPlacement, error) {
+	rows, err := tx.QueryContext(ctx, `SELECT instance_id,item_key,space,x_cm,z_cm,rotation FROM island_scene_placements WHERE scene_key=? ORDER BY position_index,instance_id`, key)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	placements := []SpatialPlacement{}
+	for rows.Next() {
+		var item SpatialPlacement
+		if err = rows.Scan(&item.InstanceID, &item.ItemKey, &item.Space, &item.XCM, &item.ZCM, &item.Rotation); err != nil {
+			return nil, err
+		}
+		placements = append(placements, item)
+	}
+	return placements, rows.Err()
+}
+
+// spatialLocations 将尚未保存的海边默认布局也视为真实占用，避免复制免费实例。
+func spatialLocations(ctx context.Context, tx *sql.Tx, configuration spatialConfiguration) (map[string]string, error) {
+	locations := map[string]string{}
+	var persisted bool
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM island_scene_states WHERE scene_key=?)`, configuration.Scene.Key).Scan(&persisted); err != nil {
+		return nil, err
+	}
+	if !persisted {
+		state := SpatialState{Version: 1, EnvironmentKey: configuration.DefaultEnvironment, Placements: configuration.DefaultPlacements}
+		if err := readLegacySpatialState(ctx, tx, &state); err != nil {
+			return nil, err
+		}
+		for _, placement := range state.Placements {
+			locations[placement.InstanceID] = configuration.Scene.Key
+		}
+	}
+	rows, err := tx.QueryContext(ctx, `SELECT instance_id,scene_key FROM island_scene_placements`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var instance, key string
+		if err = rows.Scan(&instance, &key); err != nil {
+			return nil, err
+		}
+		locations[instance] = key
+	}
+	return locations, rows.Err()
+}
+
+// ReadSpatial 保留不带场景参数的免费海边入口。
 func (service *Service) ReadSpatial(ctx context.Context, principal account.Principal) (SpatialState, error) {
+	return service.ReadSpatialScene(ctx, principal, spatialIndex.configuration.Scene.Key)
+}
+
+// ReadSpatialScene 读取家庭拥有的独立场景，不在GET中创建状态。
+func (service *Service) ReadSpatialScene(ctx context.Context, principal account.Principal, key string) (SpatialState, error) {
+	if key == "" {
+		key = spatialIndex.configuration.Scene.Key
+	}
 	tx, err := service.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return SpatialState{}, err
@@ -55,14 +157,47 @@ func (service *Service) ReadSpatial(ctx context.Context, principal account.Princ
 	if err = account.Authorize(ctx, tx, principal, false, service.Now()); err != nil {
 		return SpatialState{}, err
 	}
-	state, err := readSpatialState(ctx, tx)
+	state, err := readSpatialSceneState(ctx, tx, key)
 	if err != nil {
 		return state, err
 	}
 	return state, tx.Commit()
 }
 
-// SaveSpatial 在同一写事务复核权限、所有权与完整空间，再提交整套布局和版本。
+// materializeSpatialSeaside 在首次写入时固定默认海边基线，收起后不会再次虚拟生成。
+func materializeSpatialSeaside(ctx context.Context, tx *sql.Tx) error {
+	key := spatialIndex.configuration.Scene.Key
+	var exists bool
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM island_scene_states WHERE scene_key=?)`, key).Scan(&exists); err != nil {
+		return err
+	}
+	if exists {
+		return nil
+	}
+	state, err := readSpatialSceneState(ctx, tx, key)
+	if err != nil {
+		return err
+	}
+	return writeSpatialScene(ctx, tx, state)
+}
+
+// writeSpatialScene 同一事务替换当前场景的整套位置，实例主键约束跨场景唯一。
+func writeSpatialScene(ctx context.Context, tx *sql.Tx, state SpatialState) error {
+	if _, err := tx.ExecContext(ctx, `INSERT INTO island_scene_states(scene_key,version,environment_key) VALUES(?,?,?) ON CONFLICT(scene_key) DO UPDATE SET version=excluded.version,environment_key=excluded.environment_key`, state.SceneKey, state.Version, state.EnvironmentKey); err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM island_scene_placements WHERE scene_key=?`, state.SceneKey); err != nil {
+		return err
+	}
+	for index, item := range state.Placements {
+		if _, err := tx.ExecContext(ctx, `INSERT INTO island_scene_placements(instance_id,scene_key,item_key,space,x_cm,z_cm,rotation,position_index) VALUES(?,?,?,?,?,?,?,?)`, item.InstanceID, state.SceneKey, item.ItemKey, item.Space, item.XCM, item.ZCM, item.Rotation, index); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SaveSpatial 在单个写事务复核场景资格、实例占用和几何，再更新目标场景版本。
 func (service *Service) SaveSpatial(ctx context.Context, principal account.Principal, input SpatialSaveInput) (SpatialState, error) {
 	tx, err := service.DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -72,7 +207,7 @@ func (service *Service) SaveSpatial(ctx context.Context, principal account.Princ
 	if err = account.Authorize(ctx, tx, principal, false, service.Now()); err != nil {
 		return SpatialState{}, err
 	}
-	state, err := readSpatialState(ctx, tx)
+	state, err := readSpatialSceneState(ctx, tx, input.SceneKey)
 	if err != nil {
 		return state, err
 	}
@@ -82,25 +217,34 @@ func (service *Service) SaveSpatial(ctx context.Context, principal account.Princ
 	if input.ExpectedVersion != state.Version {
 		return SpatialState{}, core.VersionConflict(state.Version)
 	}
+	locations := make(map[string]string, len(state.Inventory))
+	for _, item := range state.Inventory {
+		locations[item.InstanceID] = item.PlacedSceneKey
+	}
+	for _, placement := range input.Placements {
+		if location := locations[placement.InstanceID]; location != "" && location != input.SceneKey {
+			return SpatialState{}, core.Invalid("placements", "PLACED_IN_OTHER_SCENE")
+		}
+	}
 	if err = validateSpatialPlacements(input, state); err != nil {
 		return SpatialState{}, err
 	}
-	version, err := core.Add(state.Version, 1)
+	state.Version, err = core.Add(state.Version, 1)
 	if err != nil {
 		return SpatialState{}, err
 	}
-	raw, err := json.Marshal(input.Placements)
-	if err != nil {
+	if err = materializeSpatialSeaside(ctx, tx); err != nil {
 		return SpatialState{}, err
 	}
-	_, err = tx.ExecContext(ctx, "INSERT INTO island_spatial_state(id,version,scene_key,environment_key,placements) VALUES(1,?,?,?,?) ON CONFLICT(id) DO UPDATE SET version=excluded.version,scene_key=excluded.scene_key,environment_key=excluded.environment_key,placements=excluded.placements", version, input.SceneKey, input.EnvironmentKey, string(raw))
-	if err != nil {
-		return SpatialState{}, err
-	}
-	state.Version = version
-	state.SceneKey = input.SceneKey
 	state.EnvironmentKey = input.EnvironmentKey
 	state.Placements = input.Placements
+	if err = writeSpatialScene(ctx, tx, state); err != nil {
+		return SpatialState{}, err
+	}
+	state, err = readSpatialSceneState(ctx, tx, input.SceneKey)
+	if err != nil {
+		return state, err
+	}
 	return state, tx.Commit()
 }
 
@@ -121,9 +265,14 @@ type spatialPlaced struct {
 	rect       SpatialRect       // 旋转后的完整占地。
 }
 
-// validateSpatialPlacements 要求完整主屋、真实实例和完整地形覆盖，不要求全营地连通。
+// validateSpatialPlacements 允许零栋或一栋主屋，并复核真实实例、完整地形及门口通路。
 func validateSpatialPlacements(input SpatialSaveInput, state SpatialState) error {
 	invalid := func() error { return core.Invalid("placements", "INVALID_VALUE") }
+	var err error
+	state.Scene, err = resolveSpatialHouse(state.Scene, input.Placements, state.Catalog)
+	if err != nil {
+		return err
+	}
 	if input.SceneKey != state.Scene.Key {
 		return core.Invalid("scene_key", "INVALID_VALUE")
 	}
@@ -154,10 +303,18 @@ func validateSpatialPlacements(input SpatialSaveInput, state SpatialState) error
 		}
 		rect := SpatialPlacementRect(placement, definition.Footprint)
 		if placement.Space == SpatialOutdoor {
+			for _, fixed := range state.Scene.FixedObjects {
+				if fixed.BlocksPlacement && definition.BlocksPlacement && spatialRectsOverlap(rect, SpatialPlacementRect(SpatialPlacement{XCM: fixed.XCM, ZCM: fixed.ZCM, Rotation: fixed.Rotation}, fixed.Footprint)) {
+					return invalid()
+				}
+			}
 			if !SpatialFootprintCovered(placement, definition.Footprint, state.Scene.Regions, definition.AllowedTerrain) {
 				return invalid()
 			}
 		} else if placement.Space == SpatialIndoor {
+			if state.Scene.House == nil {
+				return invalid()
+			}
 			floor := state.Scene.House.Interior
 			if rect.MinXCM < floor.MinXCM || rect.MaxXCM > floor.MaxXCM || rect.MinZCM < floor.MinZCM || rect.MaxZCM > floor.MaxZCM {
 				return invalid()
@@ -193,7 +350,7 @@ func validateSpatialPlacements(input SpatialSaveInput, state SpatialState) error
 		}
 		placed = append(placed, spatialPlaced{placement, definition, rect})
 	}
-	if houses != 1 {
+	if houses > 1 {
 		return invalid()
 	}
 	for index, first := range placed {
@@ -213,6 +370,11 @@ func validateSpatialPlacements(input SpatialSaveInput, state SpatialState) error
 		clearance.MaxZCM += z
 		if !spatialRectCovered(clearance, state.Scene.Regions, first.definition.AllowedTerrain) {
 			return invalid()
+		}
+		for _, fixed := range state.Scene.FixedObjects {
+			if fixed.WalkObstacle != nil && spatialRectsOverlap(clearance, SpatialPlacementRect(SpatialPlacement{XCM: fixed.XCM, ZCM: fixed.ZCM, Rotation: fixed.Rotation}, *fixed.WalkObstacle)) {
+				return invalid()
+			}
 		}
 		for _, other := range placed {
 			if other.placement.InstanceID == first.placement.InstanceID || other.placement.Space != SpatialOutdoor || other.definition.WalkObstacle == nil {

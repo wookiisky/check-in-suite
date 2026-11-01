@@ -15,10 +15,27 @@ interface StaticModelProps {
   onError?:(error:unknown)=>void; // HTML反馈由页面显示。
   onReady?:()=>void; // 角色道具等需要等实际加载完成再推进。
   rotationY?:number; // 建筑长墙先沿自身纵向缩放，再转到共享轴向。
+  scale?:number; // 固定景物使用场景配置中的整体比例。
+  hiddenNodes?:readonly string[]; // 完整房型仅隐藏实例节点，不改变缓存源。
+}
+
+// 每个摆设独立持有节点显隐和变换，几何与材质仍由资源缓存管理。
+export function cloneStaticModel(source:Object3D,fit?:[number,number,number],hiddenNodes:readonly string[]=[]):Object3D {
+  const result=source.clone(true);
+  result.traverse(node=>{
+    if(hiddenNodes.includes(node.name))node.visible=false;
+    if(node instanceof Mesh){node.castShadow=true;node.receiveShadow=true;}
+  });
+  if(fit){
+    const bounds=new Box3().setFromObject(result),size=bounds.getSize(new Vector3()),center=bounds.getCenter(new Vector3());
+    result.scale.set(fit[0]/size.x,fit[1]/size.y,fit[2]/size.z);
+    result.position.set(-center.x*result.scale.x,-bounds.min.y*result.scale.y,-center.z*result.scale.z);
+  }
+  return result;
 }
 
 // 建筑构件可伸缩，普通家具保留发布时的米制比例。
-export function StaticModel({url,position=[0,0,0],fit,onError,onReady,rotationY=0}:StaticModelProps){
+export function StaticModel({url,position=[0,0,0],fit,onError,onReady,rotationY=0,scale=1,hiddenNodes}:StaticModelProps){
   const [source,setSource]=useState<Object3D|null>(null);
   useEffect(()=>{
     let active=true;const lease=characterResources.acquire(url);
@@ -27,15 +44,9 @@ export function StaticModel({url,position=[0,0,0],fit,onError,onReady,rotationY=
   },[url,onError,onReady]);
   const object=useMemo(()=>{
     if(!source)return null;
-    const result=source.clone(true);result.traverse(node=>{if(node instanceof Mesh){node.castShadow=true;node.receiveShadow=true;}});
-    if(fit){
-      const bounds=new Box3().setFromObject(result),size=bounds.getSize(new Vector3()),center=bounds.getCenter(new Vector3());
-      result.scale.set(fit[0]/size.x,fit[1]/size.y,fit[2]/size.z);
-      result.position.set(-center.x*result.scale.x,-bounds.min.y*result.scale.y,-center.z*result.scale.z);
-    }
-    return result;
-  },[source,fit?.[0],fit?.[1],fit?.[2]]);
-  return object?<group position={position} rotation={[0,rotationY,0]}><primitive object={object} dispose={null}/></group>:null;
+    return cloneStaticModel(source,fit,hiddenNodes);
+  },[source,fit?.[0],fit?.[1],fit?.[2],hiddenNodes]);
+  return object?<group position={position} rotation={[0,rotationY,0]} scale={scale}><primitive object={object} dispose={null}/></group>:null;
 }
 
 // 内墙面向主活动区，外墙面向房屋外侧；两者都用真实 x/z 决定剖切方向。
@@ -49,16 +60,26 @@ export function houseWallSide(wall:SpatialRect,house:SpatialHouse):WallSide{
   return (wall.min_z_cm+wall.max_z_cm)>0?'north':'south';
 }
 
+// 新房型的方向节点和原有墙体共用同一相机剖切规则。
+export function houseHiddenNodes(house:SpatialHouse,direction:number,open:boolean):string[] {
+  if(!open)return [];
+  return [...house.roof_nodes??[],...hiddenWallSides(direction,true).flatMap(side=>house.wall_nodes?.[side]??[])];
+}
+
 // 房屋模型尺寸直接来自共享墙体和门洞，室内家具与导航使用同一范围。
 export function SpatialHouseModel({house,direction,open,onError}:{house:SpatialHouse;direction:number;open:boolean;onError:(error:unknown)=>void}){
+  const hiddenNodes=useMemo(()=>houseHiddenNodes(house,direction,open),[house,direction,open]);
+  if(house.model_url)return <group name="spatial-house"><StaticModel url={house.model_url} hiddenNodes={hiddenNodes} onError={onError}/></group>;
+  const models = house.models;
+  if(!models)return null;
   const hidden=hiddenWallSides(direction,open),floor=house.interior;
   const width=(floor.max_x_cm-floor.min_x_cm)/100,depth=(floor.max_z_cm-floor.min_z_cm)/100,y=house.floor_height_cm/100,height=house.wall_height_cm/100;
   const cx=(floor.min_x_cm+floor.max_x_cm)/200,cz=(floor.min_z_cm+floor.max_z_cm)/200;
   const door=house.door_center,lintel=(house.wall_height_cm-house.door_height_cm)/100;
   return <group name="spatial-house">
-    <StaticModel url={house.models.floor_url} position={[cx,0,cz]} fit={[width,y,depth]} onError={onError}/>
-    {house.walls.map((wall,index)=>hidden.includes(houseWallSide(wall,house))?null:<StaticModel key={index} url={house.models.wall_url} position={[(wall.min_x_cm+wall.max_x_cm)/200,y,(wall.min_z_cm+wall.max_z_cm)/200]} rotationY={wall.max_x_cm-wall.min_x_cm>wall.max_z_cm-wall.min_z_cm?Math.PI/2:0} fit={[Math.min(wall.max_x_cm-wall.min_x_cm,wall.max_z_cm-wall.min_z_cm)/100,height,Math.max(wall.max_x_cm-wall.min_x_cm,wall.max_z_cm-wall.min_z_cm)/100]} onError={onError}/>)}
-    {!hidden.includes('south')&&lintel>0&&<StaticModel url={house.models.wall_url} position={[door.x_cm/100,y+house.door_height_cm/100,door.z_cm/100-.05]} rotationY={Math.PI/2} fit={[.1,lintel,house.door_width_cm/100]} onError={onError}/>}
-    {!open&&<StaticModel url={house.models.roof_url} position={[cx,y+height,cz]} fit={[width+.25,.28,depth+.25]} onError={onError}/>}
+    <StaticModel url={models.floor_url} position={[cx,0,cz]} fit={[width,y,depth]} onError={onError}/>
+    {house.walls.map((wall,index)=>hidden.includes(houseWallSide(wall,house))?null:<StaticModel key={index} url={models.wall_url} position={[(wall.min_x_cm+wall.max_x_cm)/200,y,(wall.min_z_cm+wall.max_z_cm)/200]} rotationY={wall.max_x_cm-wall.min_x_cm>wall.max_z_cm-wall.min_z_cm?Math.PI/2:0} fit={[Math.min(wall.max_x_cm-wall.min_x_cm,wall.max_z_cm-wall.min_z_cm)/100,height,Math.max(wall.max_x_cm-wall.min_x_cm,wall.max_z_cm-wall.min_z_cm)/100]} onError={onError}/>)}
+    {!hidden.includes('south')&&lintel>0&&<StaticModel url={models.wall_url} position={[door.x_cm/100,y+house.door_height_cm/100,door.z_cm/100-.05]} rotationY={Math.PI/2} fit={[.1,lintel,house.door_width_cm/100]} onError={onError}/>}
+    {!open&&<StaticModel url={models.roof_url} position={[cx,y+height,cz]} fit={[width+.25,.28,depth+.25]} onError={onError}/>}
   </group>;
 }

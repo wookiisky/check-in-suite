@@ -16,6 +16,7 @@ type ownershipIdentity struct {
 	Product   string // Quote identity, empty for aggregate stable identities.
 	Item      string // Stable island item identity.
 	Character string // Stable character identity.
+	Scene     string // Stable scene identity.
 }
 
 // addOwnership combines disjoint order groups while retaining permanent ownership.
@@ -26,14 +27,14 @@ func addOwnership(first, second ownershipCount) ownershipCount {
 // applyProductOwnership resolves all visible quotes with one grouped order query.
 func applyProductOwnership(ctx context.Context, tx *sql.Tx, items []Product) error {
 	counts := map[ownershipIdentity]ownershipCount{}
-	rows, err := tx.QueryContext(ctx, `SELECT product_id,item_key_snapshot,character_key_snapshot,type_snapshot,status,count(*) FROM purchases GROUP BY product_id,item_key_snapshot,character_key_snapshot,type_snapshot,status`)
+	rows, err := tx.QueryContext(ctx, `SELECT product_id,item_key_snapshot,character_key_snapshot,scene_key_snapshot,type_snapshot,status,count(*) FROM purchases GROUP BY product_id,item_key_snapshot,character_key_snapshot,scene_key_snapshot,type_snapshot,status`)
 	if err != nil {
 		return err
 	}
 	for rows.Next() {
-		var product, item, body, kind, status string
+		var product, item, body, scene, kind, status string
 		var count int64
-		if err := rows.Scan(&product, &item, &body, &kind, &status, &count); err != nil {
+		if err := rows.Scan(&product, &item, &body, &scene, &kind, &status, &count); err != nil {
 			rows.Close()
 			return err
 		}
@@ -48,6 +49,9 @@ func applyProductOwnership(ctx context.Context, tx *sql.Tx, items []Product) err
 		if body != "" {
 			keys = append(keys, ownershipIdentity{Character: body}, ownershipIdentity{Product: product, Character: body})
 		}
+		if scene != "" {
+			keys = append(keys, ownershipIdentity{Scene: scene}, ownershipIdentity{Product: product, Scene: scene})
+		}
 		for _, key := range keys {
 			counts[key] = addOwnership(counts[key], value)
 		}
@@ -61,14 +65,17 @@ func applyProductOwnership(ctx context.Context, tx *sql.Tx, items []Product) err
 		item := &items[index]
 		value := counts[ownershipIdentity{Product: item.ID}]
 		var stable, intersection ownershipIdentity
-		if item.Type == TypeCharacter {
+		if item.Type == TypeScene {
+			stable.Scene = item.SceneKey
+			intersection = ownershipIdentity{Product: item.ID, Scene: item.SceneKey}
+		} else if item.Type == TypeCharacter {
 			stable.Character = item.CharacterKey
 			intersection = ownershipIdentity{Product: item.ID, Character: item.CharacterKey}
 		} else if item.IslandItemKey != "" {
 			stable.Item = item.IslandItemKey
 			intersection = ownershipIdentity{Product: item.ID, Item: item.IslandItemKey}
 		}
-		if stable.Item != "" || stable.Character != "" {
+		if stable.Item != "" || stable.Character != "" || stable.Scene != "" {
 			other := counts[stable]
 			value.Count += other.Count - counts[intersection].Count
 			value.Owned = value.Owned || other.Owned

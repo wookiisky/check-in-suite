@@ -19,14 +19,14 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/wallet"
 )
 
-const purchaseColumns = `p.id,p.product_id,p.type_snapshot,p.name_snapshot,p.asset_key_snapshot,p.description_snapshot,p.coin_price,p.diamond_price,p.status,p.redeemed_at,p.version,p.created_at,p.item_key_snapshot,p.wearable_key_snapshot,p.character_key_snapshot`
+const purchaseColumns = `p.id,p.product_id,p.type_snapshot,p.name_snapshot,p.asset_key_snapshot,p.description_snapshot,p.coin_price,p.diamond_price,p.status,p.redeemed_at,p.version,p.created_at,p.item_key_snapshot,p.wearable_key_snapshot,p.character_key_snapshot,p.scene_key_snapshot`
 
 // scanPurchase formats actual instants while preserving nullable redemption time.
 func scanPurchase(row rowScanner) (Purchase, error) {
 	var p Purchase
 	var redeemed sql.NullInt64
 	var created int64
-	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created, &p.ItemKeySnapshot, &p.WearableKey, &p.CharacterKey)
+	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created, &p.ItemKeySnapshot, &p.WearableKey, &p.CharacterKey, &p.SceneKey)
 	p.CreatedAt = core.Timestamp(created)
 	if asset, ok := assets.Get(p.AssetKeySnapshot); ok {
 		p.Provider, p.PackKey, p.PackName = asset.Provider, asset.PackKey, asset.PackName
@@ -119,7 +119,7 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 	if product.Type == TypeReward {
 		status = StatusPending
 	}
-	_, err = tx.ExecContext(ctx, "INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,repeatable,item_key_snapshot,wearable_key_snapshot,character_key_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli(), product.Repeatable, product.IslandItemKey, product.WearableKey, product.CharacterKey)
+	_, err = tx.ExecContext(ctx, "INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,repeatable,item_key_snapshot,wearable_key_snapshot,character_key_snapshot,scene_key_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli(), product.Repeatable, product.IslandItemKey, product.WearableKey, product.CharacterKey, product.SceneKey)
 	if err != nil {
 		return result, err
 	}

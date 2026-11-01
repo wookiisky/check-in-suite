@@ -59,7 +59,7 @@ func TestSpatialBathroomFitsFixtures(t *testing.T) {
 	configuration := spatialConfigurationData()
 	state := SpatialState{Scene: configuration.Scene, Catalog: configuration.Catalog, Placements: configuration.DefaultPlacements}
 	for _, placement := range configuration.DefaultPlacements {
-		state.Inventory = append(state.Inventory, SpatialOwnedItem{placement.InstanceID, placement.ItemKey})
+		state.Inventory = append(state.Inventory, SpatialOwnedItem{InstanceID: placement.InstanceID, ItemKey: placement.ItemKey})
 	}
 	placements := []SpatialPlacement{
 		{InstanceID: "bath-toilet", ItemKey: "camp-toilet-v1", Space: SpatialIndoor, XCM: 155, ZCM: -255, Rotation: 1},
@@ -67,7 +67,7 @@ func TestSpatialBathroomFitsFixtures(t *testing.T) {
 		{InstanceID: "bath-shower", ItemKey: "camp-shower-v1", Space: SpatialIndoor, XCM: 235, ZCM: -156},
 	}
 	for _, placement := range placements {
-		state.Inventory = append(state.Inventory, SpatialOwnedItem{placement.InstanceID, placement.ItemKey})
+		state.Inventory = append(state.Inventory, SpatialOwnedItem{InstanceID: placement.InstanceID, ItemKey: placement.ItemKey})
 	}
 	input := spatialInput(state)
 	input.EnvironmentKey = configuration.DefaultEnvironment
@@ -85,7 +85,7 @@ func TestSpatialCatalogDefaultInstances(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []SpatialOwnedItem{{"base:house3d", "camp-house-v1"}, {"base:reading3d", "camp-reading-desk-v1"}, {"base:sport3d", "camp-sports-area-v1"}}
+	want := []SpatialOwnedItem{{InstanceID: "base:house3d", ItemKey: "camp-house-v1", PlacedSceneKey: "seaside-v1"}, {InstanceID: "base:reading3d", ItemKey: "camp-reading-desk-v1", PlacedSceneKey: "seaside-v1"}, {InstanceID: "base:sport3d", ItemKey: "camp-sports-area-v1", PlacedSceneKey: "seaside-v1"}}
 	if !reflect.DeepEqual(state.Inventory, want) {
 		t.Fatalf("default inventory=%+v", state.Inventory)
 	}
@@ -125,9 +125,9 @@ func TestSpatialBallPlacement(t *testing.T) {
 	configuration := spatialConfigurationData()
 	state := SpatialState{Scene: configuration.Scene, Catalog: configuration.Catalog, Placements: configuration.DefaultPlacements}
 	for _, placement := range configuration.DefaultPlacements {
-		state.Inventory = append(state.Inventory, SpatialOwnedItem{placement.InstanceID, placement.ItemKey})
+		state.Inventory = append(state.Inventory, SpatialOwnedItem{InstanceID: placement.InstanceID, ItemKey: placement.ItemKey})
 	}
-	state.Inventory = append(state.Inventory, SpatialOwnedItem{"owned-ball", "camp-ball-v1"})
+	state.Inventory = append(state.Inventory, SpatialOwnedItem{InstanceID: "owned-ball", ItemKey: "camp-ball-v1"})
 	for _, tc := range []struct {
 		name  string
 		x, z  int

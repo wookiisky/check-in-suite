@@ -141,7 +141,7 @@ func inspect(ctx context.Context, db *sql.DB) (bool, bool, error) {
 // requireEmptyBusiness refuses orphaned or partially managed data rather than merging it into a demo.
 func requireEmptyBusiness(ctx context.Context, tx *sql.Tx) error {
 	var occupied bool
-	err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM categories UNION ALL SELECT 1 FROM tasks UNION ALL SELECT 1 FROM products UNION ALL SELECT 1 FROM achievements UNION ALL SELECT 1 FROM media_files UNION ALL SELECT 1 FROM messages UNION ALL SELECT 1 FROM appearance_state UNION ALL SELECT 1 FROM island_spatial_state UNION ALL SELECT 1 FROM demo_seeds)`).Scan(&occupied)
+	err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM categories UNION ALL SELECT 1 FROM tasks UNION ALL SELECT 1 FROM products UNION ALL SELECT 1 FROM achievements UNION ALL SELECT 1 FROM media_files UNION ALL SELECT 1 FROM messages UNION ALL SELECT 1 FROM appearance_state UNION ALL SELECT 1 FROM island_spatial_state UNION ALL SELECT 1 FROM island_scene_states UNION ALL SELECT 1 FROM island_scene_placements UNION ALL SELECT 1 FROM demo_seeds)`).Scan(&occupied)
 	if err != nil {
 		return err
 	}

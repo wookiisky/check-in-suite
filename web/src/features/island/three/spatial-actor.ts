@@ -2,7 +2,7 @@ import type { components } from '../../../api/schema';
 import { allowedIslandActivities } from '../island-activity-access';
 import type { IslandAccess, IslandActivity } from '../island-activity-access';
 import type { SpatialPoint } from '../spatial-geometry';
-import { createSpatialNavigation, spatialLocalToWorld } from './spatial-navigation';
+import { createSpatialNavigation, spatialLocalToWorld, spatialWorldToLocal } from './spatial-navigation';
 import type { SpatialLayout, SpatialNavigation, SpatialPlacement, SpatialSpace } from './spatial-navigation';
 
 export type SpatialActorActivity = 'walk' | 'rest' | IslandActivity;
@@ -68,7 +68,7 @@ export class SpatialActorController {
   // 出生在主屋门外，若该位置被占用则找最近可用地面。
   constructor(environment:SpatialActorEnvironment,random:()=>number=Math.random) {
     this.layout=environment.layout;this.layoutSignature=JSON.stringify([this.layout.placements,this.layout.catalog,this.layout.scene]);this.navigation=createSpatialNavigation(this.layout);this.random=random;
-    const point=this.navigation.nearest(spatialLocalToWorld({x_cm:0,z_cm:this.layout.scene.house.door_center.z_cm+170},this.navigation.house));
+    const point=this.spawnPoint();
     this.position={...point,y_cm:0};this.status={phase:'idle',activity:'rest',space:this.navigation.space(point)};
     this.updateHeight();
   }
@@ -78,8 +78,9 @@ export class SpatialActorController {
     if(!environment.editing&&environment.layout!==this.layout) {
       const signature=JSON.stringify([environment.layout.placements,environment.layout.catalog,environment.layout.scene]);
       if(signature!==this.layoutSignature) {
+        const changedScene=environment.layout.scene_key!==this.layout.scene_key;
         this.stop();this.layout=environment.layout;this.layoutSignature=signature;this.navigation=createSpatialNavigation(this.layout);
-        this.position={...this.navigation.nearest(this.position),y_cm:0};this.updateHeight();
+        this.position={...(changedScene?this.spawnPoint():this.navigation.nearest(this.position)),y_cm:0};this.updateHeight();
       } else this.layout=environment.layout;
     }
     if(this.status.phase!=='idle'&&this.status.activity!=='walk'&&this.status.activity!=='rest'&&!allowedIslandActivities(environment.access,environment.now()).includes(this.status.activity))this.stop();
@@ -112,16 +113,18 @@ export class SpatialActorController {
     if(!candidates.length)return 'missing_target';
     candidates.sort((a,b)=>this.targetDistance(a)-this.targetDistance(b));
     for(const placement of candidates) {
+      if(placement.space==='indoor'&&(!this.navigation.house||!this.layout.scene.house))continue;
       const definition=this.layout.catalog.find(item=>item.item_key===placement.item_key)!;
       const interaction=definition.interaction!;
-      const transform=placement.space==='indoor'?{...spatialLocalToWorld(placement,this.navigation.house),rotation:placement.rotation+this.navigation.house.rotation}:placement;
+      const house=this.navigation.house;
+      const transform=placement.space==='indoor'&&house?{...spatialLocalToWorld(placement,house),rotation:placement.rotation+house.rotation}:placement;
       const approach=spatialLocalToWorld(interaction,transform),path=this.navigation.path(this.position,approach);
       if(!path)continue;
       const pose=interaction.pose??{...interaction,y_cm:0};
       const root=spatialLocalToWorld(pose,transform),rotation=transform.rotation+pose.rotation;
       // 球沿有限局部轨迹活动，整条轨迹必须留在陆地且不穿墙或家具。
       if(intent.activity==='ball'&&Array.from({length:25},(_,index)=>spatialBallPosition(index*1.5/24)).some(point=>!this.navigation.walkable(spatialLocalToWorld({x_cm:point[0]*100,z_cm:point[2]*100},{...root,rotation}))))continue;
-      this.target={placement:{...placement},approach,pose:{...root,y_cm:pose.y_cm+(placement.space==='indoor'?this.layout.scene.house.floor_height_cm:0),rotation:-rotation*Math.PI/2}};
+      this.target={placement:{...placement},approach,pose:{...root,y_cm:pose.y_cm+(placement.space==='indoor'?(this.layout.scene.house?.floor_height_cm??0):0),rotation:-rotation*Math.PI/2}};
       this.route=path.slice(1);this.status={phase:'walking',activity:intent.activity,space:this.navigation.space(this.position),targetInstanceId:placement.instance_id};this.action='walk';return null;
     }
     return 'unreachable';
@@ -170,11 +173,40 @@ export class SpatialActorController {
 
   // 根据目标世界位置排序，室内局部位置不能直接与世界位置相减。
   private targetDistance(placement:SpatialPlacement):number {
-    const point=placement.space==='indoor'?spatialLocalToWorld(placement,this.navigation.house):placement;
+    const point=placement.space==='indoor'&&this.navigation.house?spatialLocalToWorld(placement,this.navigation.house):placement;
     return Math.hypot(point.x_cm-this.position.x_cm,point.z_cm-this.position.z_cm);
   }
-  // 角色过门时跟随地板高度，表演pose保留自身高度。
-  private updateHeight() {this.position.y_cm=this.navigation.space(this.position)==='indoor'?this.layout.scene.house.floor_height_cm:0;}
+  // 门外通路把地面连续接到室内地板；活动pose仍保留自己的表演高度。
+  private updateHeight() {
+    const house=this.navigation.house,geometry=this.layout.scene.house;
+    if(!house||!geometry){this.position.y_cm=0;return;}
+    if(this.navigation.space(this.position)==='indoor'){this.position.y_cm=geometry.floor_height_cm;return;}
+    const local=spatialWorldToLocal(this.position,house),clearance=geometry.door_clearance;
+    const profile=geometry.entry_height_profile;
+    const start=Math.min(clearance.min_z_cm,geometry.interior.max_z_cm,geometry.door_center.z_cm);
+    const end=Math.max(clearance.max_z_cm,profile?.at(-1)?.z_cm??clearance.max_z_cm);
+    const length=clearance.max_z_cm-geometry.door_center.z_cm;
+    const onApproach=local.x_cm>=clearance.min_x_cm&&local.x_cm<=clearance.max_x_cm&&local.z_cm>=start&&local.z_cm<=end;
+    if(onApproach&&profile?.length) {
+      let lower=profile[0]!;
+      for(const upper of profile) {
+        if(local.z_cm<=upper.z_cm) {
+          const span=upper.z_cm-lower.z_cm;
+          this.position.y_cm=span>0?lower.y_cm+(upper.y_cm-lower.y_cm)*(local.z_cm-lower.z_cm)/span:upper.y_cm;
+          return;
+        }
+        lower=upper;
+      }
+      this.position.y_cm=lower.y_cm;return;
+    }
+    this.position.y_cm=onApproach&&length>0?geometry.floor_height_cm*Math.min(1,(clearance.max_z_cm-local.z_cm)/length):0;
+  }
+  // 新场景使用自己的出生点；旧海边仍优先采用门外通路。
+  private spawnPoint():SpatialPoint {
+    const house=this.navigation.house,geometry=this.layout.scene.house;
+    const point=this.layout.scene.spawn??(house&&geometry?spatialLocalToWorld({x_cm:0,z_cm:geometry.door_center.z_cm+170},house):{x_cm:0,z_cm:0});
+    return this.navigation.nearest(point);
+  }
   // 空间变化只产生一个新状态，不将连续位置写入React。
   private updateSpace() {const space=this.navigation.space(this.position);if(this.status.space!==space)this.status={...this.status,space};}
 }

@@ -28,7 +28,7 @@ export function SpatialTerrain({state,paused,onPointerDown}:{state:SpatialIsland
   }),[state.scene.regions]);
   const dusk=state.environment_key==='dusk';
   return <group name="spatial-terrain">
-    <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.16,0]} onPointerDown={onPointerDown} receiveShadow><planeGeometry args={[180,180]}/><meshStandardMaterial color={dusk?'#6995a8':'#72cbd9'} roughness={.85} onBeforeCompile={shader=>terrainPattern(shader,'water',time)} customProgramCacheKey={()=>'camp-water-v1'}/></mesh>
+    {state.scene.background_terrain==='water'&&<mesh rotation={[-Math.PI/2,0,0]} position={[0,-.16,0]} onPointerDown={onPointerDown} receiveShadow><planeGeometry args={[180,180]}/><meshStandardMaterial color={dusk?'#6995a8':'#72cbd9'} roughness={.85} onBeforeCompile={shader=>terrainPattern(shader,'water',time)} customProgramCacheKey={()=>'camp-water-v1'}/></mesh>}
     {regions.map((region,index)=><mesh key={index} rotation={[-Math.PI/2,0,0]} position={[0,region.terrain==='water'?-.06:-.65,0]} onPointerDown={onPointerDown} receiveShadow>
       {region.terrain==='water'?<shapeGeometry args={[region.shape]}/>:<extrudeGeometry args={[region.shape,{depth:.65,bevelEnabled:false}]}/>}
       <meshStandardMaterial side={DoubleSide} color={region.terrain==='grass'?(dusk?'#81a975':'#9ccf83'):region.terrain==='sand'?'#f0d7a5':(dusk?'#76aabd':'#8dd9df')} roughness={1} flatShading onBeforeCompile={shader=>{if(region.terrain!=='sand')terrainPattern(shader,region.terrain,time);}} customProgramCacheKey={()=>`camp-${region.terrain}-v1`}/>

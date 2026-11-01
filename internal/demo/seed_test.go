@@ -3,6 +3,7 @@ package demo
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"path/filepath"
 	"testing"
@@ -127,6 +128,19 @@ func TestSeedPopulatesUsableHistory(t *testing.T) {
 	if len(state.Inventory) == 0 || len(state.Placements) == 0 {
 		t.Fatalf("island=%+v", state)
 	}
+	var content settings
+	if err := json.Unmarshal(settingsJSON, &content); err != nil {
+		t.Fatal(err)
+	}
+	if len(state.Placements) != len(island.SpatialDefaultLayout().Placements)+len(content.Placements) {
+		t.Fatalf("seeded placements were not read from scene state: %+v", state.Placements)
+	}
+	if countRows(t, db, `SELECT count(*) FROM island_scene_states WHERE scene_key='seaside-v1' AND version=1`) != 1 || countRows(t, db, `SELECT count(*) FROM island_scene_placements WHERE scene_key='seaside-v1'`) != len(state.Placements) {
+		t.Fatal("demo did not persist its complete scene layout")
+	}
+	if countRows(t, db, `SELECT count(*) FROM island_spatial_state`) != 0 || countRows(t, db, `SELECT count(*) FROM purchases WHERE type_snapshot='scene'`) != 0 || countRows(t, db, `SELECT count(*) FROM island_scene_states`) != 1 {
+		t.Fatal("demo wrote legacy layout or unlocked additional scenes")
+	}
 	if _, err := island.New(db, time.Now).SaveSpatial(ctx, principal, island.SpatialSaveInput{ExpectedVersion: state.Version, SceneKey: state.SceneKey, EnvironmentKey: state.EnvironmentKey, Placements: state.Placements}); err != nil {
 		t.Fatalf("seeded layout invalid: %v", err)
 	}
@@ -207,7 +221,7 @@ func TestSeedFinalFailureRollsBackEverything(t *testing.T) {
 	if _, err := Seed(context.Background(), db, cfg); err == nil {
 		t.Fatal("expected final-write failure")
 	}
-	for _, table := range []string{"accounts", "wallets", "tasks", "products", "checkins", "wallet_entries", "demo_seeds", "appearance_state", "island_spatial_state"} {
+	for _, table := range []string{"accounts", "wallets", "tasks", "products", "checkins", "wallet_entries", "demo_seeds", "appearance_state", "island_spatial_state", "island_scene_states", "island_scene_placements"} {
 		if countRows(t, db, "SELECT count(*) FROM "+table) != 0 {
 			t.Errorf("%s survived rollback", table)
 		}
@@ -233,6 +247,22 @@ func TestSeedRefusesUnmarkedBusinessData(t *testing.T) {
 	}
 	if countRows(t, db, `SELECT count(*) FROM accounts`) != 0 || countRows(t, db, `SELECT count(*) FROM messages`) != 1 {
 		t.Fatal("partial or existing data changed")
+	}
+}
+
+// 尚未初始化账户但已有场景时，测试初始化必须整体拒绝而不合并布局。
+func TestSeedRefusesUnmarkedSceneData(t *testing.T) {
+	db, cfg := demoDatabase(t)
+	if _, err := db.Exec(`INSERT INTO island_scene_states(scene_key,version,environment_key) VALUES('seaside-v1',3,'dusk'); INSERT INTO island_scene_placements(instance_id,scene_key,item_key,space,x_cm,z_cm,rotation) VALUES('kept-house','seaside-v1','camp-house-v1','outdoor',0,0,0)`); err != nil {
+		t.Fatal(err)
+	}
+	_, err := Seed(context.Background(), db, cfg)
+	var domain *core.Error
+	if !errors.As(err, &domain) || domain.Code != "DEMO_REQUIRES_EMPTY_DATABASE" {
+		t.Fatalf("error=%v", err)
+	}
+	if countRows(t, db, `SELECT count(*) FROM accounts`) != 0 || countRows(t, db, `SELECT count(*) FROM island_scene_states WHERE version=3 AND environment_key='dusk'`) != 1 || countRows(t, db, `SELECT count(*) FROM island_scene_placements WHERE instance_id='kept-house'`) != 1 {
+		t.Fatal("existing scene changed or partial demo survived")
 	}
 }
 

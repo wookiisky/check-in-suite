@@ -71,8 +71,8 @@ function useSceneGestures(props:SpatialScene3DProps,units:MutableRefObject<numbe
   const pointers=useRef(new Map<number,{x:number;y:number}>());
   const gesture=useRef<PointerGesture|null>(null);
   const click=useRef({blocked:false,x:0,y:0}); // 拖动和双指缩放完成后不能误触物件活动。
-  const house=props.layout.placements.find(item=>props.layout.catalog.find(d=>d.item_key===item.item_key)?.assembly==='house')!;
-  const floor=(space:'indoor'|'outdoor')=>space==='indoor'?props.layout.scene.house.floor_height_cm/100:0;
+  const house=props.layout.placements.find(item=>props.layout.catalog.find(d=>d.item_key===item.item_key)?.assembly==='house');
+  const floor=(space:'indoor'|'outdoor')=>space==='indoor'?(props.layout.scene.house?.floor_height_cm??0)/100:0;
   function worldPoint(clientX:number,clientY:number,height:number){
     const rect=gl.domElement.getBoundingClientRect();
     raycaster.setFromCamera(new Vector2((clientX-rect.left)/rect.width*2-1,-(clientY-rect.top)/rect.height*2+1),camera);
@@ -92,7 +92,8 @@ function useSceneGestures(props:SpatialScene3DProps,units:MutableRefObject<numbe
       const definition=props.layout.catalog.find(item=>item.item_key===placement.item_key);
       if(!definition?.movable)return;
       const point=worldPoint(native.clientX,native.clientY,floor(placement.space));
-      const local=point?groundFromWorld(point,placement.space,house):placement;
+      if(placement.space==='indoor'&&!house)return;
+      const local=point?groundFromWorld(point,placement.space,house??placement):placement;
       gesture.current={mode:'object',x:native.clientX,y:native.clientY,distance:0,original:placement,offset:{x:local.x_cm-placement.x_cm,z:local.z_cm-placement.z_cm}};
     }else gesture.current={mode:'pan',x:native.clientX,y:native.clientY,distance:0};
   }
@@ -111,10 +112,11 @@ function useSceneGestures(props:SpatialScene3DProps,units:MutableRefObject<numbe
       }
       if(active.mode==='pan')latest.current.camera.current=dragCamera(latest.current.camera.current,event.clientX-active.x,event.clientY-active.y,units.current);
       else if(active.original){
-        const current=latest.current,original=active.original,home=current.layout.placements.find(p=>current.layout.catalog.find(d=>d.item_key===p.item_key)?.assembly==='house')!;
-        const height=original.space==='indoor'?current.layout.scene.house.floor_height_cm/100:0;
+        const current=latest.current,original=active.original,home=current.layout.placements.find(p=>current.layout.catalog.find(d=>d.item_key===p.item_key)?.assembly==='house');
+        if(original.space==='indoor'&&!home)return;
+        const height=original.space==='indoor'?(current.layout.scene.house?.floor_height_cm??0)/100:0;
         const point=worldPoint(event.clientX,event.clientY,height);
-        if(point){const local=groundFromWorld(point,original.space,home);current.onPlacement({...original,...snappedPlacement({x_cm:local.x_cm-(active.offset?.x??0),z_cm:local.z_cm-(active.offset?.z??0)})});}
+        if(point){const local=groundFromWorld(point,original.space,home??original);current.onPlacement({...original,...snappedPlacement({x_cm:local.x_cm-(active.offset?.x??0),z_cm:local.z_cm-(active.offset?.z??0)})});}
       }
       active.x=event.clientX;active.y=event.clientY;
     };
@@ -135,7 +137,8 @@ function useSceneGestures(props:SpatialScene3DProps,units:MutableRefObject<numbe
 // 深度测试由 Three.js 统一处理，选中占地仅作反馈且不参与拾取。
 function IslandWorld(props:SpatialScene3DProps){
   const units=useRef(.05),{down,canClick}=useSceneGestures(props,units);
-  const house=props.layout.placements.find(item=>props.layout.catalog.find(d=>d.item_key===item.item_key)?.assembly==='house')!;
+  const house=props.layout.placements.find(item=>props.layout.catalog.find(d=>d.item_key===item.item_key)?.assembly==='house');
+  const geometry=props.layout.scene.house;
   const dusk=props.layout.environment_key==='dusk';
   return <>
     <color attach="background" args={[dusk?'#d9bba7':'#b8e2ee']}/><fog attach="fog" args={[dusk?'#d9bba7':'#b8e2ee',48,65]}/>
@@ -143,17 +146,20 @@ function IslandWorld(props:SpatialScene3DProps){
     <directionalLight position={[-9,18,12]} intensity={dusk?2:2.5} color={dusk?'#ffd0a2':'#fff4dc'} castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-25} shadow-camera-right={25} shadow-camera-top={25} shadow-camera-bottom={-25} shadow-normalBias={.025}/>
     <CameraRig camera={props.camera} insets={props.insets} units={units}/>
     <SpatialTerrain state={props.layout} paused={props.paused||props.editing} onPointerDown={event=>down(event)}/>
+    {(props.layout.scene.fixed_objects??[]).map(object=><group key={object.key} position={[object.x_cm/100,0,object.z_cm/100]} rotation={[0,-object.rotation*Math.PI/2,0]}>
+      <StaticModel url={object.model_url} scale={object.scale} onError={props.onError}/>
+    </group>)}
     {props.layout.placements.map(placement=>{
       const definition=props.layout.catalog.find(item=>item.item_key===placement.item_key);if(!definition||placement.instance_id===props.hiddenInstanceId)return null;
-      if(placement.space==='indoor'&&!props.indoor)return null;
+      if(placement.space==='indoor'&&(!props.indoor||!house||!geometry))return null;
       const indoor=placement.space==='indoor',selected=props.selected===placement.instance_id;
-      const x=(placement.x_cm+(indoor?house.x_cm:0))/100,z=(placement.z_cm+(indoor?house.z_cm:0))/100,y=indoor?props.layout.scene.house.floor_height_cm/100:0;
+      const x=(placement.x_cm+(indoor?(house?.x_cm??0):0))/100,z=(placement.z_cm+(indoor?(house?.z_cm??0):0))/100,y=indoor?(geometry?.floor_height_cm??0)/100:0;
       return <group key={placement.instance_id} position={[x,y,z]} rotation={[0,-placement.rotation*Math.PI/2,0]} onPointerDown={event=>down(event,placement)} onClick={event=>{event.stopPropagation();if(!props.editing&&canClick())props.onObject(placement.instance_id);}}>
-        {definition.assembly==='house'?<SpatialHouseModel house={props.layout.scene.house} direction={props.direction} open={props.indoor} onError={props.onError}/>:definition.model_url?<StaticModel url={definition.model_url} onError={props.onError}/>:null}
+        {definition.assembly==='house'?(geometry?<SpatialHouseModel house={geometry} direction={props.direction} open={props.indoor} onError={props.onError}/>:null):definition.model_url?<StaticModel url={definition.model_url} onError={props.onError}/>:null}
         {selected&&props.editing&&<mesh rotation={[-Math.PI/2,0,0]} position={[0,.025,0]} raycast={()=>{}}><planeGeometry args={[definition.footprint.width_cm/100,definition.footprint.depth_cm/100]}/><meshBasicMaterial color={props.invalid?'#d73545':'#f3b839'} transparent opacity={.38} depthWrite={false}/></mesh>}
       </group>;
     })}
-    {props.appearance&&<SpatialActor3D layout={props.layout} appearance={props.appearance} access={props.access} now={props.now} editing={props.editing} paused={props.paused} {...(props.intent?{intent:props.intent}:{})} onStatus={props.onStatus} onUnavailable={props.onUnavailable} onCharacterStatus={props.onCharacterStatus}/>}
+    {props.appearance&&<SpatialActor3D key={props.layout.scene_key} layout={props.layout} appearance={props.appearance} access={props.access} now={props.now} editing={props.editing} paused={props.paused} {...(props.intent?{intent:props.intent}:{})} onStatus={props.onStatus} onUnavailable={props.onUnavailable} onCharacterStatus={props.onCharacterStatus}/>}
   </>;
 }
 

@@ -56,7 +56,6 @@ func TestSpatialInvalidIsAtomic(t *testing.T) {
 		{"wrong scene", func(i *SpatialSaveInput) { i.SceneKey = "unknown" }},
 		{"wrong environment", func(i *SpatialSaveInput) { i.EnvironmentKey = "unknown" }},
 		{"null placements", func(i *SpatialSaveInput) { i.Placements = nil }},
-		{"missing house", func(i *SpatialSaveInput) { i.Placements = []SpatialPlacement{} }},
 		{"duplicate instance", func(i *SpatialSaveInput) { i.Placements = append(i.Placements, i.Placements[0]) }},
 		{"unowned instance", func(i *SpatialSaveInput) { i.Placements[0].InstanceID = "foreign" }},
 		{"wrong item", func(i *SpatialSaveInput) { i.Placements[0].ItemKey = "other" }},
@@ -116,13 +115,12 @@ func TestSpatialConcurrentSave(t *testing.T) {
 		t.Fatalf("success %d conflict %d", success, conflict)
 	}
 	var version int64
-	var raw string
-	if err = f.db.QueryRow("SELECT version,placements FROM island_spatial_state WHERE id=1").Scan(&version, &raw); err != nil {
+	var count int
+	if err = f.db.QueryRow("SELECT version FROM island_scene_states WHERE scene_key=?", state.SceneKey).Scan(&version); err != nil {
 		t.Fatal(err)
 	}
-	var placements []SpatialPlacement
-	if err = json.Unmarshal([]byte(raw), &placements); err != nil || version != 2 || len(placements) != len(state.Placements) {
-		t.Fatalf("bad persisted result version=%d err=%v", version, err)
+	if err = f.db.QueryRow("SELECT COUNT(*) FROM island_scene_placements WHERE scene_key=?", state.SceneKey).Scan(&count); err != nil || version != 2 || count != len(state.Placements) {
+		t.Fatalf("bad persisted result version=%d count=%d err=%v", version, count, err)
 	}
 }
 
@@ -209,7 +207,7 @@ func TestSpatialPlacementBoundaries(t *testing.T) {
 	configuration := spatialConfigurationData()
 	baseInventory := make([]SpatialOwnedItem, 0, len(configuration.DefaultPlacements))
 	for _, placement := range configuration.DefaultPlacements {
-		baseInventory = append(baseInventory, SpatialOwnedItem{placement.InstanceID, placement.ItemKey})
+		baseInventory = append(baseInventory, SpatialOwnedItem{InstanceID: placement.InstanceID, ItemKey: placement.ItemKey})
 	}
 	shape := SpatialFootprint{WidthCM: 100, DepthCM: 50}
 	solid := SpatialDefinition{Key: "test-solid", Footprint: shape, WalkObstacle: &shape, BlocksPlacement: true, Movable: true, Spaces: []SpatialSpace{SpatialOutdoor, SpatialIndoor}, Rotations: []int{0, 1, 2, 3}, AllowedTerrain: []string{"grass", "sand"}}
@@ -235,7 +233,7 @@ func TestSpatialPlacementBoundaries(t *testing.T) {
 		{"door approach edge touches", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialOutdoor, ZCM: 445}, SpatialPlacement{InstanceID: "two", ItemKey: "test-rug", Space: SpatialOutdoor, XCM: 600}, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			state := SpatialState{Scene: configuration.Scene, Catalog: append(SpatialCatalog(), solid, rug), Placements: configuration.DefaultPlacements, Inventory: append(append([]SpatialOwnedItem{}, baseInventory...), SpatialOwnedItem{"one", tc.first.ItemKey}, SpatialOwnedItem{"two", tc.second.ItemKey})}
+			state := SpatialState{Scene: configuration.Scene, Catalog: append(SpatialCatalog(), solid, rug), Placements: configuration.DefaultPlacements, Inventory: append(append([]SpatialOwnedItem{}, baseInventory...), SpatialOwnedItem{InstanceID: "one", ItemKey: tc.first.ItemKey}, SpatialOwnedItem{InstanceID: "two", ItemKey: tc.second.ItemKey})}
 			input := SpatialSaveInput{SceneKey: configuration.Scene.Key, EnvironmentKey: configuration.DefaultEnvironment, Placements: append(append([]SpatialPlacement{}, configuration.DefaultPlacements...), tc.first, tc.second)}
 			if err := validateSpatialPlacements(input, state); (err == nil) != tc.valid {
 				t.Fatalf("valid=%v err=%v", tc.valid, err)

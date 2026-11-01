@@ -6,6 +6,57 @@ import type { SpatialLayout } from './spatial-navigation';
 import { spatialLocalToWorld } from './spatial-navigation';
 
 describe('三维角色统一活动执行器',()=>{
+  it('高地板房屋沿实际门外通路连续抬高人物，离开后回到地面',()=>{
+    const {environment}=spatialActorFixture();
+    environment.layout.placements=environment.layout.placements.filter(item=>environment.layout.catalog.find(definition=>definition.item_key===item.item_key)?.assembly==='house');
+    environment.layout.scene.house!.floor_height_cm=40;
+    const actor=new SpatialActorController(environment);
+    expect(actor.position).toEqual({x_cm:0,z_cm:470,y_cm:0});
+    expect(actor.request({sequence:1,activity:'walk',destination:{x_cm:0,z_cm:0}},environment)).toBeNull();
+    actor.advance(1.1,environment);
+    expect(actor.position.z_cm).toBeCloseTo(360);
+    expect(actor.position.y_cm).toBeCloseTo(20);
+    actor.advance(0.7,environment);
+    expect(actor.position.y_cm).toBe(40);
+    actor.advance(10,environment);
+    expect(actor.request({sequence:2,activity:'walk',destination:{x_cm:0,z_cm:470}},environment)).toBeNull();
+    actor.advance(10,environment);
+    expect(actor.position.y_cm).toBe(0);
+  });
+  it('实测入口高度保留平台平面，只有台阶所在区间改变高度',()=>{
+    const {environment}=spatialActorFixture();
+    environment.layout.placements=environment.layout.placements.filter(item=>environment.layout.catalog.find(definition=>definition.item_key===item.item_key)?.assembly==='house');
+    Object.assign(environment.layout.scene.house!,{floor_height_cm:40,entry_height_profile:[{z_cm:300,y_cm:40},{z_cm:360,y_cm:40},{z_cm:420,y_cm:0}]});
+    const actor=new SpatialActorController(environment);
+    actor.request({sequence:1,activity:'walk',destination:{x_cm:0,z_cm:0}},environment);
+    actor.advance(0.8,environment);expect(actor.position.z_cm).toBeCloseTo(390);expect(actor.position.y_cm).toBeCloseTo(20);
+    actor.advance(0.3,environment);expect(actor.position.z_cm).toBeCloseTo(360);expect(actor.position.y_cm).toBe(40);
+    actor.advance(0.3,environment);expect(actor.position.z_cm).toBeCloseTo(330);expect(actor.position.y_cm).toBe(40);
+  });
+  it('无房场景出生在配置落点，能散步休息并拒绝室内请求',()=>{
+    const {environment}=spatialActorFixture();
+    environment.layout.placements=[];
+    Object.assign(environment.layout.scene,{house:null,spawn:{x_cm:600,z_cm:300},fixed_objects:[]});
+    const actor=new SpatialActorController(environment);
+    expect(actor.position).toEqual({x_cm:600,z_cm:300,y_cm:0});
+    expect(actor.request({sequence:1,activity:'rest'},environment)).toBeNull();
+    expect(actor.request({sequence:2,activity:'walk',space:'indoor'},environment)).toBe('unreachable');
+    expect(actor.request({sequence:3,activity:'walk',destination:{x_cm:800,z_cm:400}},environment)).toBeNull();
+    actor.advance(10,environment);
+    expect(actor.position).toEqual({x_cm:800,z_cm:400,y_cm:0});
+    expect(actor.status.space).toBe('outdoor');
+  });
+  it('切换场景停止原有活动并采用目标场景落点',()=>{
+    const {environment}=spatialActorFixture(),actor=new SpatialActorController(environment);
+    actor.request({sequence:1,activity:'read'},environment);actor.advance(30,environment);
+    const target=structuredClone(environment.layout);target.scene_key='forest-courtyard-v1';
+    target.scene.scene_key=target.scene_key;target.placements=[];
+    Object.assign(target.scene,{house:null,spawn:{x_cm:600,z_cm:300},fixed_objects:[]});
+    actor.advance(0,{...environment,layout:target});
+    expect(actor.status.phase).toBe('idle');expect(actor.status.space).toBe('outdoor');
+    expect(actor.attachments).toHaveLength(0);
+    expect(actor.position).toEqual({x_cm:600,z_cm:300,y_cm:0});
+  });
   it('走到approach后才进入pose，结束回可行走位置',()=>{
     const {environment}=spatialActorFixture(),actor=new SpatialActorController(environment,()=>0.2);
     expect(actor.request({sequence:1,activity:'read'},environment)).toBeNull();
@@ -42,7 +93,7 @@ describe('三维角色统一活动执行器',()=>{
   });
   it('不可达目标不会启动活动；散步和休息无资格也能执行',()=>{
     const {environment}=spatialActorFixture(),actor=new SpatialActorController(environment);
-    const blocked=structuredClone(environment.layout);blocked.scene.house.walls.push({min_x_cm:-45,max_x_cm:45,min_z_cm:290,max_z_cm:300});
+    const blocked=structuredClone(environment.layout);blocked.scene.house!.walls.push({min_x_cm:-45,max_x_cm:45,min_z_cm:290,max_z_cm:300});
     const next={...environment,layout:blocked};
     expect(actor.request({sequence:1,activity:'read'},next)).toBe('unreachable');expect(actor.status.phase).toBe('idle');
     expect(actor.request({sequence:2,activity:'rest'},{...next,access:null})).toBeNull();expect(actor.status.activity).toBe('rest');
@@ -85,8 +136,8 @@ describe('三维角色统一活动执行器',()=>{
     expect(actor.status.targetInstanceId).toBe('base:reading3d');expect(actor.action).toBe('read');expect(actor.attachments).toHaveLength(1);
     const desk=next.layout.placements.find(item=>item.instance_id==='base:reading3d')!;
     const pose=next.layout.catalog.find(item=>item.item_key===desk.item_key)!.interaction!.pose!;
-    const expectedRoot=spatialLocalToWorld(spatialLocalToWorld(pose,desk),actor.navigation.house);
-    expect(actor.status.space).toBe('indoor');expect(actor.position).toEqual({...expectedRoot,y_cm:next.layout.scene.house.floor_height_cm+pose.y_cm});
+    const expectedRoot=spatialLocalToWorld(spatialLocalToWorld(pose,desk),actor.navigation.house!);
+    expect(actor.status.space).toBe('indoor');expect(actor.position).toEqual({...expectedRoot,y_cm:next.layout.scene.house!.floor_height_cm+pose.y_cm});
     expect(actor.request({sequence:2,activity:'run'},next)).toBeNull();actor.advance(30,next);
     expect(actor.status.targetInstanceId).toBe('base:sport3d');expect(actor.action).toBe('exercise');expect(actor.attachments).toHaveLength(0);
   });

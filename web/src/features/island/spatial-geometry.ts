@@ -39,8 +39,13 @@ export function spatialPlacementRect(placement: SpatialTransform, footprint: Spa
 // 对完整占地求允许区域的并集面积，凹岸缺口与重复面积均不能放行。
 export function spatialFootprintCovered(placement: SpatialTransform, footprint: SpatialFootprint, regions: readonly SpatialTerrainRegion[], allowed: readonly string[]): boolean {
   if (![placement.x_cm, placement.z_cm, placement.rotation, footprint.width_cm, footprint.depth_cm].every(Number.isSafeInteger) || placement.rotation < 0 || placement.rotation > 3 || footprint.width_cm <= 0 || footprint.depth_cm <= 0) return false;
+  return spatialRectCovered(spatialPlacementRect(placement,footprint),regions,allowed);
+}
+
+// 实测房型和旋转占地产生的分数厘米边界直接参与面积计算，不改变保存坐标的整数契约。
+export function spatialRectCovered(rect:SpatialRect,regions:readonly SpatialTerrainRegion[],allowed:readonly string[]):boolean {
+  if(![rect.min_x_cm,rect.max_x_cm,rect.min_z_cm,rect.max_z_cm].every(Number.isFinite)||rect.min_x_cm>=rect.max_x_cm||rect.min_z_cm>=rect.max_z_cm)return false;
   const polygons = regions.filter((region) => allowed.includes(region.terrain) && region.polygon.length >= 3).map((region) => region.polygon);
-  const rect = spatialPlacementRect(placement, footprint);
   return Math.abs(coveredArea(rect, polygons) - (rect.max_x_cm-rect.min_x_cm)*(rect.max_z_cm-rect.min_z_cm)) <= 0.000001;
 }
 

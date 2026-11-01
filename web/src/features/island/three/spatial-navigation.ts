@@ -10,7 +10,7 @@ const GRID_CM = 10;
 
 /** 导航只持有当前完整布局，不依赖相机或旧投影。 */
 export interface SpatialNavigation {
-  house: SpatialPlacement; // 室内局部坐标的世界锚点。
+  house: SpatialPlacement | null; // 无房场景没有室内局部坐标锚点。
   walkable: (point: SpatialPoint) => boolean; // 整个身体必须留在陆地且不碰障碍。
   path: (start: SpatialPoint, end: SpatialPoint) => SpatialPoint[] | null; // 返回包含真实终点的世界路径。
   nearest: (point: SpatialPoint) => SpatialPoint; // 布局变更后寻找最近有效落点。
@@ -33,16 +33,22 @@ export function spatialWorldToLocal(point: SpatialPoint, transform: SpatialPlace
 // 墙和家具均以真实阻挡定义膨胀身体半径，不能使用摆放占地代替。
 export function createSpatialNavigation(layout: SpatialLayout): SpatialNavigation {
   const definitions=new Map(layout.catalog.map(item=>[item.item_key,item]));
-  const house=layout.placements.find(item=>definitions.get(item.item_key)?.assembly==='house')!;
-  const obstacles:SpatialRect[]=layout.scene.house.walls.map(rect=>({
+  const house=layout.scene.house ? layout.placements.find(item=>definitions.get(item.item_key)?.assembly==='house')??null : null;
+  const geometry=house ? layout.scene.house : null;
+  const anchor=house??layout.scene.spawn??{x_cm:0,z_cm:0};
+  const obstacles:SpatialRect[]=house&&geometry ? geometry.walls.map(rect=>({
     min_x_cm:rect.min_x_cm+house.x_cm,max_x_cm:rect.max_x_cm+house.x_cm,
     min_z_cm:rect.min_z_cm+house.z_cm,max_z_cm:rect.max_z_cm+house.z_cm,
-  }));
+  })) : [];
   for (const placement of layout.placements) {
     const definition=definitions.get(placement.item_key);
     if (!definition?.walk_obstacle || definition.assembly==='house') continue;
-    const world=placement.space==='indoor'?spatialLocalToWorld(placement,house):placement;
-    obstacles.push(spatialPlacementRect({...world,rotation:placement.rotation+ (placement.space==='indoor'?house.rotation:0)},definition.walk_obstacle));
+    if(placement.space==='indoor'&&!house)continue;
+    const world=placement.space==='indoor'&&house?spatialLocalToWorld(placement,house):placement;
+    obstacles.push(spatialPlacementRect({...world,rotation:placement.rotation+ (placement.space==='indoor'&&house?house.rotation:0)},definition.walk_obstacle));
+  }
+  for(const object of layout.scene.fixed_objects??[]) {
+    if(object.walk_obstacle)obstacles.push(spatialPlacementRect(object,object.walk_obstacle));
   }
   const vertices=layout.scene.regions.filter(region=>region.terrain!=='water').flatMap(region=>region.polygon);
   const minX=Math.min(...vertices.map(point=>point.x_cm)),maxX=Math.max(...vertices.map(point=>point.x_cm));
@@ -65,7 +71,7 @@ export function createSpatialNavigation(layout: SpatialLayout): SpatialNavigatio
     for(let i=0;i<=steps;i++) if(!walkable({x_cm:a.x_cm+(b.x_cm-a.x_cm)*i/(steps||1),z_cm:a.z_cm+(b.z_cm-a.z_cm)*i/(steps||1)})) return false;
     return true;
   };
-  const grid=(point:SpatialPoint):SpatialPoint=>({x_cm:house.x_cm+Math.round((point.x_cm-house.x_cm)/GRID_CM)*GRID_CM,z_cm:house.z_cm+Math.round((point.z_cm-house.z_cm)/GRID_CM)*GRID_CM});
+  const grid=(point:SpatialPoint):SpatialPoint=>({x_cm:anchor.x_cm+Math.round((point.x_cm-anchor.x_cm)/GRID_CM)*GRID_CM,z_cm:anchor.z_cm+Math.round((point.z_cm-anchor.z_cm)/GRID_CM)*GRID_CM});
   const connectedGrid=(point:SpatialPoint):SpatialPoint|null=>{
     const center=grid(point);
     for(let r=0;r<=5;r++) for(let x=-r;x<=r;x++) for(let z=-r;z<=r;z++) {
@@ -105,7 +111,8 @@ export function createSpatialNavigation(layout: SpatialLayout): SpatialNavigatio
     return null;
   };
   const space=(point:SpatialPoint):SpatialSpace=>{
-    const local=spatialWorldToLocal(point,house),interior=layout.scene.house.interior;
+    if(!house||!geometry)return 'outdoor';
+    const local=spatialWorldToLocal(point,house),interior=geometry.interior;
     return local.x_cm>=interior.min_x_cm&&local.x_cm<=interior.max_x_cm&&local.z_cm>=interior.min_z_cm&&local.z_cm<=interior.max_z_cm?'indoor':'outdoor';
   };
   const nearest=(point:SpatialPoint):SpatialPoint=>{
@@ -116,12 +123,13 @@ export function createSpatialNavigation(layout: SpatialLayout): SpatialNavigatio
       const candidate={x_cm:center.x_cm+x*GRID_CM,z_cm:center.z_cm+z*GRID_CM};if(walkable(candidate))return candidate;
       const other={x_cm:center.x_cm+z*GRID_CM,z_cm:center.z_cm+x*GRID_CM};if(walkable(other))return other;
     }
-    return {x_cm:house.x_cm,z_cm:house.z_cm+450};
+    return {...anchor};
   };
   const randomPoint=(desired:SpatialSpace,random:()=>number):SpatialPoint|null=>{
-    const bounds=layout.scene.house.interior;
+    if(desired==='indoor'&&(!house||!geometry))return null;
+    const bounds=geometry?.interior;
     for(let i=0;i<80;i++) {
-      const point=desired==='indoor'?spatialLocalToWorld({x_cm:Math.round(bounds.min_x_cm+random()*(bounds.max_x_cm-bounds.min_x_cm)),z_cm:Math.round(bounds.min_z_cm+random()*(bounds.max_z_cm-bounds.min_z_cm))},house):{x_cm:Math.round(minX+random()*(maxX-minX)),z_cm:Math.round(minZ+random()*(maxZ-minZ))};
+      const point=desired==='indoor'&&bounds&&house?spatialLocalToWorld({x_cm:Math.round(bounds.min_x_cm+random()*(bounds.max_x_cm-bounds.min_x_cm)),z_cm:Math.round(bounds.min_z_cm+random()*(bounds.max_z_cm-bounds.min_z_cm))},house):{x_cm:Math.round(minX+random()*(maxX-minX)),z_cm:Math.round(minZ+random()*(maxZ-minZ))};
       if(space(point)===desired&&walkable(point))return point;
     }
     return null;

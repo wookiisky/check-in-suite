@@ -23,7 +23,7 @@ func productIslandItemKey(assetKey string) string {
 	return ""
 }
 
-const productColumns = "p.id,p.type,p.name,p.asset_key,p.wearable_key,p.character_key,p.description,p.coin_price,p.diamond_price,p.stock,p.enabled,p.version,p.deleted_at,p.created_at"
+const productColumns = "p.id,p.type,p.name,p.asset_key,p.wearable_key,p.character_key,p.scene_key,p.description,p.coin_price,p.diamond_price,p.stock,p.enabled,p.version,p.deleted_at,p.created_at"
 
 // rowScanner is the common Scan boundary shared by database rows and one-row queries.
 type rowScanner interface{ Scan(...any) error }
@@ -32,12 +32,12 @@ type rowScanner interface{ Scan(...any) error }
 func scanProduct(row rowScanner) (Product, error) {
 	var p Product
 	var stock, deleted sql.NullInt64
-	err := row.Scan(&p.ID, &p.Type, &p.Name, &p.AssetKey, &p.WearableKey, &p.CharacterKey, &p.Description, &p.CoinPrice, &p.DiamondPrice, &stock, &p.Enabled, &p.Version, &deleted, &p.CreatedAt)
+	err := row.Scan(&p.ID, &p.Type, &p.Name, &p.AssetKey, &p.WearableKey, &p.CharacterKey, &p.SceneKey, &p.Description, &p.CoinPrice, &p.DiamondPrice, &stock, &p.Enabled, &p.Version, &deleted, &p.CreatedAt)
 	if stock.Valid {
 		p.Stock = &stock.Int64
 	}
 	p.Deleted = deleted.Valid
-	if item, ok := island.SpatialForThumbnail(p.AssetKey); ok {
+	if item, ok := island.SpatialForThumbnail(p.AssetKey); ok && p.Type == TypeIsland {
 		p.IslandItemKey, p.Repeatable = item.Key, item.Repeatable
 	}
 	if asset, ok := assets.Get(p.AssetKey); ok {
@@ -65,7 +65,7 @@ func readProduct(ctx context.Context, tx *sql.Tx, id string, includeDeleted bool
 
 // validType uses the declared product behaviors, never inferred display text.
 func validType(kind string) bool {
-	return kind == TypeCharacter || kind == TypeWearable || kind == TypeIsland || kind == TypeTitle || kind == TypeReward
+	return kind == TypeScene || kind == TypeCharacter || kind == TypeWearable || kind == TypeIsland || kind == TypeTitle || kind == TypeReward
 }
 
 // validateProduct applies configured numeric and Unicode bounds before any product write.
@@ -79,10 +79,24 @@ func (s *Service) validateProduct(input ProductInput) error {
 	if err := core.Text("description", input.Description, 0, s.Config.Limits.TextMax); err != nil {
 		return err
 	}
-	if artwork, ok := assets.Get(input.AssetKey); !ok || artwork.Kind != assets.Kind(input.Type) || artwork.Free {
-		return core.Invalid("asset_key", "INVALID_ASSET")
+	if input.Type == TypeScene {
+		scene, found := island.SpatialSceneFind(input.SceneKey)
+		if !found || scene.Free {
+			return core.Invalid("scene_key", "INVALID_VALUE")
+		}
+		artwork, found := assets.Get(input.AssetKey)
+		if !found || scene.ThumbnailAssetKey != input.AssetKey || (artwork.Kind != assets.Kind(TypeScene) && artwork.Kind != assets.KindIsland) {
+			return core.Invalid("asset_key", "INVALID_ASSET")
+		}
+	} else {
+		if input.SceneKey != "" {
+			return core.Invalid("scene_key", "INVALID_VALUE")
+		}
+		if artwork, ok := assets.Get(input.AssetKey); !ok || artwork.Kind != assets.Kind(input.Type) || artwork.Free {
+			return core.Invalid("asset_key", "INVALID_ASSET")
+		}
 	}
-	if item, ok := island.SpatialForThumbnail(input.AssetKey); ok && (input.Type != TypeIsland || item.Free) {
+	if item, ok := island.SpatialForThumbnail(input.AssetKey); ok && input.Type != TypeScene && (input.Type != TypeIsland || item.Free) {
 		return core.Invalid("asset_key", "INVALID_ASSET")
 	}
 	if input.Type == TypeWearable {
@@ -183,7 +197,7 @@ func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key st
 		return Product{}, err
 	}
 	id := core.ID()
-	_, err = tx.ExecContext(ctx, "INSERT INTO products(id,type,name,asset_key,wearable_key,character_key,description,coin_price,diamond_price,stock,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", id, input.Type, input.Name, input.AssetKey, input.WearableKey, input.CharacterKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), now.UnixMilli())
+	_, err = tx.ExecContext(ctx, "INSERT INTO products(id,type,name,asset_key,wearable_key,character_key,scene_key,description,coin_price,diamond_price,stock,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, input.Type, input.Name, input.AssetKey, input.WearableKey, input.CharacterKey, input.SceneKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), now.UnixMilli())
 	if err != nil {
 		return Product{}, err
 	}
@@ -219,9 +233,18 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 	if err = s.validateProduct(input.ProductInput); err != nil {
 		return Product{}, err
 	}
-	oldItemKey := productIslandItemKey(current.AssetKey)
-	newItemKey := productIslandItemKey(input.AssetKey)
-	if ((oldItemKey != "" || newItemKey != "") && oldItemKey != newItemKey) || (current.Type == TypeWearable && input.Type == TypeWearable && current.WearableKey != input.WearableKey) || (current.Type == TypeCharacter && input.Type == TypeCharacter && current.CharacterKey != input.CharacterKey) {
+	oldItemKey, newItemKey := "", ""
+	if current.Type == TypeIsland {
+		oldItemKey = productIslandItemKey(current.AssetKey)
+	}
+	if input.Type == TypeIsland {
+		newItemKey = productIslandItemKey(input.AssetKey)
+	}
+	identityChanged := ((oldItemKey != "" || newItemKey != "") && oldItemKey != newItemKey) ||
+		(current.Type == TypeWearable && input.Type == TypeWearable && current.WearableKey != input.WearableKey) ||
+		(current.Type == TypeCharacter && input.Type == TypeCharacter && current.CharacterKey != input.CharacterKey) ||
+		(current.Type == TypeScene && input.Type == TypeScene && current.SceneKey != input.SceneKey)
+	if identityChanged {
 		var sold bool
 		if err = tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM purchases WHERE product_id=?)", id).Scan(&sold); err != nil {
 			return Product{}, err
@@ -239,7 +262,7 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 			return Product{}, core.Fail(409, "PRODUCT_TYPE_LOCKED")
 		}
 	}
-	_, err = tx.ExecContext(ctx, "UPDATE products SET type=?,name=?,asset_key=?,wearable_key=?,character_key=?,description=?,coin_price=?,diamond_price=?,stock=?,enabled=?,version=version+1,updated_at=? WHERE id=?", input.Type, input.Name, input.AssetKey, input.WearableKey, input.CharacterKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), id)
+	_, err = tx.ExecContext(ctx, "UPDATE products SET type=?,name=?,asset_key=?,wearable_key=?,character_key=?,scene_key=?,description=?,coin_price=?,diamond_price=?,stock=?,enabled=?,version=version+1,updated_at=? WHERE id=?", input.Type, input.Name, input.AssetKey, input.WearableKey, input.CharacterKey, input.SceneKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), id)
 	if err != nil {
 		return Product{}, err
 	}

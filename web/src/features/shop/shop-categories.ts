@@ -1,11 +1,11 @@
-import type { Asset, CharacterDefinition, CharacterSlot, CharacterWearable, Product, Purchase } from './types';
+import type { Asset, CharacterDefinition, CharacterSlot, CharacterWearable, Product, Purchase, SceneOption } from './types';
 import content from './content.json';
 
-export type ShopCategory = CharacterSlot | 'character' | 'title' | 'reward' | 'island';
+export type ShopCategory = CharacterSlot | 'character' | 'title' | 'reward' | 'island' | 'scene';
 
 // 商品用途由正式类型及服装定义决定，不从名称或素材key推测。
 export const wardrobeCategories: ShopCategory[] = ['character', 'hair', 'upper', 'lower', 'shoes', 'title'];
-export const shopCategories: ShopCategory[] = [...wardrobeCategories, 'reward', 'island'];
+export const shopCategories: ShopCategory[] = [...wardrobeCategories, 'reward', 'island', 'scene'];
 
 // 四个槽位共用人物目录的稳定类型。
 export function isWearableSlot(value: string): value is CharacterSlot {
@@ -24,7 +24,8 @@ export function itemCategory(item: Product | Purchase, wearables: readonly Chara
 }
 
 // 默认服装来自身体定义，不依靠缩略图的免费标志。
-export function matchesAssetCategory(asset: Asset, category: ShopCategory, wearables: readonly CharacterWearable[] = [], characters: readonly CharacterDefinition[] = []): boolean {
+export function matchesAssetCategory(asset: Asset, category: ShopCategory, wearables: readonly CharacterWearable[] = [], characters: readonly CharacterDefinition[] = [], scenes: readonly SceneOption[] = []): boolean {
+  if (category === 'scene') return scenes.some((scene) => !scene.free && scene.thumbnail_asset_key === asset.key);
   if (!isWearableSlot(category)) return asset.kind === category && !asset.free;
   const defaults = new Set(characters.flatMap((character) => Object.values(character.defaults)));
   return wearables.some((definition) => definition.slot === category && definition.thumbnail_asset_key === asset.key && !defaults.has(definition.wearable_key));
@@ -37,7 +38,7 @@ export function categoryPurchaseType(category: ShopCategory): string {
 
 // 分类属于页面本地状态，保存外观不会重置筛选或分页。
 export interface CategoryFilter {
-  group: 'all' | 'appearance' | 'island' | 'reward'; // 一级用途。
+  group: 'all' | 'appearance' | 'island' | 'scene' | 'reward'; // 一级用途。
   category: ShopCategory | ''; // 角色装扮的具体部位或称号。
 }
 
@@ -45,7 +46,7 @@ export interface CategoryFilter {
 export function matchesCategory(item: Product | Purchase, filter: CategoryFilter, wearables: readonly CharacterWearable[] = []): boolean {
   if (filter.group === 'all') return true;
   const type = 'type_snapshot' in item ? item.type_snapshot : item.type;
-  if (filter.group === 'island' || filter.group === 'reward') return type === filter.group;
+  if (filter.group === 'island' || filter.group === 'scene' || filter.group === 'reward') return type === filter.group;
   if (type !== 'character' && type !== 'title' && type !== 'wearable') return false;
   return !filter.category || itemCategory(item, wearables) === filter.category;
 }

@@ -147,6 +147,9 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 	if err := shop.SeedSpatialProducts(seedContext, db, accounts.Now().UnixMilli()); err != nil {
 		return err
 	}
+	if err := shop.SeedSceneProducts(seedContext, db, accounts.Now().UnixMilli()); err != nil {
+		return err
+	}
 	application.RegisterAssets(artwork)
 	checkins := checkin.New(db, accounts, cfg)
 	application.RegisterCheckins(checkins)

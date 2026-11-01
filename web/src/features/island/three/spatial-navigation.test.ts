@@ -3,6 +3,28 @@ import { createSpatialNavigation, spatialLocalToWorld, type SpatialLayout } from
 import { navigationFixture } from './spatial-actor-fixture';
 
 describe('三维厘米导航', () => {
+  it('无房场景在独立出生点附近导航，室内目标不可选', () => {
+    const layout=navigationFixture();
+    layout.placements=[];
+    Object.assign(layout.scene,{house:null,spawn:{x_cm:600,z_cm:300},fixed_objects:[]});
+    const nav=createSpatialNavigation(layout);
+    expect(nav.house).toBeNull();
+    expect(nav.walkable({x_cm:0,z_cm:0})).toBe(true);
+    expect(nav.space({x_cm:0,z_cm:0})).toBe('outdoor');
+    expect(nav.path({x_cm:600,z_cm:300},{x_cm:0,z_cm:0})).not.toBeNull();
+    expect(nav.randomPoint('indoor',()=>0.5)).toBeNull();
+    expect(nav.walkable(nav.nearest({x_cm:2000,z_cm:2000}))).toBe(true);
+  });
+  it('固定景物使用和摆放相同的旋转阻挡，湖水不能行走', () => {
+    const layout=navigationFixture();
+    layout.placements=[];
+    Object.assign(layout.scene,{house:null,spawn:{x_cm:600,z_cm:300},fixed_objects:[{key:'hedge',model_url:'/hedge',x_cm:0,z_cm:0,rotation:1,scale:1,footprint:{width_cm:80,depth_cm:240},walk_obstacle:{width_cm:80,depth_cm:240},blocks_placement:true}]});
+    const nav=createSpatialNavigation(layout);
+    expect(nav.walkable({x_cm:140,z_cm:0})).toBe(false);
+    expect(nav.walkable({x_cm:0,z_cm:100})).toBe(true);
+    expect(nav.path({x_cm:-300,z_cm:0},{x_cm:300,z_cm:0})).not.toBeNull();
+    expect(nav.walkable({x_cm:0,z_cm:1100})).toBe(false);
+  });
   it('按完整身体半径拒绝岸边、水和场景外', () => {
     const nav = createSpatialNavigation(navigationFixture());
     expect(nav.walkable({x_cm:800,z_cm:965})).toBe(true);
@@ -36,7 +58,7 @@ describe('三维厘米导航', () => {
   it('室内物件随房屋世界变换，隔墙不因整体房屋占地而消失', () => {
     const layout = navigationFixture(); layout.placements[0]!.x_cm=200;
     expect(spatialLocalToWorld({x_cm:10,z_cm:20},layout.placements[0]!)).toEqual({x_cm:210,z_cm:20});
-    layout.scene.house.walls!.push({min_x_cm:-100,max_x_cm:-90,min_z_cm:-290,max_z_cm:290});
+    layout.scene.house!.walls!.push({min_x_cm:-100,max_x_cm:-90,min_z_cm:-290,max_z_cm:290});
     const nav=createSpatialNavigation(layout);
     expect(nav.path({x_cm:50,z_cm:0},{x_cm:200,z_cm:0})).toBeNull();
     expect(nav.walkable({x_cm:105,z_cm:0})).toBe(false);
@@ -57,12 +79,12 @@ describe('三维厘米导航', () => {
     const layout=navigationFixture(),nav=createSpatialNavigation(layout);
     const desk=layout.placements.find(item=>item.instance_id==='base:reading3d')!;
     const interaction=layout.catalog.find(item=>item.item_key===desk.item_key)!.interaction!;
-    const approach=spatialLocalToWorld(spatialLocalToWorld(interaction,desk),nav.house);
-    const path=nav.path(spatialLocalToWorld({x_cm:0,z_cm:470},nav.house),approach);
+    const approach=spatialLocalToWorld(spatialLocalToWorld(interaction,desk),nav.house!);
+    const path=nav.path(spatialLocalToWorld({x_cm:0,z_cm:470},nav.house!),approach);
     expect(desk.space).toBe('indoor');expect(nav.walkable(approach)).toBe(true);
     expect(path).not.toBeNull();expect(path!.every(point=>nav.walkable(point))).toBe(true);
     expect(path!.at(-1)).toEqual(approach);
-    expect(path!.some(point=>Math.abs(point.x_cm-nav.house.x_cm)<=10&&point.z_cm>=280&&point.z_cm<=320)).toBe(true);
+    expect(path!.some(point=>Math.abs(point.x_cm-nav.house!.x_cm)<=10&&point.z_cm>=280&&point.z_cm<=320)).toBe(true);
     expect(nav.space(approach)).toBe('indoor');
   });
 });

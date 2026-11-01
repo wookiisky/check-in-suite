@@ -19,13 +19,28 @@ type spatialPlacementRequest struct {
 
 // registerSpatialIsland keeps the new centimeter contract independent from the legacy projected layout.
 func (app *App) registerSpatialIsland(service *island.Service) {
+	app.Mux.HandleFunc("GET /api/v1/island/scenes", func(w http.ResponseWriter, r *http.Request) {
+		principal, err := app.Authenticate(r)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		items, err := service.ReadSpatialScenes(r.Context(), principal)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		WriteJSON(w, http.StatusOK, struct {
+			Items []island.SpatialSceneOption `json:"items"` // 正式场景与当前家庭的永久资格。
+		}{Items: items})
+	})
 	app.Mux.HandleFunc("GET /api/v1/island/layout", func(w http.ResponseWriter, r *http.Request) {
 		principal, err := app.Authenticate(r)
 		if err != nil {
 			WriteError(w, r, err)
 			return
 		}
-		state, err := service.ReadSpatial(r.Context(), principal)
+		state, err := service.ReadSpatialScene(r.Context(), principal, r.URL.Query().Get("scene_key"))
 		if err != nil {
 			WriteError(w, r, err)
 			return

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { ApiFailure } from '../../api/client';
 import { Modal } from '../../components/Modal';
 import { FieldError } from '../../components/FormFeedback';
-import type { Asset, CharacterDefinition, CharacterWearable, Product, ProductInput, ShopProps } from './types';
+import type { Asset, CharacterDefinition, CharacterWearable, Product, ProductInput, SceneOption, ShopProps } from './types';
 import { pendingProducts } from './pending';
 import { shopError, uncertainResult } from './helpers';
 import { Price } from './Price';
@@ -23,6 +23,7 @@ function draftFor(product: Product | null, assets: Asset[]): ProductInput {
         asset_key: product.asset_key,
         ...(product.wearable_key ? { wearable_key: product.wearable_key } : {}),
         ...(product.character_key ? { character_key: product.character_key } : {}),
+        ...(product.scene_key ? { scene_key: product.scene_key } : {}),
         description: product.description,
         coin_price: product.coin_price,
         diamond_price: product.diamond_price,
@@ -74,25 +75,43 @@ export function ProductEditor({
   const [discarding, setDiscarding] = useState(false);
   const [assetSearch, setAssetSearch] = useState('');
   const [assetLimit, setAssetLimit] = useState(100);
+  const [scenes, setScenes] = useState<SceneOption[]>([]);
+  const [sceneLoading, setSceneLoading] = useState(initial.type === 'scene');
+  const [sceneError, setSceneError] = useState<unknown>(null);
+  const [sceneRevision, reloadScenes] = useState(0);
+  // 场景商品必须选目录中的稳定空间，不能用任意图片推导解锁身份。
+  useEffect(() => {
+    if (category !== 'scene') return;
+    const controller = new AbortController();
+    setSceneLoading(true);
+    setSceneError(null);
+    void client.request<{ items: SceneOption[] }>('/island/scenes', { signal: controller.signal })
+      .then((result) => { if (!controller.signal.aborted) setScenes(result.items.filter((scene) => !scene.free)); })
+      .catch((reason: unknown) => { if (!controller.signal.aborted) setSceneError(reason); })
+      .finally(() => { if (!controller.signal.aborted) setSceneLoading(false); });
+    return () => controller.abort();
+  }, [client, category, sceneRevision]);
   const selectedAsset = assets.find((item) => item.key === draft.asset_key);
   const identityLocked = (product?.owned_count ?? 0) > 0; // 服务端仍会复核其他账户的历史购买。
   const searchTerm = assetSearch.trim().toLocaleLowerCase();
-  const names = new Map([...wearables.map((item) => [item.thumbnail_asset_key, item.name] as const), ...characters.map((item) => [item.thumbnail_asset_key, item.name] as const)]);
-  const choices = assets.filter((item) => matchesAssetCategory(item, category, wearables, characters) && (!searchTerm || `${names.get(item.key) ?? item.name} ${item.provider ?? ''} ${item.pack_name ?? item.pack_key ?? ''}`.toLocaleLowerCase().includes(searchTerm)));
+  const names = new Map([...wearables.map((item) => [item.thumbnail_asset_key, item.name] as const), ...characters.map((item) => [item.thumbnail_asset_key, item.name] as const), ...scenes.map((item) => [item.thumbnail_asset_key, item.name] as const)]);
+  const choices = assets.filter((item) => matchesAssetCategory(item, category, wearables, characters, scenes) && (!searchTerm || `${names.get(item.key) ?? item.name} ${item.provider ?? ''} ${item.pack_name ?? item.pack_key ?? ''}`.toLocaleLowerCase().includes(searchTerm)));
   const visibleChoices = choices.slice(0, assetLimit);
-  if (selectedAsset && matchesAssetCategory(selectedAsset, category, wearables, characters) && !visibleChoices.some((item) => item.key === selectedAsset.key)) visibleChoices.unshift(selectedAsset);
+  if (selectedAsset && (identityLocked || matchesAssetCategory(selectedAsset, category, wearables, characters, scenes)) && !visibleChoices.some((item) => item.key === selectedAsset.key)) visibleChoices.unshift(selectedAsset);
   // 同时修改素材与稳定身份，防止类型切换后带入上一次服装的 key。
   function selectAsset(assetKey: string, nextCategory: ShopCategory) {
     const definition = isWearableSlot(nextCategory)
       ? wearables.find((item) => item.thumbnail_asset_key === assetKey && item.slot === nextCategory)
       : undefined;
     const selectedCharacter = nextCategory === 'character' ? characters.find((item) => item.thumbnail_asset_key === assetKey) : undefined;
-    setDraft(({ wearable_key: _previousKey, character_key: _previousCharacter, ...value }) => ({
+    const selectedScene = nextCategory === 'scene' ? scenes.find((item) => item.thumbnail_asset_key === assetKey) : undefined;
+    setDraft(({ wearable_key: _previousKey, character_key: _previousCharacter, scene_key: _previousScene, ...value }) => ({
       ...value,
       type: categoryPurchaseType(nextCategory) as ProductInput['type'],
       asset_key: assetKey,
       ...(definition ? { wearable_key: definition.wearable_key } : {}),
       ...(selectedCharacter ? { character_key: selectedCharacter.character_key } : {}),
+      ...(selectedScene ? { scene_key: selectedScene.scene_key } : {}),
     }));
   }
 
@@ -204,7 +223,7 @@ export function ProductEditor({
               const next = event.target.value as ShopCategory;
               setCategory(next);
               setAssetSearch(''); setAssetLimit(100);
-              selectAsset(assets.find((item) => matchesAssetCategory(item, next, wearables, characters))?.key ?? '', next);
+              selectAsset(assets.find((item) => matchesAssetCategory(item, next, wearables, characters, scenes))?.key ?? '', next);
             }}
           >
             {shopCategories.map((value) => (
@@ -220,20 +239,23 @@ export function ProductEditor({
             id="product-asset"
             value={draft.asset_key}
             required
-            disabled={identityLocked}
+            disabled={identityLocked || category === 'scene' && sceneLoading}
             onChange={(event) => selectAsset(event.target.value, category)}
           >
             <option value="">{content.chooseAsset}</option>
             {visibleChoices.map((item) => (
                 <option key={item.key} value={item.key}>
-                  {wearables.find((definition) => definition.thumbnail_asset_key === item.key)?.name ?? item.name}
+                  {names.get(item.key) ?? item.name}
                 </option>
               ))}
           </select>
+          {category === 'scene' && sceneLoading && <p role="status">{content.sceneCatalogLoading}</p>}
+          {category === 'scene' && sceneError !== null && <div role="alert"><p className="shop-error">{shopError(sceneError)}</p><button type="button" onClick={() => reloadScenes((value) => value + 1)}>{content.sceneCatalogRetry}</button></div>}
           {choices.length > assetLimit && <button type="button" className="secondary" onClick={() => setAssetLimit((value) => value + 100)}>{content.moreAssets}</button>}
           <FieldError error={error} field="asset_key" />
           <FieldError error={error} field="wearable_key" />
           <FieldError error={error} field="character_key" />
+          <FieldError error={error} field="scene_key" />
           {selectedAsset && <ShopItemArtwork item={selectedAsset} />}
           <label htmlFor="product-description">{content.description}</label>
           <textarea
@@ -325,7 +347,7 @@ export function ProductEditor({
             <p>{content.reviewProduct}</p>
           </div>
         )}
-        <button type="submit" disabled={busy || needsRefresh}>
+        <button type="submit" disabled={busy || needsRefresh || category === 'scene' && !pending && (sceneLoading || sceneError !== null)}>
           {busy
             ? content.saving
             : pending

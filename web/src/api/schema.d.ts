@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/api/v1/island/scenes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取正式场景和家庭的永久进入资格 */
+        get: operations["listSpatialScenes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/island/activity-access": {
         parameters: {
             query?: never;
@@ -1084,6 +1101,7 @@ export interface components {
             pose?: components["schemas"]["SpatialInteractionPose"];
         };
         SpatialDefinition: {
+            house_key?: string;
             pack_name?: string;
             provider?: string;
             pack_key?: string;
@@ -1118,6 +1136,16 @@ export interface components {
             roof_url: string;
         };
         SpatialHouse: {
+            entry_height_profile?: {
+                z_cm: number;
+                y_cm: number;
+            }[];
+            house_key?: string;
+            model_url?: string;
+            roof_nodes?: string[];
+            wall_nodes?: {
+                [key: string]: string[];
+            };
             interior: components["schemas"]["SpatialRect"];
             floor_height_cm: number;
             wall_height_cm: number;
@@ -1125,7 +1153,7 @@ export interface components {
             door_width_cm: number;
             door_height_cm: number;
             door_clearance: components["schemas"]["SpatialRect"];
-            models: components["schemas"]["SpatialHouseModels"];
+            models?: components["schemas"]["SpatialHouseModels"];
             walls: components["schemas"]["SpatialRect"][];
             interior_clearances: components["schemas"]["SpatialRect"][];
         };
@@ -1140,13 +1168,38 @@ export interface components {
             attachment?: components["schemas"]["SpatialActivityAttachment"];
         };
         SpatialScene: {
+            name?: string;
+            spawn?: components["schemas"]["SpatialPoint"];
+            fixed_objects?: components["schemas"]["SpatialFixedObject"][];
+            background_terrain?: components["schemas"]["SpatialTerrain"];
             scene_key: string;
             regions: components["schemas"]["SpatialTerrainRegion"][];
             environments: string[];
-            house: components["schemas"]["SpatialHouse"];
+            house: components["schemas"]["SpatialHouse"] | null;
             activity_presentations: {
                 [key: string]: components["schemas"]["SpatialActivityPresentation"];
             };
+        };
+        SpatialFixedObject: {
+            key: string;
+            model_url: string;
+            x_cm: number;
+            z_cm: number;
+            rotation: number;
+            scale: number;
+            footprint: components["schemas"]["SpatialFootprint"];
+            walk_obstacle?: components["schemas"]["SpatialFootprint"];
+            blocks_placement: boolean;
+        };
+        SpatialSceneOption: {
+            scene_key: string;
+            name: string;
+            thumbnail_asset_key: string;
+            thumbnail_url: string;
+            free: boolean;
+            owned: boolean;
+            default_environment: string;
+            scene: components["schemas"]["SpatialScene"];
         };
         SpatialPlacement: {
             instance_id: string;
@@ -1157,10 +1210,14 @@ export interface components {
             rotation: number;
         };
         SpatialOwnedItem: {
+            placed_scene_key?: string;
             instance_id: string;
             item_key: string;
         };
         SpatialIslandState: {
+            houses?: {
+                [key: string]: components["schemas"]["SpatialHouse"];
+            };
             version: number;
             scene_key: string;
             environment_key: string;
@@ -1176,11 +1233,13 @@ export interface components {
             placements: components["schemas"]["SpatialPlacement"][];
         };
         /** @enum {string} */
-        ProductType: "title" | "reward" | "wearable" | "island" | "character";
+        ProductType: "title" | "reward" | "wearable" | "island" | "character" | "scene";
         Product: {
             pack_name?: string;
             /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
             character_key?: string;
+            /** @description 独立场景的永久身份；scene 商品必须提供，订单保留成交资格。 */
+            scene_key?: string;
             /** @description 受控来源标识，例如 kaykit、kenney。 */
             provider?: string;
             /** @description 受控素材包身份。 */
@@ -1209,6 +1268,8 @@ export interface components {
         ProductCreate: {
             /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
             character_key?: string;
+            /** @description 独立场景的永久身份；scene 商品必须提供，订单保留成交资格。 */
+            scene_key?: string;
             /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
             wearable_key?: string;
             type: components["schemas"]["ProductType"];
@@ -1223,6 +1284,8 @@ export interface components {
         ProductUpdate: {
             /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
             character_key?: string;
+            /** @description 独立场景的永久身份；scene 商品必须提供，订单保留成交资格。 */
+            scene_key?: string;
             /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
             wearable_key?: string;
             type: components["schemas"]["ProductType"];
@@ -1257,6 +1320,8 @@ export interface components {
             pack_key?: string;
             /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
             character_key?: string;
+            /** @description 独立场景的永久身份；scene 商品必须提供，订单保留成交资格。 */
+            scene_key?: string;
             /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
             wearable_key?: string;
             id: string;
@@ -1598,6 +1663,29 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listSpatialScenes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["SpatialSceneOption"][];
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getIslandActivityAccess: {
         parameters: {
             query?: never;
@@ -1621,7 +1709,10 @@ export interface operations {
     };
     getSpatialIsland: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 目标场景；省略时读取免费海边。 */
+                scene_key?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;

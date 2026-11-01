@@ -3,7 +3,6 @@ package demo
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/character"
@@ -88,10 +87,13 @@ func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.T
 	if _, err := tx.ExecContext(ctx, `INSERT INTO appearance_state(id,version,character_key,hair_purchase_id,upper_purchase_id,lower_purchase_id,shoes_purchase_id) VALUES(1,?,?,?,?,?,?)`, appearance.Version, appearance.CharacterKey, appearance.HairPurchaseID, appearance.UpperPurchaseID, appearance.LowerPurchaseID, appearance.ShoesPurchaseID); err != nil {
 		return err
 	}
-	raw, err := json.Marshal(placements)
-	if err != nil {
+	if _, err := tx.ExecContext(ctx, `INSERT INTO island_scene_states(scene_key,version,environment_key) VALUES(?,1,?)`, layout.SceneKey, layout.EnvironmentKey); err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, `INSERT INTO island_spatial_state(id,version,scene_key,environment_key,placements) VALUES(1,1,?,?,?)`, layout.SceneKey, layout.EnvironmentKey, string(raw))
-	return err
+	for index, placement := range placements {
+		if _, err := tx.ExecContext(ctx, `INSERT INTO island_scene_placements(instance_id,scene_key,position_index,item_key,space,x_cm,z_cm,rotation) VALUES(?,?,?,?,?,?,?,?)`, placement.InstanceID, layout.SceneKey, index, placement.ItemKey, placement.Space, placement.XCM, placement.ZCM, placement.Rotation); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -6,6 +6,13 @@ info:
 servers: [{"url": "/"}]
 security: [{"sessionCookie": []}]
 paths:
+  "/api/v1/island/scenes":
+    get:
+      operationId: "listSpatialScenes"
+      summary: "读取正式场景和家庭的永久进入资格"
+      responses:
+        "200": {"description": "成功", "content": {"application/json": {"schema": {"type": "object", "additionalProperties": false, "required": ["items"], "properties": {"items": {"type": "array", "items": {"$ref": "#/components/schemas/SpatialSceneOption"}}}}}}}
+        default: {"$ref": "#/components/responses/Error"}
   "/api/v1/island/activity-access":
     get:
       operationId: "getIslandActivityAccess"
@@ -18,6 +25,8 @@ paths:
     get:
       operationId: "getSpatialIsland"
       summary: "读取整数厘米的三维营地布局与统一空间定义"
+      parameters:
+        - {"name": "scene_key", "in": "query", "schema": {"type": "string"}, "description": "目标场景；省略时读取免费海边。"}
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SpatialIslandState"}}}}
         default: {"$ref": "#/components/responses/Error"}
@@ -980,6 +989,7 @@ components:
       additionalProperties: false
       required: ["item_key", "name", "footprint", "blocks_placement", "movable", "repeatable", "spaces", "rotations", "allowed_terrain", "thumbnail_asset_key", "thumbnail_url", "coin_price", "diamond_price", "free"]
       properties:
+        house_key: {"type": "string", "minLength": 1}
         pack_name: {"type": "string"}
         provider: {"type": "string"}
         pack_key: {"type": "string"}
@@ -1021,8 +1031,13 @@ components:
     SpatialHouse:
       type: "object"
       additionalProperties: false
-      required: ["interior", "floor_height_cm", "wall_height_cm", "door_center", "door_width_cm", "door_height_cm", "door_clearance", "models", "walls", "interior_clearances"]
+      required: ["interior", "floor_height_cm", "wall_height_cm", "door_center", "door_width_cm", "door_height_cm", "door_clearance", "walls", "interior_clearances"]
       properties:
+        entry_height_profile: {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["z_cm", "y_cm"], "properties": {"z_cm": {"type": "number"}, "y_cm": {"type": "number"}}}}
+        house_key: {"type": "string", "minLength": 1}
+        model_url: {"type": "string", "minLength": 1}
+        roof_nodes: {"type": "array", "items": {"type": "string"}}
+        wall_nodes: {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}, "propertyNames": {"enum": ["north", "south", "east", "west"]}}
         interior: {"$ref": "#/components/schemas/SpatialRect"}
         floor_height_cm: {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
         wall_height_cm: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
@@ -1053,11 +1068,42 @@ components:
       additionalProperties: false
       required: ["scene_key", "regions", "environments", "house", "activity_presentations"]
       properties:
+        name: {"type": "string"}
+        spawn: {"$ref": "#/components/schemas/SpatialPoint"}
+        fixed_objects: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialFixedObject"}}
+        background_terrain: {"$ref": "#/components/schemas/SpatialTerrain"}
         scene_key: {"type": "string", "minLength": 1}
         regions: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialTerrainRegion"}}
         environments: {"type": "array", "items": {"type": "string", "minLength": 1}}
-        house: {"$ref": "#/components/schemas/SpatialHouse"}
+        house: {"oneOf": [{"$ref": "#/components/schemas/SpatialHouse"}, {"type": "null"}]}
         activity_presentations: {"type": "object", "additionalProperties": {"$ref": "#/components/schemas/SpatialActivityPresentation"}, "propertyNames": {"enum": ["read", "run", "ball"]}}
+    SpatialFixedObject:
+      type: "object"
+      additionalProperties: false
+      required: ["key", "model_url", "x_cm", "z_cm", "rotation", "scale", "footprint", "blocks_placement"]
+      properties:
+        key: {"type": "string", "minLength": 1}
+        model_url: {"type": "string", "minLength": 1}
+        x_cm: {"type": "integer"}
+        z_cm: {"type": "integer"}
+        rotation: {"type": "integer", "minimum": 0, "maximum": 3}
+        scale: {"type": "number", "exclusiveMinimum": 0}
+        footprint: {"$ref": "#/components/schemas/SpatialFootprint"}
+        walk_obstacle: {"$ref": "#/components/schemas/SpatialFootprint"}
+        blocks_placement: {"type": "boolean"}
+    SpatialSceneOption:
+      type: "object"
+      additionalProperties: false
+      required: ["scene_key", "name", "thumbnail_asset_key", "thumbnail_url", "free", "owned", "default_environment", "scene"]
+      properties:
+        scene_key: {"type": "string", "minLength": 1}
+        name: {"type": "string", "minLength": 1}
+        thumbnail_asset_key: {"type": "string", "minLength": 1}
+        thumbnail_url: {"type": "string", "minLength": 1}
+        free: {"type": "boolean"}
+        owned: {"type": "boolean"}
+        default_environment: {"type": "string", "minLength": 1}
+        scene: {"$ref": "#/components/schemas/SpatialScene"}
     SpatialPlacement:
       type: "object"
       additionalProperties: false
@@ -1074,6 +1120,7 @@ components:
       additionalProperties: false
       required: ["instance_id", "item_key"]
       properties:
+        placed_scene_key: {"type": "string", "minLength": 1}
         instance_id: {"type": "string", "minLength": 1}
         item_key: {"type": "string", "minLength": 1}
     SpatialIslandState:
@@ -1081,6 +1128,7 @@ components:
       additionalProperties: false
       required: ["version", "scene_key", "environment_key", "placements", "inventory", "catalog", "scene"]
       properties:
+        houses: {"type": "object", "additionalProperties": {"$ref": "#/components/schemas/SpatialHouse"}}
         version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         scene_key: {"type": "string", "minLength": 1}
         environment_key: {"type": "string", "minLength": 1}
@@ -1099,7 +1147,7 @@ components:
         placements: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialPlacement"}}
     ProductType:
       type: "string"
-      enum: ["title", "reward", "wearable", "island", "character"]
+      enum: ["title", "reward", "wearable", "island", "character", "scene"]
     Product:
       type: "object"
       additionalProperties: false
@@ -1107,6 +1155,7 @@ components:
       properties:
         pack_name: {"type": "string"}
         character_key: {"type": "string", "minLength": 1, "description": "完整角色的稳定身份；character 商品必须提供，订单保存成交身份。"}
+        scene_key: {"type": "string", "minLength": 1, "description": "独立场景的永久身份；scene 商品必须提供，订单保留成交资格。"}
         provider: {"type": "string", "description": "受控来源标识，例如 kaykit、kenney。"}
         pack_key: {"type": "string", "description": "受控素材包身份。"}
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
@@ -1130,6 +1179,7 @@ components:
       required: ["type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled"]
       properties:
         character_key: {"type": "string", "minLength": 1, "description": "完整角色的稳定身份；character 商品必须提供，订单保存成交身份。"}
+        scene_key: {"type": "string", "minLength": 1, "description": "独立场景的永久身份；scene 商品必须提供，订单保留成交资格。"}
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
         type: {"$ref": "#/components/schemas/ProductType"}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
@@ -1145,6 +1195,7 @@ components:
       required: ["type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled", "expected_version"]
       properties:
         character_key: {"type": "string", "minLength": 1, "description": "完整角色的稳定身份；character 商品必须提供，订单保存成交身份。"}
+        scene_key: {"type": "string", "minLength": 1, "description": "独立场景的永久身份；scene 商品必须提供，订单保留成交资格。"}
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
         type: {"$ref": "#/components/schemas/ProductType"}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
@@ -1199,6 +1250,7 @@ components:
         provider: {"type": "string"}
         pack_key: {"type": "string"}
         character_key: {"type": "string", "minLength": 1, "description": "完整角色的稳定身份；character 商品必须提供，订单保存成交身份。"}
+        scene_key: {"type": "string", "minLength": 1, "description": "独立场景的永久身份；scene 商品必须提供，订单保留成交资格。"}
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
         id: {"type": "string", "minLength": 1}
         island_item_key: {"type": "string", "description": "根据稳定物品身份读取的当前营地能力，可随资源更新增加。"}

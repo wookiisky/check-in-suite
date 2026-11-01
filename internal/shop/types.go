@@ -14,6 +14,7 @@ import (
 const (
 	TypeCharacter     = "character"       // Purchased identity for a complete shared-body character.
 	TypeWearable      = "wearable"        // Three-dimensional clothing with a stable definition identity.
+	TypeScene         = "scene"           // Permanent access to an independent household scene.
 	TypeIsland        = "island"          // Controlled island construction item.
 	TypeTitle         = "title"           // One equipped title, permanently owned after purchase.
 	TypeReward        = "reward"          // A repeatable household reward requiring redemption.
@@ -39,6 +40,7 @@ func New(db *sql.DB, cfg config.Config, accounts *account.Service) *Service {
 
 // Product describes the current offer; its fields never rewrite existing purchase snapshots.
 type Product struct {
+	SceneKey      string `json:"scene_key,omitempty"`       // Permanent scene identity independent of its artwork.
 	PackName      string `json:"pack_name,omitempty"`       // Human-readable official source pack name.
 	CharacterKey  string `json:"character_key,omitempty"`   // Permanent character identity independent of model versions.
 	Provider      string `json:"provider,omitempty"`        // Controlled source provider.
@@ -64,6 +66,7 @@ type Product struct {
 
 // ProductInput is the complete mutable merchandise configuration.
 type ProductInput struct {
+	SceneKey     string `json:"scene_key,omitempty"`     // Required for scene products, empty for other types.
 	CharacterKey string `json:"character_key,omitempty"` // Required for character products; empty for other behaviors.
 	WearableKey  string `json:"wearable_key,omitempty"`  // Required for three-dimensional clothing, empty for other types.
 	Type         string `json:"type"`                    // Selected product type.
@@ -116,6 +119,7 @@ type ProductQuery struct {
 
 // Purchase is a permanent transaction snapshot plus the independent redemption state.
 type Purchase struct {
+	SceneKey            string  `json:"scene_key,omitempty"`       // Scene identity copied at purchase time.
 	PackName            string  `json:"pack_name,omitempty"`       // Human-readable official source pack name.
 	Provider            string  `json:"provider,omitempty"`        // Current catalog source of the purchased resource.
 	PackKey             string  `json:"pack_key,omitempty"`        // Current catalog source pack.

@@ -32,9 +32,18 @@ func loadSpatialCatalog() spatialCatalogIndex {
 	if err := json.Unmarshal(spatialSceneJSON, &result.configuration); err != nil {
 		panic(err)
 	}
+	var extra spatialHouseConfiguration
+	if err := json.Unmarshal(spatialHousesJSON, &extra); err != nil {
+		panic(err)
+	}
+	result.configuration.Catalog = append(result.configuration.Catalog, extra.Catalog...)
 	result.byKey = make(map[string]int, len(result.configuration.Catalog))
 	result.byThumbnail = make(map[string]int, len(result.configuration.Catalog))
 	for index, item := range result.configuration.Catalog {
+		if item.Assembly == "house" && item.HouseKey == "" {
+			item.HouseKey = "seaside-house-v1"
+			result.configuration.Catalog[index] = item
+		}
 		if _, exists := result.byKey[item.Key]; exists {
 			panic("duplicate spatial item key: " + item.Key)
 		}
@@ -77,6 +86,7 @@ func SpatialSceneDefinition() SpatialScene {
 	if err := json.Unmarshal(data, &scene); err != nil {
 		panic(err)
 	}
+	scene.BackgroundTerrain = "water"
 	return scene
 }
 
