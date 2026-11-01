@@ -9,6 +9,9 @@ import (
 //go:embed spatial-scene.json
 var spatialSceneJSON []byte
 
+//go:embed spatial-thumbnail-aliases.json
+var spatialThumbnailAliasesJSON []byte
+
 // spatialConfiguration 保持默认布局与场景配置属于同一个固定版本来源。
 type spatialConfiguration struct {
 	Scene              SpatialScene        `json:"scene"`               // 地形与房屋空间。
@@ -52,6 +55,22 @@ func loadSpatialCatalog() spatialCatalogIndex {
 		}
 		result.byKey[item.Key] = index
 		result.byThumbnail[item.ThumbnailAssetKey] = index
+	}
+	var history struct {
+		Aliases map[string]string `json:"aliases"` // 明确登记的历史缩略图与稳定物件关系。
+	}
+	if err := json.Unmarshal(spatialThumbnailAliasesJSON, &history); err != nil {
+		panic(err)
+	}
+	for thumbnail, key := range history.Aliases {
+		index, found := result.byKey[key]
+		if !found {
+			continue
+		}
+		if current, exists := result.byThumbnail[thumbnail]; exists && current != index {
+			panic("conflicting historical spatial thumbnail key: " + thumbnail)
+		}
+		result.byThumbnail[thumbnail] = index
 	}
 	return result
 }
@@ -123,7 +142,7 @@ func SpatialFind(key string) (SpatialDefinition, bool) {
 	return copySpatialDefinition(spatialIndex.configuration.Catalog[index]), true
 }
 
-// SpatialForThumbnail 只认目录登记的缩略图，不从名称或前缀猜测物件。
+// SpatialForThumbnail 按当前目录及明确历史别名解析，不从名称或前缀猜测物件。
 func SpatialForThumbnail(assetKey string) (SpatialDefinition, bool) {
 	index, exists := spatialIndex.byThumbnail[assetKey]
 	if !exists {

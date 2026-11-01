@@ -40,6 +40,9 @@ func SeedSceneProducts(ctx context.Context, db *sql.DB, now int64) error {
 		if err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `UPDATE products SET asset_key=?,version=version+1,updated_at=? WHERE type=? AND scene_key=? AND asset_key!=?`, scene.ThumbnailAssetKey, now, TypeScene, scene.Key, scene.ThumbnailAssetKey); err != nil {
+			return err
+		}
 	}
 	return tx.Commit()
 }

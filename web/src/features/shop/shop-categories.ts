@@ -26,6 +26,7 @@ export function itemCategory(item: Product | Purchase, wearables: readonly Chara
 // 默认服装来自身体定义，不依靠缩略图的免费标志。
 export function matchesAssetCategory(asset: Asset, category: ShopCategory, wearables: readonly CharacterWearable[] = [], characters: readonly CharacterDefinition[] = [], scenes: readonly SceneOption[] = []): boolean {
   if (category === 'scene') return scenes.some((scene) => !scene.free && scene.thumbnail_asset_key === asset.key);
+  if (category === 'character') return asset.kind === 'character' && !asset.free && characters.some((character) => character.thumbnail_asset_key === asset.key);
   if (!isWearableSlot(category)) return asset.kind === category && !asset.free;
   const defaults = new Set(characters.flatMap((character) => Object.values(character.defaults)));
   return wearables.some((definition) => definition.slot === category && definition.thumbnail_asset_key === asset.key && !defaults.has(definition.wearable_key));

@@ -28,6 +28,7 @@ tests:
 - web/src/features/island/useIslandActivityAccess.test.tsx
 - web/src/features/island/three/
 - web/e2e/island-3d.spec.ts
+- web/e2e/spatial-scenes.spec.ts
 - web/e2e/p0-preview.spec.ts
 ---
 # 营地建设与活动

@@ -36,6 +36,10 @@ func SeedCharacterProducts(ctx context.Context, db *sql.DB, now int64) error {
 		if _, err := tx.ExecContext(ctx, `INSERT INTO products(id,type,name,asset_key,character_key,description,coin_price,diamond_price,enabled,created_at,updated_at) VALUES(?,?,?,?,?,'',?,?,1,?,?) ON CONFLICT(id) DO NOTHING`, "character-offer-"+body.Key, TypeCharacter, body.Name, body.ThumbnailAssetKey, body.Key, price.Coins, price.Diamonds, now, now); err != nil {
 			return err
 		}
+		// 只推进相同人物的图片版本，报价及历史成交快照保持原样。
+		if _, err := tx.ExecContext(ctx, `UPDATE products SET asset_key=?,version=version+1,updated_at=? WHERE type=? AND character_key=? AND asset_key!=?`, body.ThumbnailAssetKey, now, TypeCharacter, body.Key, body.ThumbnailAssetKey); err != nil {
+			return err
+		}
 	}
 	return tx.Commit()
 }

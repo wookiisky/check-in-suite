@@ -29,6 +29,12 @@ async function catalogAPI(page: Page, path: string, method = 'GET', data?: unkno
   return response.status() === 204 ? null : response.json();
 }
 
+// 在完整目录中搜索本用例的报价，使库存和上下架验证覆盖分页后的条目。
+async function searchCatalogProduct(page: Page, name: string) {
+  await page.getByLabel(shop.searchLabel, { exact: true }).fill(name);
+  await page.getByRole('button', { name: shop.search, exact: true }).click();
+}
+
 // 商品配置全部通过页面完成，普通商店再验证库存和上下架带来的行为。
 test('商品管理的素材筛选、草稿、编辑、库存、上下架和删除闭环', async ({ page }, testInfo) => {
   test.setTimeout(90_000);
@@ -72,12 +78,14 @@ test('商品管理的素材筛选、草稿、编辑、库存、上下架和删�
 
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
     await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
+    await searchCatalogProduct(page, originalName);
     const soldOut = page.getByRole('article').filter({ has: page.getByRole('heading', { name: originalName, exact: true }) });
     await expect(soldOut.getByRole('button', { name: `${shop.buy} ${originalName}`, exact: true })).toBeDisabled();
     await expect(soldOut.getByRole('button')).toHaveAttribute('aria-description', new RegExp(shop.soldOut));
 
     await enterManagement(page);
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation.products, exact: true }).click();
+    await searchCatalogProduct(page, originalName);
     await page.getByRole('button', { name: `${shop.edit} ${originalName}`, exact: true }).click();
     await dialog.getByLabel(shop.name, { exact: true }).fill(editedName);
     await dialog.getByLabel(shop.coinPrice, { exact: true }).fill('2');
@@ -90,19 +98,23 @@ test('商品管理的素材筛选、草稿、编辑、库存、上下架和删�
     expect(products.items.find((item) => item.id === created.id)).toMatchObject({ name: editedName, coin_price: 2, diamond_price: 1, stock: 3, enabled: false });
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
     await expect(page.getByRole('heading', { name: shop.title, exact: true })).toBeVisible();
+    await searchCatalogProduct(page, editedName);
     await expect(page.getByRole('heading', { name: editedName, exact: true })).toHaveCount(0);
 
     await enterManagement(page);
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation.products, exact: true }).click();
+    await searchCatalogProduct(page, editedName);
     await page.getByRole('button', { name: `${shop.edit} ${editedName}`, exact: true }).click();
     await dialog.getByRole('checkbox', { name: shop.enabled, exact: true }).check();
     await dialog.getByRole('button', { name: shop.save, exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+    await searchCatalogProduct(page, editedName);
     await expect(page.getByRole('heading', { name: editedName, exact: true })).toBeVisible();
 
     await enterManagement(page);
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation.products, exact: true }).click();
+    await searchCatalogProduct(page, editedName);
     await page.getByRole('button', { name: `${shop.edit} ${editedName}`, exact: true }).click();
     await dialog.getByLabel(shop.description, { exact: true }).fill('不会保存的修改');
     await dialog.getByRole('button', { name: content.common.close, exact: true }).click();
@@ -116,6 +128,7 @@ test('商品管理的素材筛选、草稿、编辑、库存、上下架和删�
     await expect(dialog).toHaveCount(0);
     await expect(page.getByRole('button', { name: `${shop.edit} ${editedName}`, exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+    await searchCatalogProduct(page, editedName);
     await expect(page.getByRole('heading', { name: editedName, exact: true })).toHaveCount(0);
   } finally {
     await catalogAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });

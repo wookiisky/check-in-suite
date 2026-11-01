@@ -18,6 +18,7 @@ source:
 - scripts/prepare-camp-assets.py
 - scripts/fetch-provider-assets.py
 - scripts/import-provider-assets.py
+- scripts/update-spatial-thumbnail-aliases.py
 - scripts/import-provider-characters.py
 - scripts/import-provider-animations.py
 - scripts/check-gltf-assets.mjs
@@ -105,6 +106,8 @@ go test ./internal/httpapi -run 'TestGraphicsAssetsHTTP'
 扩充官方免费资源时，`scripts/fetch-provider-assets.py` 负责保存包级快照；原包及解压内容位于 `.local/3d-sources/provider-packs/`，来源、免费版本、原包校验值和许可依据记录在 `internal/assets/provider-pack-manifest.json`。免费与付费下载内容分别处理，不因为同属 CC0 就把付费文件记为免费取得。重新发现官方目录可能引入新版本，应核对清单差异，不能把重新抓取当作复现旧快照。
 
 `scripts/import-provider-assets.py` 根据按来源维护的审核配置整理完整物件。完整物件库与本次选入清单分开：未选入物件和制作工程保留在本地，发行包只包含本次使用的 GLB、PNG 与元数据。源条目及范围排除、准备失败、本次选择均保留在 `internal/assets/provider-asset-manifest.json`，不能只检查商品总数就认定清单无遗漏。
+
+合并新的正式物件目录后，运行 `uv run --locked python scripts/update-spatial-thumbnail-aliases.py`，保留并补充历史缩略图到稳定物品的明确映射。运行时只嵌入紧凑的 `internal/island/spatial-thumbnail-aliases.json`；旧发布记录与加工历史的来源指针和校验值保留在该文件中，不依靠名称或前缀猜测身份。启动初始化据此刷新旧报价的资源引用，同时保留管理配置和成交事实。
 
 人物由 `scripts/import-provider-characters.py` 在 Blender 中整理，标准身体、骨架、切面和逐源选择由专用配置提供。没有原始下肢或骨架的源人物须明确记录补充身体与离线绑定，不能声称其源包已有这些部件。`internal/assets/provider-character-manifest.json` 记录已加工人物和恢复检查点；尚未适配或未通过画面检查的人物不进入正式可选目录。原始动作单独由 `scripts/import-provider-animations.py` 处理，并在 `provider-animation-manifest.json` 中记录已完成范围与剩余范围；预览按需加载，不能让正式人物页面下载全部原始动作。
 

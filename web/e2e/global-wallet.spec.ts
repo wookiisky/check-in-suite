@@ -102,6 +102,9 @@ test('全局余额在普通页面右上常驻，打卡购买删除即时同步�
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
   await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
+  // 先搜索本用例创建的商品，分页后仍定位到真实报价。
+  await page.getByLabel(shop.searchLabel, { exact: true }).fill(product.name);
+  await page.getByRole('button', { name: shop.search, exact: true }).click();
   await page.getByRole('button', { name: `${shop.buy} ${product.name}`, exact: true }).click();
   const purchased = { coins: granted.coins - 2, diamonds: granted.diamonds - 1 };
   await expectReceiptWallet(page, purchased, async () => {

@@ -23,5 +23,31 @@ func SeedSpatialProducts(ctx context.Context, db *sql.DB, now int64) error {
 			return err
 		}
 	}
+	// 自建报价也按稳定物件更新资源引用，不能因旧图退出当前目录而失去摆放能力。
+	rows, err := tx.QueryContext(ctx, "SELECT id,asset_key FROM products WHERE type=?", TypeIsland)
+	if err != nil {
+		return err
+	}
+	updates := map[string]string{}
+	for rows.Next() {
+		var id, artwork string
+		if err := rows.Scan(&id, &artwork); err != nil {
+			rows.Close()
+			return err
+		}
+		if item, found := island.SpatialForThumbnail(artwork); found && artwork != item.ThumbnailAssetKey {
+			updates[id] = item.ThumbnailAssetKey
+		}
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return err
+	}
+	for id, artwork := range updates {
+		if _, err := tx.ExecContext(ctx, "UPDATE products SET asset_key=?,version=version+1,updated_at=? WHERE id=?", artwork, now, id); err != nil {
+			return err
+		}
+	}
 	return tx.Commit()
 }
