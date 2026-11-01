@@ -270,7 +270,8 @@ describe('小岛初次读取跨日', () => {
       request.mockImplementation(async (path) => path === '/camp' ? camp : next);
       await act(async () => { resolveIsland(expired); });
       await screen.findByRole('button', { name: `${content.activities.run} 运动区，${content.activityLocked}` });
-      expect(request.mock.calls.filter(([path]) => path === '/island')).toHaveLength(2);
+      expect(request.mock.calls.filter(([path]) => path === '/island')).toHaveLength(1);
+      expect(request.mock.calls.filter(([path]) => path === '/island/activity-access')).toHaveLength(2);
       expect(recordServerTime).toHaveBeenCalledOnce();
     } finally { view.unmount(); clock.mockRestore(); }
   });

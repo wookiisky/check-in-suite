@@ -15,17 +15,11 @@ import (
 // readState resolves ownership using all purchases, never the paginated shop view.
 func readState(ctx context.Context, tx *sql.Tx, now time.Time) (State, error) {
 	state := State{Version: 1, Placements: defaultPlacements(), Inventory: baseInventory(), Catalog: Catalog()}
-	zone, err := time.LoadLocation("Asia/Taipei")
+	access, err := readActivityAccessState(ctx, tx, now)
 	if err != nil {
 		return state, err
 	}
-	local := now.In(zone)
-	state.Today = core.Today(now)
-	state.ExpiresAt = time.Date(local.Year(), local.Month(), local.Day()+1, 0, 0, 0, 0, zone).Format(time.RFC3339)
-	state.ActivityAccess, err = readActivityAccess(ctx, tx, state.Catalog, state.Today)
-	if err != nil {
-		return state, err
-	}
+	state.Today, state.ExpiresAt, state.ActivityAccess = access.Today, access.ExpiresAt, access.ActivityAccess
 	var raw string
 	err = tx.QueryRowContext(ctx, "SELECT version,placements FROM island_state WHERE id=1").Scan(&state.Version, &raw)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {

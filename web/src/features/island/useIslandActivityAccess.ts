@@ -1,19 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ApiClient } from '../../api/client';
-import type { IslandActivity, IslandState } from './island-types';
+import type { IslandAccess } from './island-activity-access';
+export type { IslandAccess } from './island-activity-access';
+export { allowedIslandActivities } from './island-activity-access';
 
-// 活动资格独立于布局；刷新读取绝不替换页面里的布置草稿。
-export type IslandAccess = Pick<IslandState, 'today' | 'expires_at' | 'activity_access'>;
-
-// 每次使用时检查期限，后台节流后的旧计时器也不能延长昨日资格。
-export function allowedIslandActivities(access: IslandAccess | null, now = Date.now()): IslandActivity[] {
-  if (!access) return [];
-  const valid = Date.parse(access.expires_at) > now;
-  return access.activity_access.filter((item) => item.available && (valid || item.tasks.length === 0)).map((item) => item.activity);
-}
-
-// 只摘取服务端资格，避免读取或保存响应把布局带入另一份状态。
-function activityAccess(state: IslandState): IslandAccess {
+// 只摘取服务端资格，避免初始页面响应把布局带入另一份状态。
+function activityAccess(state: IslandAccess): IslandAccess {
   return { today: state.today, expires_at: state.expires_at, activity_access: state.activity_access };
 }
 
@@ -22,11 +14,11 @@ function invalidateAccess(access: IslandAccess | null): IslandAccess | null {
   return access && { ...access, activity_access: access.activity_access.map((item) => ({ ...item, available: item.tasks.length === 0 && item.available })) };
 }
 
-// 初次读取和保存复用页面响应，跨日与恢复前台只重新读取资格。
-export function useIslandActivityAccess(client: Pick<ApiClient, 'request'> & Partial<Pick<ApiClient, 'now'>>, state: IslandState | null) {
+// 无初始资格时主动读取；跨日和恢复前台仅刷新资格，不替换布局。
+export function useIslandActivityAccess(client: Pick<ApiClient, 'request'> & Partial<Pick<ApiClient, 'now'>>, state?: IslandAccess | null) {
   const [access, setAccess] = useState<IslandAccess | null>(null);
   const [error, setError] = useState<unknown>(null);
-  const [pending, setPending] = useState(false);
+  const [pending, setPending] = useState(!state);
   const request = useRef<AbortController | null>(null);
   const now = useCallback(() => client.now?.().getTime() ?? Date.now(), [client]);
 
@@ -36,7 +28,7 @@ export function useIslandActivityAccess(client: Pick<ApiClient, 'request'> & Par
     const controller = new AbortController();
     request.current = controller;
     setAccess(invalidateAccess); setPending(true); setError(null);
-    void client.request<IslandState>('/island', { signal: controller.signal }).then((next) => {
+    void client.request<IslandAccess>('/island/activity-access', { signal: controller.signal }).then((next) => {
       if (controller.signal.aborted) return;
       const received = activityAccess(next);
       if (Date.parse(received.expires_at) <= now()) {
@@ -51,7 +43,7 @@ export function useIslandActivityAccess(client: Pick<ApiClient, 'request'> & Par
   }, [client, now]);
 
   useEffect(() => {
-    if (!state) return;
+    if (!state) { refresh(); return; }
     request.current?.abort();
     const next = activityAccess(state);
     setError(null); setPending(false);
@@ -78,5 +70,5 @@ export function useIslandActivityAccess(client: Pick<ApiClient, 'request'> & Par
     };
   }, [refresh]);
 
-  return { access, error, pending, refresh };
+  return { access, error, pending, refresh, loading: pending, retry: refresh };
 }

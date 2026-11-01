@@ -11,6 +11,8 @@ source:
 - internal/island/spatial-scene.json
 - web/src/features/island/spatial-geometry.ts
 - internal/island/activity_access.go
+- internal/island/activity_access_state.go
+- internal/httpapi/island_activity_access.go
 - internal/island/catalog.json
 - internal/island/house-layout.json
 - internal/island/housing.go
@@ -48,6 +50,7 @@ tests:
 - internal/island/housing_upgrade_test.go
 - internal/httpapi/island_routes_test.go
 - internal/httpapi/island_unlock_test.go
+- internal/httpapi/island_activity_access_test.go
 - internal/storage/task_island_migration_test.go
 - internal/shop/island_purchase_test.go
 - web/src/features/island/IslandPage.test.tsx
@@ -143,7 +146,9 @@ Go 与 TypeScript 使用相同场景数据及几何案例。允许地形按完�
 
 保存携带预期版本，服务端在同一事务内复核会话、版本和所有布局约束，再原子写入并递增版本。其他页面已保存时返回版本冲突，当前页面保留草稿，用户读取最新状态后核对；未确认的结果不能显示为已保存。
 
-活动资格刷新仅更新资格，不能覆盖当前布局或布置草稿。保存响应虽同时携带资格，也必须遵循活动期限判断。通用重试和版本语义见 [HTTP 协议](../SYSTEM/HTTP_API.md)。
+活动资格通过独立的 `GET /island/activity-access` 读取。它在同一读取事务内复核会话，只使用一次时钟，不读取布局或库存。业务活动身份固定为 `read`、`run`、`ball`，不从物品名称或动画名称推测。
+
+活动资格刷新仅更新资格，不能覆盖当前布局或布置草稿。旧布局接口暂时仍附带同一计算规则的资格；客户端判断资格时始终检查期限。通用重试和版本语义见 [HTTP 协议](../SYSTEM/HTTP_API.md)。
 
 ## 角色活动与屋内展示
 

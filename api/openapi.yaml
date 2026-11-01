@@ -22,6 +22,14 @@ paths:
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandState"}}}}
         default: {"$ref": "#/components/responses/Error"}
+  "/api/v1/island/activity-access":
+    get:
+      operationId: "getIslandActivityAccess"
+      summary: "独立读取当天任务活动资格"
+      description: "一次读取事务中复核登录会话，按台北日期计算任务资格和下个午夜期限；不读取布局、物品目录或库存。活动身份为 read/run/ball。"
+      responses:
+        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandActivityAccessState"}}}}
+        default: {"$ref": "#/components/responses/Error"}
   "/api/v1/island/layout":
     get:
       operationId: "getSpatialIsland"
@@ -1007,6 +1015,14 @@ components:
         activity: {"$ref": "#/components/schemas/IslandActivity"}
         available: {"type": "boolean"}
         tasks: {"type": "array", "items": {"$ref": "#/components/schemas/IslandActivityTask"}, "description": "仍关联的未删除任务；停用任务保留。没有关联任务时活动开放。"}
+    IslandActivityAccessState:
+      type: "object"
+      additionalProperties: false
+      required: ["today", "expires_at", "activity_access"]
+      properties:
+        today: {"type": "string", "format": "date", "description": "本次资格计算采用的台北业务日期。"}
+        expires_at: {"type": "string", "format": "date-time", "description": "下一个台北午夜；当刻起需要打卡的资格失效。"}
+        activity_access: {"type": "array", "items": {"$ref": "#/components/schemas/IslandActivityAccess"}}
     IslandState:
       type: "object"
       additionalProperties: false
@@ -1063,19 +1079,29 @@ components:
       properties:
         width_cm: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         depth_cm: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+    SpatialInteractionPose:
+      type: "object"
+      additionalProperties: false
+      required: ["x_cm", "y_cm", "z_cm", "rotation"]
+      properties:
+        x_cm: {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}
+        y_cm: {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}
+        z_cm: {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}
+        rotation: {"type": "integer", "minimum": 0, "maximum": 3}
     SpatialInteraction:
       type: "object"
       additionalProperties: false
       required: ["activity", "x_cm", "z_cm", "rotation"]
       properties:
-        activity: {"type": "string", "minLength": 1}
+        activity: {"$ref": "#/components/schemas/IslandActivity"}
         x_cm: {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}
         z_cm: {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}
         rotation: {"type": "integer", "minimum": 0, "maximum": 3}
+        pose: {"$ref": "#/components/schemas/SpatialInteractionPose"}
     SpatialDefinition:
       type: "object"
       additionalProperties: false
-      required: ["item_key", "name", "footprint", "blocks_placement", "movable", "repeatable", "spaces", "rotations", "allowed_terrain"]
+      required: ["item_key", "name", "footprint", "blocks_placement", "movable", "repeatable", "spaces", "rotations", "allowed_terrain", "thumbnail_asset_key", "thumbnail_url", "coin_price", "diamond_price", "free"]
       properties:
         item_key: {"type": "string", "minLength": 1}
         name: {"type": "string", "minLength": 1}
@@ -1090,6 +1116,11 @@ components:
         spaces: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialSpace"}, "minItems": 1}
         rotations: {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 3}, "minItems": 1}
         allowed_terrain: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialTerrain"}}
+        thumbnail_asset_key: {"type": "string", "minLength": 1}
+        thumbnail_url: {"type": "string", "minLength": 1}
+        coin_price: {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+        diamond_price: {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+        free: {"type": "boolean"}
     SpatialTerrainRegion:
       type: "object"
       additionalProperties: false
@@ -1109,7 +1140,7 @@ components:
     SpatialHouse:
       type: "object"
       additionalProperties: false
-      required: ["interior", "floor_height_cm", "wall_height_cm", "door_center", "door_width_cm", "door_height_cm", "door_clearance", "models"]
+      required: ["interior", "floor_height_cm", "wall_height_cm", "door_center", "door_width_cm", "door_height_cm", "door_clearance", "models", "walls", "interior_clearances"]
       properties:
         interior: {"$ref": "#/components/schemas/SpatialRect"}
         floor_height_cm: {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
@@ -1119,15 +1150,33 @@ components:
         door_height_cm: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         door_clearance: {"$ref": "#/components/schemas/SpatialRect"}
         models: {"$ref": "#/components/schemas/SpatialHouseModels"}
+        walls: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialRect"}}
+        interior_clearances: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialRect"}}
+    SpatialActivityAttachment:
+      type: "object"
+      additionalProperties: false
+      required: ["model_url", "bone", "matrix"]
+      properties:
+        model_url: {"type": "string", "minLength": 1}
+        bone: {"type": "string", "minLength": 1}
+        matrix: {"type": "array", "items": {"type": "number"}, "minItems": 16, "maxItems": 16}
+    SpatialActivityPresentation:
+      type: "object"
+      additionalProperties: false
+      required: ["action"]
+      properties:
+        action: {"type": "string", "minLength": 1, "description": "共享人物动作语义，如 read/exercise/play。任务活动身份保持 read/run/ball。"}
+        attachment: {"$ref": "#/components/schemas/SpatialActivityAttachment"}
     SpatialScene:
       type: "object"
       additionalProperties: false
-      required: ["scene_key", "regions", "environments", "house"]
+      required: ["scene_key", "regions", "environments", "house", "activity_presentations"]
       properties:
         scene_key: {"type": "string", "minLength": 1}
         regions: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialTerrainRegion"}}
         environments: {"type": "array", "items": {"type": "string", "minLength": 1}}
         house: {"$ref": "#/components/schemas/SpatialHouse"}
+        activity_presentations: {"type": "object", "additionalProperties": {"$ref": "#/components/schemas/SpatialActivityPresentation"}, "propertyNames": {"enum": ["read", "run", "ball"]}}
     SpatialPlacement:
       type: "object"
       additionalProperties: false

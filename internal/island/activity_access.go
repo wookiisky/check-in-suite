@@ -6,15 +6,9 @@ import (
 	"slices"
 )
 
-// readActivityAccess derives eligibility from effective records in the layout's database snapshot.
-func readActivityAccess(ctx context.Context, tx *sql.Tx, catalog []Definition, today string) ([]ActivityAccess, error) {
-	activities := make([]string, 0)
-	for _, definition := range catalog {
-		if definition.Activity != "" && !slices.Contains(activities, definition.Activity) {
-			activities = append(activities, definition.Activity)
-		}
-	}
-	slices.Sort(activities)
+// readActivityAccess derives task eligibility without reading inventory or layout geometry.
+func readActivityAccess(ctx context.Context, tx *sql.Tx, today string) ([]ActivityAccess, error) {
+	activities := []string{"ball", "read", "run"}
 	access := make([]ActivityAccess, 0, len(activities))
 	for _, activity := range activities {
 		access = append(access, ActivityAccess{Activity: activity, Available: true, Tasks: []ActivityTask{}})

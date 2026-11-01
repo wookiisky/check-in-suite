@@ -20,6 +20,7 @@ type islandPlacementRequest struct {
 // RegisterIsland keeps layout writes available to the authenticated child without management authority.
 func (app *App) RegisterIsland(service *island.Service) {
 	app.registerSpatialIsland(service)
+	app.registerIslandActivityAccess(service)
 	app.Mux.HandleFunc("GET /api/v1/island", func(w http.ResponseWriter, r *http.Request) {
 		principal, err := app.Authenticate(r)
 		if err != nil {

@@ -25,6 +25,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/island/activity-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 独立读取当天任务活动资格
+         * @description 一次读取事务中复核登录会话，按台北日期计算任务资格和下个午夜期限；不读取布局、物品目录或库存。活动身份为 read/run/ball。
+         */
+        get: operations["getIslandActivityAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/island/layout": {
         parameters: {
             query?: never;
@@ -1171,6 +1191,19 @@ export interface components {
             /** @description 仍关联的未删除任务；停用任务保留。没有关联任务时活动开放。 */
             tasks: components["schemas"]["IslandActivityTask"][];
         };
+        IslandActivityAccessState: {
+            /**
+             * Format: date
+             * @description 本次资格计算采用的台北业务日期。
+             */
+            today: string;
+            /**
+             * Format: date-time
+             * @description 下一个台北午夜；当刻起需要打卡的资格失效。
+             */
+            expires_at: string;
+            activity_access: components["schemas"]["IslandActivityAccess"][];
+        };
         IslandState: {
             /**
              * Format: date
@@ -1217,11 +1250,18 @@ export interface components {
             width_cm: number;
             depth_cm: number;
         };
+        SpatialInteractionPose: {
+            x_cm: number;
+            y_cm: number;
+            z_cm: number;
+            rotation: number;
+        };
         SpatialInteraction: {
-            activity: string;
+            activity: components["schemas"]["IslandActivity"];
             x_cm: number;
             z_cm: number;
             rotation: number;
+            pose?: components["schemas"]["SpatialInteractionPose"];
         };
         SpatialDefinition: {
             item_key: string;
@@ -1237,6 +1277,11 @@ export interface components {
             spaces: components["schemas"]["SpatialSpace"][];
             rotations: number[];
             allowed_terrain: components["schemas"]["SpatialTerrain"][];
+            thumbnail_asset_key: string;
+            thumbnail_url: string;
+            coin_price: number;
+            diamond_price: number;
+            free: boolean;
         };
         SpatialTerrainRegion: {
             terrain: components["schemas"]["SpatialTerrain"];
@@ -1257,12 +1302,27 @@ export interface components {
             door_height_cm: number;
             door_clearance: components["schemas"]["SpatialRect"];
             models: components["schemas"]["SpatialHouseModels"];
+            walls: components["schemas"]["SpatialRect"][];
+            interior_clearances: components["schemas"]["SpatialRect"][];
+        };
+        SpatialActivityAttachment: {
+            model_url: string;
+            bone: string;
+            matrix: number[];
+        };
+        SpatialActivityPresentation: {
+            /** @description 共享人物动作语义，如 read/exercise/play。任务活动身份保持 read/run/ball。 */
+            action: string;
+            attachment?: components["schemas"]["SpatialActivityAttachment"];
         };
         SpatialScene: {
             scene_key: string;
             regions: components["schemas"]["SpatialTerrainRegion"][];
             environments: string[];
             house: components["schemas"]["SpatialHouse"];
+            activity_presentations: {
+                [key: string]: components["schemas"]["SpatialActivityPresentation"];
+            };
         };
         SpatialPlacement: {
             instance_id: string;
@@ -1751,6 +1811,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IslandState"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getIslandActivityAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IslandActivityAccessState"];
                 };
             };
             default: components["responses"]["Error"];
