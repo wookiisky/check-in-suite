@@ -12,12 +12,15 @@ source:
 - scripts/inspect-glb.mjs
 - scripts/prepare-p0-character.py
 - scripts/retarget-p0-mixamo.py
+- scripts/prepare-camp-assets.py
 - scripts/verify-3d-release.mjs
 tests:
 - scripts/check-spec.test.mjs
 - scripts/inspect-glb.test.mjs
 - scripts/p0-character-assets.test.mjs
 - scripts/retarget-p0-mixamo.test.mjs
+- internal/assets/camp_assets_test.go
+- web/e2e/island-3d.spec.ts
 ---
 # 测试与验证
 
@@ -36,6 +39,7 @@ tests:
 | HTTP 和 OpenAPI | 实际 JSON、错误、空数组、整数、日期与 multipart 字节；生成类型一致性不能替代运行时协议验证 |
 | 媒体 | 实际图片解码、EXIF、音频探测、文件目录及引用/清理竞争；不只检查 MIME 或客户端元数据 |
 | 页面和交互 | 组件覆盖草稿、焦点、请求竞争与状态；受影响业务流程再做浏览器验证 |
+| 三维资源和场景 | 实际 GLB 的骨骼、蒙皮、占地、内嵌资源及字节；浏览器检查 shader 错误、真实姿态、遮挡、道具失败和 HTML 恢复 |
 | 发布及持久化 | 临时发布包、校验清单与重启；数据库、媒体和历史素材脱离旧发布目录后仍可使用 |
 
 需要证明 WAL、文件锁、磁盘满或提交失败时，内存数据库与同一连接池的排队不足以证明结论。使用真实故障边界；只有受影响或尚有具体疑点时才运行这些较慢专项。
@@ -100,7 +104,7 @@ node scripts/verify-3d-release.mjs /absolute/path/to/release
 - WebKit 设备尺寸模拟与假麦克风录音不能证明 iPhone 硬件、软键盘、来电中断或真机多指手势。
 - 营地隐藏动画的可见性事件模拟不能证明操作系统真实后台行为。
 
-3D 样片的浏览器检查加载实际 GLB，覆盖混搭、动作、房屋、暂停与读取失败恢复。无头 Chromium 当前使用 SwiftShader 软件渲染；因此帧间隔不能作为真实 GPU 的帧率证据，WebKit 的设备尺寸也不能作为手机性能证据。桌面 60 fps、手机 30 fps 是后续正式场景的目标，需绑定实际设备、陈设规模、画质和加载环境另行测量。
+3D 样片与正式场景的浏览器检查加载实际 GLB，覆盖混搭、动作、房屋、暂停、读取失败恢复和保存结果未知。真实画面需检查阅读书本与桌椅贴合、不同方向墙体剖切及窄屏工具栏；仅有 Canvas 或成功响应不足以证明渲染正确，shader 编译错误也必须检查。无头 Chromium 当前使用 SwiftShader 软件渲染；因此帧间隔不能作为真实 GPU 的帧率证据，WebKit 的设备尺寸也不能作为手机性能证据。桌面 60 fps、手机 30 fps 是正式场景的目标，需绑定实际设备、陈设规模、画质和加载环境另行测量。
 
 备份与从备份恢复是已取消的产品范围，真机验收不在既定范围；它们不作为待完成任务。重启持久化、事务回滚、上传和清理中断恢复仍属于现有行为，不能由“未提供备份”推导为无需验证。
 
