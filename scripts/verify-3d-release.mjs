@@ -281,7 +281,7 @@ try {
   report('同一持久目录重启与新会话通过', { appearance_version: restartedAppearance.version, layout_version: restartedLayout.version, resources: assets.length });
   report('旧 WAL 数据库拒绝启动且逻辑内容不变', await verifyOldSchema(binary, staticDirectory));
   check(!interrupted, '验证被中断');
-  report('P1正式发行包冒烟通过', { version: release.version, resources: assets.length, restarted: true, old_schema_rejected: true });
+  report('三维正式发行包冒烟通过', { version: release.version, resources: assets.length, restarted: true, old_schema_rejected: true });
 } catch (error) {
   process.stderr.write(JSON.stringify({ step: 'P1正式发行包冒烟失败', error: error.message }) + '\n'); process.exitCode = interrupted ? 130 : 1;
 } finally {
