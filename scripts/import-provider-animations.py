@@ -4,16 +4,19 @@ import argparse
 import base64
 import bisect
 import hashlib
+import importlib.util
 import json
 import math
 from pathlib import Path
 import struct
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKS = ROOT / ".local/3d-sources/provider-packs"
 BUILTIN = ROOT / "internal/assets/builtin"
 MANIFEST = ROOT / "internal/assets/provider-animation-manifest.json"
+NORMALIZATION_VERSION = 2  # 第二版动作固定水平根位置，位移由营地导航负责。
 CANONICAL_BONES = ("root", "hips", "spine", "chest", "head", *(
     name + "." + side for side in ("l", "r")
     for name in ("upperarm", "lowerarm", "wrist", "hand", "handslot", "upperleg", "lowerleg", "foot", "toes")
@@ -117,6 +120,12 @@ def bone_mapping(doc):
     names = {node.get("name"): index for index, node in enumerate(doc["nodes"])}
     if "hips" in names and "upperleg.l" in names:
         return {name: names[name] for name in CANONICAL_BONES if name in names}, "kaykit-humanoid"
+    if "Hips" in names and "LeftArm" in names:
+        aliases = {"root": "Root", "hips": "Hips", "spine": "Spine", "chest": "Chest", "head": "Head"}
+        for side, prefix in (("l", "Left"), ("r", "Right")):
+            for target, source in (("upperarm", "Arm"), ("lowerarm", "ForeArm"), ("wrist", "Hand"), ("hand", "Hand"), ("upperleg", "UpLeg"), ("lowerleg", "Leg"), ("foot", "Foot"), ("toes", "Toes")):
+                aliases[target + "." + side] = prefix + source
+        return {target: names[source] for target, source in aliases.items() if source in names}, "kenney-fbx-humanoid"
     if "Body" in names and "armLeft" in names:
         aliases = {"hips": "Body", "head": "Head", "upperarm.l": "armLeft", "upperarm.r": "armRight", "handslot.l": "handSlotLeft", "handslot.r": "handSlotRight"}
         return {target: names[source] for target, source in aliases.items() if source in names}, "kaykit-legacy-six-parts"
@@ -195,6 +204,7 @@ def retarget(doc, blob, clip, canonical, canonical_blob):
             states[index][{"translation": 0, "rotation": 1, "scale": 2}[path]] = Quaternion((value[3], *value[:3])) if path == "rotation" else Vector(value)
         source_world = world_matrices(doc, [Matrix.LocRotScale(*values) for values in states])
         target_world = {}
+        source_root_motion = source_world[mapping["root"]].translation - source_rest[mapping["root"]].translation if "root" in mapping else Vector((0, 0, 0))
         for name in ordered:
             index = target_names[name]
             parent = target_parents.get(index)
@@ -209,7 +219,11 @@ def retarget(doc, blob, clip, canonical, canonical_blob):
                 delta = source_world[source_index].to_quaternion() @ source_rest[source_index].to_quaternion().inverted()
                 rotation = delta @ rest.to_quaternion()
                 if name in {"root", "hips"}:
-                    position = rest.translation + (source_world[source_index].translation - source_rest[source_index].translation) * ratio
+                    movement = source_world[source_index].translation - source_rest[source_index].translation
+                    # 只剥离水平根位移，保留跳跃高度和髋部相对身体的摇摆。
+                    movement.x -= source_root_motion.x
+                    movement.z -= source_root_motion.z
+                    position = rest.translation + movement * ratio
             pose = Matrix.LocRotScale(position, rotation, rest.to_scale())
             target_world[index] = pose
             local = parent_world.inverted() @ pose
@@ -221,7 +235,7 @@ def retarget(doc, blob, clip, canonical, canonical_blob):
             output[name]["translation"].append(tuple(round(x, 6) for x in location))
             output[name]["rotation"].append(tuple(round(x, 6) for x in (quaternion.x, quaternion.y, quaternion.z, quaternion.w)))
             output[name]["scale"].append(tuple(round(x, 6) for x in scale))
-    return times, output, {"profile": profile, "method": "global-bind-rotation-delta-with-canonical-segment-lengths", "translation_scale": ratio, "fps": 30, "mapped_bones": {name: doc["nodes"][index]["name"] for name, index in mapping.items()}}
+    return times, output, {"profile": profile, "method": "global-bind-rotation-delta-with-canonical-segment-lengths", "translation_scale": ratio, "fps": 30, "mapped_bones": {name: doc["nodes"][index]["name"] for name, index in mapping.items()}, "root_motion": "horizontal-root-removed-from-root-and-hips", "normalization_version": NORMALIZATION_VERSION}
 
 
 # 父节点数量决定处理顺序，保证子骨使用本帧刚更新的父姿势。
@@ -269,66 +283,193 @@ def write_clip(path, name, nodes, roots, times, poses):
     path.write_bytes(result)
 
 
-# 逐源片段统计保留重复来源，导出只交付不同的实际动作曲线。
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--first-medium", action="store_true")
-    args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else None)
-    canonical, canonical_blob = read_document(BUILTIN / "character-medium-v1.glb")
+# 曲线身份与来源名称分开，相同实际轨道可共享已交付资源。
+def curve_signature(times, poses):
+    return hashlib.sha256(json.dumps([times, poses], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+# 只从已审核清单选择，未知批次或源不能静默变成全量扫描。
+def select_sources(configuration, batches, only):
+    available = {batch["key"]: batch for batch in configuration["batches"]}
+    for key in batches:
+        if key not in available:
+            raise ValueError("未知动作批次: " + key)
+    sources = [source for key in batches for source in available[key]["sources"]]
+    if only:
+        selected = [source for source in sources if source["source_file"] in only]
+        unknown = set(only) - {source["source_file"] for source in selected}
+        if unknown:
+            raise ValueError("选择的源不在审核批次: " + ", ".join(sorted(unknown)))
+        sources = selected
+    return list({source["source_file"]: source for source in sources}.values())
+
+
+# 清单按源片段核对剩余范围，未启动的片段不会混进失败或成功数量。
+def save_progress(configuration, manifest, records, path):
+    pending, batches = [], []
+    seen_assets = set()
+    for record in records.values():
+        if record["status"] in {"imported", "duplicate"}:
+            key = record["asset_key"]
+            record["status"] = "duplicate" if key in seen_assets else "imported"
+            seen_assets.add(key)
+    for batch in configuration["batches"]:
+        counts = {"imported": 0, "duplicate": 0, "failed": 0, "pending": 0}
+        for source in batch["sources"]:
+            for clip in source["clips"]:
+                record = records.get((source["source_file"], clip))
+                status = record["status"] if record else "pending"
+                counts[status] += 1
+                if not record:
+                    pending.append({"batch": batch["key"], "source_file": source["source_file"], "source_clip": clip})
+        batches.append({"key": batch["key"], **counts})
+    manifest["sources"] = list(records.values())
+    manifest["pending"] = pending
+    manifest["batches"] = batches
+    manifest["excluded_sources"] = configuration.get("excluded_sources", [])
+    manifest["excluded_clips"] = [{"source_file": source["source_file"], **clip} for batch in configuration["batches"] for source in batch["sources"] for clip in source.get("excluded_clips", [])]
+    manifest["counts"] = {
+        "source_clips": len(records), "unique_clips": len(manifest["animations"]),
+        "failed_clips": sum(item["status"] == "failed" for item in records.values()),
+        "duplicate_clips": sum(item["status"] == "duplicate" for item in records.values()),
+        "pending_clips": len(pending), "total_source_clips": sum(sum(item[key] for key in ("imported", "duplicate", "failed", "pending")) for item in batches),
+    }
+    manifest["complete"] = not pending and not manifest["counts"]["failed_clips"]
+    manifest["completed_scope"] = [item["key"] for item in batches if not item["pending"] and not item["failed"]]
+    manifest["remaining_scope"] = [item["key"] for item in batches if item["pending"] or item["failed"]]
+    next_batch = manifest["remaining_scope"][0] if manifest["remaining_scope"] else (batches[0]["key"] if batches else "")
+    manifest["checkpoint"] = {
+        "command": "/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python-exit-code 1 --python scripts/import-provider-animations.py -- --batch " + next_batch,
+        "note": "按审核批次增量恢复；只有清单中的全部人形来源处理成功后才标记完成。",
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as temporary:
+        json.dump(manifest, temporary, ensure_ascii=False, indent=2)
+        temporary.write("\n")
+        temporary_path = Path(temporary.name)
+    temporary_path.replace(path)
+
+
+# 分批处理只追加新资源；恢复必须核对源和产物字节，单源失败仍保留其他成果。
+def import_sources(configuration, sources, manifest_path=MANIFEST, output_directory=BUILTIN, canonical_path=BUILTIN / "character-medium-v1.glb"):
+    canonical, canonical_blob = read_document(canonical_path)
+    canonical_hash = hashlib.sha256(canonical_path.read_bytes()).hexdigest()
     nodes, roots = skeleton_nodes(canonical)
-    manifest = {
+    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {
         "body_key": "kaykit-medium-body-v1", "rig_key": "kaykit-adventurers-medium-v1",
-        "complete": False,
-        "completed_scope": "medium-general-first-batch" if args.first_medium else "supported-gltf-humanoid-clips",
-        "remaining_scope": ["other-medium-animation-sets", "large-rig-retargeting", "other-character-source-clips", "fbx-only-character-clips"],
-        "checkpoint": {
-            "command": "/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/import-provider-animations.py -- --first-medium",
-            "note": "此命令仅复现已完成的Medium General批次；其他来源尚未开始，不能视为全量动作接入完成。",
-        },
         "sources": [], "assets": [], "animations": [],
     }
-    unique = {}
-    paths = sorted(PACKS.rglob("*.glb"), key=lambda path: ("Rig_Medium_General" not in path.name, "Rig_Medium" not in str(path), str(path)))
-    if args.first_medium:
-        paths = [path for path in paths if path.name == "Rig_Medium_General.glb"][:1]
-    for path in paths:
-        provider, pack = path.relative_to(PACKS).parts[:2]
-        doc, blob = read_document(path)
-        if not doc.get("animations"):
+    canonical_matches = manifest.get("canonical_sha256", canonical_hash) == canonical_hash
+    manifest["canonical_sha256"] = canonical_hash
+    records = {(item["source_file"], item["source_clip"]): item for item in manifest["sources"]}
+    animations = {item["asset_key"]: item for item in manifest["animations"]}
+    assets = {item["key"]: item for item in manifest["assets"]}
+    output_hashes = {item["asset_key"]: item["output_sha256"] for item in records.values() if item.get("output_sha256")}
+    output_directory.mkdir(parents=True, exist_ok=True)
+    converted = {}
+    for source in sources:
+        path = ROOT / source["source_file"]
+        try:
+            source_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+            if source_hash != source["sha256"]:
+                raise ValueError("来源字节与审核快照不一致: " + source["source_file"])
+            conversion = None
+            if source.get("format") == "fbx":
+                if source_hash not in converted:
+                    spec = importlib.util.spec_from_file_location("provider_animation_fbx", Path(__file__).with_name("provider-animation-fbx.py"))
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+                    converted[source_hash] = module.read_fbx_document(path, read_document)
+                doc, blob, conversion = converted[source_hash]
+            else:
+                doc, blob = read_document(path)
+            clips = {clip["name"]: clip for clip in doc.get("animations", [])}
+            missing = set(source["clips"]) - clips.keys()
+            if missing:
+                raise ValueError("来源片段缺失: " + ", ".join(sorted(missing)))
+        except Exception as error:
+            for name in source["clips"]:
+                records[(source["source_file"], name)] = {"provider": source["provider"], "pack_key": source["pack_key"], "source_file": source["source_file"], "source_sha256": source["sha256"], "source_clip": name, "status": "failed", "reason": str(error)}
+            save_progress(configuration, manifest, records, manifest_path)
             continue
-        mapping, profile = bone_mapping(doc)
-        # 静态物件与非人形动画不属于统一人物预览。
-        if not mapping:
-            continue
-        source_hash = hashlib.sha256(path.read_bytes()).hexdigest()
-        for clip in doc["animations"]:
-            record = {"provider": provider, "pack_key": pack, "source_file": str(path.relative_to(ROOT)), "source_sha256": source_hash, "source_clip": clip["name"]}
+        for name in source["clips"]:
+            identity = (source["source_file"], name)
+            previous = records.get(identity, {})
+            record = {"provider": source["provider"], "pack_key": source["pack_key"], "source_file": source["source_file"], "source_sha256": source_hash, "source_clip": name}
             try:
-                times, poses, normalization = retarget(doc, blob, clip, canonical, canonical_blob)
-                signature = hashlib.sha256(json.dumps([times, poses], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-                record["normalization"] = normalization
+                if canonical_matches and previous.get("normalization_version") == NORMALIZATION_VERSION and previous.get("status") in {"imported", "duplicate"} and previous.get("source_sha256") == source_hash:
+                    previous_path = output_directory / (previous["asset_key"] + ".glb")
+                    expected = previous.get("output_sha256") or output_hashes.get(previous["asset_key"])
+                    if previous_path.exists() and expected and hashlib.sha256(previous_path.read_bytes()).hexdigest() != expected:
+                        raise ValueError("已交付动作字节损坏: " + previous_path.name)
+                    if previous_path.exists() and expected:
+                        continue
+                times, poses, normalization = retarget(doc, blob, clips[name], canonical, canonical_blob)
+                if conversion:
+                    normalization["source_conversion"] = conversion
+                signature = curve_signature(times, poses)
                 key = "pa-" + signature[:24]
-                if signature in unique:
-                    record.update(status="duplicate", asset_key=unique[signature]["asset_key"], output_clip=unique[signature]["clip"])
-                else:
-                    label = provider + "/" + profile + "/" + clip["name"]
-                    output = BUILTIN / (key + ".glb")
-                    write_clip(output, label, nodes, roots, times, poses)
-                    animation = {"clip": label, "asset_key": key, "url": "/api/v1/assets/" + key}
-                    unique[signature] = animation
-                    manifest["animations"].append(animation)
-                    manifest["assets"].append({"key": key, "name": label, "kind": "animation", "format": "glb", "url": animation["url"], "provider": provider, "pack_key": pack, "source_url": ("https://kaylousberg.itch.io/" if provider == "kaykit" else "https://kenney.nl/assets/") + pack, "license": "CC0-1.0"})
-                    record.update(status="imported", asset_key=key, output_clip=label, output_sha256=hashlib.sha256(output.read_bytes()).hexdigest())
-                print(record["status"], path.name, clip["name"], flush=True)
+                output = output_directory / (key + ".glb")
+                existing = animations.get(key)
+                label = existing["clip"] if existing else source["provider"] + "/" + normalization.get("profile", "canonical") + "/" + name
+                write_clip(output, label, nodes, roots, times, poses)
+                output_hash = hashlib.sha256(output.read_bytes()).hexdigest()
+                if key in output_hashes and output_hashes[key] != output_hash:
+                    raise ValueError("同一动作身份的既有校验值不同: " + key)
+                animation = {"clip": label, "asset_key": key, "url": "/api/v1/assets/" + key}
+                animations[key] = animation
+                if key not in assets:
+                    assets[key] = {"key": key, "name": label, "kind": "animation", "format": "glb", "url": animation["url"], "provider": source["provider"], "pack_key": source["pack_key"], "source_url": source["source_url"], "license": source["license"]}
+                record.update(status="duplicate" if existing else "imported", normalization=normalization, normalization_version=NORMALIZATION_VERSION, asset_key=key, output_clip=label, output_sha256=output_hash, curve_sha256=signature)
+                output_hashes[key] = output_hash
+                print("动作整理完成", record["status"], path.name, name, flush=True)
             except Exception as error:
                 record.update(status="failed", reason=str(error))
-                print("failed", path.name, clip["name"], str(error), flush=True)
-            manifest["sources"].append(record)
-        MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
-    manifest["counts"] = {"source_clips": len(manifest["sources"]), "unique_clips": len(unique), "failed_clips": sum(item["status"] == "failed" for item in manifest["sources"])}
-    MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+                print("动作整理失败", path.name, name, str(error), flush=True)
+            records[identity] = record
+        manifest["animations"] = list(animations.values())
+        manifest["assets"] = list(assets.values())
+        save_progress(configuration, manifest, records, manifest_path)
+    # 清单只发布仍由已完成来源引用的曲线；历史文件本身留给发布集成人核对。
+    referenced = {record["asset_key"] for record in records.values() if record.get("asset_key")}
+    manifest["animations"] = [item for item in manifest["animations"] if item["asset_key"] in referenced]
+    manifest["assets"] = [item for item in manifest["assets"] if item["key"] in referenced]
+    save_progress(configuration, manifest, records, manifest_path)
+    return manifest
+
+
+# CLI必须显式选择范围；列表只读取配置，不加载Blender或改动交付清单。
+def main(argv=None):
+    default_sources = Path(__file__).with_name("provider-animation-sources.json")
+    configuration = json.loads(default_sources.read_text())
+    parser = argparse.ArgumentParser(description=configuration["content"]["description"])
+    parser.add_argument("--batch", action="append", default=[])
+    parser.add_argument("--only", action="append", default=[])
+    parser.add_argument("--all", action="store_true")
+    parser.add_argument("--list", action="store_true")
+    parser.add_argument("--first-medium", action="store_true")
+    parser.add_argument("--manifest", type=Path, default=MANIFEST)
+    parser.add_argument("--output", type=Path, default=BUILTIN)
+    parser.add_argument("--sources", type=Path, default=default_sources)
+    arguments = argv if argv is not None else (sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else None)
+    args = parser.parse_args(arguments)
+    configuration = json.loads(args.sources.read_text())
+    if args.list:
+        print(json.dumps([{ "key": batch["key"], "sources": len(batch["sources"]), "clips": sum(len(item["clips"]) for item in batch["sources"])} for batch in configuration["batches"]], ensure_ascii=False, indent=2))
+        return 0
+    batches = args.batch + (["kaykit-medium-general"] if args.first_medium else [])
+    if args.all:
+        batches = [batch["key"] for batch in configuration["batches"]]
+    if not batches:
+        parser.error(configuration["content"]["select_batch"])
+    try:
+        sources = select_sources(configuration, batches, args.only)
+        manifest = import_sources(configuration, sources, args.manifest, args.output)
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
     print(json.dumps(manifest["counts"]), flush=True)
+    return int(manifest["counts"]["failed_clips"] > 0)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

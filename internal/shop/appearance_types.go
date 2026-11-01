@@ -31,6 +31,8 @@ type AppearanceOwnedCharacter struct {
 
 // AppearanceState is one snapshot of saved choices, definitions and complete ownership.
 type AppearanceState struct {
+	PreviewAnimations []character.Animation `json:"preview_animations"` // 标准身体共用的检查动作目录，不随人物数量重复。
+
 	HairFreeWearableKey  *string `json:"hair_free_wearable_key"`  // Optional initial free garment shared across controlled bodies.
 	UpperFreeWearableKey *string `json:"upper_free_wearable_key"` // Optional initial free garment shared across controlled bodies.
 	LowerFreeWearableKey *string `json:"lower_free_wearable_key"` // Optional initial free garment shared across controlled bodies.

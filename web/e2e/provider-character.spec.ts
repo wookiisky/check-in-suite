@@ -94,7 +94,7 @@ test('独立人物检查按需播放原始动作，切换与返回待机不修�
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   const state = await shopAPI<Appearance>(page, '/appearance');
   const character = state.characters.find((item) => item.character_key === state.character_key)!;
-  const sourceAnimations = character.preview_animations ?? [];
+  const sourceAnimations = state.preview_animations ?? character.preview_animations ?? [];
   expect(sourceAnimations.length, '完整素材目录必须登记原始动作').toBeGreaterThan(1);
   const canonicalURLs = new Set([character.model_url, ...Object.values(character.animations).map((item) => item.url), ...state.wearables.map((item) => item.model_url)]);
   const rawURLs = new Set(sourceAnimations.map((item) => item.url).filter((url) => !canonicalURLs.has(url)));

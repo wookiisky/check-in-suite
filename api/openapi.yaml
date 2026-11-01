@@ -1313,6 +1313,7 @@ components:
       additionalProperties: false
       required: ["version", "character_key", "hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "characters", "wearables", "inventory"]
       properties:
+        preview_animations: {"type": "array", "items": {"$ref": "#/components/schemas/CharacterAnimation"}, "description": "统一骨架共用的原始动作目录，只返回一份，选中动作后才加载模型。"}
         hair_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
         upper_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
         lower_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}

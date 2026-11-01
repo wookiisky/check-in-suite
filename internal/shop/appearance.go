@@ -29,6 +29,7 @@ func readAppearance(ctx context.Context, tx *sql.Tx) (AppearanceState, error) {
 		return result, err
 	}
 	result.Characters, result.Wearables = character.Definitions(), character.Wearables()
+	result.PreviewAnimations = character.PreviewAnimations()
 	result.Inventory = []AppearanceOwnedItem{}
 	result.CharacterInventory = []AppearanceOwnedCharacter{}
 	rows, err := tx.QueryContext(ctx, "SELECT id,wearable_key_snapshot,character_key_snapshot,type_snapshot FROM purchases WHERE type_snapshot IN (?,?) AND status=? ORDER BY created_at,id", TypeWearable, TypeCharacter, StatusOwned)

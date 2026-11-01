@@ -7,7 +7,7 @@ import { AppearanceDialog } from '../shop/AppearanceDialog';
 import { AppearanceProvider, useAppearance } from './AppearanceProvider';
 import { CharacterPreview3D } from './CharacterPreview3D';
 import { CharacterActionPicker } from './CharacterActionPicker';
-import { resolveCharacterPreviewAction } from './character-preview-actions';
+import { characterPreviewAnimations, resolveCharacterPreviewAction } from './character-preview-actions';
 import type { CharacterLoadStatus } from './character3d-appearance';
 import content from './character-verification-content.json';
 import '../../styles/island.css';
@@ -27,7 +27,7 @@ function SavedAppearance({ client, reduced }: { client: ApiClient; reduced: bool
       <CharacterPreview3D snapshot={previewSelection.snapshot} action={previewSelection.action} paused={reduced} label={content.preview} onStatus={setStatus} />
       <p data-testid="character-render-status" role="status">{content.status[status.phase]}</p>
       <p data-testid="character-saved-version">{content.version} {snapshot.version}</p>
-      <div className="button-row"><CharacterActionPicker characterKey={character.character_key} animations={character.animations} previewAnimations={character.preview_animations ?? []} value={previewSelection.action === '_preview' ? action : previewSelection.action} onChange={setAction} /><button onClick={() => setEditing(true)}>{content.edit}</button></div>
+      <div className="button-row"><CharacterActionPicker characterKey={character.character_key} animations={character.animations} previewAnimations={characterPreviewAnimations(snapshot)} value={previewSelection.action === '_preview' ? action : previewSelection.action} onChange={setAction} /><button onClick={() => setEditing(true)}>{content.edit}</button></div>
     </section>
     {editing && <AppearanceDialog client={client} reduceMotion={reduced} onClose={() => setEditing(false)} onSaved={publishSaved} />}
   </>;

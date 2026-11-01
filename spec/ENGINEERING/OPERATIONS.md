@@ -114,6 +114,8 @@ go test ./internal/httpapi -run 'TestGraphicsAssetsHTTP'
 
 发行包运行不需要 Python 或 Blender。构建验证需检查实际 GLB 内嵌数据、目录引用与缩略图解码，正式包还需验证新进程能从持久素材目录读取相同字节。素材制作检查不代表已完成真实手机性能验收。
 
+动作来源按 `scripts/provider-animation-sources.json` 中的审核批次处理，不按骨名扫描结果自动纳入非人形资源。导入脚本的 `--list` 查看批次，`--batch` 或 `--only` 选择范围，`--all` 处理全部审核来源；`--first-medium` 保留首批复现入口。增量执行核对来源与产物哈希，保留已完成记录；失败保留原因并返回非零。不同来源的相同曲线合并为一份交付资源，来源记录仍分别保留。原始水平根位移留在本地源文件，正式动作移除导航方向的根位移，垂直动作与身体摇摆继续保留。
+
 ### 素材工具环境、检查与预览
 
 开发期的 glTF Transform、Khronos Validator 由根目录 npm 依赖锁定。普通 Python 素材脚本使用 uv、`.python-version`、`pyproject.toml` 和 `uv.lock` 管理；在源码根目录执行 `uv sync --locked` 后，使用 `uv run --locked python scripts/脚本名.py`。Pillow 供图片处理和总览图使用；`bpy`、`bmesh`、`mathutils` 由 Blender 自带 Python 提供，不安装进普通 Python 环境。完整测试需要先准备 npm 和 uv 两套依赖，生产发行包不依赖这些工具。

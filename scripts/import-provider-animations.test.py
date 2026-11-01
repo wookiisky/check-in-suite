@@ -2,6 +2,12 @@
 
 import importlib.util
 import json
+import math
+import hashlib
+import tempfile
+import subprocess
+import sys
+from unittest.mock import patch
 from pathlib import Path
 import unittest
 
@@ -42,7 +48,23 @@ class ProviderAnimationDeliveryTest(unittest.TestCase):
                 self.assertTrue(all(a[0] < b[0] for a, b in zip(times, times[1:])))
                 values = MODULE.read_accessor(doc, blob, sampler["output"])
                 self.assertEqual(len(times), len(values))
+                self.assertTrue(all(math.isfinite(value) for row in values for value in row), path)
             self.assertEqual(assets[entry["asset_key"]]["kind"], "animation")
+
+    # 场景负责水平导航，离线动作根轨道不能再带人物离开已验证落点。
+    def test_delivered_root_tracks_stay_in_place(self):
+        manifest = json.loads((ROOT / "internal/assets/provider-animation-manifest.json").read_text())
+        for entry in manifest["animations"]:
+            path = ROOT / "internal/assets/builtin" / (entry["asset_key"] + ".glb")
+            doc, blob = MODULE.read_document(path)
+            clip = doc["animations"][0]
+            for channel in clip["channels"]:
+                name = doc["nodes"][channel["target"]["node"]]["name"]
+                if name != "root" or channel["target"]["path"] != "translation":
+                    continue
+                values = MODULE.read_accessor(doc, blob, clip["samplers"][channel["sampler"]]["output"])
+                for axis in (0, 2):
+                    self.assertLess(max(row[axis] for row in values) - min(row[axis] for row in values), 0.00001, entry["clip"])
 
     # 多个源文件共用同一动作时仍保留全部来源，不复制人物网格作为动画包。
     def test_sources_remain_accounted_for(self):
@@ -57,6 +79,128 @@ class ProviderAnimationDeliveryTest(unittest.TestCase):
                 self.assertTrue(item["normalization"])
             else:
                 self.assertTrue(item["reason"])
+
+
+class ProviderAnimationBatchTest(unittest.TestCase):
+    """用实际GLB与临时清单验证分批、去重、恢复和失败的持久结果。"""
+
+    # 最小动作夹具包含实际时间与旋转轨道，不依赖源包或Blender。
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        self.output = self.root / "outputs"
+        self.output.mkdir()
+        self.manifest = self.root / "manifest.json"
+        self.nodes = [{"name": "root"}]
+        self.times = [0.0, 1.0]
+        self.poses = {"root": {"translation": [(0, 0, 0)] * 2, "rotation": [(0, 0, 0, 1), (0, 0.5, 0, 0.8660254)], "scale": [(1, 1, 1)] * 2}}
+        self.canonical = self.root / "canonical.glb"
+        MODULE.write_clip(self.canonical, "canonical", self.nodes, [0], self.times, self.poses)
+        self.configuration = {"batches": [], "excluded_sources": []}
+
+    # 每批夹具独立源文件，来源校验值由真实序列化字节取得。
+    def source(self, key, clip="walk"):
+        path = self.root / (key + ".glb")
+        MODULE.write_clip(path, clip, self.nodes, [0], self.times, self.poses)
+        source = {"source_file": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "provider": "kaykit", "pack_key": "test-pack", "clips": [clip], "source_url": "https://example.test/source", "license": "CC0-1.0"}
+        self.configuration["batches"].append({"key": key, "sources": [source]})
+        return source
+
+    # 输出变化由实际曲线决定，相同曲线只交付一份GLB但不丢来源。
+    def convert(self, sources, poses=None):
+        result = (self.times, poses or self.poses, {"method": "fixture-retarget"})
+        with patch.object(MODULE, "retarget", return_value=result) as converter:
+            report = MODULE.import_sources(self.configuration, sources, self.manifest, self.output, self.canonical)
+        return report, converter.call_count
+
+    # 第二批保留第一批，恢复成功项不重新转换或改写既有文件。
+    def test_batches_preserve_results_and_resume_validated_outputs(self):
+        first = self.source("first")
+        second = self.source("second", "run")
+        report, calls = self.convert([first])
+        self.assertEqual(calls, 1)
+        self.assertEqual(report["counts"]["pending_clips"], 1)
+        before = {p.name: p.read_bytes() for p in self.output.glob("*.glb")}
+        report, calls = self.convert([second])
+        self.assertEqual(calls, 1)
+        self.assertEqual(len(report["sources"]), 2)
+        self.assertEqual(len(report["animations"]), 1)
+        self.assertEqual(report["sources"][1]["status"], "duplicate")
+        self.assertTrue(report["complete"])
+        report, calls = self.convert([first, second])
+        self.assertEqual(calls, 0)
+        self.assertEqual(before, {p.name: p.read_bytes() for p in self.output.glob("*.glb")})
+        self.assertEqual(json.loads(self.manifest.read_text()), report)
+
+    # 坏源会留下失败原因，其他源继续加工，重试只处理失败项。
+    def test_partial_failure_keeps_success_and_retry_recovers(self):
+        good = self.source("good")
+        bad = self.source("bad")
+        original = Path(bad["source_file"]).read_bytes()
+        Path(bad["source_file"]).write_bytes(b"broken")
+        report, calls = self.convert([good, bad])
+        self.assertEqual(calls, 1)
+        self.assertEqual(report["counts"]["failed_clips"], 1)
+        self.assertFalse(report["complete"])
+        self.assertEqual(len(report["animations"]), 1)
+        Path(bad["source_file"]).write_bytes(original)
+        report, calls = self.convert([good, bad])
+        self.assertEqual(calls, 1)
+        self.assertEqual(report["counts"]["failed_clips"], 0)
+        self.assertTrue(report["complete"])
+
+    # 已有资源损坏时禁止把它继续算成功，也不能覆写不同字节的不可变身份。
+    def test_corrupted_delivery_is_reported_without_overwrite(self):
+        source = self.source("first")
+        report, _ = self.convert([source])
+        output = self.output / (report["animations"][0]["asset_key"] + ".glb")
+        output.write_bytes(b"corrupted")
+        report, _ = self.convert([source])
+        self.assertEqual(report["counts"]["failed_clips"], 1)
+        self.assertEqual(output.read_bytes(), b"corrupted")
+
+    # 显式来源清单不会因为骨名相同而导入幽灵或平台怪物。
+    def test_selection_requires_reviewed_batch_and_source(self):
+        first = self.source("first")
+        self.source("second")
+        self.assertEqual(MODULE.select_sources(self.configuration, ["first"], []), [first])
+        with self.assertRaises(ValueError):
+            MODULE.select_sources(self.configuration, ["unknown"], [])
+        with self.assertRaises(ValueError):
+            MODULE.select_sources(self.configuration, ["first"], ["unreviewed-ghost.glb"])
+        production = json.loads((ROOT / "scripts/provider-animation-sources.json").read_text())
+        paths = [item["source_file"] for batch in production["batches"] for item in batch["sources"]]
+        self.assertFalse(any("character-ghost.glb" in path or "/platformer-kit/" in path for path in paths))
+
+    # CLI使用真实坏源写失败清单并返回非零，不会成功退出冒充交付完成。
+    def test_cli_failure_is_nonzero_and_preserves_failure_report(self):
+        source = self.source("bad")
+        Path(source["source_file"]).write_bytes(b"broken")
+        configuration = self.root / "sources.json"
+        self.configuration["content"] = {"description": "fixture", "select_batch": "select"}
+        configuration.write_text(json.dumps(self.configuration))
+        result = subprocess.run([sys.executable, str(ROOT / "scripts/import-provider-animations.py"), "--batch", "bad", "--sources", str(configuration), "--manifest", str(self.manifest), "--output", str(self.output)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        report = json.loads(self.manifest.read_text())
+        self.assertEqual(report["counts"]["failed_clips"], 1)
+        self.assertFalse(report["complete"])
+
+    # FBX语义映射包含实际四肢关节，不把辅助控制骨当手脚。
+    def test_fbx_joint_mapping_uses_reviewed_humanoid_bones(self):
+        names = ["Root", "Hips", "Spine", "Chest", "Head", "LeftArm", "RightArm", "LeftForeArm", "RightForeArm", "LeftHand", "RightHand", "LeftUpLeg", "RightUpLeg", "LeftLeg", "RightLeg", "LeftFoot", "RightFoot", "LeftToes", "RightToes", "LeftFootCtrl"]
+        mapping, profile = MODULE.bone_mapping({"nodes": [{"name": name} for name in names]})
+        self.assertEqual(profile, "kenney-fbx-humanoid")
+        self.assertEqual(names[mapping["lowerleg.l"]], "LeftLeg")
+        self.assertEqual(names[mapping["foot.l"]], "LeftFoot")
+        self.assertNotIn(names.index("LeftFootCtrl"), mapping.values())
+
+    # 数值相同的曲线具有稳定身份，与源片段的显示名无关。
+    def test_curve_identity_is_stable(self):
+        self.assertEqual(MODULE.curve_signature(self.times, self.poses), MODULE.curve_signature(list(self.times), dict(self.poses)))
+        changed = json.loads(json.dumps(self.poses))
+        changed["root"]["rotation"][1][1] += 0.1
+        self.assertNotEqual(MODULE.curve_signature(self.times, self.poses), MODULE.curve_signature(self.times, changed))
 
 
 if __name__ == "__main__":

@@ -1361,6 +1361,8 @@ export interface components {
             character_key: string;
         };
         AppearanceState: {
+            /** @description 统一骨架共用的原始动作目录，只返回一份，选中动作后才加载模型。 */
+            preview_animations?: components["schemas"]["CharacterAnimation"][];
             /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
             hair_free_wearable_key?: string | null;
             /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
