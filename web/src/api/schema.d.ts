@@ -1437,7 +1437,7 @@ export interface components {
             key: string;
             name: string;
             /** @enum {string} */
-            kind: "icon" | "title" | "reward" | "badge" | "island" | "model" | "animation" | "wearable" | "character";
+            kind: "icon" | "title" | "reward" | "badge" | "island" | "model" | "animation" | "wearable" | "character" | "scene";
             url: string;
             /**
              * @description 省略时为 svg。

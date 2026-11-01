@@ -26,6 +26,7 @@ const (
 	KindWearable  Kind = "wearable"  // Rendered thumbnail for a 3D wearable definition.
 	KindCharacter Kind = "character" // Rendered thumbnail for a complete standardized character.
 	KindIsland    Kind = "island"    // Controlled island construction thumbnail.
+	KindScene     Kind = "scene"     // 独立场景购买与入口使用的缩略图。
 	KindIcon      Kind = "icon"      // Task icon rendered in current and historical records.
 	KindTitle     Kind = "title"     // Emblem shown with the equipped title.
 	KindReward    Kind = "reward"    // Illustration for a household reward.
@@ -133,7 +134,7 @@ func (item Asset) validateBuiltinMetadata() error {
 		return fmt.Errorf("invalid controlled asset key %q", item.Key)
 	}
 	model := item.Kind == KindModel || item.Kind == KindAnimation
-	if model != (item.extension() == "glb") || ((item.Kind == KindWearable || item.Kind == KindCharacter) && item.extension() != "png") {
+	if model != (item.extension() == "glb") || ((item.Kind == KindWearable || item.Kind == KindCharacter || item.Kind == KindScene) && item.extension() != "png") {
 		return fmt.Errorf("controlled asset format does not match kind %q", item.Key)
 	}
 	return nil

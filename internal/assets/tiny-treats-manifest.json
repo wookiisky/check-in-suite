@@ -1,0 +1,1170 @@
+{
+  "houses": [
+    {
+      "house_key": "tiny-treats-cottage-v1",
+      "model_url": "/api/v1/assets/tiny-treats-cottage-v1",
+      "interior": {
+        "min_x_cm": -228,
+        "max_x_cm": 228,
+        "min_z_cm": -233,
+        "max_z_cm": 23
+      },
+      "floor_height_cm": 40,
+      "wall_height_cm": 260,
+      "door_center": {
+        "x_cm": 0,
+        "z_cm": 45
+      },
+      "door_width_cm": 162,
+      "door_height_cm": 250,
+      "door_clearance": {
+        "min_x_cm": -81,
+        "max_x_cm": 81,
+        "min_z_cm": 45,
+        "max_z_cm": 327.5
+      },
+      "walls": [
+        {
+          "min_x_cm": -250,
+          "max_x_cm": -228,
+          "min_z_cm": -255,
+          "max_z_cm": 45
+        },
+        {
+          "min_x_cm": 228,
+          "max_x_cm": 250,
+          "min_z_cm": -255,
+          "max_z_cm": 45
+        },
+        {
+          "min_x_cm": -228,
+          "max_x_cm": 228,
+          "min_z_cm": -255,
+          "max_z_cm": -233
+        },
+        {
+          "min_x_cm": -228,
+          "max_x_cm": -81,
+          "min_z_cm": 23,
+          "max_z_cm": 45
+        },
+        {
+          "min_x_cm": 81,
+          "max_x_cm": 228,
+          "min_z_cm": 23,
+          "max_z_cm": 45
+        },
+        {
+          "min_x_cm": -170,
+          "max_x_cm": -81,
+          "min_z_cm": 45,
+          "max_z_cm": 175
+        },
+        {
+          "min_x_cm": 81,
+          "max_x_cm": 170,
+          "min_z_cm": 45,
+          "max_z_cm": 175
+        }
+      ],
+      "interior_clearances": [
+        {
+          "min_x_cm": -81,
+          "max_x_cm": 81,
+          "min_z_cm": -35,
+          "max_z_cm": 45
+        }
+      ],
+      "roof_nodes": [
+        "roof"
+      ],
+      "wall_nodes": {
+        "north": [
+          "wall_north"
+        ],
+        "south": [
+          "wall_south"
+        ],
+        "east": [
+          "wall_east"
+        ],
+        "west": [
+          "wall_west"
+        ]
+      },
+      "fixed_nodes": [
+        "floor"
+      ],
+      "footprint": {
+        "width_cm": 600,
+        "depth_cm": 660
+      },
+      "measured_bounds_cm": [
+        [
+          -295.0,
+          295.0
+        ],
+        [
+          0.0,
+          650.0
+        ],
+        [
+          -326.73,
+          327.5
+        ]
+      ],
+      "entry_height_profile": [
+        {
+          "z_cm": 45,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 294.5,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 298.389,
+          "y_cm": 38.3891
+        },
+        {
+          "z_cm": 300,
+          "y_cm": 34.5
+        },
+        {
+          "z_cm": 300.01,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 322,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 325.889,
+          "y_cm": 20.3891
+        },
+        {
+          "z_cm": 327.5,
+          "y_cm": 16.5
+        },
+        {
+          "z_cm": 327.51,
+          "y_cm": 0
+        }
+      ]
+    },
+    {
+      "house_key": "tiny-treats-courtyard-v1",
+      "model_url": "/api/v1/assets/tiny-treats-courtyard-v1",
+      "interior": {
+        "min_x_cm": -342.0,
+        "max_x_cm": 342.0,
+        "min_z_cm": -349.5,
+        "max_z_cm": 34.5
+      },
+      "floor_height_cm": 40,
+      "wall_height_cm": 260,
+      "door_center": {
+        "x_cm": 0,
+        "z_cm": 68
+      },
+      "door_width_cm": 243,
+      "door_height_cm": 250,
+      "door_clearance": {
+        "min_x_cm": -121.5,
+        "max_x_cm": 121.5,
+        "min_z_cm": 67.5,
+        "max_z_cm": 491.25
+      },
+      "walls": [
+        {
+          "min_x_cm": -375.0,
+          "max_x_cm": -342.0,
+          "min_z_cm": -382.5,
+          "max_z_cm": 67.5
+        },
+        {
+          "min_x_cm": 342.0,
+          "max_x_cm": 375.0,
+          "min_z_cm": -382.5,
+          "max_z_cm": 67.5
+        },
+        {
+          "min_x_cm": -342.0,
+          "max_x_cm": 342.0,
+          "min_z_cm": -382.5,
+          "max_z_cm": -349.5
+        },
+        {
+          "min_x_cm": -342.0,
+          "max_x_cm": -121.5,
+          "min_z_cm": 34.5,
+          "max_z_cm": 67.5
+        },
+        {
+          "min_x_cm": 121.5,
+          "max_x_cm": 342.0,
+          "min_z_cm": 34.5,
+          "max_z_cm": 67.5
+        },
+        {
+          "min_x_cm": -255.0,
+          "max_x_cm": -121.5,
+          "min_z_cm": 67.5,
+          "max_z_cm": 262.5
+        },
+        {
+          "min_x_cm": 121.5,
+          "max_x_cm": 255.0,
+          "min_z_cm": 67.5,
+          "max_z_cm": 262.5
+        },
+        {
+          "min_x_cm": -304.5,
+          "max_x_cm": -280.5,
+          "min_z_cm": 403.5,
+          "max_z_cm": 427.5
+        },
+        {
+          "min_x_cm": 280.5,
+          "max_x_cm": 304.5,
+          "min_z_cm": 403.5,
+          "max_z_cm": 427.5
+        }
+      ],
+      "interior_clearances": [
+        {
+          "min_x_cm": -121.5,
+          "max_x_cm": 121.5,
+          "min_z_cm": -52.5,
+          "max_z_cm": 67.5
+        }
+      ],
+      "roof_nodes": [
+        "roof"
+      ],
+      "wall_nodes": {
+        "north": [
+          "wall_north"
+        ],
+        "south": [
+          "wall_south"
+        ],
+        "east": [
+          "wall_east"
+        ],
+        "west": [
+          "wall_west"
+        ]
+      },
+      "fixed_nodes": [
+        "floor"
+      ],
+      "footprint": {
+        "width_cm": 900,
+        "depth_cm": 990
+      },
+      "measured_bounds_cm": [
+        [
+          -442.5,
+          442.5
+        ],
+        [
+          0.0,
+          650.0
+        ],
+        [
+          -490.09,
+          491.25
+        ]
+      ],
+      "entry_height_profile": [
+        {
+          "z_cm": 68,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 445.5,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 445.51,
+          "y_cm": 38.9615
+        },
+        {
+          "z_cm": 447.583,
+          "y_cm": 38.3891
+        },
+        {
+          "z_cm": 450,
+          "y_cm": 34.5
+        },
+        {
+          "z_cm": 450.01,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 483,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 488.833,
+          "y_cm": 20.3891
+        },
+        {
+          "z_cm": 491.25,
+          "y_cm": 16.5
+        },
+        {
+          "z_cm": 491.26,
+          "y_cm": 0
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "key": "tiny-treats-cottage-v1-thumbnail",
+      "name": "温馨小屋",
+      "kind": "island",
+      "format": "png",
+      "url": "/api/v1/assets/tiny-treats-cottage-v1-thumbnail",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "provider": "tiny-treats",
+      "pack_key": "homely-house",
+      "output_sha256": "ea8b344b165f1dd594aa0dd1c8c0635fca8ccedb8808fd2ff21ad7e5cdcf3d9c"
+    },
+    {
+      "key": "tiny-treats-courtyard-v1-thumbnail",
+      "name": "庭院大屋",
+      "kind": "island",
+      "format": "png",
+      "url": "/api/v1/assets/tiny-treats-courtyard-v1-thumbnail",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "provider": "tiny-treats",
+      "pack_key": "homely-house",
+      "output_sha256": "c8f7a0a8339e2fb34c13ba92746d5014e44600fe1db2e9db0869924eb5541caf"
+    },
+    {
+      "key": "forest-courtyard-v1-thumbnail",
+      "name": "林间草地庭院",
+      "kind": "scene",
+      "format": "png",
+      "url": "/api/v1/assets/forest-courtyard-v1-thumbnail",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "provider": "tiny-treats",
+      "pack_key": "homely-house",
+      "output_sha256": "98368591aea51f5d4b5afc6c77358105b282e8f7df5e709f97f8b3661d34b7e3"
+    },
+    {
+      "key": "lakeside-garden-v1-thumbnail",
+      "name": "湖畔花园",
+      "kind": "scene",
+      "format": "png",
+      "url": "/api/v1/assets/lakeside-garden-v1-thumbnail",
+      "source_url": "https://tinytreats.itch.io/pretty-park",
+      "license": "CC0-1.0",
+      "provider": "tiny-treats",
+      "pack_key": "pretty-park",
+      "output_sha256": "5fc776d288d5b8f909c347f4b2c41b7040e5c59024c5db6385e04eae8da635a8"
+    },
+    {
+      "key": "tiny-treats-cottage-v1",
+      "name": "温馨小屋",
+      "pack_key": "homely-house",
+      "kind": "model",
+      "format": "glb",
+      "url": "/api/v1/assets/tiny-treats-cottage-v1",
+      "coin_price": 60,
+      "diamond_price": 0,
+      "source_sha256": "4791478bf825236a5cae4f6f1894dbea7ac36b447b07a5d78bd627ca460a1e49",
+      "provider": "tiny-treats",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "output_sha256": "ce13332e97fa947c65f15393665751f4ed22c8bec2ebeeadf6169f10a82b3bdf"
+    },
+    {
+      "key": "tiny-treats-courtyard-v1",
+      "name": "庭院大屋",
+      "pack_key": "homely-house",
+      "kind": "model",
+      "format": "glb",
+      "url": "/api/v1/assets/tiny-treats-courtyard-v1",
+      "coin_price": 90,
+      "diamond_price": 0,
+      "source_sha256": "4791478bf825236a5cae4f6f1894dbea7ac36b447b07a5d78bd627ca460a1e49",
+      "provider": "tiny-treats",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "output_sha256": "a95c34d24cffac0318bec4568096211dd894e5cd4e49d1eea51c7f7fbe652d1a"
+    },
+    {
+      "key": "tiny-treats-pine-v1",
+      "name": "庭院松树",
+      "pack_key": "homely-house",
+      "provider": "tiny-treats",
+      "kind": "model",
+      "format": "glb",
+      "url": "/api/v1/assets/tiny-treats-pine-v1",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "output_sha256": "3c4da3d0e1108b19ec27969d47eebf0d861a8dd0bdb0eba30e7ae71068f3c9c9",
+      "obstacle_cm": [
+        110,
+        110
+      ],
+      "footprint": {
+        "width_cm": 228,
+        "depth_cm": 227
+      },
+      "blocks_placement": true
+    },
+    {
+      "key": "tiny-treats-pine-large-v1",
+      "name": "高大松树",
+      "pack_key": "homely-house",
+      "provider": "tiny-treats",
+      "kind": "model",
+      "format": "glb",
+      "url": "/api/v1/assets/tiny-treats-pine-large-v1",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "output_sha256": "5b0751bde9b199cb3e5ae7786c9c70616c85a91170693fc65445a9ad7613e71c",
+      "obstacle_cm": [
+        140,
+        140
+      ],
+      "footprint": {
+        "width_cm": 285,
+        "depth_cm": 284
+      },
+      "blocks_placement": true
+    },
+    {
+      "key": "tiny-treats-foliage-a-v1",
+      "name": "庭院灌木",
+      "pack_key": "homely-house",
+      "provider": "tiny-treats",
+      "kind": "model",
+      "format": "glb",
+      "url": "/api/v1/assets/tiny-treats-foliage-a-v1",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "output_sha256": "ed32aec6b985a966e861f0043b23c30692330f8d45050dba712c71d20af2f818",
+      "obstacle_cm": [
+        65,
+        65
+      ],
+      "footprint": {
+        "width_cm": 53,
+        "depth_cm": 45
+      },
+      "blocks_placement": true
+    },
+    {
+      "key": "tiny-treats-foliage-b-v1",
+      "name": "低矮灌木",
+      "pack_key": "homely-house",
+      "provider": "tiny-treats",
+      "kind": "model",
+      "format": "glb",
+      "url": "/api/v1/assets/tiny-treats-foliage-b-v1",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "output_sha256": "f2bf38dc013123f2278bc579f1ba6376b918a636d3e077fcbb532c33c906c8d3",
+      "obstacle_cm": [
+        55,
+        55
+      ],
+      "footprint": {
+        "width_cm": 71,
+        "depth_cm": 47
+      },
+      "blocks_placement": true
+    },
+    {
+      "key": "tiny-treats-fountain-v1",
+      "name": "花园喷泉",
+      "pack_key": "pretty-park",
+      "provider": "tiny-treats",
+      "kind": "model",
+      "format": "glb",
+      "url": "/api/v1/assets/tiny-treats-fountain-v1",
+      "source_url": "https://tinytreats.itch.io/pretty-park",
+      "license": "CC0-1.0",
+      "output_sha256": "59b7d45fc0de70b9dd540d58c50a861051dd0659bcf3427e1d84f46970492e87",
+      "obstacle_cm": [
+        300,
+        300
+      ],
+      "footprint": {
+        "width_cm": 400,
+        "depth_cm": 400
+      },
+      "blocks_placement": true
+    },
+    {
+      "key": "tiny-treats-hedge-v1",
+      "name": "花园树篱",
+      "pack_key": "pretty-park",
+      "provider": "tiny-treats",
+      "kind": "model",
+      "format": "glb",
+      "url": "/api/v1/assets/tiny-treats-hedge-v1",
+      "source_url": "https://tinytreats.itch.io/pretty-park",
+      "license": "CC0-1.0",
+      "output_sha256": "82fa7af402ba69ae04dd1c4bf05c250d5dc45700d1ff02ea74dedfda9711ccc9",
+      "obstacle_cm": [
+        400,
+        150
+      ],
+      "footprint": {
+        "width_cm": 401,
+        "depth_cm": 151
+      },
+      "blocks_placement": true
+    },
+    {
+      "key": "tiny-treats-flower-v1",
+      "name": "花园花朵",
+      "pack_key": "pretty-park",
+      "provider": "tiny-treats",
+      "kind": "model",
+      "format": "glb",
+      "url": "/api/v1/assets/tiny-treats-flower-v1",
+      "source_url": "https://tinytreats.itch.io/pretty-park",
+      "license": "CC0-1.0",
+      "output_sha256": "2e32549a622cc4efc40b11f6439b47e7e17ff7a2091cd4b17c38163e8dd7241f",
+      "obstacle_cm": [
+        20,
+        20
+      ],
+      "footprint": {
+        "width_cm": 45,
+        "depth_cm": 45
+      },
+      "blocks_placement": false
+    }
+  ],
+  "scenes": [
+    {
+      "scene_key": "forest-courtyard-v1",
+      "name": "林间草地庭院",
+      "coin_price": 80,
+      "diamond_price": 0,
+      "environments": [
+        "day",
+        "dusk"
+      ],
+      "default_environment": "day",
+      "spawn": {
+        "x_cm": 0,
+        "z_cm": 800
+      },
+      "regions": [
+        {
+          "terrain": "grass",
+          "polygon": [
+            {
+              "x_cm": -1500,
+              "z_cm": -1500
+            },
+            {
+              "x_cm": 1500,
+              "z_cm": -1500
+            },
+            {
+              "x_cm": 1500,
+              "z_cm": 1500
+            },
+            {
+              "x_cm": -1500,
+              "z_cm": 1500
+            }
+          ]
+        }
+      ],
+      "thumbnail_asset_key": "forest-courtyard-v1-thumbnail",
+      "thumbnail_url": "/api/v1/assets/forest-courtyard-v1-thumbnail",
+      "fixed_objects": [
+        {
+          "key": "forest-courtyard-v1-landscape-1",
+          "model_url": "/api/v1/assets/tiny-treats-pine-large-v1",
+          "x_cm": -1230,
+          "z_cm": -1200,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 285,
+            "depth_cm": 284
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 140,
+            "depth_cm": 140
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-2",
+          "model_url": "/api/v1/assets/tiny-treats-pine-large-v1",
+          "x_cm": -800,
+          "z_cm": -1250,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 285,
+            "depth_cm": 284
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 140,
+            "depth_cm": 140
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-3",
+          "model_url": "/api/v1/assets/tiny-treats-pine-v1",
+          "x_cm": -250,
+          "z_cm": -1300,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 228,
+            "depth_cm": 227
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 110,
+            "depth_cm": 110
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-4",
+          "model_url": "/api/v1/assets/tiny-treats-pine-large-v1",
+          "x_cm": 400,
+          "z_cm": -1200,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 285,
+            "depth_cm": 284
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 140,
+            "depth_cm": 140
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-5",
+          "model_url": "/api/v1/assets/tiny-treats-pine-v1",
+          "x_cm": 1050,
+          "z_cm": -1250,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 228,
+            "depth_cm": 227
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 110,
+            "depth_cm": 110
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-6",
+          "model_url": "/api/v1/assets/tiny-treats-pine-large-v1",
+          "x_cm": 1200,
+          "z_cm": -600,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 285,
+            "depth_cm": 284
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 140,
+            "depth_cm": 140
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-7",
+          "model_url": "/api/v1/assets/tiny-treats-pine-v1",
+          "x_cm": 1250,
+          "z_cm": 100,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 228,
+            "depth_cm": 227
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 110,
+            "depth_cm": 110
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-8",
+          "model_url": "/api/v1/assets/tiny-treats-pine-v1",
+          "x_cm": 1200,
+          "z_cm": 1100,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 228,
+            "depth_cm": 227
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 110,
+            "depth_cm": 110
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-9",
+          "model_url": "/api/v1/assets/tiny-treats-pine-large-v1",
+          "x_cm": -1200,
+          "z_cm": -400,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 285,
+            "depth_cm": 284
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 140,
+            "depth_cm": 140
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-10",
+          "model_url": "/api/v1/assets/tiny-treats-pine-v1",
+          "x_cm": -1250,
+          "z_cm": 400,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 228,
+            "depth_cm": 227
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 110,
+            "depth_cm": 110
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-11",
+          "model_url": "/api/v1/assets/tiny-treats-pine-v1",
+          "x_cm": -1200,
+          "z_cm": 1100,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 228,
+            "depth_cm": 227
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 110,
+            "depth_cm": 110
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-12",
+          "model_url": "/api/v1/assets/tiny-treats-foliage-a-v1",
+          "x_cm": -1000,
+          "z_cm": 1300,
+          "rotation": 0,
+          "scale": 2,
+          "footprint": {
+            "width_cm": 106,
+            "depth_cm": 90
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 130,
+            "depth_cm": 130
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-13",
+          "model_url": "/api/v1/assets/tiny-treats-foliage-b-v1",
+          "x_cm": 300,
+          "z_cm": 1250,
+          "rotation": 0,
+          "scale": 2,
+          "footprint": {
+            "width_cm": 142,
+            "depth_cm": 94
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 110,
+            "depth_cm": 110
+          }
+        },
+        {
+          "key": "forest-courtyard-v1-landscape-14",
+          "model_url": "/api/v1/assets/tiny-treats-foliage-a-v1",
+          "x_cm": 1000,
+          "z_cm": 1300,
+          "rotation": 0,
+          "scale": 2,
+          "footprint": {
+            "width_cm": 106,
+            "depth_cm": 90
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 130,
+            "depth_cm": 130
+          }
+        }
+      ]
+    },
+    {
+      "scene_key": "lakeside-garden-v1",
+      "name": "湖畔花园",
+      "coin_price": 120,
+      "diamond_price": 0,
+      "environments": [
+        "day",
+        "dusk"
+      ],
+      "default_environment": "day",
+      "spawn": {
+        "x_cm": 500,
+        "z_cm": 800
+      },
+      "regions": [
+        {
+          "terrain": "water",
+          "polygon": [
+            {
+              "x_cm": -1500,
+              "z_cm": -1500
+            },
+            {
+              "x_cm": -300,
+              "z_cm": -1500
+            },
+            {
+              "x_cm": -300,
+              "z_cm": -800
+            },
+            {
+              "x_cm": -700,
+              "z_cm": -450
+            },
+            {
+              "x_cm": -1500,
+              "z_cm": -450
+            }
+          ]
+        },
+        {
+          "terrain": "grass",
+          "polygon": [
+            {
+              "x_cm": -300,
+              "z_cm": -1500
+            },
+            {
+              "x_cm": 1500,
+              "z_cm": -1500
+            },
+            {
+              "x_cm": 1500,
+              "z_cm": 1500
+            },
+            {
+              "x_cm": -1500,
+              "z_cm": 1500
+            },
+            {
+              "x_cm": -1500,
+              "z_cm": -450
+            },
+            {
+              "x_cm": -700,
+              "z_cm": -450
+            },
+            {
+              "x_cm": -300,
+              "z_cm": -800
+            }
+          ]
+        }
+      ],
+      "thumbnail_asset_key": "lakeside-garden-v1-thumbnail",
+      "thumbnail_url": "/api/v1/assets/lakeside-garden-v1-thumbnail",
+      "fixed_objects": [
+        {
+          "key": "lakeside-garden-v1-landscape-1",
+          "model_url": "/api/v1/assets/tiny-treats-fountain-v1",
+          "x_cm": 950,
+          "z_cm": -950,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 400,
+            "depth_cm": 400
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 300,
+            "depth_cm": 300
+          }
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-2",
+          "model_url": "/api/v1/assets/tiny-treats-hedge-v1",
+          "x_cm": -1100,
+          "z_cm": -230,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 401,
+            "depth_cm": 151
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 400,
+            "depth_cm": 150
+          }
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-3",
+          "model_url": "/api/v1/assets/tiny-treats-hedge-v1",
+          "x_cm": -1050,
+          "z_cm": 1250,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 401,
+            "depth_cm": 151
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 400,
+            "depth_cm": 150
+          }
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-4",
+          "model_url": "/api/v1/assets/tiny-treats-hedge-v1",
+          "x_cm": 1250,
+          "z_cm": 500,
+          "rotation": 1,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 401,
+            "depth_cm": 151
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 400,
+            "depth_cm": 150
+          }
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-5",
+          "model_url": "/api/v1/assets/tiny-treats-pine-large-v1",
+          "x_cm": -1200,
+          "z_cm": 850,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 285,
+            "depth_cm": 284
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 140,
+            "depth_cm": 140
+          }
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-6",
+          "model_url": "/api/v1/assets/tiny-treats-pine-v1",
+          "x_cm": 1250,
+          "z_cm": -400,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 228,
+            "depth_cm": 227
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 110,
+            "depth_cm": 110
+          }
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-7",
+          "model_url": "/api/v1/assets/tiny-treats-pine-large-v1",
+          "x_cm": 0,
+          "z_cm": -1250,
+          "rotation": 0,
+          "scale": 1,
+          "footprint": {
+            "width_cm": 285,
+            "depth_cm": 284
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 140,
+            "depth_cm": 140
+          }
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-8",
+          "model_url": "/api/v1/assets/tiny-treats-foliage-a-v1",
+          "x_cm": -650,
+          "z_cm": -200,
+          "rotation": 0,
+          "scale": 2,
+          "footprint": {
+            "width_cm": 106,
+            "depth_cm": 90
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 130,
+            "depth_cm": 130
+          }
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-9",
+          "model_url": "/api/v1/assets/tiny-treats-foliage-b-v1",
+          "x_cm": -1350,
+          "z_cm": -100,
+          "rotation": 0,
+          "scale": 2,
+          "footprint": {
+            "width_cm": 142,
+            "depth_cm": 94
+          },
+          "blocks_placement": true,
+          "walk_obstacle": {
+            "width_cm": 110,
+            "depth_cm": 110
+          }
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-10",
+          "model_url": "/api/v1/assets/tiny-treats-flower-v1",
+          "x_cm": 650,
+          "z_cm": -1050,
+          "rotation": 0,
+          "scale": 3,
+          "footprint": {
+            "width_cm": 135,
+            "depth_cm": 135
+          },
+          "blocks_placement": false
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-11",
+          "model_url": "/api/v1/assets/tiny-treats-flower-v1",
+          "x_cm": 650,
+          "z_cm": -850,
+          "rotation": 0,
+          "scale": 3,
+          "footprint": {
+            "width_cm": 135,
+            "depth_cm": 135
+          },
+          "blocks_placement": false
+        },
+        {
+          "key": "lakeside-garden-v1-landscape-12",
+          "model_url": "/api/v1/assets/tiny-treats-flower-v1",
+          "x_cm": 900,
+          "z_cm": 1250,
+          "rotation": 0,
+          "scale": 3,
+          "footprint": {
+            "width_cm": 135,
+            "depth_cm": 135
+          },
+          "blocks_placement": false
+        }
+      ]
+    }
+  ],
+  "source_packs": [
+    {
+      "provider": "tiny-treats",
+      "id": "homely-house",
+      "name": "Tiny Treats - Homely House set by Tiny Treats",
+      "source_url": "https://tinytreats.itch.io/homely-house",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/tiny-treats/tiny-treats/homely-house/extracted",
+      "status": "downloaded",
+      "source_page_sha256": "0748d9201f4400c4fff2ac1db32b1a6765b1ad0cc1949881adcda866c4ad3df0",
+      "license_evidence_url": "https://tinytreats.itch.io/homely-house",
+      "uploads": [
+        {
+          "id": "11308378",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/tiny-treats/tiny-treats/homely-house/source-11308378.zip",
+          "archive_sha256": "a84af014347cf7970bc71c6c64ba1aa65186ac28de40cfd37e4f70e031e28929"
+        }
+      ],
+      "archive_sha256": "a84af014347cf7970bc71c6c64ba1aa65186ac28de40cfd37e4f70e031e28929",
+      "archive_path": ".local/3d-sources/tiny-treats/tiny-treats/homely-house/source-11308378.zip",
+      "download_url": "https://tinytreats.itch.io/homely-house/download_url",
+      "version": "Free",
+      "content_revision": "sha256:a84af014347cf7970bc71c6c64ba1aa65186ac28de40cfd37e4f70e031e28929",
+      "model_formats": {
+        ".fbx": 54,
+        ".gltf": 27,
+        ".obj": 32
+      },
+      "license_files": [
+        ".local/3d-sources/tiny-treats/tiny-treats/homely-house/extracted/Tiny_Treats_Homely_House_1.0_FREE/License.txt"
+      ]
+    },
+    {
+      "provider": "tiny-treats",
+      "id": "pretty-park",
+      "name": "Tiny Treats - Pretty Park set by Tiny Treats",
+      "source_url": "https://tinytreats.itch.io/pretty-park",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/tiny-treats/tiny-treats/pretty-park/extracted",
+      "status": "downloaded",
+      "source_page_sha256": "aa07d840344b42cbac5c14fa3753a3e19206daa5fb85a86f44eef47629592753",
+      "license_evidence_url": "https://tinytreats.itch.io/pretty-park",
+      "uploads": [
+        {
+          "id": "11308387",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/tiny-treats/tiny-treats/pretty-park/source-11308387.zip",
+          "archive_sha256": "55c1954ac96ddc76b68e06a58b9780c945ec34440ab03749cca7317bec0591d2"
+        }
+      ],
+      "archive_sha256": "55c1954ac96ddc76b68e06a58b9780c945ec34440ab03749cca7317bec0591d2",
+      "archive_path": ".local/3d-sources/tiny-treats/tiny-treats/pretty-park/source-11308387.zip",
+      "download_url": "https://tinytreats.itch.io/pretty-park/download_url",
+      "version": "Free",
+      "content_revision": "sha256:55c1954ac96ddc76b68e06a58b9780c945ec34440ab03749cca7317bec0591d2",
+      "model_formats": {
+        ".fbx": 56,
+        ".gltf": 28,
+        ".obj": 30
+      },
+      "license_files": [
+        ".local/3d-sources/tiny-treats/tiny-treats/pretty-park/extracted/Tiny_Treats_Pretty_Park_1.0_FREE/License.txt"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "description": "整理 Tiny Treats 房屋和固定景物，产物先进入本地暂存目录。",
+  "source_root": ".local/3d-sources/tiny-treats/tiny-treats",
+  "output_directory": ".local/3d-sources/tiny-treats/prepared",
+  "source_urls": {
+    "homely-house": "https://tinytreats.itch.io/homely-house",
+    "pretty-park": "https://tinytreats.itch.io/pretty-park"
+  },
+  "license": "CC0-1.0",
+  "materials": {
+    "interior": [
+      0.84,
+      0.79,
+      0.69,
+      1
+    ],
+    "floor": [
+      0.54,
+      0.35,
+      0.19,
+      1
+    ],
+    "trim": [
+      0.9,
+      0.9,
+      0.85,
+      1
+    ],
+    "roof": [
+      0.74,
+      0.22,
+      0.075,
+      1
+    ]
+  },
+  "houses": [
+    {
+      "house_key": "tiny-treats-cottage-v1",
+      "name": "温馨小屋",
+      "coin_price": 60,
+      "scale_xz": 1,
+      "porch": false,
+      "entry_height_profile": [
+        {
+          "z_cm": 45,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 294.5,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 298.389,
+          "y_cm": 38.3891
+        },
+        {
+          "z_cm": 300,
+          "y_cm": 34.5
+        },
+        {
+          "z_cm": 300.01,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 322,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 325.889,
+          "y_cm": 20.3891
+        },
+        {
+          "z_cm": 327.5,
+          "y_cm": 16.5
+        },
+        {
+          "z_cm": 327.51,
+          "y_cm": 0
+        }
+      ]
+    },
+    {
+      "house_key": "tiny-treats-courtyard-v1",
+      "name": "庭院大屋",
+      "coin_price": 90,
+      "scale_xz": 1.5,
+      "porch": true,
+      "entry_height_profile": [
+        {
+          "z_cm": 68,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 445.5,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 445.51,
+          "y_cm": 38.9615
+        },
+        {
+          "z_cm": 447.583,
+          "y_cm": 38.3891
+        },
+        {
+          "z_cm": 450,
+          "y_cm": 34.5
+        },
+        {
+          "z_cm": 450.01,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 483,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 488.833,
+          "y_cm": 20.3891
+        },
+        {
+          "z_cm": 491.25,
+          "y_cm": 16.5
+        },
+        {
+          "z_cm": 491.26,
+          "y_cm": 0
+        }
+      ]
+    }
+  ],
+  "landscape_models": [
+    {
+      "pack": "homely-house",
+      "source": "tree",
+      "key": "tiny-treats-pine-v1",
+      "name": "庭院松树",
+      "obstacle_cm": [
+        110,
+        110
+      ]
+    },
+    {
+      "pack": "homely-house",
+      "source": "tree_large",
+      "key": "tiny-treats-pine-large-v1",
+      "name": "高大松树",
+      "obstacle_cm": [
+        140,
+        140
+      ]
+    },
+    {
+      "pack": "homely-house",
+      "source": "foliage_A",
+      "key": "tiny-treats-foliage-a-v1",
+      "name": "庭院灌木",
+      "obstacle_cm": [
+        65,
+        65
+      ]
+    },
+    {
+      "pack": "homely-house",
+      "source": "foliage_B",
+      "key": "tiny-treats-foliage-b-v1",
+      "name": "低矮灌木",
+      "obstacle_cm": [
+        55,
+        55
+      ]
+    },
+    {
+      "pack": "pretty-park",
+      "source": "fountain",
+      "key": "tiny-treats-fountain-v1",
+      "name": "花园喷泉",
+      "obstacle_cm": [
+        300,
+        300
+      ]
+    },
+    {
+      "pack": "pretty-park",
+      "source": "hedge_straight_long",
+      "key": "tiny-treats-hedge-v1",
+      "name": "花园树篱",
+      "obstacle_cm": [
+        400,
+        150
+      ]
+    },
+    {
+      "pack": "pretty-park",
+      "source": "flower_A",
+      "key": "tiny-treats-flower-v1",
+      "name": "花园花朵",
+      "obstacle_cm": [
+        20,
+        20
+      ],
+      "blocks_placement": false
+    }
+  ]
+}

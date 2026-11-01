@@ -13,11 +13,11 @@ func TestCurrentCatalogUses3DChoices(t *testing.T) {
 	}
 	for _, item := range items {
 		switch item.Kind {
-		case KindIcon, KindTitle, KindReward, KindBadge, KindIsland, KindModel, KindAnimation, KindWearable, KindCharacter:
+		case KindIcon, KindTitle, KindReward, KindBadge, KindIsland, KindScene, KindModel, KindAnimation, KindWearable, KindCharacter:
 		default:
 			t.Fatalf("retired kind remains selectable: %s %s", item.Key, item.Kind)
 		}
-		if item.Kind == KindIsland && item.extension() != "png" {
+		if (item.Kind == KindIsland || item.Kind == KindScene) && item.extension() != "png" {
 			t.Fatalf("retired flat island art remains: %s", item.Key)
 		}
 		if item.Free && item.Kind != KindIsland {

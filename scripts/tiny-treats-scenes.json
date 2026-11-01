@@ -1,0 +1,59 @@
+{
+  "scenes": [
+    {
+      "scene_key": "forest-courtyard-v1",
+      "name": "林间草地庭院",
+      "coin_price": 80,
+      "diamond_price": 0,
+      "environments": ["day", "dusk"],
+      "default_environment": "day",
+      "spawn": {"x_cm": 0, "z_cm": 800},
+      "regions": [
+        {"terrain": "grass", "polygon": [{"x_cm": -1500, "z_cm": -1500}, {"x_cm": 1500, "z_cm": -1500}, {"x_cm": 1500, "z_cm": 1500}, {"x_cm": -1500, "z_cm": 1500}]}
+      ],
+      "landscape": [
+        {"asset_key": "tiny-treats-pine-large-v1", "x_cm": -1230, "z_cm": -1200},
+        {"asset_key": "tiny-treats-pine-large-v1", "x_cm": -800, "z_cm": -1250},
+        {"asset_key": "tiny-treats-pine-v1", "x_cm": -250, "z_cm": -1300},
+        {"asset_key": "tiny-treats-pine-large-v1", "x_cm": 400, "z_cm": -1200},
+        {"asset_key": "tiny-treats-pine-v1", "x_cm": 1050, "z_cm": -1250},
+        {"asset_key": "tiny-treats-pine-large-v1", "x_cm": 1200, "z_cm": -600},
+        {"asset_key": "tiny-treats-pine-v1", "x_cm": 1250, "z_cm": 100},
+        {"asset_key": "tiny-treats-pine-v1", "x_cm": 1200, "z_cm": 1100},
+        {"asset_key": "tiny-treats-pine-large-v1", "x_cm": -1200, "z_cm": -400},
+        {"asset_key": "tiny-treats-pine-v1", "x_cm": -1250, "z_cm": 400},
+        {"asset_key": "tiny-treats-pine-v1", "x_cm": -1200, "z_cm": 1100},
+        {"asset_key": "tiny-treats-foliage-a-v1", "x_cm": -1000, "z_cm": 1300, "scale": 2},
+        {"asset_key": "tiny-treats-foliage-b-v1", "x_cm": 300, "z_cm": 1250, "scale": 2},
+        {"asset_key": "tiny-treats-foliage-a-v1", "x_cm": 1000, "z_cm": 1300, "scale": 2}
+      ]
+    },
+    {
+      "scene_key": "lakeside-garden-v1",
+      "name": "湖畔花园",
+      "coin_price": 120,
+      "diamond_price": 0,
+      "environments": ["day", "dusk"],
+      "default_environment": "day",
+      "spawn": {"x_cm": 500, "z_cm": 800},
+      "regions": [
+        {"terrain": "water", "polygon": [{"x_cm": -1500, "z_cm": -1500}, {"x_cm": -300, "z_cm": -1500}, {"x_cm": -300, "z_cm": -800}, {"x_cm": -700, "z_cm": -450}, {"x_cm": -1500, "z_cm": -450}]},
+        {"terrain": "grass", "polygon": [{"x_cm": -300, "z_cm": -1500}, {"x_cm": 1500, "z_cm": -1500}, {"x_cm": 1500, "z_cm": 1500}, {"x_cm": -1500, "z_cm": 1500}, {"x_cm": -1500, "z_cm": -450}, {"x_cm": -700, "z_cm": -450}, {"x_cm": -300, "z_cm": -800}]}
+      ],
+      "landscape": [
+        {"asset_key": "tiny-treats-fountain-v1", "x_cm": 950, "z_cm": -950},
+        {"asset_key": "tiny-treats-hedge-v1", "x_cm": -1100, "z_cm": -230},
+        {"asset_key": "tiny-treats-hedge-v1", "x_cm": -1050, "z_cm": 1250},
+        {"asset_key": "tiny-treats-hedge-v1", "x_cm": 1250, "z_cm": 500, "rotation": 1},
+        {"asset_key": "tiny-treats-pine-large-v1", "x_cm": -1200, "z_cm": 850},
+        {"asset_key": "tiny-treats-pine-v1", "x_cm": 1250, "z_cm": -400},
+        {"asset_key": "tiny-treats-pine-large-v1", "x_cm": 0, "z_cm": -1250},
+        {"asset_key": "tiny-treats-foliage-a-v1", "x_cm": -650, "z_cm": -200, "scale": 2},
+        {"asset_key": "tiny-treats-foliage-b-v1", "x_cm": -1350, "z_cm": -100, "scale": 2},
+        {"asset_key": "tiny-treats-flower-v1", "x_cm": 650, "z_cm": -1050, "scale": 3},
+        {"asset_key": "tiny-treats-flower-v1", "x_cm": 650, "z_cm": -850, "scale": 3},
+        {"asset_key": "tiny-treats-flower-v1", "x_cm": 900, "z_cm": 1250, "scale": 3}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,354 @@
+{
+  "houses": [
+    {
+      "house_key": "tiny-treats-cottage-v1",
+      "model_url": "/api/v1/assets/tiny-treats-cottage-v1",
+      "interior": {
+        "min_x_cm": -228,
+        "max_x_cm": 228,
+        "min_z_cm": -233,
+        "max_z_cm": 23
+      },
+      "floor_height_cm": 40,
+      "wall_height_cm": 260,
+      "door_center": {
+        "x_cm": 0,
+        "z_cm": 45
+      },
+      "door_width_cm": 162,
+      "door_height_cm": 250,
+      "door_clearance": {
+        "min_x_cm": -81,
+        "max_x_cm": 81,
+        "min_z_cm": 45,
+        "max_z_cm": 327.5
+      },
+      "walls": [
+        {
+          "min_x_cm": -250,
+          "max_x_cm": -228,
+          "min_z_cm": -255,
+          "max_z_cm": 45
+        },
+        {
+          "min_x_cm": 228,
+          "max_x_cm": 250,
+          "min_z_cm": -255,
+          "max_z_cm": 45
+        },
+        {
+          "min_x_cm": -228,
+          "max_x_cm": 228,
+          "min_z_cm": -255,
+          "max_z_cm": -233
+        },
+        {
+          "min_x_cm": -228,
+          "max_x_cm": -81,
+          "min_z_cm": 23,
+          "max_z_cm": 45
+        },
+        {
+          "min_x_cm": 81,
+          "max_x_cm": 228,
+          "min_z_cm": 23,
+          "max_z_cm": 45
+        },
+        {
+          "min_x_cm": -170,
+          "max_x_cm": -81,
+          "min_z_cm": 45,
+          "max_z_cm": 175
+        },
+        {
+          "min_x_cm": 81,
+          "max_x_cm": 170,
+          "min_z_cm": 45,
+          "max_z_cm": 175
+        }
+      ],
+      "interior_clearances": [
+        {
+          "min_x_cm": -81,
+          "max_x_cm": 81,
+          "min_z_cm": -35,
+          "max_z_cm": 45
+        }
+      ],
+      "roof_nodes": [
+        "roof"
+      ],
+      "wall_nodes": {
+        "north": [
+          "wall_north"
+        ],
+        "south": [
+          "wall_south"
+        ],
+        "east": [
+          "wall_east"
+        ],
+        "west": [
+          "wall_west"
+        ]
+      },
+      "entry_height_profile": [
+        {
+          "z_cm": 45,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 294.5,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 298.389,
+          "y_cm": 38.3891
+        },
+        {
+          "z_cm": 300,
+          "y_cm": 34.5
+        },
+        {
+          "z_cm": 300.01,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 322,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 325.889,
+          "y_cm": 20.3891
+        },
+        {
+          "z_cm": 327.5,
+          "y_cm": 16.5
+        },
+        {
+          "z_cm": 327.51,
+          "y_cm": 0
+        }
+      ]
+    },
+    {
+      "house_key": "tiny-treats-courtyard-v1",
+      "model_url": "/api/v1/assets/tiny-treats-courtyard-v1",
+      "interior": {
+        "min_x_cm": -342.0,
+        "max_x_cm": 342.0,
+        "min_z_cm": -349.5,
+        "max_z_cm": 34.5
+      },
+      "floor_height_cm": 40,
+      "wall_height_cm": 260,
+      "door_center": {
+        "x_cm": 0,
+        "z_cm": 68
+      },
+      "door_width_cm": 243,
+      "door_height_cm": 250,
+      "door_clearance": {
+        "min_x_cm": -121.5,
+        "max_x_cm": 121.5,
+        "min_z_cm": 67.5,
+        "max_z_cm": 491.25
+      },
+      "walls": [
+        {
+          "min_x_cm": -375.0,
+          "max_x_cm": -342.0,
+          "min_z_cm": -382.5,
+          "max_z_cm": 67.5
+        },
+        {
+          "min_x_cm": 342.0,
+          "max_x_cm": 375.0,
+          "min_z_cm": -382.5,
+          "max_z_cm": 67.5
+        },
+        {
+          "min_x_cm": -342.0,
+          "max_x_cm": 342.0,
+          "min_z_cm": -382.5,
+          "max_z_cm": -349.5
+        },
+        {
+          "min_x_cm": -342.0,
+          "max_x_cm": -121.5,
+          "min_z_cm": 34.5,
+          "max_z_cm": 67.5
+        },
+        {
+          "min_x_cm": 121.5,
+          "max_x_cm": 342.0,
+          "min_z_cm": 34.5,
+          "max_z_cm": 67.5
+        },
+        {
+          "min_x_cm": -255.0,
+          "max_x_cm": -121.5,
+          "min_z_cm": 67.5,
+          "max_z_cm": 262.5
+        },
+        {
+          "min_x_cm": 121.5,
+          "max_x_cm": 255.0,
+          "min_z_cm": 67.5,
+          "max_z_cm": 262.5
+        },
+        {
+          "min_x_cm": -304.5,
+          "max_x_cm": -280.5,
+          "min_z_cm": 403.5,
+          "max_z_cm": 427.5
+        },
+        {
+          "min_x_cm": 280.5,
+          "max_x_cm": 304.5,
+          "min_z_cm": 403.5,
+          "max_z_cm": 427.5
+        }
+      ],
+      "interior_clearances": [
+        {
+          "min_x_cm": -121.5,
+          "max_x_cm": 121.5,
+          "min_z_cm": -52.5,
+          "max_z_cm": 67.5
+        }
+      ],
+      "roof_nodes": [
+        "roof"
+      ],
+      "wall_nodes": {
+        "north": [
+          "wall_north"
+        ],
+        "south": [
+          "wall_south"
+        ],
+        "east": [
+          "wall_east"
+        ],
+        "west": [
+          "wall_west"
+        ]
+      },
+      "entry_height_profile": [
+        {
+          "z_cm": 68,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 445.5,
+          "y_cm": 40
+        },
+        {
+          "z_cm": 445.51,
+          "y_cm": 38.9615
+        },
+        {
+          "z_cm": 447.583,
+          "y_cm": 38.3891
+        },
+        {
+          "z_cm": 450,
+          "y_cm": 34.5
+        },
+        {
+          "z_cm": 450.01,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 483,
+          "y_cm": 22
+        },
+        {
+          "z_cm": 488.833,
+          "y_cm": 20.3891
+        },
+        {
+          "z_cm": 491.25,
+          "y_cm": 16.5
+        },
+        {
+          "z_cm": 491.26,
+          "y_cm": 0
+        }
+      ]
+    }
+  ],
+  "catalog": [
+    {
+      "item_key": "tiny-treats-cottage-v1",
+      "name": "温馨小屋",
+      "house_key": "tiny-treats-cottage-v1",
+      "assembly": "house",
+      "model_url": "/api/v1/assets/tiny-treats-cottage-v1",
+      "thumbnail_asset_key": "tiny-treats-cottage-v1-thumbnail",
+      "thumbnail_url": "/api/v1/assets/tiny-treats-cottage-v1-thumbnail",
+      "provider": "tiny-treats",
+      "pack_key": "homely-house",
+      "coin_price": 60,
+      "diamond_price": 0,
+      "free": false,
+      "footprint": {
+        "width_cm": 600,
+        "depth_cm": 660
+      },
+      "walk_obstacle": {
+        "width_cm": 600,
+        "depth_cm": 660
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": false,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ]
+    },
+    {
+      "item_key": "tiny-treats-courtyard-v1",
+      "name": "庭院大屋",
+      "house_key": "tiny-treats-courtyard-v1",
+      "assembly": "house",
+      "model_url": "/api/v1/assets/tiny-treats-courtyard-v1",
+      "thumbnail_asset_key": "tiny-treats-courtyard-v1-thumbnail",
+      "thumbnail_url": "/api/v1/assets/tiny-treats-courtyard-v1-thumbnail",
+      "provider": "tiny-treats",
+      "pack_key": "homely-house",
+      "coin_price": 90,
+      "diamond_price": 0,
+      "free": false,
+      "footprint": {
+        "width_cm": 900,
+        "depth_cm": 990
+      },
+      "walk_obstacle": {
+        "width_cm": 900,
+        "depth_cm": 990
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": false,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ]
+    }
+  ]
+}

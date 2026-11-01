@@ -1382,7 +1382,7 @@ components:
         free: {"type": "boolean", "description": "无需购买的免费营地物品资源；仅用于 island 类型。"}
         key: {"type": "string", "minLength": 1}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
-        kind: {"type": "string", "enum": ["icon", "title", "reward", "badge", "island", "model", "animation", "wearable", "character"]}
+        kind: {"type": "string", "enum": ["icon", "title", "reward", "badge", "island", "model", "animation", "wearable", "character", "scene"]}
         url: {"type": "string"}
         format: {"type": "string", "enum": ["svg", "png", "webp", "glb"], "description": "省略时为 svg。"}
         source_url: {"type": "string", "description": "素材来源页面。"}
