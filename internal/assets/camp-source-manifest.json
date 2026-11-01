@@ -1,0 +1,756 @@
+{
+  "items": [
+    {
+      "key": "camp-bed-v1",
+      "name": "单人床",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/bedSingle.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-dining-table-v1",
+      "name": "餐桌",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/table.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-dining-chair-v1",
+      "name": "餐椅",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/chair.glb",
+          "scale": [
+            2.8,
+            2.15,
+            2.8
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-sofa-v1",
+      "name": "沙发",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/loungeSofa.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-coffee-table-v1",
+      "name": "茶几",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/tableCoffee.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-television-v1",
+      "name": "电视机",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/cabinetTelevision.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/televisionModern.glb",
+          "scale": [
+            1.7,
+            1.7,
+            1.7
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0.62,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-cabinet-v1",
+      "name": "储物柜",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/bookcaseClosedDoors.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-refrigerator-v1",
+      "name": "电冰箱",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/kitchenFridge.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-kitchen-counter-v1",
+      "name": "厨房操作台",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/kitchenCabinet.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-toilet-v1",
+      "name": "马桶",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/toilet.glb",
+          "scale": [
+            1.6,
+            1.6,
+            1.6
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-washbasin-v1",
+      "name": "洗漱台",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/bathroomSink.glb",
+          "scale": [
+            1.6,
+            1.6,
+            1.6
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-shower-v1",
+      "name": "淋浴间",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/shower.glb",
+          "scale": [
+            1.75,
+            1.75,
+            1.75
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-reading-desk-v1",
+      "name": "书桌与座椅",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/desk.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/chairDesk.glb",
+          "scale": [
+            2.1,
+            1.8,
+            2.4
+          ],
+          "rotation_y_degrees": 180,
+          "position_m": [
+            0,
+            0,
+            0.85
+          ]
+        }
+      ],
+      "free": true,
+      "thumbnail": true,
+      "interaction_pose": {
+        "actor_root_xz_cm": [
+          0,
+          10
+        ],
+        "actor_root_height_cm": 10,
+        "seat_height_cm": 46,
+        "seat_xz_cm": [
+          0,
+          43
+        ],
+        "seat_surface_evidence": {
+          "method": "actual Read+book render fitted to curved office seat; lower support plate is not the cushion",
+          "reference": ".local/3d-sources/p3-prepared/evidence/read-contact-0.png"
+        }
+      }
+    },
+    {
+      "key": "camp-tree-v1",
+      "name": "海边椰树",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/tree_palm.glb",
+          "scale": [
+            2.0,
+            2.0,
+            2.0
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "material_style": {
+            "woodBark": {
+              "base_color": [
+                0.4,
+                0.25,
+                0.13,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85
+            },
+            "leafsGreen": {
+              "base_color": [
+                0.17,
+                0.43,
+                0.22,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            }
+          },
+          "repair_leaf_normals": true
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-rocks-v1",
+      "name": "营地岩石",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/rock_largeA.glb",
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "material_style": {
+            "dirt": {
+              "base_color": [
+                0.42,
+                0.46,
+                0.47,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.9
+            },
+            "grass": {
+              "base_color": [
+                0.25,
+                0.4,
+                0.21,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.9
+            }
+          }
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-flowers-v1",
+      "name": "花丛",
+      "region": "outdoor",
+      "walk_obstacle": false,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/flower_redA.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": -20,
+          "position_m": [
+            -0.22,
+            0,
+            0
+          ],
+          "material_style": {
+            "grass": {
+              "base_color": [
+                0.24,
+                0.43,
+                0.22,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorRed": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorYellow": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorPurple": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            }
+          }
+        },
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/flower_yellowA.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 30,
+          "position_m": [
+            0.2,
+            0,
+            0.12
+          ],
+          "material_style": {
+            "grass": {
+              "base_color": [
+                0.24,
+                0.43,
+                0.22,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorRed": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorYellow": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorPurple": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            }
+          }
+        },
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/flower_purpleA.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            -0.2
+          ],
+          "material_style": {
+            "grass": {
+              "base_color": [
+                0.24,
+                0.43,
+                0.22,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorRed": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorYellow": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorPurple": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            }
+          }
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-bench-v1",
+      "name": "休憩长凳",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/bench.glb",
+          "scale": [
+            4,
+            2.0,
+            2.5
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-tent-v1",
+      "name": "帆布帐篷",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-survival/Models/GLB format/tent-canvas.glb",
+          "scale": [
+            4,
+            4,
+            4
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-fence-v1",
+      "name": "木围栏",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-survival/Models/GLB format/fence.glb",
+          "scale": [
+            3.2,
+            1.8,
+            2.0
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-lamp-v1",
+      "name": "户外小灯",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "parts": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/lampSquareTable.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "free": false,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-sports-area-v1",
+      "name": "运动区标线",
+      "region": "outdoor",
+      "walk_obstacle": false,
+      "authored": "sports-area",
+      "parts": [],
+      "free": true,
+      "thumbnail": true
+    },
+    {
+      "key": "camp-ball-v1",
+      "name": "营地皮球",
+      "region": "outdoor",
+      "walk_obstacle": false,
+      "authored": "ball",
+      "parts": [],
+      "free": false,
+      "thumbnail": true,
+      "placement_allows_soft_overlap": false
+    },
+    {
+      "key": "activity-reading-book-v1",
+      "name": "阅读活动书本",
+      "region": "activity-prop",
+      "walk_obstacle": false,
+      "preserve_model_origin": true,
+      "pass_through": true,
+      "thumbnail": false,
+      "parts": [
+        {
+          "source": ".local/3d-sources/living-actions/reading-book.glb",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "preserve_source_origin": true,
+          "provenance": {
+            "provider": "本项目原创建模",
+            "license": "project-owned",
+            "source_url": "project:check-in-suite/living-actions"
+          }
+        }
+      ]
+    }
+  ],
+  "extra_assets": [
+    {
+      "key": "character-living-v1",
+      "name": "营地生活动作",
+      "kind": "animation",
+      "source": ".local/3d-sources/living-actions/living.glb",
+      "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+      "license": "CC0-1.0 derivative"
+    }
+  ],
+  "house_thumbnail": {
+    "key": "camp-house-v1-thumbnail",
+    "name": "基础房屋",
+    "kind": "island",
+    "free": true,
+    "source_url": "https://kenney-assets.itch.io/building-kit",
+    "license": "CC0-1.0"
+  }
+}

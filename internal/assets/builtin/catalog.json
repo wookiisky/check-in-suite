@@ -899,5 +899,431 @@
     "format": "png",
     "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
     "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-bed-v1",
+    "name": "单人床",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-bed-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-bed-v1-thumbnail",
+    "name": "单人床",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-bed-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-dining-table-v1",
+    "name": "餐桌",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-dining-table-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-dining-table-v1-thumbnail",
+    "name": "餐桌",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-dining-table-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-dining-chair-v1",
+    "name": "餐椅",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-dining-chair-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-dining-chair-v1-thumbnail",
+    "name": "餐椅",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-dining-chair-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-sofa-v1",
+    "name": "沙发",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-sofa-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-sofa-v1-thumbnail",
+    "name": "沙发",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-sofa-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-coffee-table-v1",
+    "name": "茶几",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-coffee-table-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-coffee-table-v1-thumbnail",
+    "name": "茶几",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-coffee-table-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-television-v1",
+    "name": "电视机",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-television-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-television-v1-thumbnail",
+    "name": "电视机",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-television-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-cabinet-v1",
+    "name": "储物柜",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-cabinet-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-cabinet-v1-thumbnail",
+    "name": "储物柜",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-cabinet-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-refrigerator-v1",
+    "name": "电冰箱",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-refrigerator-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-refrigerator-v1-thumbnail",
+    "name": "电冰箱",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-refrigerator-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-kitchen-counter-v1",
+    "name": "厨房操作台",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-kitchen-counter-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-kitchen-counter-v1-thumbnail",
+    "name": "厨房操作台",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-kitchen-counter-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-toilet-v1",
+    "name": "马桶",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-toilet-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-toilet-v1-thumbnail",
+    "name": "马桶",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-toilet-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-washbasin-v1",
+    "name": "洗漱台",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-washbasin-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-washbasin-v1-thumbnail",
+    "name": "洗漱台",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-washbasin-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-shower-v1",
+    "name": "淋浴间",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-shower-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-shower-v1-thumbnail",
+    "name": "淋浴间",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-shower-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-reading-desk-v1",
+    "name": "书桌与座椅",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-reading-desk-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-reading-desk-v1-thumbnail",
+    "name": "书桌与座椅",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-reading-desk-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0",
+    "free": true
+  },
+  {
+    "key": "camp-tree-v1",
+    "name": "海边椰树",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-tree-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/nature-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-tree-v1-thumbnail",
+    "name": "海边椰树",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-tree-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/nature-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-rocks-v1",
+    "name": "营地岩石",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-rocks-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/nature-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-rocks-v1-thumbnail",
+    "name": "营地岩石",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-rocks-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/nature-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-flowers-v1",
+    "name": "花丛",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-flowers-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/nature-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-flowers-v1-thumbnail",
+    "name": "花丛",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-flowers-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/nature-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-bench-v1",
+    "name": "休憩长凳",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-bench-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-bench-v1-thumbnail",
+    "name": "休憩长凳",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-bench-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-tent-v1",
+    "name": "帆布帐篷",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-tent-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/survival-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-tent-v1-thumbnail",
+    "name": "帆布帐篷",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-tent-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/survival-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-fence-v1",
+    "name": "木围栏",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-fence-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/survival-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-fence-v1-thumbnail",
+    "name": "木围栏",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-fence-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/survival-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-lamp-v1",
+    "name": "户外小灯",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-lamp-v1",
+    "format": "glb",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-lamp-v1-thumbnail",
+    "name": "户外小灯",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-lamp-v1-thumbnail",
+    "format": "png",
+    "source_url": "https://kenney.nl/assets/furniture-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-sports-area-v1",
+    "name": "运动区标线",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-sports-area-v1",
+    "format": "glb",
+    "source_url": "project:check-in-suite/scripts/prepare-camp-assets.py",
+    "license": "project-owned"
+  },
+  {
+    "key": "camp-sports-area-v1-thumbnail",
+    "name": "运动区标线",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-sports-area-v1-thumbnail",
+    "format": "png",
+    "source_url": "project:check-in-suite/scripts/prepare-camp-assets.py",
+    "license": "project-owned",
+    "free": true
+  },
+  {
+    "key": "camp-ball-v1",
+    "name": "营地皮球",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-ball-v1",
+    "format": "glb",
+    "source_url": "project:check-in-suite/scripts/prepare-camp-assets.py",
+    "license": "project-owned"
+  },
+  {
+    "key": "camp-ball-v1-thumbnail",
+    "name": "营地皮球",
+    "kind": "island",
+    "url": "/api/v1/assets/camp-ball-v1-thumbnail",
+    "format": "png",
+    "source_url": "project:check-in-suite/scripts/prepare-camp-assets.py",
+    "license": "project-owned"
+  },
+  {
+    "key": "activity-reading-book-v1",
+    "name": "阅读活动书本",
+    "kind": "model",
+    "url": "/api/v1/assets/activity-reading-book-v1",
+    "format": "glb",
+    "source_url": "project:check-in-suite/living-actions",
+    "license": "project-owned"
+  },
+  {
+    "key": "character-living-v1",
+    "name": "营地生活动作",
+    "kind": "animation",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0 derivative",
+    "url": "/api/v1/assets/character-living-v1",
+    "format": "glb"
+  },
+  {
+    "key": "camp-house-v1-thumbnail",
+    "name": "基础房屋",
+    "kind": "island",
+    "free": true,
+    "source_url": "https://kenney-assets.itch.io/building-kit",
+    "license": "CC0-1.0",
+    "url": "/api/v1/assets/camp-house-v1-thumbnail",
+    "format": "png"
   }
 ]

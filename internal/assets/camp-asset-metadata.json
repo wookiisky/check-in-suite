@@ -1,0 +1,2269 @@
+{
+  "items": [
+    {
+      "key": "camp-bed-v1",
+      "name": "单人床",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/bedSingle.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "ca00c63f9a12da3138d902b2f5f18e0360fb6e8a5ac42ccb4bc3f185724b65d1"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-bed-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-bed-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-bed-v1",
+      "thumbnail_key_plan": "camp-bed-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.5709999799728394,
+          0.5709999799728394
+        ],
+        [
+          0.0,
+          0.75
+        ],
+        [
+          -1.125,
+          1.125
+        ]
+      ],
+      "dimensions_m": [
+        1.1419999599456787,
+        0.75,
+        2.25
+      ],
+      "placement_cm": {
+        "width": 125,
+        "depth": 235,
+        "full_model_width": 115,
+        "full_model_depth": 225
+      },
+      "walk_obstacle_cm": {
+        "min_x": -58,
+        "max_x": 58,
+        "min_z": -113,
+        "max_z": 113
+      },
+      "model_sha256": "0f404cda5b83ffaaa36786e7edb255629530f466d1b98319c82422ac31ced14f",
+      "thumbnail_sha256": "6855f5f78c048399c30d265f77ef367d16a1f3b22acac908b545dd9c6433e6af",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-dining-table-v1",
+      "name": "餐桌",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/table.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "ff1a94498d023957f4bc3ff6f55a7a82977d336dbf01a573b3364f03afe5ff61"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-dining-table-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-dining-table-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-dining-table-v1",
+      "thumbnail_key_plan": "camp-dining-table-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.8414879441261292,
+          0.8414879441261292
+        ],
+        [
+          0.0,
+          0.6534679532051086
+        ],
+        [
+          -0.44737333059310913,
+          0.44737333059310913
+        ]
+      ],
+      "dimensions_m": [
+        1.6829758882522583,
+        0.6534679532051086,
+        0.8947466611862183
+      ],
+      "placement_cm": {
+        "width": 179,
+        "depth": 100,
+        "full_model_width": 169,
+        "full_model_depth": 90
+      },
+      "walk_obstacle_cm": {
+        "min_x": -85,
+        "max_x": 85,
+        "min_z": -45,
+        "max_z": 45
+      },
+      "model_sha256": "2ae6522ad4a2dde37d43ad4f990e03073ad443b1d507b78aa91497b71d7d5c88",
+      "thumbnail_sha256": "1f060538bde4f24c92596696f74ca85f188cd5fc9de036bc7a71fcdf812d2d28",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-dining-chair-v1",
+      "name": "餐椅",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/chair.glb",
+          "scale": [
+            2.8,
+            2.15,
+            2.8
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "c8a11eec93e89e31250ba91afc1b8d56c3bec7ae86640fd1239f595ff4180883"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-dining-chair-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-dining-chair-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-dining-chair-v1",
+      "thumbnail_key_plan": "camp-dining-chair-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.2800000011920929,
+          0.2800000011920929
+        ],
+        [
+          0.0,
+          1.0105000734329224
+        ],
+        [
+          -0.2800000011920929,
+          0.2800000011920929
+        ]
+      ],
+      "dimensions_m": [
+        0.5600000023841858,
+        1.0105000734329224,
+        0.5600000023841858
+      ],
+      "placement_cm": {
+        "width": 67,
+        "depth": 67,
+        "full_model_width": 57,
+        "full_model_depth": 57
+      },
+      "walk_obstacle_cm": {
+        "min_x": -29,
+        "max_x": 29,
+        "min_z": -29,
+        "max_z": 29
+      },
+      "model_sha256": "bb5501639f798c9226f8e456b48339bece3c95a34da9116f1b05eedb339f18d3",
+      "thumbnail_sha256": "e89bc064c882061088b6c04e9d56a88e389f1002af55eaa692fa38b721402160",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-sofa-v1",
+      "name": "沙发",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/loungeSofa.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "1886b811c0d3ad0d8525a4fd43adf4112c497c8e0ed906f06877ca3517f4c7dd"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-sofa-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-sofa-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-sofa-v1",
+      "thumbnail_key_plan": "camp-sofa-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.9799999594688416,
+          0.9799999594688416
+        ],
+        [
+          0.0,
+          0.9200000166893005
+        ],
+        [
+          -0.4100000262260437,
+          0.4100000262260437
+        ]
+      ],
+      "dimensions_m": [
+        1.959999918937683,
+        0.9200000166893005,
+        0.8200000524520874
+      ],
+      "placement_cm": {
+        "width": 206,
+        "depth": 93,
+        "full_model_width": 196,
+        "full_model_depth": 83
+      },
+      "walk_obstacle_cm": {
+        "min_x": -98,
+        "max_x": 98,
+        "min_z": -42,
+        "max_z": 42
+      },
+      "model_sha256": "3013f3a8f118cbebd03d3fee6b670888117718afa1bb539e0b682a3938d4953d",
+      "thumbnail_sha256": "f7e016dc899da97f19ac569bf2f0dd4fd1e62f3291211734ba0432cb7200d77a",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-coffee-table-v1",
+      "name": "茶几",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/tableCoffee.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "e38bea760fbd514efbb75528d09b4752c91af44677bbb97e6d4386c263525179"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-coffee-table-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-coffee-table-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-coffee-table-v1",
+      "thumbnail_key_plan": "camp-coffee-table-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.6609960794448853,
+          0.6609960794448853
+        ],
+        [
+          0.0,
+          0.46000000834465027
+        ],
+        [
+          -0.40000003576278687,
+          0.40000003576278687
+        ]
+      ],
+      "dimensions_m": [
+        1.3219921588897705,
+        0.46000000834465027,
+        0.8000000715255737
+      ],
+      "placement_cm": {
+        "width": 143,
+        "depth": 91,
+        "full_model_width": 133,
+        "full_model_depth": 81
+      },
+      "walk_obstacle_cm": {
+        "min_x": -67,
+        "max_x": 67,
+        "min_z": -41,
+        "max_z": 41
+      },
+      "model_sha256": "4646ebec084906e804b8923a579d063971a632f988648bc6bb5861ce01e95b1d",
+      "thumbnail_sha256": "8aa9d4796fd33179cb105bb148cfc86ca73ab29ee4c0f35949fe9971d890f817",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        -1.4901161193847656e-08
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-television-v1",
+      "name": "电视机",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/cabinetTelevision.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "811719593d676ff76f7b5904d52c845ce0396af2bc9a6a2636c4818ead320b99"
+        },
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/televisionModern.glb",
+          "scale": [
+            1.7,
+            1.7,
+            1.7
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0.62,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "d89519ad0a5f28b5b0dccb0d83209dccf610cda959578238dd21bbf9e219cfc6"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-television-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-television-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-television-v1",
+      "thumbnail_key_plan": "camp-television-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.800000011920929,
+          0.800000011920929
+        ],
+        [
+          0.0,
+          1.3930749893188477
+        ],
+        [
+          -0.25,
+          0.25
+        ]
+      ],
+      "dimensions_m": [
+        1.600000023841858,
+        1.3930749893188477,
+        0.5
+      ],
+      "placement_cm": {
+        "width": 171,
+        "depth": 60,
+        "full_model_width": 161,
+        "full_model_depth": 50
+      },
+      "walk_obstacle_cm": {
+        "min_x": -81,
+        "max_x": 81,
+        "min_z": -25,
+        "max_z": 25
+      },
+      "model_sha256": "e6869462b2f2014537aee18fa19ad05451f10a1e803858b877991eef6c9b64b4",
+      "thumbnail_sha256": "e121abc568fb9f54c41d5defca9fa9bf6dd8f4f57116ee507706b7ba62abb74f",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-cabinet-v1",
+      "name": "储物柜",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/bookcaseClosedDoors.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "ff33f535acdb1825c0e958a293642b39665adcae0b1317b650e83d2bb687f4e2"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-cabinet-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-cabinet-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-cabinet-v1",
+      "thumbnail_key_plan": "camp-cabinet-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.4000000059604645,
+          0.4000000059604645
+        ],
+        [
+          0.0,
+          1.6999999284744263
+        ],
+        [
+          -0.25,
+          0.25
+        ]
+      ],
+      "dimensions_m": [
+        0.800000011920929,
+        1.6999999284744263,
+        0.5
+      ],
+      "placement_cm": {
+        "width": 91,
+        "depth": 60,
+        "full_model_width": 81,
+        "full_model_depth": 50
+      },
+      "walk_obstacle_cm": {
+        "min_x": -41,
+        "max_x": 41,
+        "min_z": -25,
+        "max_z": 25
+      },
+      "model_sha256": "7e5c17c0d399bde85f117155367076d485d2372bc782cb28381f14a71e7a45e5",
+      "thumbnail_sha256": "58da033eb3e06427e6669d30896dec26d1d8f5da796486dff8f373687eb47a00",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-refrigerator-v1",
+      "name": "电冰箱",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/kitchenFridge.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "8af4f4bbb1b5525ad8226e97926a5af60fa8fb20a3cb74dbda5328a9d320dbab"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-refrigerator-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-refrigerator-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-refrigerator-v1",
+      "thumbnail_key_plan": "camp-refrigerator-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.4300000071525574,
+          0.4300000071525574
+        ],
+        [
+          0.0,
+          1.840000033378601
+        ],
+        [
+          -0.29193389415740967,
+          0.29193389415740967
+        ]
+      ],
+      "dimensions_m": [
+        0.8600000143051147,
+        1.840000033378601,
+        0.5838677883148193
+      ],
+      "placement_cm": {
+        "width": 97,
+        "depth": 69,
+        "full_model_width": 87,
+        "full_model_depth": 59
+      },
+      "walk_obstacle_cm": {
+        "min_x": -44,
+        "max_x": 44,
+        "min_z": -30,
+        "max_z": 30
+      },
+      "model_sha256": "60e38c8b1a862998a80572c902c47a06aa232b760424a6c6f265fd608e0f7933",
+      "thumbnail_sha256": "a8331221fc17aa660a30f2e632fe2a2ca2381d33ecb661edf40d503f7a081b9e",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        -1.4901161193847656e-08
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-kitchen-counter-v1",
+      "name": "厨房操作台",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/kitchenCabinet.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "7238c57778935ae25db5e57e9f7af3ba7068c71b005ff7cfbff3b6f3b1a13200"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-kitchen-counter-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-kitchen-counter-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-kitchen-counter-v1",
+      "thumbnail_key_plan": "camp-kitchen-counter-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.4300000071525574,
+          0.4300000071525574
+        ],
+        [
+          0.0,
+          0.8999999761581421
+        ],
+        [
+          -0.44999998807907104,
+          0.44999998807907104
+        ]
+      ],
+      "dimensions_m": [
+        0.8600000143051147,
+        0.8999999761581421,
+        0.8999999761581421
+      ],
+      "placement_cm": {
+        "width": 97,
+        "depth": 100,
+        "full_model_width": 87,
+        "full_model_depth": 90
+      },
+      "walk_obstacle_cm": {
+        "min_x": -44,
+        "max_x": 44,
+        "min_z": -45,
+        "max_z": 45
+      },
+      "model_sha256": "1f4b134a1da6e103391cb5bbc631a1b5d083ddb349b530ab2e4a077e4cab14ee",
+      "thumbnail_sha256": "901680715351c0a0e0c1097200d9fdaeb878b6a2cec9355c72724d7b6f6960e1",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-toilet-v1",
+      "name": "马桶",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/toilet.glb",
+          "scale": [
+            1.6,
+            1.6,
+            1.6
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "16165cfd03c56c2cb443b800570810a22ef770f65e7a468f6761d9dc14eaaeae"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-toilet-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-toilet-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-toilet-v1",
+      "thumbnail_key_plan": "camp-toilet-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.2500399947166443,
+          0.2500399947166443
+        ],
+        [
+          0.0,
+          0.7215439677238464
+        ],
+        [
+          -0.38174134492874146,
+          0.38174134492874146
+        ]
+      ],
+      "dimensions_m": [
+        0.5000799894332886,
+        0.7215439677238464,
+        0.7634826898574829
+      ],
+      "placement_cm": {
+        "width": 61,
+        "depth": 87,
+        "full_model_width": 51,
+        "full_model_depth": 77
+      },
+      "walk_obstacle_cm": {
+        "min_x": -26,
+        "max_x": 26,
+        "min_z": -39,
+        "max_z": 39
+      },
+      "model_sha256": "13ae3c78e9fbb4d09fa8fcf1cdf78b9cd05fe95296d12f866c002ace95d9196a",
+      "thumbnail_sha256": "ef84feb3468aed387723f6d7f3effcb86f6b47395738557140cc050e2747933c",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -1.4901161193847656e-08,
+        -0.0,
+        4.470348358154297e-08
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-washbasin-v1",
+      "name": "洗漱台",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/bathroomSink.glb",
+          "scale": [
+            1.6,
+            1.6,
+            1.6
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "39d4f19608cab7e0fed52303b2c689f5f51fae1bad9b6913cb53d838875e797e"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-washbasin-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-washbasin-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-washbasin-v1",
+      "thumbnail_key_plan": "camp-washbasin-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.2720000147819519,
+          0.2720000147819519
+        ],
+        [
+          0.0,
+          0.8960000276565552
+        ],
+        [
+          -0.23199999332427979,
+          0.23199999332427979
+        ]
+      ],
+      "dimensions_m": [
+        0.5440000295639038,
+        0.8960000276565552,
+        0.46399998664855957
+      ],
+      "placement_cm": {
+        "width": 65,
+        "depth": 57,
+        "full_model_width": 55,
+        "full_model_depth": 47
+      },
+      "walk_obstacle_cm": {
+        "min_x": -28,
+        "max_x": 28,
+        "min_z": -24,
+        "max_z": 24
+      },
+      "model_sha256": "c7ddcea53818a945c01eb92b4f71394208b30146653728296cc090d9f49ca9bd",
+      "thumbnail_sha256": "f4debf7613457cde0ab8a24981ca5c07a05776eb9e921087783f68daf4c034e5",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-shower-v1",
+      "name": "淋浴间",
+      "region": "indoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/shower.glb",
+          "scale": [
+            1.75,
+            1.75,
+            1.75
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "25c1cebad681fe369dc04839a8f08f5da2ccbd99b3a70aa83fe2e4d1590c6951"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-shower-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-shower-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-shower-v1",
+      "thumbnail_key_plan": "camp-shower-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.4915679693222046,
+          0.4915679693222046
+        ],
+        [
+          0.0,
+          1.9145580530166626
+        ],
+        [
+          -0.5090680122375488,
+          0.5090680122375488
+        ]
+      ],
+      "dimensions_m": [
+        0.9831359386444092,
+        1.9145580530166626,
+        1.0181360244750977
+      ],
+      "placement_cm": {
+        "width": 109,
+        "depth": 112,
+        "full_model_width": 99,
+        "full_model_depth": 102
+      },
+      "walk_obstacle_cm": {
+        "min_x": -50,
+        "max_x": 50,
+        "min_z": -51,
+        "max_z": 51
+      },
+      "model_sha256": "a79030a40b6f731551162fd49d3470a666e539bd60b44640cef31437daacdf80",
+      "thumbnail_sha256": "ccba9eec816a4edb316f303969ddc8c76f648060cfaebf668d9ce961c38db1ed",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -1.4901161193847656e-08,
+        -0.0,
+        2.9802322387695312e-08
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-reading-desk-v1",
+      "name": "书桌与座椅",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "free": true,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/desk.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "0164fe828f028b321730fb8c74502e353583f751be74da1682d42fff7d3c5a42"
+        },
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/chairDesk.glb",
+          "scale": [
+            2.1,
+            1.8,
+            2.4
+          ],
+          "rotation_y_degrees": 180,
+          "position_m": [
+            0,
+            0,
+            0.85
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "46406619186034cbe92b19b79a5f1a8e3f442a17a70a7524ef2c0ad0f35095c6"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-reading-desk-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-reading-desk-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-reading-desk-v1",
+      "thumbnail_key_plan": "camp-reading-desk-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.7344754338264465,
+          0.7344754338264465
+        ],
+        [
+          0.0,
+          1.0936799049377441
+        ],
+        [
+          -0.8097294569015503,
+          0.8097294569015503
+        ]
+      ],
+      "dimensions_m": [
+        1.468950867652893,
+        1.0936799049377441,
+        1.6194589138031006
+      ],
+      "placement_cm": {
+        "width": 157,
+        "depth": 172,
+        "full_model_width": 147,
+        "full_model_depth": 162
+      },
+      "walk_obstacle_cm": {
+        "min_x": -74,
+        "max_x": 74,
+        "min_z": -81,
+        "max_z": 81
+      },
+      "model_sha256": "0efb8383280157304964c41d5e8304f2141d00269b083aa2a966704e92d5ea1b",
+      "thumbnail_sha256": "1f3e93866d40622b2d683d9ba0878ff669cfffb5afa8b7a3556ec093814e1a01",
+      "interactive": {
+        "activity": "read",
+        "approach_xz_cm": [
+          0,
+          126
+        ],
+        "suggested_facing_quarter_turns": 2,
+        "seat_pose": "Sit_Chair_Idle",
+        "verification": "交互点仅为当前模型尺度建议，正式寻路与人物坐姿还需P3集成核对",
+        "seat_xz_cm": [
+          0,
+          43
+        ],
+        "actor_root_xz_cm": [
+          0,
+          10
+        ],
+        "actor_root_height_cm": 10,
+        "seat_height_cm": 46,
+        "seat_surface_evidence": {
+          "method": "actual Read+book render fitted to curved office seat; lower support plate is not the cushion",
+          "reference": ".local/3d-sources/p3-prepared/evidence/read-contact-0.png"
+        },
+        "pose_action": "read",
+        "pose_clip": "Read",
+        "pose_reference_file": ".local/3d-sources/living-actions/living.glb",
+        "pose_reference_sha256": "268d0372435806a1b63af63591e88387cc007dc1359f1bc149a25058833b59ab",
+        "pose_anchor_note": "正式人物Read在0.5秒实测，保留Sit_Chair_Idle髋部/根轨道，骨盆相对actor根向后约32.7cm。根点已按朝向补偿；高度依据实际座面与当前默认下装接触边界。过渡/其他外观仍须P3运行时核对。"
+      },
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        -0.41742944717407227
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-tree-v1",
+      "name": "海边椰树",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/tree_palm.glb",
+          "scale": [
+            2.0,
+            2.0,
+            2.0
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "material_style": {
+            "woodBark": {
+              "base_color": [
+                0.4,
+                0.25,
+                0.13,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85
+            },
+            "leafsGreen": {
+              "base_color": [
+                0.17,
+                0.43,
+                0.22,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            }
+          },
+          "repair_leaf_normals": true,
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/nature-kit",
+          "source_archive_sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d",
+          "source_file_sha256": "27bbb23d26ed788d84de6df2f7fab0acc3fe0ff16c7d08cdcfa1fffcb11de324"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-tree-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-tree-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-tree-v1",
+      "thumbnail_key_plan": "camp-tree-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.9354897141456604,
+          0.9354897141456604
+        ],
+        [
+          0.0,
+          3.0291812419891357
+        ],
+        [
+          -1.012763500213623,
+          1.012763500213623
+        ]
+      ],
+      "dimensions_m": [
+        1.8709794282913208,
+        3.0291812419891357,
+        2.025527000427246
+      ],
+      "placement_cm": {
+        "width": 198,
+        "depth": 213,
+        "full_model_width": 188,
+        "full_model_depth": 203
+      },
+      "walk_obstacle_cm": {
+        "min_x": -11,
+        "max_x": 11,
+        "min_z": -11,
+        "max_z": 11
+      },
+      "model_sha256": "f7e99f78832e4b5f1add7fc48659906eb286bd9a1bc1331ff45495cee13f4916",
+      "thumbnail_sha256": "20119164290a645093dbe57558682433d4356d90a152cfef505081bc340653ae",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-rocks-v1",
+      "name": "营地岩石",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/rock_largeA.glb",
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "material_style": {
+            "dirt": {
+              "base_color": [
+                0.42,
+                0.46,
+                0.47,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.9
+            },
+            "grass": {
+              "base_color": [
+                0.25,
+                0.4,
+                0.21,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.9
+            }
+          },
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/nature-kit",
+          "source_archive_sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d",
+          "source_file_sha256": "6dd15390fd96501dcd1454765a17ba61dbbd8d47705dfe5149c8dd92b353ce25"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-rocks-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-rocks-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-rocks-v1",
+      "thumbnail_key_plan": "camp-rocks-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.3924533426761627,
+          0.3924533426761627
+        ],
+        [
+          0.0,
+          0.25977596640586853
+        ],
+        [
+          -0.5077307224273682,
+          0.5077307224273682
+        ]
+      ],
+      "dimensions_m": [
+        0.7849066853523254,
+        0.25977596640586853,
+        1.0154614448547363
+      ],
+      "placement_cm": {
+        "width": 89,
+        "depth": 112,
+        "full_model_width": 79,
+        "full_model_depth": 102
+      },
+      "walk_obstacle_cm": {
+        "min_x": -40,
+        "max_x": 40,
+        "min_z": -51,
+        "max_z": 51
+      },
+      "model_sha256": "07fd7b69fc9188e31d418060377633e2e2e3a50ba81692bf5d3e034c8233e02c",
+      "thumbnail_sha256": "8c4390f9af5a139d0b5abcbaa9b0da1501c0774e262140a41648c6c6110770b1",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        2.9327650236887174e-16,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-flowers-v1",
+      "name": "花丛",
+      "region": "outdoor",
+      "walk_obstacle": false,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/flower_redA.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": -20,
+          "position_m": [
+            -0.22,
+            0,
+            0
+          ],
+          "material_style": {
+            "grass": {
+              "base_color": [
+                0.24,
+                0.43,
+                0.22,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorRed": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorYellow": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorPurple": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            }
+          },
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/nature-kit",
+          "source_archive_sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d",
+          "source_file_sha256": "171930b7789ddbf735af3745576b5393750beb9133b9ff4a444bb6bb2986c020"
+        },
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/flower_yellowA.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 30,
+          "position_m": [
+            0.2,
+            0,
+            0.12
+          ],
+          "material_style": {
+            "grass": {
+              "base_color": [
+                0.24,
+                0.43,
+                0.22,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorRed": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorYellow": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorPurple": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            }
+          },
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/nature-kit",
+          "source_archive_sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d",
+          "source_file_sha256": "8a3b08cd2ca411c21f9c581d5bda651d78b13c50cba45ad8fa0389398ead6d1d"
+        },
+        {
+          "source": ".local/3d-sources/kenney-nature/Models/GLTF format/flower_purpleA.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            -0.2
+          ],
+          "material_style": {
+            "grass": {
+              "base_color": [
+                0.24,
+                0.43,
+                0.22,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorRed": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorYellow": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            },
+            "colorPurple": {
+              "metallic": 0,
+              "roughness": 0.85,
+              "double_sided": true
+            }
+          },
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/nature-kit",
+          "source_archive_sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d",
+          "source_file_sha256": "f6fc34c96a03420a74fe36d4c2d0ec88f15204fcad99cd1416c3c4ecb22e48c4"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-flowers-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-flowers-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-flowers-v1",
+      "thumbnail_key_plan": "camp-flowers-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.3969191908836365,
+          0.3969191908836365
+        ],
+        [
+          0.0,
+          0.5849999785423279
+        ],
+        [
+          -0.3020215332508087,
+          0.3020215332508087
+        ]
+      ],
+      "dimensions_m": [
+        0.793838381767273,
+        0.5849999785423279,
+        0.6040430665016174
+      ],
+      "placement_cm": {
+        "width": 90,
+        "depth": 71,
+        "full_model_width": 80,
+        "full_model_depth": 61
+      },
+      "walk_obstacle_cm": null,
+      "model_sha256": "b23939b32881ee82f7df871418b8ed181280501e55c110d34b291472caa20dea",
+      "thumbnail_sha256": "d5d4ea4a382556b57125d0020c920314c97311accde9ff793166e260a35c8592",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.027416452765464783,
+        -0.0,
+        0.07903752475976944
+      ],
+      "placement_allows_soft_overlap": true,
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-bench-v1",
+      "name": "休憩长凳",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/bench.glb",
+          "scale": [
+            4,
+            2.0,
+            2.5
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "ba05a6d23a5a5a44da016757632070e47ff7587ce10e2f6d6d52328b4cf5489b"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-bench-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-bench-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-bench-v1",
+      "thumbnail_key_plan": "camp-bench-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.800000011920929,
+          0.800000011920929
+        ],
+        [
+          0.0,
+          0.9399999976158142
+        ],
+        [
+          -0.25,
+          0.25
+        ]
+      ],
+      "dimensions_m": [
+        1.600000023841858,
+        0.9399999976158142,
+        0.5
+      ],
+      "placement_cm": {
+        "width": 171,
+        "depth": 60,
+        "full_model_width": 161,
+        "full_model_depth": 50
+      },
+      "walk_obstacle_cm": {
+        "min_x": -81,
+        "max_x": 81,
+        "min_z": -25,
+        "max_z": 25
+      },
+      "model_sha256": "f8146c0364128dab4e282d7c5ccb72381a7b66b4062413fd63c534baaad1c215",
+      "thumbnail_sha256": "5f3149508dc76d9b167f323c3c79b1d4ad9eee219e3620ff3e753c94205ec0d9",
+      "interactive": {
+        "activity": "read",
+        "approach_xz_cm": [
+          0,
+          70
+        ],
+        "suggested_facing_quarter_turns": 0,
+        "seat_pose": "Sit_Chair_Idle",
+        "verification": "交互点仅为当前模型尺度建议，正式寻路与人物坐姿还需P3集成核对",
+        "seat_xz_cm": [
+          0,
+          0
+        ],
+        "actor_root_xz_cm": [
+          0,
+          33
+        ],
+        "actor_root_height_cm": 12,
+        "seat_height_cm": 48,
+        "seat_surface_evidence": {
+          "method": "largest upward horizontal surface within known seat height band",
+          "actual_height_m": 0.48,
+          "area_m2": 0.7680000178515911
+        },
+        "pose_action": "read",
+        "pose_clip": "Read",
+        "pose_reference_file": ".local/3d-sources/living-actions/living.glb",
+        "pose_reference_sha256": "268d0372435806a1b63af63591e88387cc007dc1359f1bc149a25058833b59ab",
+        "pose_anchor_note": "正式人物Read在0.5秒实测，保留Sit_Chair_Idle髋部/根轨道，骨盆相对actor根向后约32.7cm。根点已按朝向补偿；高度依据实际座面与当前默认下装接触边界。过渡/其他外观仍须P3运行时核对。"
+      },
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-tent-v1",
+      "name": "帆布帐篷",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-survival/Models/GLB format/tent-canvas.glb",
+          "scale": [
+            4,
+            4,
+            4
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/survival-kit",
+          "source_archive_sha256": "c3586341b5932c87eb43d75d915434f47daed168b17ed36a03e8ca9977c7443e",
+          "source_file_sha256": "efc4bca46a22e4cc4fe391aeafba161c24bc39bfa75e192c57eaacaf686f9717"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-tent-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-tent-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-tent-v1",
+      "thumbnail_key_plan": "camp-tent-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -1.121524453163147,
+          1.121524453163147
+        ],
+        [
+          0.0,
+          1.9654734134674072
+        ],
+        [
+          -1.1220000982284546,
+          1.1220000982284546
+        ]
+      ],
+      "dimensions_m": [
+        2.243048906326294,
+        1.9654734134674072,
+        2.244000196456909
+      ],
+      "placement_cm": {
+        "width": 235,
+        "depth": 235,
+        "full_model_width": 225,
+        "full_model_depth": 225
+      },
+      "walk_obstacle_cm": {
+        "min_x": -113,
+        "max_x": 113,
+        "min_z": -113,
+        "max_z": 113
+      },
+      "model_sha256": "c2346e42340f565c31f3ff980fb0d575e2d78db6ae6954327eea9db37ecaa0a6",
+      "thumbnail_sha256": "267654ed2fcf2d4d3dae76705e699f8e9f1e8391f16ac3813d78ec7b33ba81b3",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-fence-v1",
+      "name": "木围栏",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-survival/Models/GLB format/fence.glb",
+          "scale": [
+            3.2,
+            1.8,
+            2.0
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/survival-kit",
+          "source_archive_sha256": "c3586341b5932c87eb43d75d915434f47daed168b17ed36a03e8ca9977c7443e",
+          "source_file_sha256": "5d8050e39c8b83b5835ea38b9b17429b4a03e289b566a1db771b7e1d9c6e4050"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-fence-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-fence-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-fence-v1",
+      "thumbnail_key_plan": "camp-fence-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.800000011920929,
+          0.800000011920929
+        ],
+        [
+          0.0,
+          0.9314402937889099
+        ],
+        [
+          -0.042780011892318726,
+          0.042780011892318726
+        ]
+      ],
+      "dimensions_m": [
+        1.600000023841858,
+        0.9314402937889099,
+        0.08556002378463745
+      ],
+      "placement_cm": {
+        "width": 171,
+        "depth": 19,
+        "full_model_width": 161,
+        "full_model_depth": 9
+      },
+      "walk_obstacle_cm": {
+        "min_x": -81,
+        "max_x": 81,
+        "min_z": -5,
+        "max_z": 5
+      },
+      "model_sha256": "37977c24e80522b7779670ebbfd2aa6dce61d8d8304ee4419039e52fe81a2a9d",
+      "thumbnail_sha256": "2ab3400f596dc86028ea094634f1d2fa54066fefc9bd1e3d5743062d16e430f2",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-lamp-v1",
+      "name": "户外小灯",
+      "region": "outdoor",
+      "walk_obstacle": true,
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "source": ".local/3d-sources/kenney-furniture/Models/GLTF format/lampSquareTable.glb",
+          "scale": [
+            2,
+            2,
+            2
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "provider": "Kenney",
+          "license": "CC0-1.0",
+          "source_url": "https://kenney.nl/assets/furniture-kit",
+          "source_archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+          "source_file_sha256": "70ec9211af336b1ef3b4da32590b8737b4facf219348c22e6533a1e898cdb13d"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-lamp-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-lamp-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-lamp-v1",
+      "thumbnail_key_plan": "camp-lamp-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.12000000476837158,
+          0.12000000476837158
+        ],
+        [
+          0.0,
+          0.5799999833106995
+        ],
+        [
+          -0.12000000476837158,
+          0.12000000476837158
+        ]
+      ],
+      "dimensions_m": [
+        0.24000000953674316,
+        0.5799999833106995,
+        0.24000000953674316
+      ],
+      "placement_cm": {
+        "width": 35,
+        "depth": 35,
+        "full_model_width": 25,
+        "full_model_depth": 25
+      },
+      "walk_obstacle_cm": {
+        "min_x": -13,
+        "max_x": 13,
+        "min_z": -13,
+        "max_z": 13
+      },
+      "model_sha256": "21a63060f8fd5a3e16451edb43c17df45089936a06b1864a762e215c85bda006",
+      "thumbnail_sha256": "58443d3bd31447f3cfc02b41b939ec601cae91f68a9b0f4b31e8caa5a7f9ad62",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-sports-area-v1",
+      "name": "运动区标线",
+      "region": "outdoor",
+      "walk_obstacle": false,
+      "authored": "sports-area",
+      "free": true,
+      "thumbnail": true,
+      "sources": [
+        {
+          "provider": "本项目原创建模",
+          "construction": "sports-area",
+          "license": "project-owned"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-sports-area-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-sports-area-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-sports-area-v1",
+      "thumbnail_key_plan": "camp-sports-area-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -1.2125000953674316,
+          1.2125000953674316
+        ],
+        [
+          0.0,
+          0.017320508137345314
+        ],
+        [
+          -1.2125000953674316,
+          1.2125000953674316
+        ]
+      ],
+      "dimensions_m": [
+        2.4250001907348633,
+        0.017320508137345314,
+        2.4250001907348633
+      ],
+      "placement_cm": {
+        "width": 253,
+        "depth": 253,
+        "full_model_width": 243,
+        "full_model_depth": 243
+      },
+      "walk_obstacle_cm": null,
+      "model_sha256": "c415b0b513ec2b94e818cddfb242713d79df372a05bd84fcf38c15ae1830f153",
+      "thumbnail_sha256": "fbfafefa4a51fff49a26d4bc2823745bc7d369fc6fc4660a4e099d9719dbea7a",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        -0.0,
+        0.003660254180431366,
+        0.0
+      ],
+      "placement_allows_soft_overlap": true,
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    },
+    {
+      "key": "camp-ball-v1",
+      "name": "营地皮球",
+      "region": "outdoor",
+      "walk_obstacle": false,
+      "authored": "ball",
+      "free": false,
+      "thumbnail": true,
+      "sources": [
+        {
+          "provider": "本项目原创建模",
+          "construction": "ball",
+          "license": "project-owned"
+        }
+      ],
+      "model_file": "internal/assets/builtin/camp-ball-v1.glb",
+      "thumbnail_file": "internal/assets/builtin/camp-ball-v1-thumbnail.png",
+      "model_url_plan": "/api/v1/assets/camp-ball-v1",
+      "thumbnail_key_plan": "camp-ball-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "ground"
+      },
+      "bounds_m": [
+        [
+          -0.12363753467798233,
+          0.12363753467798233
+        ],
+        [
+          0.0,
+          0.25999999046325684
+        ],
+        [
+          -0.12999999523162842,
+          0.12999999523162842
+        ]
+      ],
+      "dimensions_m": [
+        0.24727506935596466,
+        0.25999999046325684,
+        0.25999999046325684
+      ],
+      "placement_cm": {
+        "width": 35,
+        "depth": 36,
+        "full_model_width": 25,
+        "full_model_depth": 26
+      },
+      "walk_obstacle_cm": null,
+      "model_sha256": "d0b52c7ef784c999786225b1714b904399c2f57d4be76bd760f44112aaa8eb79",
+      "thumbnail_sha256": "65f20892c4015e31ec815d851460ecc07669d1d95ad67afb1244f3d92478469d",
+      "interactive": {
+        "activity": "ball",
+        "approach_xz_cm": [
+          0,
+          50
+        ],
+        "suggested_facing_quarter_turns": 2,
+        "pose_action": "play",
+        "visual_center_cm": [
+          0,
+          13,
+          0
+        ],
+        "verification": "摆放时ground原点，运动球旋转前须处理球心13cm偏移；performing隐藏静态球"
+      },
+      "composition_to_anchor_m": [
+        -0.0,
+        0.12999999523162842,
+        0.0
+      ],
+      "placement_allows_soft_overlap": false,
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点",
+      "placement_blocks_solids": true
+    },
+    {
+      "key": "activity-reading-book-v1",
+      "name": "阅读活动书本",
+      "region": "activity-prop",
+      "walk_obstacle": false,
+      "preserve_model_origin": true,
+      "pass_through": true,
+      "thumbnail": false,
+      "sources": [
+        {
+          "source": ".local/3d-sources/living-actions/reading-book.glb",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "rotation_y_degrees": 0,
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "preserve_source_origin": true,
+          "provenance": {
+            "provider": "本项目原创建模",
+            "license": "project-owned",
+            "source_url": "project:check-in-suite/living-actions"
+          },
+          "provider": "本项目原创建模",
+          "license": "project-owned",
+          "source_url": "project:check-in-suite/living-actions",
+          "source_file_sha256": "47b115f9222f12807b67f3c91548261bbfa8b9a221e881286e39dfab71fc477b"
+        }
+      ],
+      "model_file": "internal/assets/builtin/activity-reading-book-v1.glb",
+      "thumbnail_file": ".local/3d-sources/p3-prepared/thumbnails/activity-reading-book-v1.png",
+      "model_url_plan": "/api/v1/assets/activity-reading-book-v1",
+      "thumbnail_key_plan": "activity-reading-book-v1-thumbnail",
+      "runtime_transform": {
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "anchor_m": [
+          0,
+          0,
+          0
+        ],
+        "rotation_y_degrees": 0,
+        "anchor_kind": "attachment",
+        "center_height_on_ground_m": 0.016546569764614105
+      },
+      "bounds_m": [
+        [
+          -0.281242311000824,
+          0.2812422513961792
+        ],
+        [
+          -0.016546569764614105,
+          0.04913362115621567
+        ],
+        [
+          -0.18250000476837158,
+          0.18250000476837158
+        ]
+      ],
+      "dimensions_m": [
+        0.5624845623970032,
+        0.06568019092082977,
+        0.36500000953674316
+      ],
+      "placement_cm": null,
+      "walk_obstacle_cm": null,
+      "model_sha256": "47b115f9222f12807b67f3c91548261bbfa8b9a221e881286e39dfab71fc477b",
+      "thumbnail_sha256": "95abcc3502ddef8134119be32a8003a5bd2694fbf96dc424012cc1c36355aef2",
+      "interactive": null,
+      "composition_to_anchor_m": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "inventory": false,
+      "source_part_normalization": "各源件先以XZ边界中心/最低点归一后组合；preserve_source_origin的同套构件保留原配合原点"
+    }
+  ],
+  "house_thumbnail": {
+    "key": "camp-house-v1-thumbnail",
+    "name": "基础房屋",
+    "kind": "island",
+    "free": true,
+    "source_url": "https://kenney-assets.itch.io/building-kit",
+    "license": "CC0-1.0",
+    "file": "internal/assets/builtin/camp-house-v1-thumbnail.png",
+    "source_model_keys": [
+      "camp-floor-v1",
+      "camp-wall-v1",
+      "camp-doorway-v1",
+      "camp-roof-v1"
+    ],
+    "sha256": "ec740e76b531fffd252e5c5cc0d33611ecfba70c45e42129d33e8be60b0940cc"
+  },
+  "extra_assets": [
+    {
+      "key": "character-living-v1",
+      "name": "营地生活动作",
+      "kind": "animation",
+      "source": ".local/3d-sources/living-actions/living.glb",
+      "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+      "license": "CC0-1.0 derivative"
+    }
+  ]
+}

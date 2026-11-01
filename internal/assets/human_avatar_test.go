@@ -59,7 +59,7 @@ func TestHumanArtworkSeparatesFixedWearables(t *testing.T) {
 		}
 	}
 	for _, entry := range entries {
-		if !entry.Free && entry.WearableSlot == "" && entry.Kind != "character-part" {
+		if !(entry.Free && entry.Kind == "avatar") && entry.WearableSlot == "" && entry.Kind != "character-part" {
 			continue
 		}
 		t.Run(entry.Key, func(t *testing.T) {

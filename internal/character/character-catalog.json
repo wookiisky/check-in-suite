@@ -63,6 +63,21 @@
           "clip": "Exercise",
           "asset_key": "character-exercise-v1",
           "url": "/api/v1/assets/character-exercise-v1"
+        },
+        "read": {
+          "clip": "Read",
+          "asset_key": "character-living-v1",
+          "url": "/api/v1/assets/character-living-v1"
+        },
+        "play": {
+          "clip": "Play",
+          "asset_key": "character-living-v1",
+          "url": "/api/v1/assets/character-living-v1"
+        },
+        "rest": {
+          "clip": "Rest",
+          "asset_key": "character-living-v1",
+          "url": "/api/v1/assets/character-living-v1"
         }
       },
       "name": "规范营地人物"

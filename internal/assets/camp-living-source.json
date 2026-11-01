@@ -1,0 +1,284 @@
+{
+  "status": "frozen-local-awaiting-production-registration",
+  "target_rig": "Rogue / 41 original joints / unchanged rest",
+  "coordinate_system": "model GLB: +Y up, +Z forward; parent character scale applies to actions and props",
+  "actions": {
+    "Read": {
+      "source_clip": "Sit_Chair_Idle",
+      "duration_seconds": 4,
+      "changes": "保留坐姿与呼吸，固定长度双臂离线对齐书本，头部下倾18度，周期端点一致",
+      "prop": "reading-book.glb",
+      "bone": "handslot.l",
+      "book_world_at_zero_blender": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0.8191519975662231,
+          0.5735765099525452,
+          -0.019999999552965164
+        ],
+        [
+          0,
+          -0.5735765099525452,
+          0.8191519975662231,
+          0.9300000071525574
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "book_attachment_blender_rows": [
+        [
+          0.8603424429893494,
+          0.1878727227449417,
+          -0.4738309681415558,
+          -0.16234447062015533
+        ],
+        [
+          -0.46344977617263794,
+          0.675308346748352,
+          -0.5737356543540955,
+          0.14166420698165894
+        ],
+        [
+          0.2121928185224533,
+          0.7132057547569275,
+          0.6680660247802734,
+          0.006838465109467506
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "samples": [
+        {
+          "phase": 0,
+          "left_slot": [
+            0.20387497544288635,
+            -0.07749991863965988,
+            0.970000147819519
+          ],
+          "right_slot": [
+            -0.203874871134758,
+            -0.07750001549720764,
+            0.9700000882148743
+          ]
+        },
+        {
+          "phase": 0.25,
+          "left_slot": [
+            0.2038748860359192,
+            -0.10412785410881042,
+            0.9718434810638428
+          ],
+          "right_slot": [
+            -0.20387490093708038,
+            -0.10412788391113281,
+            0.9718434810638428
+          ]
+        },
+        {
+          "phase": 0.5,
+          "left_slot": [
+            0.20387491583824158,
+            -0.11329075694084167,
+            0.9720388054847717
+          ],
+          "right_slot": [
+            -0.20387491583824158,
+            -0.11329077929258347,
+            0.9720388054847717
+          ]
+        },
+        {
+          "phase": 0.75,
+          "left_slot": [
+            0.2038748860359192,
+            -0.09197518229484558,
+            0.9712384939193726
+          ],
+          "right_slot": [
+            -0.20387490093708038,
+            -0.09197522699832916,
+            0.9712385535240173
+          ]
+        },
+        {
+          "phase": 1,
+          "left_slot": [
+            0.20387497544288635,
+            -0.07749991863965988,
+            0.970000147819519
+          ],
+          "right_slot": [
+            -0.203874871134758,
+            -0.07750001549720764,
+            0.9700000882148743
+          ]
+        }
+      ],
+      "hips_relative_to_root_model": [
+        0,
+        0.4813,
+        -0.3969
+      ],
+      "interaction_note": "保留原Sit的后偏。1.8m人物倍率下，hips后偏32.666cm、高39.612cm；它不是座面接触点。46cm座面的候选desk/bench由p1_resources以裙装底面实际校准，水平沿角色前向补偿32.7cm、actor根高度建议+10cm。",
+      "book_visibility_delay_seconds": 0.2,
+      "prop_lifecycle": "接近和动作混合期间先隐藏书本，Read稳定后显示，停止活动时先隐藏道具再切动作。"
+    },
+    "Play": {
+      "source_clip": "Unarmed_Melee_Attack_Kick",
+      "duration_seconds": 1.5,
+      "changes": "保留原包踢球可用的腿部动作，减慢周期并固定循环端点；球由场景程序控制",
+      "contact_phase": 0.4166666666666667,
+      "contact_time_seconds": 0.625,
+      "ball_radius_model": 0.15,
+      "samples": [
+        {
+          "frame": 0,
+          "phase": 0,
+          "right_toe": [
+            -0.31597307324409485,
+            0.025889413431286812,
+            0.03940874710679054
+          ]
+        },
+        {
+          "frame": 9,
+          "phase": 0.25,
+          "right_toe": [
+            -0.19144710898399353,
+            0.26305797696113586,
+            0.2508590817451477
+          ]
+        },
+        {
+          "frame": 15,
+          "phase": 0.4166666666666667,
+          "right_toe": [
+            -0.17097289860248566,
+            0.5299256443977356,
+            0.5589028596878052
+          ]
+        },
+        {
+          "frame": 18,
+          "phase": 0.5,
+          "right_toe": [
+            -0.17098723351955414,
+            0.5204338431358337,
+            0.540436863899231
+          ]
+        },
+        {
+          "frame": 27,
+          "phase": 0.75,
+          "right_toe": [
+            -0.19059520959854126,
+            0.31461581587791443,
+            0.31585821509361267
+          ]
+        },
+        {
+          "frame": 36,
+          "phase": 1,
+          "right_toe": [
+            -0.31597307324409485,
+            0.025889413431286812,
+            0.03940874710679054
+          ]
+        }
+      ],
+      "ball_center_at_contact_model": [
+        -0.17097289860248566,
+        0.5299256443977356,
+        0.7089028596878052
+      ]
+    },
+    "Rest": {
+      "source_clip": "Sit_Floor_Idle",
+      "duration_seconds": 4,
+      "changes": "使用坐地休息姿势，保留原包动作并减慢为4秒周期，固定循环端点，无需椅子或家具；根节点不增加水平运动",
+      "ground_samples": [
+        {
+          "phase": 0,
+          "lowest_model_y": 0.0020413100719451904
+        },
+        {
+          "phase": 0.25,
+          "lowest_model_y": 0.005093141924589872
+        },
+        {
+          "phase": 0.5,
+          "lowest_model_y": 0.0017800629138946533
+        },
+        {
+          "phase": 0.75,
+          "lowest_model_y": 0.002263963222503662
+        }
+      ],
+      "root_height_recommendation_model": 0,
+      "note": "实际正式蒙皮几何在所查相位最低点约0.002至0.005模型单位，坐地可沿地面放置，不沿用Read座高补偿。"
+    }
+  },
+  "sources": [
+    {
+      "author": "Kay Lousberg",
+      "license": "CC0-1.0",
+      "url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+      "revision": "672074b73ba276876a19e8816ecdc5241817ab47"
+    },
+    {
+      "asset": "reading-book.glb",
+      "author": "project-authored",
+      "method": "本地用普通几何制作封面、书页、书脊与文字线条，无外部纹理"
+    }
+  ],
+  "verification": {
+    "glb_hierarchy_and_rest": "与正式character-medium-v1.glb各骨骼父子关系和局部rest逐矩阵比较完全相同，最大差异0；无网格，不携带另一套人物。",
+    "finite_tracks": "实际GLTFLoader读出的3条动作所有采样数值有限。",
+    "root": "实际Three.js AnimationMixer采样各动作0/25/50/75/100%未发现水平root位移。",
+    "visual": "四套代表混搭，每动作0/25/50/75%前/侧/后图逐张检查；未见明显头肩或上下装穿插。Read书本在实际left handslot矩阵下可见且与双手对齐。Play图中的球为触球参考，程序轨迹和正式浏览器需P3另验。",
+    "rest_ground": "Rest在正式人物蒙皮求值后测量最低几何点，没有椅子坐姿的悬空问题。",
+    "furniture": "Read最终座位由p1_resources的实际desk/bench重渲染负责；不以hips点代替接触面。"
+  },
+  "visual_evidence": [
+    "read-front.png",
+    "read-right.png",
+    "read-back.png",
+    "play-front.png",
+    "play-right.png",
+    "play-back.png",
+    "rest-front.png",
+    "rest-right.png",
+    "rest-back.png"
+  ],
+  "files": [
+    {
+      "path": "living.glb",
+      "sha256": "268d0372435806a1b63af63591e88387cc007dc1359f1bc149a25058833b59ab",
+      "bytes": 155332
+    },
+    {
+      "path": "reading-book.glb",
+      "sha256": "47b115f9222f12807b67f3c91548261bbfa8b9a221e881286e39dfab71fc477b",
+      "bytes": 19740
+    },
+    {
+      "path": "book-attachment.json",
+      "sha256": "0330f59314088bd6ab50af5e21faebdef723d8a55a1632f2a36bf65de0b2b010",
+      "bytes": 1022
+    }
+  ]
+}

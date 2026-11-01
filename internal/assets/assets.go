@@ -58,7 +58,7 @@ func (slot WearableSlot) Valid() bool {
 
 // Asset is public metadata for immutable controlled artwork.
 type Asset struct {
-	Free         bool         `json:"free,omitempty"`           // Base characters can be selected without a purchase.
+	Free         bool         `json:"free,omitempty"`           // Explicit built-in avatars and camp items cannot be sold.
 	WearableSlot WearableSlot `json:"wearable_slot,omitempty"`  // Fixed attachment; empty means ordinary artwork.
 	BackAssetKey string       `json:"back_asset_key,omitempty"` // Internal rear layer belonging to this same wearable.
 	Key          string       `json:"key"`                      // Versioned identity also used by historical snapshots.
@@ -137,6 +137,18 @@ func Get(key string) (Asset, bool) {
 // Valid checks the allowed business kind of a current built-in choice.
 func Valid(key string, kind Kind) bool { item, ok := Get(key); return ok && item.Kind == kind }
 
+// validateBuiltinMetadata keeps format, slot and explicit free capabilities consistent.
+func (item Asset) validateBuiltinMetadata() error {
+	if !keyPattern.MatchString(item.Key) || item.ContentType() == "" || (item.WearableSlot != "" && (!item.WearableSlot.Valid() || item.Kind != KindAccessory)) || (item.Free && item.Kind != KindAvatar && item.Kind != KindIsland) {
+		return fmt.Errorf("invalid controlled asset key %q", item.Key)
+	}
+	model := item.Kind == KindModel || item.Kind == KindAnimation
+	if model != (item.extension() == "glb") || (item.Kind == KindWearable && item.extension() != "png") {
+		return fmt.Errorf("controlled asset format does not match kind %q", item.Key)
+	}
+	return nil
+}
+
 // Install adds versioned directories atomically and refuses different bytes under existing keys.
 func (service *Service) Install() error {
 	if err := os.MkdirAll(service.Directory, 0700); err != nil {
@@ -147,12 +159,8 @@ func (service *Service) Install() error {
 		return err
 	}
 	for _, item := range items {
-		if !keyPattern.MatchString(item.Key) || item.ContentType() == "" || (item.WearableSlot != "" && (!item.WearableSlot.Valid() || item.Kind != KindAccessory)) || (item.Free && item.Kind != KindAvatar) {
-			return fmt.Errorf("invalid controlled asset key %q", item.Key)
-		}
-		model := item.Kind == KindModel || item.Kind == KindAnimation
-		if model != (item.extension() == "glb") || (item.Kind == KindWearable && item.extension() != "png") {
-			return fmt.Errorf("controlled asset format does not match kind %q", item.Key)
+		if err := item.validateBuiltinMetadata(); err != nil {
+			return err
 		}
 		drawing, err := builtin.ReadFile("builtin/" + item.Key + "." + item.extension())
 		if err != nil {

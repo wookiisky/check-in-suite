@@ -17,7 +17,7 @@ func TestWearableCatalogHidesInternalLayers(t *testing.T) {
 		if item.Kind == KindCharacterPart {
 			t.Fatalf("internal composition layer offered as a choice: %s", item.Key)
 		}
-		if item.Free {
+		if item.Free && item.Kind == KindAvatar {
 			bases++
 		}
 		if item.WearableSlot.Valid() {
