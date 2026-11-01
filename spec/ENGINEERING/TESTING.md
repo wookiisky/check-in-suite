@@ -12,6 +12,7 @@ source:
 - scripts/inspect-glb.mjs
 - scripts/prepare-p0-character.py
 - scripts/retarget-p0-mixamo.py
+- scripts/verify-3d-release.mjs
 tests:
 - scripts/check-spec.test.mjs
 - scripts/inspect-glb.test.mjs
@@ -66,9 +67,12 @@ Playwright 用独立 API、前端端口和临时数据库，不复用日常开�
 ```sh
 node web/src/features/media/verify-media-auto-stop.mjs
 python3 scripts/verify-storage-faults.py
+node scripts/verify-3d-release.mjs /absolute/path/to/release
 ```
 
 录音专项使用 Chromium 实际编码和测试麦克风输入。磁盘专项在 macOS 自建的受限临时卷中制造空间不足和提交失败；结果只证明实际运行的平台与场景。
+
+三维发行专项使用指定发行目录中的二进制与静态页面，在临时目录初始化空库，检查资源类型和实际字节、外观与布局保存、版本冲突及同一持久目录重启。它另从冻结的旧迁移建立 WAL 数据库，验证不兼容结构被拒绝且逻辑内容保留。该命令只运行本机兼容的发行包，比较当前源码中的首批资源；原始目录、日常数据库和未知服务不参与验证。
 
 ## 原型测试的承接
 
