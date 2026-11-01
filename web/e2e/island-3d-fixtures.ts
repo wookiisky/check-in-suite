@@ -47,6 +47,12 @@ export async function openIsland3D(page: Page) {
   await expect(page.getByRole('region', { name: content.scene, exact: true }).locator('canvas')).toBeVisible();
 }
 
+// 视角工具可折叠；展开后仍使用真实相机按钮，截图可以恢复完整场景空间。
+export async function setSpatialCameraOpen(page: Page, open: boolean) {
+  const toggle = page.getByRole('button', { name: open ? content.showCamera : content.hideCamera, exact: true });
+  if (await toggle.isVisible()) await toggle.click();
+}
+
 // 目录提供可访问名称，基础主屋的显示名称不写死在测试中。
 export async function selectHouse(page: Page, state: SpatialState): Promise<Locator> {
   const definition = state.catalog.find((item) => item.assembly === 'house')!;

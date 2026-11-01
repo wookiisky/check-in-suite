@@ -68,6 +68,6 @@ tests: []
 
 原产品和技术方案按能力合并为以上专题，旧任务清单中的有效决定归入对应规则，历史验收的限制保存在测试指南。旧静态原型、原型截图及阶段计划已退出当前文档系统，历史可从 Git 查阅。
 
-素材预览保留为辅助资料：[素材分类预览](assets/materials.html)、[素材总览图](assets/materials-overview.png)、[人物与发型预览](assets/human-avatars.html)、[人物预览图](assets/human-avatars.png)。另保留本轮人物效果截图：[桌面衣柜](assets/character-wardrobe-desktop.png)、[手机衣柜](assets/character-wardrobe-mobile.png)、[桌面营地](assets/character-island-desktop.png)、[手机营地](assets/character-island-mobile.png)。这些预览用于查看外观，当前可用能力和素材身份以源码目录为准。
+人物与场景使用真实三维资源验证入口，路径和验证边界见 [营地](FEATURES/ISLAND.md#动效资源与验证边界) 和 [商店](FEATURES/SHOP.md#三维外观保存)。旧二维素材预览随对应实现退出，历史截图从 Git 查阅；当前能力和素材身份以源码目录为准。
 
 本系统参考 Cortex 的 Spec 维护方法，保留唯一入口、规则归属和事实源映射；运行不依赖其他仓库。

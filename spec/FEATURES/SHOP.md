@@ -1,74 +1,35 @@
 ---
-summary: 双币购买、永久所有权、奖励兑现、角色装备与素材的行为和恢复边界。
+summary: 双币购买、永久所有权、奖励兑现、三维外观与称号、素材和失败恢复边界。
 owns:
 - shop.behavior
 - shop.equipment
 - shop.assets
 source:
-- internal/shop/purchases.go
-- internal/shop/products.go
-- internal/shop/equipment.go
-- internal/shop/appearance.go
-- internal/shop/appearance_types.go
-- internal/character/character_types.go
-- internal/character/character-catalog.json
-- web/src/features/character/AppearanceProvider.tsx
-- web/src/features/character/CharacterModel3D.tsx
-- web/src/features/character/CharacterPreview3D.tsx
-- web/src/features/character/character3d-model.ts
+- internal/shop/
+- internal/character/
+- internal/assets/
+- web/src/features/shop/
+- web/src/features/character/
 - web/src/graphics/gltf-resources.ts
-- web/src/features/shop/AppearanceDialog.tsx
-- internal/shop/base_avatar.go
-- internal/shop/accessory_layout.go
-- internal/assets/assets.go
-- internal/assets/builtin/catalog.json
-- internal/character/character-catalog.json
-- internal/character/character_types.go
 - scripts/prepare-3d-resources.py
-- web/src/features/shop/ShopPage.tsx
-- web/src/features/shop/BackpackPage.tsx
-- web/src/features/shop/WardrobeDialog.tsx
-- web/src/features/shop/CategoryTabs.tsx
-- web/src/features/shop/shop-categories.ts
-- web/src/features/shop/AccessoryEditor.tsx
-- web/src/features/shop/CharacterStage.tsx
-- web/src/features/shop/accessory-layout.ts
-- web/src/features/character/HumanCharacterArtwork.tsx
-- web/src/features/character/character-artwork.json
+- scripts/prepare-camp-assets.py
 tests:
 - internal/shop/shop_test.go
 - internal/shop/shop_concurrency_test.go
 - internal/shop/credential_race_test.go
-- internal/shop/accessory_layout_test.go
-- internal/shop/wearable_equipment_test.go
 - internal/shop/appearance_test.go
 - internal/httpapi/appearance_test.go
-- web/src/features/character/AppearanceProvider.test.tsx
-- web/src/features/character/character3d-model.test.ts
-- web/src/features/character/character3d-preparation.test.tsx
-- web/src/graphics/gltf-resources.test.ts
-- web/src/features/shop/AppearanceDialog.test.tsx
-- web/e2e/appearance-3d.spec.ts
 - internal/assets/assets_test.go
 - internal/assets/graphics_assets_test.go
-- internal/character/catalog_test.go
+- internal/assets/camp_assets_test.go
 - internal/httpapi/assets_test.go
-- internal/assets/badge_upgrade_test.go
-- internal/httpapi/wearable_routes_test.go
+- web/src/features/character/AppearanceProvider.test.tsx
+- web/src/features/character/CharacterPanel.test.tsx
+- web/src/features/character/TitlePicker.test.tsx
+- web/src/features/shop/AppearanceDialog.test.tsx
 - web/src/features/shop/ShopPage.test.tsx
 - web/src/features/shop/BackpackPage.test.tsx
-- web/src/features/shop/WardrobeDialog.test.tsx
-- web/src/features/shop/CategoryTabs.test.tsx
-- web/src/features/shop/FixedEquipment.test.tsx
-- web/src/features/shop/AccessoryEditor.test.tsx
-- web/src/features/shop/CharacterStage.test.tsx
-- web/src/features/shop/accessory-layout.test.ts
-- web/e2e/shop-flow.spec.ts
-- web/e2e/shop-navigation.spec.ts
-- web/e2e/management-catalog-flow.spec.ts
-- web/e2e/management-recovery-flow.spec.ts
-- web/e2e/outfit-layout-flow.spec.ts
-- web/e2e/fixed-equipment.spec.ts
+- web/e2e/appearance-3d.spec.ts
 ---
 # 商店、装扮与奖励
 
@@ -80,11 +41,11 @@ tests:
 
 ## 页面与分类
 
-商店只负责浏览商品与确认购买，背包是查看已购物品的独立页面，形象装扮通过弹窗管理基础形象、装备与自由饰品布局。首页角色旁提供背包和形象装扮两个入口，背包也能打开同一个装扮弹窗或前往营地布置。关闭装扮弹窗保留原页面的分类、已加载订单和输入草稿；首页在装扮保存后只更新角色装备，不重新挂载任务与家庭留言。
+商店只负责浏览商品与确认购买，背包是查看已购物品的独立页面，外观弹窗管理同一身体的发型、上装、下装和鞋子。首页与背包共用外观弹窗，称号有独立入口。关闭弹窗保留原页面的分类、已加载订单和输入草稿；外观保存只更新共享人物快照，不重新挂载任务与家庭留言。
 
-商店和背包共用两级 Tab。一级按全部、角色装扮、营地物品和奖励分组，角色装扮下再按发型、上装、下装、鞋子、饰品、动物形象、称号、背景和特效筛选，并可查看该组全部内容。切换一级分类会重置二级分类，背包的奖励组默认展示待兑现订单，并可切换已兑现。手机在分类栏内横向滑动，不让整个页面横向溢出；键盘方向键、Home 和 End 可切换同层 Tab。
+商店和背包共用两级 Tab。一级按全部、角色装扮、营地物品和奖励分组，角色装扮下再按发型、上装、下装、鞋子和称号筛选，并可查看该组全部内容。切换一级分类会重置二级分类，背包的奖励组默认展示待兑现订单，并可切换已兑现。手机在分类栏内横向滑动，不让整个页面横向溢出；键盘方向键、Home 和 End 可切换同层 Tab。
 
-分类依据物品用途与穿戴槽位，不从名称猜测。兼有画像和营地用途的物品可以同时出现在两个分组中；历史订单获得新增画像能力后也能在对应装扮分类中找到。背包的全部分类包含永久物品、待兑现和已兑现奖励；筛选与分页沿用同一查询，切换时重新取得游标，迟到响应不能覆盖新筛选。当前订单页没有匹配物品且仍有后续页时，应提示继续加载，不能据此宣称库存为空。
+分类依据商品类型与服装定义中的部位，不从名称或 key 前缀猜测。四个服装分类使用相同订单类型，切换部位仍须重置分页并作废旧读取。背包的全部分类包含永久物品、待兑现和已兑现奖励；筛选与分页沿用同一查询，切换时重新取得游标，迟到响应不能覆盖新筛选。当前订单页没有匹配物品且仍有后续页时，应提示继续加载，不能据此宣称库存为空。
 
 ## 购买与失败恢复
 
@@ -106,7 +67,7 @@ tests:
 
 外观保存携带独立的预期版本。服务端在同一写事务中复核会话、当前版本和全部四槽，再一次写入并递增版本；任一验证或提交失败都不能留下部分外观。版本冲突不覆盖已保存内容，客户端应保留草稿并读取当前状态。新增购买只增加库存，不递增外观版本，因此同版本读取仍可能包含新服装。
 
-三维服装使用 `wearable` 商品类型，购买在原有扣款事务中将稳定服装身份复制到订单。商品下架或删除不撤销已购资格；已售商品不能改指另一服装定义。三维衣物不能调用旧二维单槽或自由饰品接口。当前二维页面与新契约在重构期间分别保留，新人物模块接入时使用三维契约。
+三维服装使用 `wearable` 商品类型，购买在原有扣款事务中将稳定服装身份复制到订单。商品下架或删除不撤销已购资格；已售商品不能改指另一服装定义。默认服装由身体定义提供免费选择，不能创建为商品；初始化只提供替代服装的报价。旧二维单槽、自由饰品、整体动物形象、背景与特效接口已退出。
 
 共享人物组件与四槽编辑器可在 `/character-preview.html` 独立验证，使用正式登录、目录、库存与保存接口。编辑器打开时读取当前外观，选择只修改本地草稿；取消丢弃草稿，保存期间冻结选择与关闭，成功直接发布完整返回快照。共享层接受同版本新增库存，并防止保存前发起的迟到读取覆盖新状态。
 
@@ -114,39 +75,13 @@ tests:
 
 保存结果和人物显示状态分别反馈。已保存后出现模型错误时保持保存事实，只重试显示。版本冲突保留四槽草稿，先展示当前已保存外观，再由用户选择保留草稿继续编辑或使用当前外观。网络断开等未知结果保留原请求，读取当前状态核对；仍是原版本时可重试原请求，不能擅自换成较新版本覆盖。暂时关闭弹窗不代表撤销已发出的保存，重开继续核对。
 
-## 角色与装备
+## 称号与徽章
 
-营地与衣柜展示同一份已保存装备。称号、整体形象、背景各有一个槽位；饰品和特效允许多件。背景位于画布底部，角色与自由饰品参与前后排序，特效固定覆盖画布。姓名和币种的通用呈现见 [界面](INTERFACE.md)。
+称号与三维衣物分开保存和展示。称号在人物旁以 HTML 显示，独立选择器只列出已购买的称号；空值表示卸下。服务端在事务内验证会话、订单所有权和称号类型，只更新称号，采用后提交生效，不递增账户资料或三维外观版本。
 
-当前角色模型提供免费男孩、女孩基础形象，以及可购买的整体形象。选择免费基础形象会清除已选整体形象，但保留其他装备槽位。默认基础人物由素材目录定义，人物发型不再通过复制完整人物图片来切换。
+首页沿用已读取的称号快照；从背包首次打开而尚无快照时，先读取真实营地概览再显示选择器，不用空值冒充未佩戴。成功响应只替换称号快照，保留任务、家庭留言和背包页面。徽章继续通过成就模块取得与佩戴，不进入服装槽或购买库存。
 
-固定穿戴分为发型、上装、下装和鞋子四个独立槽位，每槽最多一件。固定穿戴商品仍使用饰品商品类型，由素材的槽位属性决定装备位置；它们不计入自由饰品的十件上限，也不能调用自由饰品的移动、缩放或排序接口。
-
-基础人物采用身体和双腿清楚可见的全身比例，给上装、下装和鞋留出可辨识的展示区域。男孩、女孩共用身体轮廓、头部尺寸、肩线、腰线和脚底位置，通过脸部细节区分，使同一件发型或服装可以直接复用，不需要按性别分别制作。
-
-男孩、女孩共用同一套穿戴组合，发型和服装不限制性别。未选择穿戴或卸下时，恢复对应人物的默认发型和基础衣物；发型的前后层由同一件商品决定，后发层不能独立购买或装备。人物组合按固定顺序绘制，画像与营地共用组件，切换基础人物不丢失购买和穿戴状态。
-
-动物等整体形象继续使用完整素材，暂不显示人物穿戴层；切换回人物后恢复原有穿戴。整体形象和固定穿戴都不自动移动用户保存的自由饰品。
-
-服务端只更新本次指定的单一槽位，并验证订单已拥有且类型或穿戴槽位匹配。不同槽位互不覆盖，同槽位以后提交为准；装备不递增账户资料版本。背景为空时恢复默认背景，称号为空时不展示称号。
-
-## 自由饰品与特效
-
-自由饰品最多同时装备十件，同一订单不能重复计数；数量限制不影响继续购买和持有。数量检查和装备写入在同一事务中完成，达到上限时保留原有装备。重复装备或重复卸下按目标状态成功返回，操作不影响其他饰品。
-
-饰品使用正方形画布中的归一化中心坐标、包围盒尺寸和顺时针旋转角度。图片保持原比例，旋转后的整个包围盒必须留在画布内；手机和桌面由同一坐标得到相同布局。拖动素材移动，拖动选框角点等比缩放，拖动圆形手柄旋转；鼠标和触摸共用这些操作，方向键可微调对应位置、大小或角度。位置按钮和尺寸滑杆已移除，层级调整按钮保留，角色仍是固定的排序参照，饰品可以移到角色后方。
-
-点击另一件饰品可切换操作对象，重叠区域通常按饰品的前后顺序响应，选中状态不改变这个顺序。下拉框仍可选择被遮挡的饰品：操作下拉框后，所选饰品在自己的区域内优先接收第一次点击、拖动、缩放或旋转；一次手势从按下到结束始终操作同一件饰品，随后恢复通常的点击顺序。画布的键盘微调也会消耗这次优先机会。点击所选区域之外的另一件饰品直接请求切换，点击空白不消耗机会；再次操作下拉框可重新启用当前饰品的优先权，即使没有更换选项。切换需要先处理未保存修改时，确认放弃后才选中新饰品并赋予下拉框优先权。
-
-旋转时，过大的素材自动缩小，靠边的素材向内调整，以保持完整可见。一次手势始终以按下时的布局为基准，来回旋转不会累计缩小；取消手势恢复操作前的位置、大小和角度。保存期间冻结手势和键盘操作。
-
-编辑时在本地预览，保存一次提交选中饰品的位置、大小、角度和相对排序意图。服务端据此重新排列层级，不接受整套布局覆盖；其他饰品的位置、大小和角度不变。重复保存同一排序意图不能继续向前或向后移动。
-
-保存失败保留草稿。选中饰品或排序目标已被卸下时，返回装备已变化，由用户读取当前状态后再调整；切换选中对象或离开时先处理未保存修改。卸下只移除装备关系，保留位置、大小和角度；再次装备恢复这些属性，并放在当前饰品最上层。
-
-特效可同时佩戴多个，按稳定顺序叠放，不占饰品额度，也不能移动、缩放、旋转或调层。移除特效仅取消佩戴；账户或系统要求减少动效时，使用对应静态版本。
-
-自由饰品旋转按重置数据库后的结构提供，不包含旧布局数据升级或旧客户端接口兼容；已有数据库需按 [运行手册](../ENGINEERING/OPERATIONS.md#数据库迁移与不兼容处理) 重建。
+称号保存结果未知时保留原目标，并暂停其他称号写入；关闭再打开仍须读取当前事实。核对通过现有营地概览只发布称号快照，不重发写入、不播放成功反馈。读取失败继续保留未知状态；事实与原目标不同时，才提供显式重试。不能把旧缓存标为当前已佩戴状态。
 
 ## 奖励兑现
 
@@ -156,22 +91,22 @@ tests:
 
 ## 素材与兼容边界
 
-商品素材来自内置目录，不提供上传入口。内部人物组合层使用 `character-part` 类型，不出现在可选素材列表或商品配置中；免费基础人物也不能创建为商品。素材的文件格式、可用类型、免费属性和穿戴槽位由目录定义，管理页只能选择适用的素材。
+商品素材来自内置目录，不提供上传入口。目录保留普通图标、称号、奖励、徽章、三维模型、动作、服装与营地缩略图。免费属性仅用于免费营地缩略图，默认服装另按身体定义校验；管理页只能选择适用于商品类型的素材。
 
-素材以不可覆写的版本标识安装到独立持久目录。名称、类型、格式和穿戴属性等元数据与图片字节都属于该版本，修改其中任何内容都须采用新标识。发布目录被替换后，历史订单仍可读取已安装素材；退役素材可以从源码和当前可选目录移除，持久目录中的旧素材继续保留。已购物品可以通过稳定物品身份获得新增的营地能力，成交事实保持原样。
+素材以不可覆写的版本标识安装到独立持久目录。名称、类型、格式、来源与许可等元数据和素材字节都属于该版本，修改其中任何内容都须采用新标识。发布目录被替换后，历史订单仍可读取已安装素材；退役素材可以从源码和当前可选目录移除，持久目录中的旧素材继续保留。已购物品可以通过稳定物品身份获得新增的营地能力，成交事实保持原样。
 
-三维人物与服装使用独立的版本定义。人物定义登记身体、骨架绑定规格、模型、身体分区、四槽默认项和整理后的动作；服装定义登记所属部位、适配身体与骨架、实际网格及覆盖区域。定义不代表购买或装备，所有权仍由订单提供。首批默认项不需要购买，也不通过将缩略图标为免费基础形象来实现。
+三维人物与服装使用独立的版本定义。人物定义登记身体、骨架绑定规格、模型、身体分区、四槽默认项和整理后的动作；服装定义登记所属部位、适配身体与骨架、实际网格及覆盖区域。定义不代表购买或装备，所有权仍由订单提供。默认项不需要购买，也不通过将缩略图标为免费来实现。
 
 三维模型与动作以自包含的 GLB 安装，文件中的纹理不依赖相对外链。它们复用登录后的同源素材路径，响应类型为 `model/gltf-binary`，不进入管理页的可选图片目录。服装卡片使用从实际模型渲染的透明 PNG；该缩略图属于 `wearable`，不沿用二维自由饰品的穿戴槽或后层图片属性。原始包、Blender 工程与原始 Mixamo FBX 不进入运行下载包。
 
 三维资源元数据分别保留官方来源与许可。KayKit 人物和 Kenney 建筑使用各自的 CC0 资源，Mixamo 补充动作按其项目使用条款登记，不能因为目标骨架来自 KayKit 就把整个动作标为 CC0。资源整理和缩略图重绘见 [运行手册](../ENGINEERING/OPERATIONS.md#三维资源制作与安装)。
 
-家庭家具作为新素材版本加入目录，同时提供可购买的营地商品。启动时为已有账户补入明确标记需要补录的商品，使用稳定商品身份避免重复；已存在商品的价格、库存、上下架及软删除状态保持不变。家具不会自动赠送或摆入房屋，摆放空间与房屋升级规则见 [营地](ISLAND.md#角色活动与屋内展示)。
+家庭家具作为新素材版本加入目录，同时提供可购买的营地商品。启动时为已有账户补入明确标记需要补录的商品，使用稳定商品身份避免重复；已存在商品的价格、库存、上下架及软删除状态保持不变。家具不会自动赠送或摆入房屋，摆放空间与房屋规则见 [营地](ISLAND.md#角色活动与屋内展示)。
 
-2026-10-29 的人物与固定穿戴改造按新模型实施，明确不提供旧人物映射、旧订单权益转换或旧数据迁移。这是已确认的实施范围，不是待验证的兼容能力；素材持久化规则也不代表旧人物订单可以自动转换。数据库结构不兼容时的安装处置见 [运行手册](../ENGINEERING/OPERATIONS.md)。
+本次三维重构使用新的初始化结构，明确不提供旧二维人物映射、旧订单权益转换或旧数据迁移。这是已确认的实施范围，不是待验证的兼容能力；素材持久化规则也不代表旧人物订单可以自动转换。数据库结构不兼容时的安装处置见 [运行手册](../ENGINEERING/OPERATIONS.md)。
 
 ## 验证边界
 
-购买与装备检查应覆盖真实数据库中的双币扣款、库存竞争、重复请求、负余额、十饰品上限、单槽并发和商品删除后所有权。布局检查覆盖重放、目标卸下和草稿保留；人物检查覆盖免费选择、四槽隔离、默认衣物、动物切换以及画像与营地一致。
+购买与装备检查覆盖真实数据库中的双币扣款、库存竞争、重复请求、负余额、称号授权和商品删除后所有权。外观检查覆盖整套原子保存、四槽隔离、默认衣物、兼容性、版本竞争与结果未知；人物检查使用实际骨骼、资源引用和浏览器画面，证明首页、编辑器与营地共用同一已保存外观。
 
 专题元数据列出相关测试入口，测试文件存在不代表本次执行通过。按改动选择验证，执行状态和设备限制见 [测试指南](../ENGINEERING/TESTING.md)。

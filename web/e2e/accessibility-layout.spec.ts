@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
 import family from '../src/features/family/content.json' with { type: 'json' };
-import island from '../src/features/island/content.json' with { type: 'json' };
+import island from '../src/features/island/three/spatial-content.json' with { type: 'json' };
 
 // 自动化检查实际布局和键盘焦点；手机项目只是WebKit仿真，不是真机验收。
 test('全页面大字触控、键盘焦点、减少动效和无横向溢出', async ({ page }, testInfo) => {
@@ -35,7 +35,7 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
   for (const route of ['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const) {
     await page.getByRole('button', { name: content.navigation[route], exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    if (route === 'island') await expect(page.locator('.island-scene')).toBeVisible();
+    if (route === 'island') await expect(page.locator('.spatial-stage')).toBeVisible();
     if (route === 'calendar') await expect(page.locator('.calendar-day').first()).toBeVisible();
     if (route === 'camp') { await expect(page.getByRole('heading', { name: checkin.todayTasks })).toBeVisible(); await expect(page.getByRole('heading', { name: family.title })).toBeVisible(); }
     if (route === 'stats') await expect(page.locator('.reports-summary')).toBeVisible();

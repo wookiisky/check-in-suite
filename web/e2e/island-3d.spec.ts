@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import content from '../src/features/island/three/spatial-content.json' with { type: 'json' };
 import { appearanceAPI } from './appearance-flow-fixtures';
-import { test, openIsland3D, readSpatial, selectHouse, spatialRequest } from './island-3d-fixtures';
+import { test, openIsland3D, readSpatial, selectHouse, spatialRequest, setSpatialCameraOpen } from './island-3d-fixtures';
 
 test.setTimeout(90_000);
 test.use({ actionTimeout: 15_000 });
@@ -37,6 +37,7 @@ test('桌面和手机真实场景支持四向相机及角色进出屋', async ({
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
   await openIsland3D(page);
   await renderFrames(page);
+  await setSpatialCameraOpen(page, true);
   const camera = page.getByRole('navigation', { name: content.camera, exact: true });
   const scene = page.getByRole('region', { name: content.scene, exact: true });
   for (const [index, direction] of content.directions.entries()) {
@@ -47,6 +48,7 @@ test('桌面和手机真实场景支持四向相机及角色进出屋', async ({
   await camera.getByRole('button', { name: content.zoomIn, exact: true }).click();
   await camera.getByRole('button', { name: content.zoomOut, exact: true }).click();
   await camera.getByRole('button', { name: content.resetCamera, exact: true }).click();
+  await setSpatialCameraOpen(page, false);
   await captureCanvas(page, testInfo, 'outdoor-canvas');
   await page.getByRole('button', { name: content.enter, exact: true }).click();
   await expect(page.getByRole('button', { name: content.exit, exact: true })).toBeVisible({ timeout: 40_000 });
@@ -72,10 +74,14 @@ test('真实阅读走到书桌表演并显示手部书本道具', async ({ page,
   await expect(page.getByText(`${content.activities.read} · ${content.phases.performing}`, { exact: true })).toBeVisible();
   await expect(scene).toHaveAttribute('data-actor-space', 'indoor');
   await renderFrames(page);
+  await setSpatialCameraOpen(page, true);
   await page.getByRole('button', { name: content.resetCamera, exact: true }).click();
   for (let step = 0; step < 3; step++) await page.getByRole('button', { name: content.zoomIn, exact: true }).click();
+  await setSpatialCameraOpen(page, false);
   await captureCanvas(page, testInfo, 'reading-front-canvas');
+  await setSpatialCameraOpen(page, true);
   await page.getByRole('button', { name: content.cameraRight, exact: true }).click();
+  await setSpatialCameraOpen(page, false);
   await captureCanvas(page, testInfo, 'reading-turned-canvas');
   expect(spatialRequest(await readSpatial(page))).toEqual(spatialRequest(originalLayout));
 });

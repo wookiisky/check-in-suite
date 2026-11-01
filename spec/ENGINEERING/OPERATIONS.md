@@ -14,6 +14,7 @@ source:
 - cmd/island/database_reset.go
 - internal/demo/settings.json
 - scripts/prepare-3d-resources.py
+- scripts/prepare-camp-assets.py
 - internal/assets/assets.go
 - internal/character/character-catalog.json
 tests:
@@ -83,6 +84,8 @@ go test ./internal/httpapi -run 'TestGraphicsAssetsHTTP'
 ```
 
 该脚本复制已经整理的人物及动作，将 Kenney 建筑的纹理写入 GLB，并从交付人物模型渲染缩略图；它不生成新服装，也不自动适配新骨架。模型与服装定义由 `internal/character/character-catalog.json` 管理，文件格式、显示名称、来源及许可由受控素材目录管理。模型与动作的来源和权利分别登记，原始 FBX 与加工工程仍留在 `.local/3d-sources/`。
+
+家具与户外模型使用 `scripts/prepare-camp-assets.py` 整理，来源包分别放在 `.local/3d-sources/kenney-furniture/`、`kenney-nature/`、`kenney-survival/`。生活动作与书本工程保存在 `.local/3d-sources/living-actions/`，Mixamo 原始动作位于 `.local/3d-sources/mixamo/`。正式模型的实际边界、地面锚点、来源与加工参数分别登记在 `internal/assets/camp-source-manifest.json`、`camp-asset-metadata.json` 和 `camp-living-source.json`；座姿的靠近点与根位置由共享场景目录使用，不在浏览器按模型名称猜测。
 
 发行包运行不需要 Python 或 Blender。构建验证需检查实际 GLB 内嵌数据、目录引用与缩略图解码，正式包还需验证新进程能从持久素材目录读取相同字节。素材制作检查不代表已完成真实手机性能验收。
 

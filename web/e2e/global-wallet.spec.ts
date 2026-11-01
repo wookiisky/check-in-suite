@@ -5,7 +5,7 @@ import content from '../src/content/zh-CN.json' with { type: 'json' };
 import currency from '../src/components/content.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
-import island from '../src/features/island/content.json' with { type: 'json' };
+import island from '../src/features/island/three/spatial-content.json' with { type: 'json' };
 
 type Camp = components['schemas']['CampResponse'];
 type Wallet = Camp['wallet'];
@@ -119,9 +119,9 @@ test('全局余额在普通页面右上常驻，打卡购买删除即时同步�
   const persisted = await api<Camp>(page, '/camp');
   expect(persisted.wallet).toMatchObject(recovered);
   await page.getByRole('button', { name: content.navigation.island, exact: true }).click();
-  await expect(page.locator('.island-scene')).toBeVisible();
+  await expect(page.locator('.spatial-stage')).toBeVisible();
   await expect(page.locator('.global-wallet, .global-wallet-bar')).toHaveCount(0);
-  await expect(page.locator('.island-wallet')).toHaveCount(1);
+  await expect(page.locator('.spatial-wallet')).toHaveCount(1);
   await page.getByRole('button', { name: island.back, exact: true }).click();
   await expectWallet(page, recovered);
 

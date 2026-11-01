@@ -3,7 +3,7 @@ import content from '../src/content/zh-CN.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
 import achievement from '../src/features/achievements/content.json' with { type: 'json' };
-import island from '../src/features/island/content.json' with { type: 'json' };
+import island from '../src/features/island/three/spatial-content.json' with { type: 'json' };
 
 // 真实浏览器验证币种标签、指标配置和各页面的图标资源，截图供桌面与手机核对。
 test('币种只显示图标，表单与成就指标保留可访问名称', async ({ page }, testInfo) => {
@@ -62,7 +62,7 @@ test('币种只显示图标，表单与成就指标保留可访问名称', async
   await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
   for (const route of ['camp', 'shop', 'island'] as const) {
     await page.getByRole('button', { name: content.navigation[route], exact: true }).click();
-    const wallet = page.locator(route === 'island' ? '.island-wallet' : '.global-wallet');
+    const wallet = page.locator(route === 'island' ? '.spatial-wallet' : '.global-wallet');
     await expect(wallet).toBeVisible();
     await expect(wallet).not.toContainText(/金币|钻石/);
     const images = wallet.locator('img');
