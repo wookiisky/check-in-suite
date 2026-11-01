@@ -62,6 +62,54 @@ function deferred<T>() {
 
 const networkFailure=()=>new ApiFailure(0,{code:'NETWORK_ERROR',field_errors:{},request_id:''});
 
+describe('独立场景草稿',()=>{
+  it('读回其他场景不能成为当前保存基线',async()=>{
+    const client={request:vi.fn().mockResolvedValue(structuredClone(initial)) as never};
+    const test=renderHook(()=>useSpatialLayout(client,'forest-courtyard-v1'));
+    await waitFor(()=>expect(test.result.current.loading).toBe(false));
+    expect(test.result.current.state).toBeNull();
+    expect(test.result.current.error).toBeInstanceOf(ApiFailure);
+    expect(test.result.current.editing).toBe(false);
+  });
+  it('同一客户端切换场景时隔离草稿、版本与读取目标',async()=>{
+    const request=vi.fn(async(path:string)=>structuredClone(path.includes('forest-courtyard-v1')?{...initial,scene_key:'forest-courtyard-v1',scene:{...initial.scene,scene_key:'forest-courtyard-v1'},version:7}:initial));
+    const client={request:request as never};
+    const test=renderHook(({scene})=>useSpatialLayout(client,scene),{initialProps:{scene:'seaside-v1'}});
+    await waitFor(()=>expect(test.result.current.state?.scene_key).toBe('seaside-v1'));
+    act(()=>test.result.current.begin());act(()=>test.result.current.setEnvironment('dusk'));
+    test.rerender({scene:'forest-courtyard-v1'});
+    await waitFor(()=>expect(test.result.current.state?.version).toBe(7));
+    expect(test.result.current.editing).toBe(false);
+    expect(request).toHaveBeenCalledWith('/island/layout?scene_key=forest-courtyard-v1',expect.anything());
+    test.rerender({scene:'seaside-v1'});
+    await waitFor(()=>expect(test.result.current.loading).toBe(false));
+    expect(test.result.current.view?.environment_key).toBe('dusk');
+    expect(test.result.current.review).toBe(true);
+  });
+
+  it('保存结果未知后切换并返回，只核对原场景并保留原请求',async()=>{
+    const request=vi.fn(async(path:string,options?:{method?:string;body?:unknown})=>{
+      if(options?.method==='PUT')throw networkFailure();
+      return structuredClone(path.includes('forest-courtyard-v1')?{...initial,scene_key:'forest-courtyard-v1',scene:{...initial.scene,scene_key:'forest-courtyard-v1'},version:9}:initial);
+    });
+    const client={request:request as never};
+    const test=renderHook(({scene})=>useSpatialLayout(client,scene),{initialProps:{scene:'seaside-v1'}});
+    await waitFor(()=>expect(test.result.current.state).not.toBeNull());
+    act(()=>test.result.current.begin());act(()=>test.result.current.setEnvironment('dusk'));
+    await act(async()=>{await test.result.current.save();});
+    test.rerender({scene:'forest-courtyard-v1'});
+    await waitFor(()=>expect(test.result.current.state?.scene_key).toBe('forest-courtyard-v1'));
+    expect(test.result.current.unknownSave).toBe(false);
+    test.rerender({scene:'seaside-v1'});
+    await waitFor(()=>expect(test.result.current.canRetryOriginal).toBe(true));
+    expect(test.result.current.unknownSave).toBe(true);
+    await act(async()=>{await test.result.current.retryOriginal();});
+    const bodies=request.mock.calls.filter(call=>call[1]?.method==='PUT').map(call=>call[1]?.body);
+    expect(bodies).toHaveLength(2);expect(bodies[0]).toEqual(bodies[1]);
+    expect(bodies[1]).toMatchObject({scene_key:'seaside-v1',expected_version:1});
+  });
+});
+
 describe('3D布局未知结果与读取竞争',()=>{
   it('未推进的读回保留原请求，禁止修改或取消，并只能显式重发原版本',async()=>{
     let writes=0;

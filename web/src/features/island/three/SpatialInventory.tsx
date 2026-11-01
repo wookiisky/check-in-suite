@@ -26,6 +26,7 @@ interface SpatialInventoryProps {
   expanded:boolean; // 手机也可收起列表，保存栏仍保留。
   busy:boolean; // 保存或未知结果时锁定修改。
   saving:boolean; // 保存中的反馈。
+  sceneNames?:Record<string,string>; // 用场景名称解释共享实例当前的占用位置。
   saveDisabled:boolean; // 完整占地或冲突待处理。
   panelRef:RefObject<HTMLElement|null>; // 相机测量可见区域。
   onToggle:()=>void; // 只收起列表。
@@ -33,7 +34,7 @@ interface SpatialInventoryProps {
   onChoose:(instanceId:string)=>void; // 选择或摆放库存实例。
   onMove:(dx:number,dz:number)=>void; // 十厘米微调。
   onRotate:()=>void; // 目录允许的90度旋转。
-  onStore:()=>void; // 主屋不提供收起。
+  onStore:()=>void; // 收起主屋后由完整草稿校验室内物品。
   onSave:()=>void; // 保存整套草稿。
   onCancel:()=>void; // 恢复已保存布局。
   onEnvironment:(key:string)=>void; // 独立环境设置。
@@ -45,6 +46,8 @@ export function SpatialInventory(props:SpatialInventoryProps){
   const catalog = useMemo(() => new Map(props.state.catalog.map((item) => [item.item_key, item])), [props.state.catalog]);
   const definition=props.selected ? catalog.get(props.selected.item_key) : undefined;
   const isHouse=definition?.assembly==='house';
+  const orphanedIndoor=props.selected?.space==='indoor'&&!props.state.scene.house;
+  const canManageIndoor=!!props.state.scene.house||props.state.placements.some(item=>item.space==='indoor');
   const items = useMemo(() => {
     const counts = new Map<string, number>();
     return props.state.inventory.flatMap((item) => {
@@ -57,7 +60,7 @@ export function SpatialInventory(props:SpatialInventoryProps){
     });
   }, [catalog, props.state.inventory]);
   const placedInstances = useMemo(() => new Set(props.state.placements.map((item) => item.instance_id)), [props.state.placements]);
-  const inSpace = items.filter((item) => item.current.spaces.includes(props.space));
+  const inSpace = items.filter((item) => item.current.spaces.includes(props.space)&&(props.space!=='indoor'||props.state.scene.house||props.state.placements.some(placement=>placement.instance_id===item.instance_id&&placement.space==='indoor')));
   const providers = [...new Set(inSpace.map((item) => item.current.provider || 'builtin'))].sort();
   const packs = new Map(inSpace.filter((item) => !filters.provider || (item.current.provider || 'builtin') === filters.provider).flatMap((item) => item.current.pack_key ? [[item.current.pack_key, item.current.pack_name || item.current.pack_key.replaceAll('-', ' ')] as const] : []));
   const categories = [...new Set(inSpace.flatMap((item) => item.current.category ? [item.current.category] : []))].sort();
@@ -79,7 +82,8 @@ export function SpatialInventory(props:SpatialInventoryProps){
   return <aside ref={props.panelRef} className={`spatial-inventory ${props.expanded?'is-expanded':'is-collapsed'}`} aria-label={content.inventory}>
     <header><h2>{!props.expanded&&definition?definition.name:content.inventory}</h2><button className="secondary" aria-label={props.expanded?content.hideInventory:content.showInventory} aria-expanded={props.expanded} onClick={props.onToggle}>{props.expanded?'−':'+'}</button></header>
     {props.expanded&&<div className="spatial-inventory-browser">
-      <div className="spatial-tabs"><button className={props.space==='outdoor'?'is-active':'secondary'} aria-pressed={props.space==='outdoor'} onClick={()=>{setPage({ space: 'outdoor', limit: batchSize });props.onSpace('outdoor');}}>{content.outdoorItems}</button><button className={props.space==='indoor'?'is-active':'secondary'} aria-pressed={props.space==='indoor'} onClick={()=>{setPage({ space: 'indoor', limit: batchSize });props.onSpace('indoor');}}>{content.indoorItems}</button></div>
+      <div className="spatial-tabs"><button className={props.space==='outdoor'?'is-active':'secondary'} aria-pressed={props.space==='outdoor'} onClick={()=>{setPage({ space: 'outdoor', limit: batchSize });props.onSpace('outdoor');}}>{content.outdoorItems}</button><button className={props.space==='indoor'?'is-active':'secondary'} aria-pressed={props.space==='indoor'} disabled={!canManageIndoor} onClick={()=>{setPage({ space: 'indoor', limit: batchSize });props.onSpace('indoor');}}>{content.indoorItems}</button></div>
+      {props.space==='indoor'&&!props.state.scene.house&&<p>{browserContent.orphanedIndoor}</p>}
       <fieldset className="spatial-inventory-filters" aria-label={browserContent.filters}>
         <label className="spatial-inventory-search">{browserContent.search}<input type="search" value={filters.search} placeholder={browserContent.searchPlaceholder} onChange={(event) => changeFilters({ ...filters, search: event.target.value })} /></label>
         <label>{browserContent.provider}<select value={filters.provider} onChange={(event) => changeFilters({ ...filters, provider: event.target.value, pack: '' })}><option value="">{browserContent.allProviders}</option>{providers.map((key) => <option key={key} value={key}>{key === 'builtin' ? browserContent.builtin : providerNames[key] || key}</option>)}</select></label>
@@ -89,8 +93,11 @@ export function SpatialInventory(props:SpatialInventoryProps){
       <div className="spatial-inventory-results"><small role="status">{browserContent.results.replace('{shown}', String(visible.length)).replace('{total}', String(filtered.length))}</small>{hasFilters && <button className="secondary" onClick={() => changeFilters(emptyFilters)}>{browserContent.clearFilters}</button>}</div>
       <div className="spatial-inventory-list">{visible.map(item=>{
         const placed=placedInstances.has(item.instance_id),selected=item.instance_id===props.selected?.instance_id;
-        return <button key={item.instance_id} className={`spatial-item secondary ${selected?'is-selected':''}`} disabled={props.busy} aria-pressed={selected} aria-label={(placed?content.select:content.add).replace('{name}',item.name)} onClick={()=>props.onChoose(item.instance_id)}>
-          <img src={item.current.thumbnail_url} alt="" loading="lazy" decoding="async" width={56} height={56}/><span><strong>{item.name}</strong><small>{placed?content.placed:content.stored}</small></span>
+        const placedScene=item.placed_scene_key;
+        const elsewhere=!!placedScene&&placedScene!==props.state.scene_key;
+        const location=elsewhere?browserContent.placedElsewhere.replace('{name}',props.sceneNames?.[placedScene]??browserContent.otherScene):placed?content.placed:content.stored;
+        return <button key={item.instance_id} className={`spatial-item secondary ${selected?'is-selected':''}`} disabled={props.busy||elsewhere} aria-pressed={selected} aria-label={(placed?content.select:content.add).replace('{name}',item.name)} onClick={()=>props.onChoose(item.instance_id)}>
+          <img src={item.current.thumbnail_url} alt="" loading="lazy" decoding="async" width={56} height={56}/><span><strong>{item.name}</strong><small>{location}</small></span>
         </button>;
       })}{!filtered.length&&<p>{inSpace.length ? browserContent.noMatches : content.emptyInventory}</p>}</div>
       {visible.length < filtered.length && <button className="secondary spatial-inventory-more" onClick={() => setPage({ space: props.space, limit: limit + batchSize })}>{browserContent.loadMore}</button>}
@@ -99,8 +106,8 @@ export function SpatialInventory(props:SpatialInventoryProps){
     {props.selected&&<section className="spatial-selected" aria-label={definition?.name}>
       <strong>{definition?.name}</strong><span>{content.position} {props.selected.x_cm}, {props.selected.z_cm}</span>
       {isHouse&&<small>{content.houseRequired}</small>}
-      <div className="spatial-adjust"><button className="secondary" disabled={props.busy||!definition?.movable} aria-label={content.moveLeft} onClick={()=>props.onMove(-10,0)}>←</button><button className="secondary" disabled={props.busy||!definition?.movable} aria-label={content.moveBack} onClick={()=>props.onMove(0,-10)}>↑</button><button className="secondary" disabled={props.busy||!definition?.movable} aria-label={content.moveForward} onClick={()=>props.onMove(0,10)}>↓</button><button className="secondary" disabled={props.busy||!definition?.movable} aria-label={content.moveRight} onClick={()=>props.onMove(10,0)}>→</button></div>
-      <div className="spatial-item-actions"><button className="secondary" disabled={props.busy||isHouse||!definition?.movable||(definition?.rotations.length??0)<2} onClick={props.onRotate}>{content.rotate}</button><button className="secondary" disabled={props.busy||isHouse||!definition?.movable} onClick={props.onStore}>{content.store}</button></div>
+      <div className="spatial-adjust"><button className="secondary" disabled={props.busy||orphanedIndoor||!definition?.movable} aria-label={content.moveLeft} onClick={()=>props.onMove(-10,0)}>←</button><button className="secondary" disabled={props.busy||orphanedIndoor||!definition?.movable} aria-label={content.moveBack} onClick={()=>props.onMove(0,-10)}>↑</button><button className="secondary" disabled={props.busy||orphanedIndoor||!definition?.movable} aria-label={content.moveForward} onClick={()=>props.onMove(0,10)}>↓</button><button className="secondary" disabled={props.busy||orphanedIndoor||!definition?.movable} aria-label={content.moveRight} onClick={()=>props.onMove(10,0)}>→</button></div>
+      <div className="spatial-item-actions"><button className="secondary" disabled={props.busy||orphanedIndoor||isHouse||!definition?.movable||(definition?.rotations.length??0)<2} onClick={props.onRotate}>{content.rotate}</button><button className="secondary" disabled={props.busy||!definition?.movable} onClick={props.onStore}>{content.store}</button></div>
     </section>}
     <footer><button disabled={props.saveDisabled||props.busy} onClick={props.onSave}>{props.saving?content.saving:content.save}</button><button className="secondary" disabled={props.busy} onClick={props.onCancel}>{content.cancel}</button></footer>
   </aside>;

@@ -38,7 +38,7 @@
   "select": "选择{name}",
   "rotate": "旋转90度",
   "store": "收起物品",
-  "houseRequired": "主屋必须保留一座，朝向固定。",
+  "houseRequired": "每个场景最多一座主屋，朝向固定。收起前请先收起室内物品。",
   "moveLeft": "向左移动物品",
   "moveRight": "向右移动物品",
   "moveForward": "向前移动物品",
@@ -111,7 +111,7 @@
   "sessionLoading": "正在确认登录状态…",
   "invalid": {
     "ownership": "物品库存已变化，请读取最新布局核对。",
-    "house": "需要保留一座朝向固定的主屋。",
+    "house": "每个场景最多一座朝向固定的主屋；室内物品需要房屋。",
     "terrain": "物品的完整占地超出了可摆放地面。",
     "boundary": "物品不能超出所在区域。",
     "wall": "物品与墙体重叠，请换个位置。",

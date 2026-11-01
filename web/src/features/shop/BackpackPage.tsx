@@ -18,14 +18,14 @@ function purchaseQuery(filter: CategoryFilter, status: 'pending' | 'redeemed'): 
   if (filter.group === 'reward') return new URLSearchParams({ type: 'reward', status }).toString();
   return new URLSearchParams({
     status: 'owned',
-    ...(filter.group === 'island' ? { type: 'island' } : filter.category ? { type: categoryPurchaseType(filter.category) } : {}),
+    ...(filter.group === 'island' || filter.group === 'scene' ? { type: filter.group } : filter.category ? { type: categoryPurchaseType(filter.category) } : {}),
   }).toString();
 }
 
 // 背包只管理已购物品的查看和奖励兑现，装扮及营地操作由各自入口负责。
 export function BackpackPage({ client, onBack, onIsland, onAppearance, onTitle }: ShopProps & {
   onBack: () => void;
-  onIsland: () => void;
+  onIsland: (sceneKey?: string) => void;
   onAppearance: () => void;
   onTitle?: () => void;
 }) {
@@ -121,7 +121,7 @@ export function BackpackPage({ client, onBack, onIsland, onAppearance, onTitle }
     <div className="shop-actions">
       <button type="button" onClick={(event) => { event.currentTarget.focus(); onAppearance(); }}>{content.wardrobeTitle}</button>
       {onTitle && <button type="button" className="secondary" onClick={(event) => { event.currentTarget.focus(); onTitle(); }}>{content.manageTitles}</button>}
-      <button type="button" className="secondary" onClick={onIsland}>{content.goToIsland}</button>
+      <button type="button" className="secondary" onClick={() => onIsland()}>{content.goToIsland}</button>
     </div>
     {message && <p className="shop-warning feedback-success" role="status">{message}</p>}
     <CatalogFilters value={search} facets={facets} onChange={(next) => { generation.current += 1; setSearch(next); }} />
@@ -143,6 +143,7 @@ export function BackpackPage({ client, onBack, onIsland, onAppearance, onTitle }
           {visibleItems.map((item) => <article className="shop-card shop-product-card" key={item.id}>
             <h3>{item.name_snapshot}</h3>
             <ShopItemArtwork className="shop-item-art shop-product-art" item={item} />
+            {item.type_snapshot === 'scene' && item.scene_key && <button type="button" aria-label={`${content.enterScene} ${item.name_snapshot}`} onClick={() => onIsland(item.scene_key)}>{content.enterScene}</button>}
             {item.type_snapshot === 'reward' && (item.status === 'pending'
               ? <button type="button" aria-label={`${content.redeem} ${item.name_snapshot}`} onClick={(event) => { event.currentTarget.focus(); setReward(item); }}>{content.redeem}</button>
               : <strong>{content.redeemed}</strong>)}

@@ -6,6 +6,37 @@ import content from './spatial-content.json';
 import browserContent from './spatial-inventory-content.json';
 
 describe('营地完整库存浏览', () => {
+  it('其他场景占用的实例显示去向并禁止直接复制摆放', () => {
+    const props = inventoryFixture(2);
+    props.state.inventory[0]!.placed_scene_key = 'forest-courtyard-v1';
+    render(<SpatialInventory {...props} sceneNames={{'forest-courtyard-v1':'林间草地庭院'}} />);
+    expect(screen.getByRole('button', {name:'摆放摆设 0'})).toBeDisabled();
+    expect(screen.getByText(browserContent.placedElsewhere.replace('{name}','林间草地庭院'))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', {name:'摆放摆设 0'}));
+    expect(props.onChoose).not.toHaveBeenCalled();
+  });
+
+  it('无房场景禁用室内入口，但仍能布置户外并收起主屋', () => {
+    const props = inventoryFixture(2);
+    props.state.scene.house = null;
+    render(<SpatialInventory {...props} />);
+    expect(screen.getByRole('button', {name:content.indoorItems})).toBeDisabled();
+    expect(screen.getByRole('button', {name:content.outdoorItems})).toBeEnabled();
+    expect(screen.getByRole('button', {name:'摆放摆设 0'})).toBeEnabled();
+  });
+  it('收起主屋后仍能管理并收起已有室内草稿，不能添加或移动室内物品',()=>{
+    const props=inventoryFixture(2);
+    props.state.scene.house=null;
+    const existing={instance_id:'owned-0',item_key:'item-0',space:'indoor' as const,x_cm:0,z_cm:0,rotation:0};
+    props.state.placements=[existing];
+    render(<SpatialInventory {...props} space="indoor" selected={existing} />);
+    expect(screen.getByRole('button',{name:content.indoorItems})).toBeEnabled();
+    expect(screen.getByRole('button',{name:content.select.replace('{name}','摆设 0')})).toBeEnabled();
+    expect(screen.queryByRole('button',{name:content.add.replace('{name}','摆设 1')})).not.toBeInTheDocument();
+    expect(screen.getByRole('button',{name:content.moveRight})).toBeDisabled();
+    fireEvent.click(screen.getByRole('button',{name:content.store}));
+    expect(props.onStore).toHaveBeenCalledOnce();
+  });
   it('只分批呈现列表，缩略图延迟加载，选择和保存保留完整库存', () => {
     const props = inventoryFixture();
     render(<SpatialInventory {...props} />);

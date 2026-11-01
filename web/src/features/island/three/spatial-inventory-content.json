@@ -23,5 +23,8 @@
   "results": "已显示 {shown} / {total} 件物品",
   "loadMore": "显示更多物品",
   "noMatches": "没有符合筛选条件的物品。",
-  "clearFilters": "清除筛选"
+  "clearFilters": "清除筛选",
+  "placedElsewhere": "已放在{name}，请先前往收起并保存",
+  "otherScene": "其他场景",
+  "orphanedIndoor": "房屋已收起，请先收起这些室内物品，或重新放入房屋。"
 }

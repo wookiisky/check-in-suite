@@ -14,10 +14,10 @@ import { useProductCatalog, type CatalogSearch } from './useProductCatalog';
 import { CatalogFilters } from './CatalogFilters';
 
 // 商店只浏览与购买，分类属于当前页面，成交和恢复均不改变选择。
-export function ShopPage({ client, onBackpack }: ShopProps & { onBackpack?: () => void }) {
+export function ShopPage({ client, onBackpack, initialGroup }: ShopProps & { onBackpack?: () => void; initialGroup?: 'scene' }) {
   const publishWallet = useWalletSync();
   const appearance = useAppearance();
-  const [filter, setFilter] = useState<CategoryFilter>({ group: 'all', category: '' });
+  const [filter, setFilter] = useState<CategoryFilter>({ group: initialGroup ?? 'all', category: '' });
   const [search, setSearch] = useState<CatalogSearch>({ search: '', provider: '', packKey: '' });
   const [snapshot, setSnapshot] = useState<Camp | null>(null);
   const [campLoading, setCampLoading] = useState(true);
@@ -52,7 +52,11 @@ export function ShopPage({ client, onBackpack }: ShopProps & { onBackpack?: () =
   // 成功只刷新当前报价；读取失败通过重读恢复，不能重放购买反馈。
   function purchased(item: Purchase) {
     setSelected(null);
-    setMessage(item.type_snapshot === 'reward' ? content.rewardPurchased : item.type_snapshot === 'island' ? content.islandPurchased : content.purchaseSuccess);
+    let success = content.purchaseSuccess;
+    if (item.type_snapshot === 'scene') success = content.scenePurchased;
+    else if (item.type_snapshot === 'reward') success = content.rewardPurchased;
+    else if (item.type_snapshot === 'island') success = content.islandPurchased;
+    setMessage(success);
     refresh((value) => value + 1);
   }
   const catalogReady = !isWearableSlot(filter.category) || appearance.snapshot !== null;

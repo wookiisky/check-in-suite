@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { ApiFailure } from '../../../api/client';
 import type { ApiClient } from '../../../api/client';
 import type { components } from '../../../api/schema';
-import { layoutIssue } from './spatial-layout';
+import { houseForPlacements, layoutIssue } from './spatial-layout';
 import type { SpatialIslandState, SpatialPlacement } from './spatial-ui-types';
 
 type LayoutClient = Pick<ApiClient, 'request'>;
@@ -29,6 +29,7 @@ interface LayoutSnapshot {
 
 /** journal 持有原请求和读取代次，写请求完成后仍可恢复其结果。 */
 interface LayoutJournal {
+  sceneKey: string; // 读取、草稿与冻结请求始终属于同一个空间。
   snapshot: LayoutSnapshot; // 对订阅者稳定发布的状态。
   original: LayoutRequest | null; // 冻结的版本和完整保存值。
   read: AbortController | null; // 当前可取消的只读请求。
@@ -39,19 +40,22 @@ interface LayoutJournal {
   getSnapshot: () => LayoutSnapshot; // 返回已缓存快照。
 }
 
-const journals = new WeakMap<LayoutClient, LayoutJournal>();
+const journals = new WeakMap<LayoutClient, Map<string, LayoutJournal>>();
 
 // 同一客户端保留 journal，切换客户端后旧响应只更新旧 journal。
-function journalFor(client: LayoutClient): LayoutJournal {
-  const existing = journals.get(client);
+function journalFor(client: LayoutClient, sceneKey: string): LayoutJournal {
+  let scenes = journals.get(client);
+  if (!scenes) { scenes = new Map(); journals.set(client, scenes); }
+  const existing = scenes.get(sceneKey);
   if (existing) return existing;
   const journal: LayoutJournal = {
+    sceneKey,
     snapshot: { state: null, draft: null, loading: true, saving: false, error: null, conflict: false, review: false, unknownSave: false, canRetryOriginal: false },
     original: null, read: null, generation: 0, consumers: 0, listeners: new Set(),
     subscribe: (listener) => { journal.listeners.add(listener); return () => { journal.listeners.delete(listener); }; },
     getSnapshot: () => journal.snapshot,
   };
-  journals.set(client, journal);
+  scenes.set(sceneKey, journal);
   return journal;
 }
 
@@ -87,8 +91,10 @@ async function readJournal(client: LayoutClient, journal: LayoutJournal) {
   journal.read = controller;
   publish(journal, { loading: true, error: null, canRetryOriginal: false });
   try {
-    const next = await client.request<SpatialIslandState>('/island/layout', { signal: controller.signal });
+    const path = journal.sceneKey === 'seaside-v1' ? '/island/layout' : `/island/layout?scene_key=${encodeURIComponent(journal.sceneKey)}`;
+    const next = await client.request<SpatialIslandState>(path, { signal: controller.signal });
     if (controller.signal.aborted || generation !== journal.generation) return;
+    if (next.scene_key !== journal.sceneKey) throw new ApiFailure(502, { code: 'INVALID_RESPONSE', field_errors: {}, request_id: '' });
     const before = journal.snapshot;
     if (before.state && next.version < before.state.version) return;
     const original = journal.original;
@@ -122,6 +128,7 @@ async function writeOriginal(client: LayoutClient, journal: LayoutJournal): Prom
   publish(journal, { saving: true, loading: false, error: null, canRetryOriginal: false });
   try {
     const next = await client.request<SpatialIslandState>('/island/layout', { method: 'PUT', body: structuredClone(original) });
+    if (next.scene_key !== journal.sceneKey) throw new ApiFailure(502, { code: 'INVALID_RESPONSE', field_errors: {}, request_id: '' });
     journal.original = null;
     publish(journal, { state: next, draft: null, conflict: false, review: false, unknownSave: false });
     return true;
@@ -137,8 +144,8 @@ async function writeOriginal(client: LayoutClient, journal: LayoutJournal): Prom
 }
 
 // 保存失败及冲突都保留草稿；只有真实响应或可证明的读回才确认保存。
-export function useSpatialLayout(client: LayoutClient) {
-  const journal = useMemo(() => journalFor(client), [client]);
+export function useSpatialLayout(client: LayoutClient, sceneKey = 'seaside-v1') {
+  const journal = useMemo(() => journalFor(client, sceneKey), [client, sceneKey]);
   const snapshot = useSyncExternalStore(journal.subscribe, journal.getSnapshot, journal.getSnapshot);
   const { state, draft } = snapshot;
   const readLatest = useCallback(() => readJournal(client, journal), [client, journal]);
@@ -191,6 +198,6 @@ export function useSpatialLayout(client: LayoutClient) {
   function confirmReview() {
     if (journal.snapshot.review && !journal.snapshot.unknownSave && !journal.snapshot.saving) publish(journal, { review: false, error: null });
   }
-  const view = useMemo(() => state ? (draft ? { ...state, ...draft } : state) : null, [state, draft]);
+  const view = useMemo(() => state ? (draft ? { ...state, ...draft, scene: { ...state.scene, house: houseForPlacements(state,draft.placements) } } : state) : null, [state, draft]);
   return { ...snapshot, state, view, editing: draft !== null, dirty: !!(state && draft && !sameLayout(state, draft)), canLeave: !snapshot.saving && !snapshot.unknownSave, begin, cancel, setPlacements, setEnvironment, save, retryOriginal, readLatest, confirmReview };
 }

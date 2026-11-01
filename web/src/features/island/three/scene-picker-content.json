@@ -1,0 +1,15 @@
+{
+  "open": "选择场景",
+  "title": "前往其他场景",
+  "hint": "每个场景分别保留房屋、物品和光照。物品需要先在原场景收起并保存，才能搬到其他场景。",
+  "loading": "正在读取可用场景…",
+  "error": "场景列表暂时无法读取，当前场景仍可使用。",
+  "retry": "重新读取场景",
+  "free": "免费场景",
+  "owned": "已解锁",
+  "locked": "购买后永久解锁",
+  "current": "当前场景",
+  "go": "前往{name}",
+  "buy": "购买{name}",
+  "storageKey": "growth-island-current-scene"
+}

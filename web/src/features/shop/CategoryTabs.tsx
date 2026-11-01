@@ -4,7 +4,7 @@ import { categoryLabel, wardrobeCategories } from './shop-categories';
 import type { CategoryFilter } from './shop-categories';
 import content from './content.json';
 
-const groups: CategoryFilter['group'][] = ['all', 'appearance', 'island', 'reward'];
+const groups: CategoryFilter['group'][] = ['all', 'appearance', 'island', 'scene', 'reward'];
 
 // 两级分类共享选择状态，键盘只在当前层级移动并立即显示对应内容。
 export function CategoryTabs({ value, onChange, children }: {

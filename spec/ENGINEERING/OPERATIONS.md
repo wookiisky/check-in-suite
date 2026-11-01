@@ -150,7 +150,7 @@ Blender 程序及 MCP 服务端统一在项目外安装和维护，项目内不�
 
 本项目使用 [Blender Lab 官方 MCP](https://www.blender.org/lab/mcp-server/)，项目配置位于 `.codex/config.toml`。服务端全局安装在 `/Users/air/toolkit/blender_mcp`，固定源码提交为 `dbbf836ad4b1025f14a2b3b504c43903f39e0b04`；依赖由该安装目录下生成的 `mcp/uv.lock` 锁定。配置使用 `/opt/homebrew/bin/uv` 启动服务端，并通过 `BLENDER_PATH` 指定 `/Applications/Blender.app/Contents/MacOS/Blender`。其他电脑需按本机安装位置调整这些路径；此配置只在 Codex 信任本项目时加载。
 
-本次清理时，全局 Blender 版本为 5.2.3 LTS，已检查命令行版本与 MCP 只读连接。既有样片保留 Blender 4.5 的制作记录；动画清单中的检查点命令仍限定原有批次范围，尚未验证使用 5.2 重新加工与旧版本结果一致。恢复制作时应重新检查生成文件及实际画面，不能用连接成功代替资源加工验证。
+本次清理时，全局 Blender 版本为 5.2.3 LTS，已检查命令行版本与 MCP 只读连接。既有样片保留 Blender 4.5 的制作记录；人物和动作恢复时须使用清单中实际记录的批次；已完成的 5.2 制作检查不证明与 4.5 导出字节相同。恢复制作时应重新检查生成文件及实际画面，不能用连接成功代替资源加工验证。
 
 使用时先启动 Blender，确认已启用官方 Lab MCP 插件及 Online Access，并在插件设置中确认 MCP Bridge Server 正在运行。服务端默认连接 `localhost:9876`。在项目根目录执行 `codex mcp get blender` 可检查配置是否被识别；实际连通性需要调用只读工具 `get_objects_summary` 验证。安装或调整配置后，重新加载 Codex 的 MCP 连接；当前聊天未出现工具时，在本项目新建聊天后检查。
 

@@ -9,20 +9,24 @@ import { IslandPage3D } from '../IslandPage3D';
 import type { SpatialScene3DProps } from './SpatialScene3D';
 import type { SpatialIslandState } from './spatial-ui-types';
 import content from './spatial-content.json';
+import scenesContent from './scene-picker-content.json';
 
-beforeEach(()=>vi.stubGlobal('matchMedia',()=>({matches:false,addEventListener:()=>{},removeEventListener:()=>{}})));
+beforeEach(()=>{localStorage.clear();vi.stubGlobal('matchMedia',()=>({matches:false,addEventListener:()=>{},removeEventListener:()=>{}}));});
 afterEach(()=>vi.unstubAllGlobals());
 const renderedScene=vi.hoisted(()=>({current:null as unknown as SpatialScene3DProps}));
 vi.mock('./SpatialScene3D',()=>({SpatialScene3D:(props:SpatialScene3DProps)=>{renderedScene.current=props;return <div data-testid="scene-layout">{props.layout.environment_key}</div>;}}));
 const initial={version:1,scene_key:configuration.scene.scene_key,environment_key:'day',scene:configuration.scene,catalog:configuration.catalog,placements:configuration.default_placements,inventory:configuration.default_placements.map((p)=>({instance_id:p.instance_id,item_key:p.item_key}))} as SpatialIslandState;
 
 // 组件边界使用真实草稿hook、请求错误及HTML离开流程，Canvas另由真实浏览器验证。
-function setup(failure?:ApiFailure){
+function setup(failure?:ApiFailure,prepare?:(state:SpatialIslandState)=>void){
   let state=structuredClone(initial);
   state.inventory.push({instance_id:'owned-chair-1',item_key:'camp-dining-chair-v1'},{instance_id:'owned-chair-2',item_key:'camp-dining-chair-v1'});
+  prepare?.(state);
   const request=vi.fn(async(path:string,options?:RequestOptions)=>{
     if(path==='/camp')return structuredClone(camp);
     if(path==='/island/activity-access')return {today:'2026-11-01',expires_at:new Date(Date.now()+3_600_000).toISOString(),activity_access:[{activity:'read',available:false,tasks:[{id:'read-task',name:'今日阅读',enabled:true}]}]};
+    if(path==='/island/scenes')return {items:[{scene_key:'seaside-v1',name:'海边营地',thumbnail_url:'/sea.png',free:true,owned:true},{scene_key:'forest-courtyard-v1',name:'林间草地庭院',thumbnail_url:'/forest.png',free:false,owned:true},{scene_key:'lakeside-garden-v1',name:'湖畔花园',thumbnail_url:'/lake.png',free:false,owned:false}]};
+    if(path==='/island/layout?scene_key=forest-courtyard-v1')return {...structuredClone(state),version:4,scene_key:'forest-courtyard-v1',scene:{...structuredClone(state.scene),scene_key:'forest-courtyard-v1',house:null},placements:[]};
     if(path==='/island/layout'){
       if(options?.method==='PUT'){
         if(failure)throw failure;
@@ -48,6 +52,103 @@ async function editDesk(){
 }
 
 describe('三维营地页面业务交互',()=>{
+  it('收起主屋后可收起剩余室内家具，修正草稿后再保存',async()=>{
+    const chair={instance_id:'owned-chair-1',item_key:'camp-dining-chair-v1',space:'indoor' as const,x_cm:150,z_cm:0,rotation:0};
+    setup(undefined,state=>state.placements.push(chair));await waitFor(()=>expect(screen.getByRole('button',{name:content.edit})).toBeEnabled());
+    fireEvent.click(screen.getByRole('button',{name:content.edit}));
+    const houseName=configuration.catalog.find(item=>item.assembly==='house')!.name;
+    fireEvent.click(screen.getByRole('button',{name:content.select.replace('{name}',houseName)}));
+    fireEvent.click(screen.getByRole('button',{name:content.store}));
+    expect(screen.getByText(content.invalid.house)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:content.indoorItems}));
+    const indoors=[...initial.placements.filter(item=>item.space==='indoor'),chair];
+    for(const placement of indoors){
+      const name=configuration.catalog.find(item=>item.item_key===placement.item_key)!.name;
+      fireEvent.click(screen.getByRole('button',{name:content.select.replace('{name}',name)}));
+      fireEvent.click(screen.getByRole('button',{name:content.store}));
+    }
+    expect(screen.queryByText(content.invalid.house)).not.toBeInTheDocument();
+    expect(screen.getByRole('button',{name:content.save})).toBeEnabled();
+    expect(renderedScene.current.indoor).toBe(false);
+  });
+  it('恢复设备选择前核对场景资格，未拥有的旧选择不会发起布局请求',async()=>{
+    localStorage.setItem(scenesContent.storageKey,'lakeside-garden-v1');
+    const test=setup();
+    await waitFor(()=>expect(test.request).toHaveBeenCalledWith('/island/scenes',expect.anything()));
+    await waitFor(()=>expect(screen.getByRole('button',{name:content.edit})).toBeEnabled());
+    expect(test.request.mock.calls.some(call=>call[0].includes('scene_key='))).toBe(false);
+    expect(renderedScene.current.layout.scene_key).toBe('seaside-v1');
+  });
+
+  it('已解锁的设备选择在重新进入时恢复，不修改服务端家庭当前场景',async()=>{
+    localStorage.setItem(scenesContent.storageKey,'forest-courtyard-v1');
+    const test=setup();
+    await waitFor(()=>expect(renderedScene.current.layout.scene_key).toBe('forest-courtyard-v1'));
+    expect(test.request.mock.calls.filter(call=>call[1]?.method==='PUT')).toHaveLength(0);
+  });
+
+  it('换成较小主屋保留家具草稿并明确显示冲突，不自动清空室内',async()=>{
+    setup(undefined,state=>{
+      const original=state.scene.house!;
+      const current=state.catalog.find(item=>item.assembly==='house')!;
+      state.catalog.push({...current,item_key:'tiny-house',name:'试验小屋',house_key:'tiny-house'});
+      state.houses={'tiny-house':{...original,interior:{min_x_cm:-80,max_x_cm:80,min_z_cm:-80,max_z_cm:80}}};
+      state.inventory.push({instance_id:'tiny-house-owned',item_key:'tiny-house'});
+    });
+    await waitFor(()=>expect(screen.getByRole('button',{name:content.edit})).toBeEnabled());
+    fireEvent.click(screen.getByRole('button',{name:content.edit}));
+    fireEvent.click(screen.getByRole('button',{name:content.add.replace('{name}','试验小屋')}));
+    expect(renderedScene.current.layout.placements.filter(item=>renderedScene.current.layout.catalog.find(definition=>definition.item_key===item.item_key)?.assembly==='house')).toHaveLength(1);
+    expect(renderedScene.current.layout.placements.some(item=>item.instance_id==='tiny-house-owned')).toBe(true);
+    expect(renderedScene.current.layout.placements.filter(item=>item.space==='indoor')).toEqual(initial.placements.filter(item=>item.space==='indoor'));
+    expect(screen.getByText(content.invalid.boundary)).toBeInTheDocument();
+    expect(screen.getByRole('button',{name:content.save})).toBeDisabled();
+  });
+  it('前往已解锁场景时独立读取并记住本设备选择，无房场景不提供室内入口',async()=>{
+    const test=setup();await waitFor(()=>expect(screen.getByRole('button',{name:content.edit})).toBeEnabled());
+    fireEvent.click(screen.getByRole('button',{name:scenesContent.open}));
+    fireEvent.click(await screen.findByRole('button',{name:scenesContent.go.replace('{name}','林间草地庭院')}));
+    await waitFor(()=>expect(renderedScene.current.layout.scene_key).toBe('forest-courtyard-v1'));
+    expect(localStorage.getItem(scenesContent.storageKey)).toBe('forest-courtyard-v1');
+    expect(screen.getByRole('button',{name:content.indoor})).toBeDisabled();
+    expect(screen.getByRole('button',{name:content.enter})).toBeDisabled();
+    expect(test.request.mock.calls.filter(call=>call[1]?.method==='PUT')).toHaveLength(0);
+  });
+
+  it('切场景复用草稿离开流程，继续编辑不切换，放弃后才进入目标',async()=>{
+    const test=setup();await editDesk();
+    fireEvent.click(screen.getByRole('button',{name:scenesContent.open}));
+    fireEvent.click(await screen.findByRole('button',{name:scenesContent.go.replace('{name}','林间草地庭院')}));
+    let dialog=screen.getByRole('dialog',{name:content.leaveTitle});
+    fireEvent.click(within(dialog).getByRole('button',{name:content.stay}));
+    expect(screen.getByText(movedPosition)).toBeInTheDocument();
+    expect(test.request.mock.calls.some(call=>call[0].includes('scene_key=forest'))).toBe(false);
+    fireEvent.click(screen.getByRole('button',{name:scenesContent.open}));
+    fireEvent.click(screen.getByRole('button',{name:scenesContent.go.replace('{name}','林间草地庭院')}));
+    dialog=screen.getByRole('dialog',{name:content.leaveTitle});
+    fireEvent.click(within(dialog).getByRole('button',{name:content.discardLeave}));
+    await waitFor(()=>expect(renderedScene.current.layout.scene_key).toBe('forest-courtyard-v1'));
+  });
+
+  it('切场景保存失败时保留原场景和草稿，不读取目标或更新设备选择',async()=>{
+    const test=setup(new ApiFailure(0,{code:'NETWORK_ERROR',field_errors:{},request_id:''}));await editDesk();
+    fireEvent.click(screen.getByRole('button',{name:scenesContent.open}));
+    fireEvent.click(await screen.findByRole('button',{name:scenesContent.go.replace('{name}','林间草地庭院')}));
+    fireEvent.click(within(screen.getByRole('dialog',{name:content.leaveTitle})).getByRole('button',{name:content.saveLeave}));
+    await waitFor(()=>expect(within(screen.getByRole('dialog')).getByText(content.unknownSave)).toBeInTheDocument());
+    expect(renderedScene.current.layout.scene_key).toBe('seaside-v1');
+    expect(screen.getByText(movedPosition)).toBeInTheDocument();
+    expect(test.request.mock.calls.some(call=>call[0].includes('scene_key=forest'))).toBe(false);
+    expect(localStorage.getItem(scenesContent.storageKey)).not.toBe('forest-courtyard-v1');
+  });
+
+  it('未解锁场景进入商店，不请求该场景布局',async()=>{
+    const test=setup();await waitFor(()=>expect(screen.getByRole('button',{name:content.edit})).toBeEnabled());
+    fireEvent.click(screen.getByRole('button',{name:scenesContent.open}));
+    fireEvent.click(await screen.findByRole('button',{name:scenesContent.buy.replace('{name}','湖畔花园')}));
+    expect(test.onShop).toHaveBeenCalledOnce();
+    expect(test.request.mock.calls.some(call=>call[0].includes('lakeside'))).toBe(false);
+  });
   it('无修改离开清除干净草稿，同客户端重进保持浏览状态',async()=>{
     const test=setup();await waitFor(()=>expect(screen.getByRole('button',{name:content.edit})).toBeEnabled());
     fireEvent.click(screen.getByRole('button',{name:content.edit}));
