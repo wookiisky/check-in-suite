@@ -37,6 +37,7 @@ button[aria-pressed="true"] { background: #dcebdc; border-color: var(--p0-accent
 .p0-button-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .p0-full-button { display: block; width: 100%; margin-top: 8px; }
 .p0-animation-label { display: grid; gap: 6px; }
+.p0-wearables { display: grid; gap: 10px; }
 .p0-animation-label > span { font-size: 14px; }
 .p0-animation-label select { min-height: 44px; width: 100%; border: 1px solid var(--p0-border); border-radius: 8px; background: #fff; padding: 8px; color: inherit; }
 .p0-controls .p0-help { margin-top: 12px; margin-bottom: 0; color: #52665b; font-size: 13px; }
@@ -49,7 +50,9 @@ button[aria-pressed="true"] { background: #dcebdc; border-color: var(--p0-accent
   .p0-stage { height: 54vh; min-height: 340px; }
   .p0-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .p0-controls fieldset:first-child { grid-column: 1 / -1; }
-  .p0-controls fieldset:first-child .p0-button-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .p0-controls .p0-camera { grid-column: 1 / -1; }
+  .p0-controls .p0-camera .p0-button-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .p0-wearables { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; }

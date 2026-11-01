@@ -10,9 +10,13 @@ source:
 - web/src/features/media/verify-media-auto-stop.mjs
 - scripts/check-spec.mjs
 - scripts/inspect-glb.mjs
+- scripts/prepare-p0-character.py
+- scripts/retarget-p0-mixamo.py
 tests:
 - scripts/check-spec.test.mjs
 - scripts/inspect-glb.test.mjs
+- scripts/p0-character-assets.test.mjs
+- scripts/retarget-p0-mixamo.test.mjs
 ---
 # 测试与验证
 
@@ -47,7 +51,7 @@ tests:
 | `npm run check` | 文档、Go 静态检查、OpenAPI 类型一致性及 TypeScript 检查 |
 | `npm run test:go` / `npm run test:race` | Go 测试及竞态检查 |
 | `npm run test:web` | 前端组件与状态逻辑测试 |
-| `npm run test:assets` | GLB 容器、骨架和动画检查工具的测试 |
+| `npm run test:assets` | GLB 检查器与实际人物、换装和离线动作的二进制检查 |
 | `npm run test:deploy` | 构建校验清单、部署编排及发布脚本测试 |
 | `npm run test:e2e` | 桌面 Chromium 和 iPhone 14 尺寸 WebKit 的浏览器流程 |
 | `npm run build` | 类型检查和前后端构建 |
@@ -91,6 +95,8 @@ python3 scripts/verify-storage-faults.py
 - 早期带 `dirty` 标记的包只证明当时工作区；发布身份以实际 `release.json` 和对应冒烟记录为准。
 - WebKit 设备尺寸模拟与假麦克风录音不能证明 iPhone 硬件、软键盘、来电中断或真机多指手势。
 - 营地隐藏动画的可见性事件模拟不能证明操作系统真实后台行为。
+
+3D 样片的浏览器检查加载实际 GLB，覆盖混搭、动作、房屋、暂停与读取失败恢复。无头 Chromium 当前使用 SwiftShader 软件渲染；因此帧间隔不能作为真实 GPU 的帧率证据，WebKit 的设备尺寸也不能作为手机性能证据。桌面 60 fps、手机 30 fps 是后续正式场景的目标，需绑定实际设备、陈设规模、画质和加载环境另行测量。
 
 备份与从备份恢复是已取消的产品范围，真机验收不在既定范围；它们不作为待完成任务。重启持久化、事务回滚、上传和清理中断恢复仍属于现有行为，不能由“未提供备份”推导为无需验证。
 

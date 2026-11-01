@@ -1,5 +1,5 @@
 {
-  "purpose": "P0 原始素材与浏览器样片；尚未完成四槽换装与 Mixamo 转换验收",
+  "purpose": "P0 四槽人物、离线运动动作与房屋交互样片；正式业务仍使用原入口",
   "sources": [
     {
       "id": "kaykit-adventurers",
@@ -20,9 +20,64 @@
       "license": "CC0-1.0",
       "source_archive_sha256": "b46e4fc873d02dad2ab2153846ede6cc242208e751b778d37f4e75bce23cb2be",
       "changes": "原始 GLB 与纹理，仅选取四个构件"
+    },
+    {
+      "id": "p0-modular-character",
+      "derived_from": "kaykit-adventurers",
+      "license": "CC0-1.0",
+      "files": [
+        "character/modular.glb",
+        "character/character.json"
+      ],
+      "processing": "scripts/prepare-p0-character.py；实际来源与身体范围见character/DERIVATION.md"
+    },
+    {
+      "id": "p0-exercise",
+      "provider": "Adobe Mixamo",
+      "files": [
+        "animations/exercise.glb"
+      ],
+      "license": "Mixamo项目使用条款；不是CC0",
+      "details": "animations/source.json",
+      "processing": "scripts/retarget-p0-mixamo.py"
     }
   ],
   "files": [
+    {
+      "path": "animations/exercise.glb",
+      "sha256": "0cc4daeba60ca29c7a5ac415894ba65ca2ecd3cc898398ee25694a5a046147aa",
+      "bytes": 46424
+    },
+    {
+      "path": "animations/source.json",
+      "sha256": "0a50ea0d02ac2102a804c0d37832a5f55c1f630b7cea1084ebfd754d397fa421",
+      "bytes": 1840
+    },
+    {
+      "path": "character/DERIVATION.md",
+      "sha256": "5c1f718d3d823ed19188c9f6cdd2745800b32b50bb4da3b26a30ec9585d5ec4a",
+      "bytes": 2356
+    },
+    {
+      "path": "character/LICENSE.txt",
+      "sha256": "ae322141814056dda0deea7540d74c41d87aee1da319977cd1bd84ee5a923629",
+      "bytes": 891
+    },
+    {
+      "path": "character/character.json",
+      "sha256": "500ecee4253044cd6da24bb1110466efde55a01e9545bce961c08009febd6842",
+      "bytes": 2539
+    },
+    {
+      "path": "character/inspection.json",
+      "sha256": "d65049493834f12f7c88ddd6bf90d452f703788d3c5aa0083230f7e9f8d970ef",
+      "bytes": 1470
+    },
+    {
+      "path": "character/modular.glb",
+      "sha256": "171603624a18b9179c4b50d3316f429ea0f7e68d995254c40384c526a85135b8",
+      "bytes": 843324
+    },
     {
       "path": "kaykit/LICENSE.txt",
       "sha256": "ae322141814056dda0deea7540d74c41d87aee1da319977cd1bd84ee5a923629",

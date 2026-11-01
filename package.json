@@ -24,7 +24,7 @@
     "test:go": "go test ./...",
     "test:race": "go test -race ./...",
     "test:web": "npm run test --workspace @island/web",
-    "test:assets": "node --test scripts/inspect-glb.test.mjs",
+    "test:assets": "node --test scripts/inspect-glb.test.mjs scripts/p0-character-assets.test.mjs scripts/retarget-p0-mixamo.test.mjs",
     "test:e2e": "playwright test",
     "check:go": "go vet ./...",
     "build:api": "go build -o .local/bin/island ./cmd/island",

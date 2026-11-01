@@ -1,7 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Group, OrthographicCamera } from 'three';
 import { CharacterSample } from '../../character/p0/CharacterSample';
+import { sampleAppearanceCombinations } from '../../character/p0/sample-appearance';
+import type { CharacterSampleDefinition, SampleAppearance } from '../../character/p0/sample-appearance';
+import { previewAnimationURL } from './preview-character-assets';
 import { HouseSample } from './HouseSample';
 import { cameraPosition, doorRoute, moveAlongRoute } from './preview-space';
 import type { PreviewPoint } from './preview-space';
@@ -20,29 +23,33 @@ export interface PreviewSceneProps {
   onArrived: () => void; // 角色到达路线端点。
   onReady: () => void; // 整个样片已完成首次加载。
   onContextLost: () => void; // 保留页面操作与重试入口。
+  appearance: SampleAppearance; // 只用于主角色的四槽草稿。
+  showCombinations: boolean; // 展示全部混搭组合。
+  definition: CharacterSampleDefinition; // 与实际模型配套的人物描述。
 }
 
 // 方位旋转改变真实相机位置，平移始终依据当前相机的水平轴。
-function PreviewCamera({ direction, zoom, pan }: Pick<PreviewSceneProps, 'direction' | 'zoom' | 'pan'>) {
+function PreviewCamera({ direction, zoom, pan, showCombinations }: Pick<PreviewSceneProps, 'direction' | 'zoom' | 'pan' | 'showCombinations'>) {
   const { camera, size, invalidate } = useThree();
   useEffect(() => {
     const [x, y, z] = cameraPosition(direction);
     const length = Math.hypot(x, z);
     const shiftX = z / length * pan[0] + x / length * pan[1];
     const shiftZ = -x / length * pan[0] + z / length * pan[1];
-    camera.position.set(x + shiftX, y, z + shiftZ + 1);
-    camera.lookAt(shiftX, 0, shiftZ + 1);
+    const centerZ = showCombinations ? 0 : 1;
+    camera.position.set(x + shiftX, y, z + shiftZ + centerZ);
+    camera.lookAt(shiftX, 0, shiftZ + centerZ);
     if (camera instanceof OrthographicCamera) {
-      camera.zoom = Math.min(size.width / 17, size.height / 13) * zoom;
+      camera.zoom = Math.min(size.width / (showCombinations ? 24 : 17), size.height / (showCombinations ? 19 : 13)) * zoom;
       camera.updateProjectionMatrix();
     }
     invalidate();
-  }, [camera, direction, zoom, pan, size, invalidate]);
+  }, [camera, direction, zoom, pan, size, invalidate, showCombinations]);
   return null;
 }
 
 // 进出只推进累计行程；恢复后的首帧被丢弃，不补算后台时间。
-function WalkingSample({ journey, animation, paused, onArrived }: Pick<PreviewSceneProps, 'journey' | 'animation' | 'paused' | 'onArrived'>) {
+function WalkingSample({ journey, animation, paused, onArrived, appearance, definition }: Pick<PreviewSceneProps, 'journey' | 'animation' | 'paused' | 'onArrived' | 'appearance' | 'definition'>) {
   const group = useRef<Group>(null);
   const distance = useRef(0);
   const firstFrame = useRef(true);
@@ -65,7 +72,7 @@ function WalkingSample({ journey, animation, paused, onArrived }: Pick<PreviewSc
     if (state.arrived) { arrived.current = true; onArrived(); }
   });
   return <group ref={group}>
-    <CharacterSample animation={moving ? 'Walking_A' : animation} paused={paused} />
+    <CharacterSample definition={definition} appearance={appearance} animationUrl={previewAnimationURL} animation={moving ? 'Walking_A' : animation} paused={paused} />
   </group>;
 }
 
@@ -83,6 +90,7 @@ function SceneLifecycle({ onReady, onContextLost }: Pick<PreviewSceneProps, 'onR
 
 // 场景只有实际模型；地面与灯光用于观察尺寸和动作，不代表正式海边美术。
 export function PreviewScene(props: PreviewSceneProps) {
+  const combinations = useMemo(() => sampleAppearanceCombinations(props.definition), [props.definition]);
   return <>
     <color attach="background" args={['#dcebf0']} />
     <hemisphereLight args={['#fff5de', '#78936f', 2.5]} />
@@ -90,10 +98,14 @@ export function PreviewScene(props: PreviewSceneProps) {
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
       <planeGeometry args={[30, 30]} /><meshStandardMaterial color="#a9bfa0" />
     </mesh>
-    <HouseSample direction={props.direction} open={props.roofOpen || props.journey !== 'outside'} />
-    <WalkingSample journey={props.journey} animation={props.animation} paused={props.paused} onArrived={props.onArrived} />
-    <CharacterSample animation="Idle" paused={props.paused} position={[4.3, 0, 2.5]} rotation={-0.5} />
-    <PreviewCamera direction={props.direction} zoom={props.zoom} pan={props.pan} />
+    {props.showCombinations ? <group name="p0-combinations">
+      {combinations.map((appearance, index) => <CharacterSample key={index} definition={props.definition} appearance={appearance} animationUrl={previewAnimationURL} animation={props.animation} paused={props.paused} position={[(index % 4) * 3.5 - 5.25, 0, Math.floor(index / 4) * 3.5 - 5.25]} />)}
+    </group> : <>
+      <HouseSample direction={props.direction} open={props.roofOpen || props.journey !== 'outside'} />
+      <WalkingSample journey={props.journey} animation={props.animation} paused={props.paused} definition={props.definition} appearance={props.appearance} onArrived={props.onArrived} />
+      <CharacterSample definition={props.definition} appearance={props.definition.defaults} animationUrl={previewAnimationURL} animation="Idle" paused={props.paused} position={[4.3, 0, 2.5]} rotation={-0.5} />
+    </>}
+    <PreviewCamera direction={props.direction} zoom={props.zoom} pan={props.pan} showCombinations={props.showCombinations} />
     <SceneLifecycle onReady={props.onReady} onContextLost={props.onContextLost} />
   </>;
 }

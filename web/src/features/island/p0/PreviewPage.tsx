@@ -7,8 +7,13 @@ import { houseSampleURLs } from './HouseSample';
 import { PreviewScene } from './PreviewScene';
 import type { PreviewJourney } from './PreviewScene';
 import { rotateCamera } from './preview-space';
+import { sampleSlots } from '../../character/p0/sample-appearance';
+import type { CharacterSampleDefinition, SampleAppearance } from '../../character/p0/sample-appearance';
+import { previewAnimationURL, readPreviewCharacterDefinition } from './preview-character-assets';
 import content from './content.json';
 import './preview-page.css';
+
+const wearableLabels: Readonly<Record<string, string>> = content.optionLabels;
 
 /** 场景错误时，页面仍保留返回和重试操作。 */
 interface SceneBoundaryProps {
@@ -37,6 +42,9 @@ export function PreviewPage() {
   const [roofOpen, setRoofOpen] = useState(false);
   const [journey, setJourney] = useState<PreviewJourney>('outside');
   const [animation, setAnimation] = useState('Idle');
+  const [definition, setDefinition] = useState<CharacterSampleDefinition | null>(null);
+  const [appearance, setAppearance] = useState<SampleAppearance | null>(null);
+  const [showCombinations, setShowCombinations] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
   const [hidden, setHidden] = useState(document.visibilityState === 'hidden');
   const [ready, setReady] = useState(false);
@@ -49,6 +57,15 @@ export function PreviewPage() {
   const onFailure = useCallback(() => { setFailed(true); setReady(false); }, []);
   const onArrived = useCallback(() => setJourney((value) => value === 'entering' ? 'inside' : 'outside'), []);
   useEffect(() => {
+    const controller = new AbortController();
+    void readPreviewCharacterDefinition(controller.signal).then((value) => {
+      if (controller.signal.aborted) return;
+      setDefinition(value);
+      setAppearance((current) => current ?? { ...value.defaults });
+    }).catch(() => { if (!controller.signal.aborted) onFailure(); });
+    return () => controller.abort();
+  }, [attempt, onFailure]);
+  useEffect(() => {
     const changed = () => setHidden(document.visibilityState === 'hidden');
     document.addEventListener('visibilitychange', changed);
     return () => document.removeEventListener('visibilitychange', changed);
@@ -56,8 +73,9 @@ export function PreviewPage() {
 
   // 重试重新创建 Canvas 并清除失败缓存，已下载的业务状态不受影响。
   function retry() {
-    for (const url of [...houseSampleURLs, '/models/p0/kaykit/rogue.glb']) useLoader.clear(GLTFLoader, url);
-    setReady(false); setFailed(false); setJourney('outside'); setAttempt((value) => value + 1);
+    for (const url of houseSampleURLs) useLoader.clear(GLTFLoader, url);
+    if (definition) useLoader.clear(GLTFLoader, [definition.model_url, previewAnimationURL]);
+    setDefinition(null); setReady(false); setFailed(false); setJourney('outside'); setAttempt((value) => value + 1);
   }
 
   // 按钮让鼠标、触屏与键盘共用相机动作。
@@ -74,10 +92,10 @@ export function PreviewPage() {
     <p className="p0-description">{content.description}</p>
     <div className="p0-layout">
       <section className="p0-stage" aria-label={content.scene}>
-        {!failed && <SceneBoundary key={attempt} onFailure={onFailure}>
+        {!failed && definition && appearance && <SceneBoundary key={attempt} onFailure={onFailure}>
           <Canvas orthographic shadows dpr={[1, 1.5]} frameloop={paused ? 'demand' : 'always'} camera={{ position: [10, 12, 10], zoom: 40, near: 0.1, far: 100 }} fallback={<div className="p0-unavailable" role="alert">{content.unsupported}</div>}>
             <Suspense fallback={null}>
-              <PreviewScene direction={direction} zoom={zoom} pan={pan} roofOpen={roofOpen} journey={journey} animation={animation} paused={paused} onArrived={onArrived} onReady={onReady} onContextLost={onFailure} />
+              <PreviewScene direction={direction} zoom={zoom} pan={pan} roofOpen={roofOpen} journey={journey} animation={animation} paused={paused} definition={definition} appearance={appearance} showCombinations={showCombinations} onArrived={onArrived} onReady={onReady} onContextLost={onFailure} />
             </Suspense>
           </Canvas>
         </SceneBoundary>}
@@ -85,7 +103,18 @@ export function PreviewPage() {
         {failed && <button className="p0-retry" onClick={retry}>{content.retry}</button>}
       </section>
       <aside className="p0-controls">
-        <fieldset disabled={!ready || failed}>
+        {definition && appearance && <fieldset disabled={!ready || failed} className="p0-appearance">
+          <legend>{content.appearance}</legend>
+          <div className="p0-wearables">{sampleSlots.map((slot) => <label className="p0-animation-label" key={slot}>
+            <span>{content.slotLabels[slot]}</span>
+            <select aria-label={content.slotLabels[slot]} value={appearance[slot]} disabled={showCombinations} onChange={(event) => setAppearance((value) => value ? { ...value, [slot]: event.target.value } : value)}>
+              {definition.slots[slot].map((option) => <option key={option.id} value={option.id}>{wearableLabels[option.id]}</option>)}
+            </select>
+          </label>)}</div>
+          <button className="p0-full-button" aria-pressed={showCombinations} onClick={() => { setShowCombinations((value) => !value); setJourney('outside'); setDirection(0); setZoom(1); setPan([0, 0]); }}>{showCombinations ? content.showSingle : content.showCombinations}</button>
+          {showCombinations && <p className="p0-help">{content.combinationHelp}</p>}
+        </fieldset>}
+        <fieldset disabled={!ready || failed} className="p0-camera">
           <legend>{content.camera}</legend>
           <p className="p0-view-label" data-testid="p0-direction">{content.cameraDirections[direction]}</p>
           <div className="p0-button-grid">
@@ -100,17 +129,17 @@ export function PreviewPage() {
           </div>
           <button className="p0-full-button" onClick={() => { setDirection(0); setZoom(1); setPan([0, 0]); }}>{content.reset}</button>
         </fieldset>
-        <fieldset disabled={!ready || failed}>
+        {!showCombinations && <fieldset disabled={!ready || failed}>
           <legend>{content.interior}</legend>
           <p data-testid="p0-journey">{content[journey]}</p>
           <button className="p0-full-button" aria-pressed={roofOpen || journey !== 'outside'} disabled={journey !== 'outside'} onClick={() => setRoofOpen((value) => !value)}>{roofOpen || journey !== 'outside' ? content.closeRoof : content.openRoof}</button>
           <button className="p0-full-button" disabled={moving || paused} onClick={() => setJourney(journey === 'inside' ? 'leaving' : 'entering')}>{journey === 'inside' || journey === 'leaving' ? content.leave : content.enter}</button>
-        </fieldset>
+        </fieldset>}
         <fieldset disabled={!ready || failed}>
           <legend>{content.animation}</legend>
-          <label className="p0-animation-label"><span>{content.animation}</span><select value={animation} disabled={moving} onChange={(event) => setAnimation(event.target.value)}>{content.animations.map((option) => <option key={option.clip} value={option.clip}>{option.label}</option>)}</select></label>
+          <label className="p0-animation-label"><span>{content.animation}</span><select aria-label={content.animation} value={animation} disabled={moving} onChange={(event) => setAnimation(event.target.value)}>{content.animations.map((option) => <option key={option.clip} value={option.clip}>{option.label}</option>)}</select></label>
           <button className="p0-full-button" aria-pressed={userPaused} onClick={() => setUserPaused((value) => !value)}>{userPaused ? content.resume : content.pause}</button>
-          <p className="p0-help">{content.independent}</p>
+          {!showCombinations && <p className="p0-help">{content.independent}</p>}
         </fieldset>
       </aside>
     </div>

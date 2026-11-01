@@ -16,6 +16,10 @@ source:
 - web/src/features/island/p0/PreviewScene.tsx
 - web/src/features/island/p0/preview-space.ts
 - web/public/models/p0/sources.json
+- web/public/models/p0/character/character.json
+- web/public/models/p0/animations/source.json
+- web/src/features/character/p0/CharacterSample.tsx
+- web/src/features/character/p0/sample-appearance.ts
 - web/src/features/island/IslandScene.tsx
 - web/src/features/island/island-geometry.ts
 - web/src/features/island/scene-definitions.ts
@@ -51,6 +55,8 @@ tests:
 - web/e2e/p0-preview.spec.ts
 - web/src/features/island/p0/preview-space.test.ts
 - web/src/features/island/p0/PreviewPage.test.tsx
+- scripts/p0-character-assets.test.mjs
+- scripts/retarget-p0-mixamo.test.mjs
 ---
 # 营地建设与活动
 
@@ -67,6 +73,10 @@ tests:
 样片使用 Three.js 与 React Three Fiber，HTML 操作区提供相机平移、缩放、转向、进出屋和暂停。打开室内后隐藏当前相机前方的墙面；关闭室内则恢复全部外墙。人物沿门洞路线进出，页面隐藏、用户暂停或系统减少动效时停止推进，恢复时丢弃首帧时间差。GLB 读取或图形上下文失败时保留 HTML 返回与重试入口。
 
 原始包、加工工程和下载动作放在本地 `.local/3d-sources/`；浏览器使用的 GLB、纹理、描述及许可位于 `web/public/models/p0/`。来源和文件校验值分别保留，原始完整人物仅供基础动作参照，不等于四槽可换装人物。模型结构检查、混搭与动作视觉验收、浏览器交互及真实设备性能分别提供证据，不能相互替代。
+
+四槽样片使用经过加工的身体、发型、上衣、下装和鞋子。每槽各两个真实几何选项，可逐槽调整主角色，或同时查看 16 种组合；旁边的参照人物保留默认外观和独立待机。身体分区按所选服装声明隐藏，换装时重新计算，不能沿用上一套的遮盖状态。两个头部选项分别为短发和光头短须；衣服内部的支撑身体不作为裸露形象交付。每个人物实例持有独立骨骼和播放器，共享的模型、几何、材质和纹理不能被某个实例卸载时释放。
+
+人物 GLB 保留待机、行走、跑步、坐下和抬手动作；补充运动动作另从 Mixamo 下载并离线转换到同一骨架，运行时直接播放整理后的轨道。运动的过顶举臂已按当前体型调整，具体来源、许可和加工说明由素材目录维护；不能将 Mixamo 动作误标为 KayKit 的 CC0 素材。人物描述、模型和补充动作读取失败均可重试；取消或被取代的描述请求不能覆盖新读取。
 
 ## 整体场景与地形
 

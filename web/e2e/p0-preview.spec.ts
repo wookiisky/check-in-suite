@@ -29,7 +29,7 @@ test('真实模型支持四向室内观察、沿门进出和暂停恢复', async
 });
 
 test('GLB 读取失败后保留 HTML 操作并能重新下载恢复', async ({ page }) => {
-  const model = '**/models/p0/kaykit/rogue.glb';
+  const model = '**/models/p0/character/modular.glb';
   await page.route(model, (route) => route.abort());
   await page.goto('/3d-preview.html');
   await expect(page.getByTestId('p0-status')).toContainText('暂时无法显示');
@@ -50,4 +50,27 @@ test('系统减少动效保留静态模型及可操作相机', async ({ page }) 
   const paused = await page.locator('canvas').screenshot();
   await page.waitForTimeout(300);
   expect(await page.locator('canvas').screenshot()).toEqual(paused);
+});
+
+// 全部组合复用一个模型与动作下载，切槽改变真实网格可见性。
+test('四槽草稿、16种实际混搭与离线补充动作可播放', async ({ page }, testInfo) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/3d-preview.html');
+  await expect(page.getByTestId('p0-status')).toHaveText('动作正在播放');
+  await page.getByLabel('发型', { exact: true }).selectOption('hair-barbarian');
+  await page.getByLabel('上衣', { exact: true }).selectOption('upper-barbarian');
+  await page.getByLabel('下装', { exact: true }).selectOption('lower-barbarian');
+  await page.getByLabel('鞋子', { exact: true }).selectOption('shoes-barbarian');
+  await page.getByRole('button', { name: '查看16种混搭', exact: true }).click();
+  await expect(page.getByRole('button', { name: '走进房屋', exact: true })).toHaveCount(0);
+  for (const action of ['Walking_A', 'Running_A', 'Sit_Chair_Idle', 'Cheer', 'Exercise']) {
+    await page.getByLabel('人物动作', { exact: true }).selectOption(action);
+    await page.waitForTimeout(350);
+    await testInfo.attach(action, { body: await page.locator('canvas').screenshot(), contentType: 'image/png' });
+  }
+  await page.getByRole('button', { name: '返回单人样片', exact: true }).click();
+  await expect(page.getByLabel('发型', { exact: true })).toHaveValue('hair-barbarian');
+  await expect(page.getByLabel('上衣', { exact: true })).toHaveValue('upper-barbarian');
+  expect(errors).toEqual([]);
 });

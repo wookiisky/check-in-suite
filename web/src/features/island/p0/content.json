@@ -1,7 +1,7 @@
 {
   "title": "营地 3D 样片",
   "subtitle": "P0 · 人物动画与房屋空间",
-  "description": "检查实际模型、门洞尺度和四个方向的室内遮挡。当前人物用于验证基础动作，四槽换装与 Mixamo 补充动作尚未验收。",
+  "description": "用于检查四槽16种混搭、离线转换动作与房屋尺度。样片不会保存到账户。",
   "back": "返回成长营地",
   "scene": "3D 房屋和人物样片",
   "loading": "正在加载人物与建筑模型…",
@@ -35,6 +35,21 @@
   "paused": "动作已暂停",
   "running": "动作正在播放",
   "animation": "人物动作",
+  "appearance": "四槽换装",
+  "showCombinations": "查看16种混搭",
+  "showSingle": "返回单人样片",
+  "combinationHelp": "全部16种组合播放同一动作。返回单人样片后，可以继续调整当前外观。",
+  "slotLabels": { "hair": "发型", "upper": "上衣", "lower": "下装", "shoes": "鞋子" },
+  "optionLabels": {
+    "hair-rogue": "短发",
+    "hair-barbarian": "光头短须",
+    "upper-rogue": "绿色旅行装",
+    "upper-barbarian": "蓝色皮甲",
+    "lower-rogue": "旅行短装",
+    "lower-barbarian": "皮质短装",
+    "shoes-rogue": "旅行靴",
+    "shoes-barbarian": "护边靴"
+  },
   "independent": "右侧人物独立播放待机动作，用于检查两个骨架互不影响。",
   "cameraDirections": ["东南视角", "东北视角", "西北视角", "西南视角"],
   "animations": [
@@ -42,6 +57,7 @@
     { "clip": "Walking_A", "label": "行走" },
     { "clip": "Running_A", "label": "跑步" },
     { "clip": "Sit_Chair_Idle", "label": "坐下" },
-    { "clip": "Cheer", "label": "抬手" }
+    { "clip": "Cheer", "label": "抬手" },
+    { "clip": "Exercise", "label": "运动 · Mixamo样片" }
   ]
 }
