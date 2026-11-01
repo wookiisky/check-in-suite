@@ -124,7 +124,12 @@ export function BackpackPage({ client, onBack, onIsland, onAppearance, onTitle }
       <button type="button" className="secondary" onClick={() => onIsland()}>{content.goToIsland}</button>
     </div>
     {message && <p className="shop-warning feedback-success" role="status">{message}</p>}
-    <CatalogFilters value={search} facets={facets} onChange={(next) => { generation.current += 1; setSearch(next); }} />
+    <CatalogFilters value={search} facets={facets} onChange={(next) => {
+      // 相同查询不会触发读取 effect，不能使当前首屏或翻页请求失效。
+      if (next.search === search.search && next.provider === search.provider && next.packKey === search.packKey) return;
+      generation.current += 1;
+      setSearch(next);
+    }} />
     <CategoryTabs value={filter} onChange={changeFilter}>
       {filter.group === 'reward' && <div className="shop-tabs" aria-label={content.rewards}>
         {(['pending', 'redeemed'] as const).map((item) => <button

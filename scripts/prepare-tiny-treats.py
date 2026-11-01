@@ -102,6 +102,36 @@ def merge_nodes(objects, name):
     return result
 
 
+# 从实际floor网格提取朝上的支撑面，去重顶点；输出为房屋局部厘米坐标、glTF +Y向上。
+def floor_walk_surface(objects):
+    vertices, triangles, indices = [], [], {}
+    for item in objects:
+        item.data.calc_loop_triangles()
+        for triangle in item.data.loop_triangles:
+            points = [item.matrix_world @ item.data.vertices[index].co for index in triangle.vertices]
+            if (points[1] - points[0]).cross(points[2] - points[0]).z <= 1e-10:
+                continue
+            face = []
+            for point in points:
+                position = tuple(round(value * 100, 6) for value in (point.x, point.z, -point.y))
+                if position not in indices:
+                    indices[position] = len(vertices)
+                    vertices.append(dict(zip(('x_cm', 'y_cm', 'z_cm'), position)))
+                face.append(indices[position])
+            triangles.append(face)
+    return dict(vertices=vertices, triangles=triangles)
+
+
+# 自动提取的网格保持紧凑JSON，其他房型配置仍按原有缩进便于阅读。
+def write_geometry_json(path, configuration):
+    import re
+    text = json.dumps(configuration, ensure_ascii=False, indent=2)
+    for match in reversed(list(re.finditer(r'"walk_surfaces": ', text))):
+        surface, end = json.JSONDecoder().raw_decode(text, match.end())
+        text = text[:match.end()] + json.dumps(surface, separators=(',', ':')) + text[end:]
+    path.write_text(text + '\n')
+
+
 # 保留源网格的 UV 和材质，只按切分后的面分离屋顶及各方向外墙。
 def split_exterior(source):
     import bpy
@@ -204,6 +234,7 @@ def prepare_house(variant, output):
     model = output / (variant['house_key'] + '.glb')
     bpy.ops.export_scene.gltf(filepath=str(model), export_format='GLB', export_yup=True, export_animations=False)
     geometry = house_geometry(variant)
+    geometry['walk_surfaces'] = floor_walk_surface([item for item in nodes if item.name == 'floor'])
     points = [item.matrix_world @ vertex.co for item in nodes for vertex in item.data.vertices]
     geometry['measured_bounds_cm'] = [[round(min(point[axis] for point in points) * 100, 2), round(max(point[axis] for point in points) * 100, 2)] for axis in (0, 2, 1)]
     geometry['measured_bounds_cm'][2] = [-geometry['measured_bounds_cm'][2][1], -geometry['measured_bounds_cm'][2][0]]
@@ -253,14 +284,14 @@ def main():
         entry.update(source_sha256=hashlib.sha256(source_model('homely-house', 'house').read_bytes()).hexdigest())
         entry.update(provider='tiny-treats', source_url=CONTENT['source_urls']['homely-house'], license=CONTENT['license'], output_sha256=hashlib.sha256(model.read_bytes()).hexdigest())
         manifest['assets'] = [item for item in manifest['assets'] if item['key'] != entry['key']] + [entry]
-        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
+        write_geometry_json(manifest_path, manifest)
         print('房屋制作完成', entry['key'], flush=True)
     if args.only in ('all', 'landscape'):
         for entry in CONTENT['landscape_models']:
             model, footprint = prepare_landscape(entry, args.output)
             asset = dict(key=entry['key'], name=entry['name'], pack_key=entry['pack'], provider='tiny-treats', kind='model', format='glb', url='/api/v1/assets/' + entry['key'], source_url=CONTENT['source_urls'][entry['pack']], license=CONTENT['license'], output_sha256=hashlib.sha256(model.read_bytes()).hexdigest(), obstacle_cm=entry['obstacle_cm'], footprint=footprint, blocks_placement=entry.get('blocks_placement', True))
             manifest['assets'] = [item for item in manifest['assets'] if item['key'] != asset['key']] + [asset]
-            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
+            write_geometry_json(manifest_path, manifest)
             print('景物制作完成', asset['key'], flush=True)
 
 

@@ -97,7 +97,7 @@ class ProviderAnimationBatchTest(unittest.TestCase):
         self.poses = {"root": {"translation": [(0, 0, 0)] * 2, "rotation": [(0, 0, 0, 1), (0, 0.5, 0, 0.8660254)], "scale": [(1, 1, 1)] * 2}}
         self.canonical = self.root / "canonical.glb"
         MODULE.write_clip(self.canonical, "canonical", self.nodes, [0], self.times, self.poses)
-        self.configuration = {"batches": [], "excluded_sources": []}
+        self.configuration = {"batches": [], "excluded_sources": [], "shared_asset_metadata": {"kaykit": {"source_url": "https://kaylousberg.itch.io/", "license": "CC0-1.0"}, "kenney": {"source_url": "https://kenney.nl/", "license": "CC0-1.0"}}}
 
     # 每批夹具独立源文件，来源校验值由真实序列化字节取得。
     def source(self, key, clip="walk"):
@@ -132,6 +132,89 @@ class ProviderAnimationBatchTest(unittest.TestCase):
         self.assertEqual(calls, 0)
         self.assertEqual(before, {p.name: p.read_bytes() for p in self.output.glob("*.glb")})
         self.assertEqual(json.loads(self.manifest.read_text()), report)
+
+    # canonical真实节点变更后，分批恢复必须逐条重算并保留旧不可变产物。
+    def test_canonical_change_invalidates_each_batch_and_keeps_current_dedup(self):
+        first, second = self.source("first"), self.source("second")
+        original, _ = self.convert([first, second])
+        old_key = original["animations"][0]["asset_key"]
+        old_bytes = (self.output/(old_key+".glb")).read_bytes()
+        self.canonical.unlink()
+        self.nodes[0]["translation"] = [1, 0, 0]
+        MODULE.write_clip(self.canonical, "canonical", self.nodes, [0], self.times, self.poses)
+        report, calls = self.convert([first])
+        self.assertEqual(calls, 1)
+        self.assertFalse(report["complete"])
+        self.assertEqual(report["counts"]["pending_clips"], 1)
+        active = {item["asset_key"] for item in report["sources"] if item["status"] in {"imported", "duplicate"}}
+        self.assertEqual({item["asset_key"] for item in report["animations"]}, active)
+        self.assertEqual(report["counts"]["unique_clips"], len(active))
+        self.assertIn(old_key, {item["key"] for item in report["assets"]})
+        report, calls = self.convert([second])
+        self.assertEqual(calls, 1)
+        self.assertTrue(report["complete"])
+        self.assertEqual(report["counts"]["failed_clips"], 0)
+        self.assertEqual(len(report["animations"]), 1)
+        active = {item["asset_key"] for item in report["sources"] if item["status"] in {"imported", "duplicate"}}
+        self.assertEqual({item["asset_key"] for item in report["animations"]}, active)
+        self.assertEqual(report["counts"]["unique_clips"], len(active))
+        self.assertIn(old_key, {item["key"] for item in report["assets"]})
+        self.assertNotEqual(report["animations"][0]["asset_key"], old_key)
+        self.assertEqual({item["canonical_sha256"] for item in report["sources"]}, {hashlib.sha256(self.canonical.read_bytes()).hexdigest()})
+        self.assertEqual((self.output/(old_key+".glb")).read_bytes(), old_bytes)
+        document, _ = MODULE.read_document(self.output/(report["animations"][0]["asset_key"]+".glb"))
+        self.assertEqual(document["nodes"][0]["translation"], [1, 0, 0])
+        _, calls = self.convert([first, second])
+        self.assertEqual(calls, 0)
+
+    # 旧清单没有单条canonical证明，不能用已更新的全局hash替代。
+    def test_legacy_records_without_canonical_hash_are_reprocessed(self):
+        first, second = self.source("first"), self.source("second")
+        report, _ = self.convert([first, second])
+        for record in report["sources"]:
+            record.pop("canonical_sha256", None)
+        self.manifest.write_text(json.dumps(report))
+        report, calls = self.convert([first])
+        self.assertEqual(calls, 1)
+        self.assertFalse(report["complete"])
+        report, calls = self.convert([second])
+        self.assertEqual(calls, 1)
+        self.assertTrue(report["complete"])
+
+    # canonical非骨架内容变化会重新验证，但相同实际节点与轨道仍复用原身份。
+    def test_non_skeleton_canonical_change_reuses_identical_payload(self):
+        source = self.source("first")
+        report, _ = self.convert([source])
+        key = report["animations"][0]["asset_key"]
+        before = (self.output/(key+".glb")).read_bytes()
+        self.canonical.unlink()
+        MODULE.write_clip(self.canonical, "canonical metadata changed", self.nodes, [0], self.times, self.poses)
+        report, calls = self.convert([source])
+        self.assertEqual(calls, 1)
+        self.assertTrue(report["complete"])
+        self.assertEqual(report["animations"][0]["asset_key"], key)
+        self.assertEqual((self.output/(key+".glb")).read_bytes(), before)
+
+    # 新canonical的首批失败不能让下一批继承旧成功；修复后可再次恢复。
+    def test_canonical_change_failure_and_interruption_resume(self):
+        first, second = self.source("first"), self.source("second")
+        self.convert([first, second])
+        self.canonical.unlink()
+        self.nodes[0]["translation"] = [1, 0, 0]
+        MODULE.write_clip(self.canonical, "canonical", self.nodes, [0], self.times, self.poses)
+        with patch.object(MODULE, "retarget", side_effect=ValueError("fixture failure")):
+            report = MODULE.import_sources(self.configuration, [first], self.manifest, self.output, self.canonical)
+        self.assertEqual(report["counts"]["failed_clips"], 1)
+        self.assertEqual(report["counts"]["pending_clips"], 1)
+        with patch.object(MODULE, "retarget", side_effect=[(self.times, self.poses, {}), KeyboardInterrupt()]):
+            with self.assertRaises(KeyboardInterrupt):
+                MODULE.import_sources(self.configuration, [first, second], self.manifest, self.output, self.canonical)
+        checkpoint = json.loads(self.manifest.read_text())
+        self.assertFalse(checkpoint["complete"])
+        self.assertEqual(checkpoint["counts"]["pending_clips"], 1)
+        report, calls = self.convert([second])
+        self.assertEqual(calls, 1)
+        self.assertTrue(report["complete"])
 
     # 坏源会留下失败原因，其他源继续加工，重试只处理失败项。
     def test_partial_failure_keeps_success_and_retry_recovers(self):
@@ -194,6 +277,60 @@ class ProviderAnimationBatchTest(unittest.TestCase):
         self.assertEqual(names[mapping["lowerleg.l"]], "LeftLeg")
         self.assertEqual(names[mapping["foot.l"]], "LeftFoot")
         self.assertNotIn(names.index("LeftFootCtrl"), mapping.values())
+
+    # 两个空工作区反序处理同曲线，必须交付相同字节和共享定义，许可仍逐源保留。
+    def test_dedup_is_independent_of_source_order_and_preserves_provenance(self):
+        first, second = self.source("first", "walk"), self.source("second", "run")
+        second.update(pack_key="another-pack", source_url="https://example.test/other")
+        outcomes = []
+        for index, sources in enumerate([[first, second], [second, first]]):
+            directory = self.root/("order-"+str(index))
+            with patch.object(MODULE, "retarget", return_value=(self.times, self.poses, {})):
+                report = MODULE.import_sources(self.configuration, sources, self.root/("order-"+str(index)+".json"), directory, self.canonical)
+            self.assertTrue(report["complete"])
+            self.assertEqual(len(report["animations"]), 1)
+            key = report["animations"][0]["asset_key"]
+            self.assertEqual(report["assets"][0]["source_url"], "https://kaylousberg.itch.io/")
+            self.assertEqual(report["assets"][0]["license"], "CC0-1.0")
+            self.assertNotIn("pack_key", report["assets"][0])
+            outcomes.append((report["assets"], report["animations"], (directory/(key+".glb")).read_bytes()))
+            for source in [first, second]:
+                record = next(item for item in report["sources"] if item["source_file"] == source["source_file"])
+                for field in ['provider', 'pack_key', 'source_url', 'license']:
+                    self.assertEqual(record[field], source[field])
+                self.assertEqual(record['source_clip'], source['clips'][0])
+        self.assertEqual(outcomes[0], outcomes[1])
+
+    # 不同作者来源族不能共用一个带单一出处的资源身份。
+    def test_different_source_families_keep_distinct_provenance(self):
+        first, second = self.source("first"), self.source("second")
+        second['provider'] = 'kenney'
+        report, _ = self.convert([first, second])
+        self.assertTrue(report['complete'])
+        self.assertEqual(len(report['assets']), 2)
+        self.assertEqual({item['provider'] for item in report['assets']}, {'kaykit', 'kenney'})
+        self.assertEqual({item['source_url'] for item in report['assets']}, {'https://kaylousberg.itch.io/', 'https://kenney.nl/'})
+
+    # 来源许可不能被共享族配置伪标；改变族出处也必须使用新身份。
+    def test_shared_family_metadata_is_validated_and_part_of_identity(self):
+        source = self.source("first")
+        source['license'] = 'CC-BY-4.0'
+        report, calls = self.convert([source])
+        self.assertEqual(calls, 0)
+        self.assertEqual(report['counts']['failed_clips'], 1)
+        self.assertEqual(report['assets'], [])
+        source['license'] = 'CC0-1.0'
+        report, _ = self.convert([source])
+        old_key = report['assets'][0]['key']
+        self.configuration['shared_asset_metadata']['kaykit']['source_url'] = 'https://example.test/updated-family'
+        # 这次配方变化必须重新加工，不能沿用先前缓存的共享定义。
+        report, calls = self.convert([source])
+        self.assertEqual(calls, 1)
+        active_key = report['animations'][0]['asset_key']
+        self.assertNotEqual(active_key, old_key)
+        active_asset = next(item for item in report['assets'] if item['key'] == active_key)
+        self.assertEqual(active_asset['source_url'], 'https://example.test/updated-family')
+        self.assertIn(old_key, {item['key'] for item in report['assets']})
 
     # 数值相同的曲线具有稳定身份，与源片段的显示名无关。
     def test_curve_identity_is_stable(self):

@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKS = ROOT / ".local/3d-sources/provider-packs"
 BUILTIN = ROOT / "internal/assets/builtin"
 MANIFEST = ROOT / "internal/assets/provider-animation-manifest.json"
-NORMALIZATION_VERSION = 2  # 第二版动作固定水平根位置，位移由营地导航负责。
+NORMALIZATION_VERSION = 3  # 固定水平根位置，并以实际骨架、曲线与来源族确定交付身份。
 CANONICAL_BONES = ("root", "hips", "spine", "chest", "head", *(
     name + "." + side for side in ("l", "r")
     for name in ("upperarm", "lowerarm", "wrist", "hand", "handslot", "upperleg", "lowerleg", "foot", "toes")
@@ -313,6 +313,8 @@ def save_progress(configuration, manifest, records, path):
             key = record["asset_key"]
             record["status"] = "duplicate" if key in seen_assets else "imported"
             seen_assets.add(key)
+    # 活动作只来自当前成功记录；历史资产与文件继续保留供恢复和追溯。
+    manifest["animations"] = [item for item in manifest["animations"] if item["asset_key"] in seen_assets]
     for batch in configuration["batches"]:
         counts = {"imported": 0, "duplicate": 0, "failed": 0, "pending": 0}
         for source in batch["sources"]:
@@ -320,7 +322,7 @@ def save_progress(configuration, manifest, records, path):
                 record = records.get((source["source_file"], clip))
                 status = record["status"] if record else "pending"
                 counts[status] += 1
-                if not record:
+                if status == "pending":
                     pending.append({"batch": batch["key"], "source_file": source["source_file"], "source_clip": clip})
         batches.append({"key": batch["key"], **counts})
     manifest["sources"] = list(records.values())
@@ -359,9 +361,14 @@ def import_sources(configuration, sources, manifest_path=MANIFEST, output_direct
         "body_key": "kaykit-medium-body-v1", "rig_key": "kaykit-adventurers-medium-v1",
         "sources": [], "assets": [], "animations": [],
     }
-    canonical_matches = manifest.get("canonical_sha256", canonical_hash) == canonical_hash
     manifest["canonical_sha256"] = canonical_hash
+    families = {provider: {"provider": provider, "source_url": metadata.get("source_url"), "license": metadata.get("license")}
+                for provider, metadata in configuration.get("shared_asset_metadata", {}).items()}
     records = {(item["source_file"], item["source_clip"]): item for item in manifest["sources"]}
+    # 全局hash只能说明当前输入；未处理批次仍须保留各自的旧骨架证明。
+    for record in records.values():
+        if record["status"] in {"imported", "duplicate"} and (record.get("canonical_sha256") != canonical_hash or record.get("shared_asset_metadata") != families.get(record["provider"])):
+            record["status"] = "pending"
     animations = {item["asset_key"]: item for item in manifest["animations"]}
     assets = {item["key"]: item for item in manifest["assets"]}
     output_hashes = {item["asset_key"]: item["output_sha256"] for item in records.values() if item.get("output_sha256")}
@@ -370,6 +377,9 @@ def import_sources(configuration, sources, manifest_path=MANIFEST, output_direct
     for source in sources:
         path = ROOT / source["source_file"]
         try:
+            family = families.get(source["provider"])
+            if not family or not family["source_url"] or not family["license"] or family["license"] != source["license"]:
+                raise ValueError("来源与共享动作出处或许可配置不匹配: " + source["source_file"])
             source_hash = hashlib.sha256(path.read_bytes()).hexdigest()
             if source_hash != source["sha256"]:
                 raise ValueError("来源字节与审核快照不一致: " + source["source_file"])
@@ -389,15 +399,15 @@ def import_sources(configuration, sources, manifest_path=MANIFEST, output_direct
                 raise ValueError("来源片段缺失: " + ", ".join(sorted(missing)))
         except Exception as error:
             for name in source["clips"]:
-                records[(source["source_file"], name)] = {"provider": source["provider"], "pack_key": source["pack_key"], "source_file": source["source_file"], "source_sha256": source["sha256"], "source_clip": name, "status": "failed", "reason": str(error)}
+                records[(source["source_file"], name)] = {"provider": source["provider"], "pack_key": source["pack_key"], "source_url": source["source_url"], "license": source["license"], "source_file": source["source_file"], "source_sha256": source["sha256"], "source_clip": name, "canonical_sha256": canonical_hash, "status": "failed", "reason": str(error)}
             save_progress(configuration, manifest, records, manifest_path)
             continue
         for name in source["clips"]:
             identity = (source["source_file"], name)
             previous = records.get(identity, {})
-            record = {"provider": source["provider"], "pack_key": source["pack_key"], "source_file": source["source_file"], "source_sha256": source_hash, "source_clip": name}
+            record = {"provider": source["provider"], "pack_key": source["pack_key"], "source_url": source["source_url"], "license": source["license"], "source_file": source["source_file"], "source_sha256": source_hash, "source_clip": name, "canonical_sha256": canonical_hash, "shared_asset_metadata": family}
             try:
-                if canonical_matches and previous.get("normalization_version") == NORMALIZATION_VERSION and previous.get("status") in {"imported", "duplicate"} and previous.get("source_sha256") == source_hash:
+                if previous.get("canonical_sha256") == canonical_hash and previous.get("shared_asset_metadata") == family and previous.get("normalization_version") == NORMALIZATION_VERSION and previous.get("status") in {"imported", "duplicate"} and previous.get("source_sha256") == source_hash:
                     previous_path = output_directory / (previous["asset_key"] + ".glb")
                     expected = previous.get("output_sha256") or output_hashes.get(previous["asset_key"])
                     if previous_path.exists() and expected and hashlib.sha256(previous_path.read_bytes()).hexdigest() != expected:
@@ -408,18 +418,21 @@ def import_sources(configuration, sources, manifest_path=MANIFEST, output_direct
                 if conversion:
                     normalization["source_conversion"] = conversion
                 signature = curve_signature(times, poses)
-                key = "pa-" + signature[:24]
+                # 相同轨道在不同rest节点上会生成不同GLB，身份必须包含实际骨架。
+                asset_identity = hashlib.sha256(json.dumps([family, nodes, roots, signature], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+                key = "pa-" + asset_identity[:24]
                 output = output_directory / (key + ".glb")
                 existing = animations.get(key)
-                label = existing["clip"] if existing else source["provider"] + "/" + normalization.get("profile", "canonical") + "/" + name
+                # 片段名也属于GLB字节，不能由哪一个来源先执行决定。
+                label = "canonical/" + key
                 write_clip(output, label, nodes, roots, times, poses)
                 output_hash = hashlib.sha256(output.read_bytes()).hexdigest()
                 if key in output_hashes and output_hashes[key] != output_hash:
                     raise ValueError("同一动作身份的既有校验值不同: " + key)
                 animation = {"clip": label, "asset_key": key, "url": "/api/v1/assets/" + key}
                 animations[key] = animation
-                if key not in assets:
-                    assets[key] = {"key": key, "name": label, "kind": "animation", "format": "glb", "url": animation["url"], "provider": source["provider"], "pack_key": source["pack_key"], "source_url": source["source_url"], "license": source["license"]}
+                # 同一作者族内共享产物，精确原包与来源仍保留在每条source记录中。
+                assets[key] = {"key": key, "name": label, "kind": "animation", "format": "glb", "url": animation["url"], **family}
                 record.update(status="duplicate" if existing else "imported", normalization=normalization, normalization_version=NORMALIZATION_VERSION, asset_key=key, output_clip=label, output_sha256=output_hash, curve_sha256=signature)
                 output_hashes[key] = output_hash
                 print("动作整理完成", record["status"], path.name, name, flush=True)
@@ -430,10 +443,6 @@ def import_sources(configuration, sources, manifest_path=MANIFEST, output_direct
         manifest["animations"] = list(animations.values())
         manifest["assets"] = list(assets.values())
         save_progress(configuration, manifest, records, manifest_path)
-    # 清单只发布仍由已完成来源引用的曲线；历史文件本身留给发布集成人核对。
-    referenced = {record["asset_key"] for record in records.values() if record.get("asset_key")}
-    manifest["animations"] = [item for item in manifest["animations"] if item["asset_key"] in referenced]
-    manifest["assets"] = [item for item in manifest["assets"] if item["key"] in referenced]
     save_progress(configuration, manifest, records, manifest_path)
     return manifest
 

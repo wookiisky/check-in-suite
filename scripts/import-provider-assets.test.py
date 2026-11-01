@@ -1,6 +1,9 @@
 """验证实际 glTF 容器、世界边界与独立摆设选择。"""
 import importlib.util
 import json
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 import struct
 import tempfile
@@ -279,6 +282,59 @@ class ProviderSelectedScaleTest(unittest.TestCase):
             self.assertEqual(len(result['assets']), 2)
             self.assertEqual(len(result['definitions']), 1)
             self.assertTrue(source.exists())
+
+
+class ProviderStaticCLITest(unittest.TestCase):
+    """在临时库运行实际CLI，完整库失败不能被空发布范围掩盖。"""
+
+    # 两个审核模型共享最小实际GLB，其中一个损坏用于分批恢复。
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        for name in ['scripts', 'internal/assets/builtin', 'source/previews']:
+            (self.root/name).mkdir(parents=True)
+        shutil.copy2(Path(__file__).with_name('import-provider-assets.py'), self.root/'scripts/import-provider-assets.py')
+        self.write('internal/assets/builtin/catalog.json', [])
+        self.write('internal/assets/provider-pack-manifest.json', {'snapshot_at': 'test', 'packs': [{'status': 'downloaded', 'provider': 'kenney', 'id': 'fixture', 'name': 'fixture', 'source_url': 'https://example.test', 'directory': 'source'}]})
+        self.write('scripts/provider-static-policy.json', {'packs': {'kenney/fixture': {'include': ['good', 'bad'], 'exclude': {'wall': 'building-component'}}}})
+        self.write('scripts/provider-release-selection.json', {'items': [], 'target_count': 0, 'csv_headers': {}, 'unselected_reason': 'library-only'})
+        positions = struct.pack('<9f', 0, 0, 0, 1, 0, 0, 0, 1, 1)
+        doc = {'asset': {'version': '2.0'}, 'buffers': [{'byteLength': len(positions)}], 'bufferViews': [{'buffer': 0, 'byteLength': len(positions)}], 'accessors': [{'bufferView': 0, 'componentType': 5126, 'count': 3, 'type': 'VEC3'}], 'meshes': [{'primitives': [{'attributes': {'POSITION': 0}}]}], 'nodes': [{'mesh': 0}], 'scenes': [{'nodes': [0]}], 'scene': 0}
+        self.model = MODULE.glb_bytes(doc, positions)
+        (self.root/'source/good.glb').write_bytes(self.model)
+        (self.root/'source/bad.glb').write_bytes(b'invalid')
+        (self.root/'source/wall.glb').write_bytes(b'excluded invalid model')
+        for key in ['good', 'bad']:
+            (self.root/f'source/previews/{key}.png').write_bytes(b'\x89PNG\r\n\x1a\nfixture')
+
+    # 配置只写入临时仓库。
+    def write(self, path, value):
+        (self.root/path).write_text(json.dumps(value))
+
+    # 子进程使用真实解析、缓存和清单写入，不模拟CLI返回码。
+    def run_cli(self):
+        result = subprocess.run([sys.executable, str(self.root/'scripts/import-provider-assets.py'), '--catalog-output', str(self.root/'publication.json')], cwd=self.root, capture_output=True, text=True, timeout=30)
+        path = self.root/'internal/assets/provider-asset-manifest.json'
+        self.assertTrue(path.exists(), result.stdout+result.stderr)
+        report = json.loads(path.read_text())
+        return result, report
+
+    # 一个模型失败时保留另一个产物，修复源后可恢复，明确排除不算失败。
+    def test_partial_failure_and_retry_have_real_exit_codes(self):
+        result, report = self.run_cli()
+        self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertEqual(report['counts'], {'failed': 1, 'prepared': 1, 'excluded': 1})
+        good = next(item for item in report['items'] if item['model_id'] == 'good')
+        library = self.root/'.local/3d-sources/provider-prepared/library'
+        good_model = library/(good['model_asset_key']+'.glb')
+        before = good_model.read_bytes()
+        (self.root/'source/bad.glb').write_bytes(self.model)
+        result, report = self.run_cli()
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertEqual(report['counts'], {'prepared': 2, 'excluded': 1})
+        self.assertEqual(good_model.read_bytes(), before)
+        self.assertEqual(len(report['definitions']), 2)
 
 
 if __name__ == '__main__':

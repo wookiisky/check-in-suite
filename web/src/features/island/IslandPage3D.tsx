@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { ApiClient } from '../../api/client';
-import { errorMessage } from '../../api/client';
+import { ApiFailure, errorMessage } from '../../api/client';
 import type { Session } from '../../api/types';
 import { Modal } from '../../components/Modal';
 import { CurrencyAmount } from '../../components/CurrencyAmount';
@@ -30,6 +30,7 @@ import './three/spatial-island.css';
 export interface IslandPage3DProps {
   client:Pick<ApiClient,'request'>&Partial<Pick<ApiClient,'now'|'recordServerTime'>>; // 当前登录的请求入口。
   session:Session; // 账户及减少动效偏好。
+  initialSceneKey?:string; // 本次导航明确指定的目的地，仅在首次资格读取后使用。
   onBack?:()=>void; // 返回进入营地前的页面。
   onShop?:(group?:'scene')=>void; // 场景购买入口可直接打开商店的场景分类。
   onCamp?:()=>void; // 进入已有打卡页面。
@@ -39,12 +40,13 @@ type Destination='back'|'shop'|'camp'|{sceneKey:string}|{shopGroup:'scene'};
 const defaultSceneKey='seaside-v1';
 
 // 页面只保存业务状态，人物和镜头的逐帧变化留在Canvas内部。
-export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:IslandPage3DProps){
+export function IslandPage3D({client,session,initialSceneKey,onBack,onShop,onCamp,onSettings}:IslandPage3DProps){
   const [sceneKey,setSceneKey]=useState(defaultSceneKey),[scenes,setScenes]=useState<SpatialSceneChoice[]>([]);
   const [scenePickerOpen,setScenePickerOpen]=useState(false),[scenesLoading,setScenesLoading]=useState(true),[scenesError,setScenesError]=useState<unknown>(null),[scenesAttempt,setScenesAttempt]=useState(0);
   const layout=useSpatialLayout(client,sceneKey),appearance=useAppearance(),access=useIslandActivityAccess(client);
   const currentLayout=useRef(layout);currentLayout.current=layout;
   const sceneRestored=useRef(false),sceneInteracted=useRef(false);
+  const requestedScene=useRef(initialSceneKey); // 后续重渲染不重放已经消费的导航意图。
   const [camp,setCamp]=useState<Camp|null>(null),[campError,setCampError]=useState<unknown>(null);
   const [selected,setSelected]=useState<string|null>(null),[space,setSpace]=useState<SpatialSpace>('outdoor');
   const [panelOpen,setPanelOpen]=useState(true),[checkinsOpen,setCheckinsOpen]=useState(true);
@@ -67,6 +69,7 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
   const selection=view?.placements.find(item=>item.instance_id===selected);
   const issue=view?layoutIssue(view,view.placements):null;
   const busy=layout.saving||layout.unknownSave||layout.loading;
+  const inventoryError=layout.error instanceof ApiFailure&&layout.error.detail.field_errors.placements==='PLACED_IN_OTHER_SCENE';
   const allowed=allowedIslandActivities(access.access,now());
 
   // 先读取永久资格，再恢复本设备选择；失效或未拥有的本地身份不会触发布局读取。
@@ -78,11 +81,11 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
       setScenes(next.items);
       if(!sceneRestored.current){
         sceneRestored.current=true;
-        let preferred:string|null=null;
-        try{preferred=localStorage.getItem(sceneContent.storageKey);}catch{/* 存储被禁用时，当前页面仍可正常切换场景。 */}
+        let preferred:string|null=requestedScene.current??null;
+        if(!preferred){try{preferred=localStorage.getItem(sceneContent.storageKey);}catch{/* 偏好不可用时仍可处理明确目的地和手动切换。 */}}
         const target=next.items.find(item=>item.scene_key===preferred&&(item.owned||item.free));
         const before=currentLayout.current;
-        if(target&&target.scene_key!==defaultSceneKey&&!sceneInteracted.current&&before.canLeave&&!before.dirty&&!before.conflict&&!before.review)navigate({sceneKey:target.scene_key});
+        if(target&&(target.scene_key!==defaultSceneKey||requestedScene.current!==undefined)&&!sceneInteracted.current&&before.canLeave&&!before.dirty&&!before.conflict&&!before.inventoryConflict&&!before.review)navigate({sceneKey:target.scene_key});
       }
     }).catch(reason=>{if(!controller.signal.aborted)setScenesError(reason);}).finally(()=>{if(!controller.signal.aborted)setScenesLoading(false);});
     const refresh=()=>setScenesAttempt(value=>value+1);
@@ -145,7 +148,7 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
     camera.current={x:0,z:0,zoom:window.innerWidth<=760?2.6:2.2,direction};
     try{localStorage.setItem(sceneContent.storageKey,destination.sceneKey);}catch{/* 场景布置由服务端保存，设备偏好写入失败不影响前往。 */}
   }
-  function leave(destination:Destination){if(layout.saving)return;if(layout.dirty||layout.unknownSave||layout.conflict||layout.review){setLeaving(destination);return;}if(layout.editing)layout.cancel();navigate(destination);}
+  function leave(destination:Destination){if(layout.saving)return;if(layout.dirty||layout.unknownSave||layout.conflict||layout.inventoryConflict||layout.review){setLeaving(destination);return;}if(layout.editing)layout.cancel();navigate(destination);}
   async function save(destination?:Destination){if(await layout.save()){setMessage(content.saved);setSelected(null);if(destination){setLeaving(null);navigate(destination);}}}
   function discardLeave(){if(layout.unknownSave)return;layout.cancel();const destination=leaving;setLeaving(null);if(destination)navigate(destination);}
   function begin(){sceneInteracted.current=true;layout.begin();setMessage('');setSelected(null);setCheckinsOpen(false);setCameraOpen(false);setPanelOpen(true);}
@@ -181,7 +184,12 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
     if(placement.space==='indoor'&&!view.scene.house)return;
     camera.current={...camera.current,x:(placement.x_cm+(placement.space==='indoor'?(house?.x_cm??0):0))/100,z:(placement.z_cm+(placement.space==='indoor'?(house?.z_cm??0):0))/100};
   }
-  function updatePlacement(placement:SpatialPlacement){if(view&&!busy)layout.setPlacements(view.placements.map(item=>item.instance_id===placement.instance_id?placement:item));}
+  function updatePlacement(placement:SpatialPlacement){
+    if(!view||busy)return;
+    const owned=view.inventory.find(item=>item.instance_id===placement.instance_id);
+    if(owned?.placed_scene_key&&owned.placed_scene_key!==view.scene_key)return;
+    layout.setPlacements(view.placements.map(item=>item.instance_id===placement.instance_id?placement:item));
+  }
   function nudge(dx:number,dz:number){if(selection)updatePlacement({...selection,x_cm:selection.x_cm+dx,z_cm:selection.z_cm+dz});}
   function rotateItem(){if(selection&&view){const definition=view.catalog.find(d=>d.item_key===selection.item_key)!;const rotation=(selection.rotation+1)%4;if(definition.rotations.includes(rotation))updatePlacement({...selection,rotation});}}
   function store(){if(selection&&view){const kept=view.placements.filter(item=>item.instance_id!==selected);layout.setPlacements(kept);setSelected(null);if(view.catalog.find(d=>d.item_key===selection.item_key)?.assembly==='house'||(!view.scene.house&&!kept.some(item=>item.space==='indoor')))focusSpace('outdoor');}}
@@ -205,6 +213,21 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
     const action=keys[event.key];if(action){event.preventDefault();action();}
   }
 
+  const feedback=<section className="spatial-feedback" aria-live="polite">
+      {!view&&<div className="spatial-notice"><p role={layout.error?'alert':'status'}>{layout.error?errorMessage(layout.error):content.loading}</p>{layout.error!==null&&<button onClick={()=>void layout.readLatest()}>{content.retry}</button>}</div>}
+      {campError!==null&&<p role="alert">{errorMessage(campError)}</p>}
+      {appearance.loading&&!appearance.snapshot&&<p role="status">{content.appearanceLoading}</p>}
+      {appearance.error!==null&&<div><p role="alert">{content.appearanceError}</p><button onClick={()=>void appearance.refresh()}>{content.retry}</button></div>}
+      {modelError&&<div><p role="alert">{content.sceneError}</p><button onClick={()=>{setModelError(false);setSceneAttempt(value=>value+1);}}>{content.assetRetry}</button></div>}
+      {message&&<p role="status">{message}</p>}
+      {editing&&issue&&<p role="alert">{content.invalid[issue]}</p>}
+      {view&&layout.error!==null&&!inventoryError&&<p role="alert">{errorMessage(layout.error)}</p>}
+      {layout.inventoryConflict&&<div><p role="alert">{content.inventoryConflict}</p><button disabled={layout.loading} onClick={()=>void layout.readLatest()}>{content.readInventory}</button></div>}
+      {layout.conflict&&<div><p role="alert">{content.conflict}</p><button disabled={layout.loading} onClick={()=>void layout.readLatest()}>{content.readLatest}</button></div>}
+      {layout.unknownSave&&<div><p role="alert">{content.unknownSave}</p><button disabled={layout.loading} onClick={()=>void layout.readLatest()}>{content.readResult}</button>{layout.canRetryOriginal&&<button disabled={layout.saving} onClick={()=>void layout.retryOriginal()}>{content.retryOriginal}</button>}</div>}
+      {layout.review&&<div><p>{content.review}</p><p>{content.latestVersion} {layout.state?.version}</p><p>{content.latestItems}: {layout.state?.placements.map(item=>layout.state?.catalog.find(d=>d.item_key===item.item_key)?.name).join('、')}</p><button onClick={layout.confirmReview}>{content.confirmReview}</button><button className="secondary" onClick={cancel}>{content.useLatest}</button></div>}
+    </section>;
+
   return <main className="spatial-island" aria-label={content.title} style={{'--spatial-hud-top':`${hudTop}px`,'--spatial-panel-top':`${panelTop}px`} as CSSProperties}>
     <section className="spatial-stage" aria-label={content.scene} aria-describedby="spatial-scene-help" data-camera-direction={direction} data-actor-space={actor.space} data-actor-phase={actor.phase} data-character-status={characterStatus.phase} tabIndex={0} onKeyDown={cameraKeys}>
       {view&&<SpatialSceneBoundary key={`${sceneKey}:${sceneAttempt}`} onError={sceneError}><SpatialScene3D layout={view} appearance={appearance.snapshot} access={access.access} now={now} camera={camera} insets={insets} direction={direction} editing={editing} indoor={indoor} paused={stopped||modelError} selected={selected} invalid={!!issue} {...(actor.phase==='performing'&&actor.activity==='ball'&&actor.targetInstanceId?{hiddenInstanceId:actor.targetInstanceId}:{})} {...(intent?{intent}:{})} onStatus={setActor} onUnavailable={unavailable} onSelect={id=>{if(!busy)setSelected(id);}} onObject={objectClick} onPlacement={updatePlacement} onRejected={()=>setMessage(content.invalid[issue??'boundary'])} onError={sceneError} onCharacterStatus={reportCharacter}/></SpatialSceneBoundary>}
@@ -226,20 +249,8 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
       <div><button className="secondary" aria-label={content.zoomOut} title={content.zoomOut} onClick={()=>{camera.current=zoomCamera(camera.current,1/1.2);}}>−</button><button className="secondary" aria-label={content.resetCamera} title={content.resetCamera} onClick={()=>focusSpace(indoor?'indoor':'outdoor')}>⌖</button><button className="secondary" aria-label={content.zoomIn} title={content.zoomIn} onClick={()=>{camera.current=zoomCamera(camera.current,1.2);}}>+</button></div>
       {cameraPanOpen&&<div className="spatial-pan"><button className="secondary" aria-label={content.panLeft} onClick={()=>pan(80,0)}>←</button><button className="secondary" aria-label={content.panUp} onClick={()=>pan(0,80)}>↑</button><button className="secondary" aria-label={content.panDown} onClick={()=>pan(0,-80)}>↓</button><button className="secondary" aria-label={content.panRight} onClick={()=>pan(-80,0)}>→</button></div>}
     </nav>}
-    <section className="spatial-feedback" aria-live="polite">
-      {!view&&<div className="spatial-notice"><p role={layout.error?'alert':'status'}>{layout.error?errorMessage(layout.error):content.loading}</p>{layout.error!==null&&<button onClick={()=>void layout.readLatest()}>{content.retry}</button>}</div>}
-      {campError!==null&&<p role="alert">{errorMessage(campError)}</p>}
-      {appearance.loading&&!appearance.snapshot&&<p role="status">{content.appearanceLoading}</p>}
-      {appearance.error!==null&&<div><p role="alert">{content.appearanceError}</p><button onClick={()=>void appearance.refresh()}>{content.retry}</button></div>}
-      {modelError&&<div><p role="alert">{content.sceneError}</p><button onClick={()=>{setModelError(false);setSceneAttempt(value=>value+1);}}>{content.assetRetry}</button></div>}
-      {message&&<p role="status">{message}</p>}
-      {editing&&issue&&<p role="alert">{content.invalid[issue]}</p>}
-      {view&&layout.error!==null&&<p role="alert">{errorMessage(layout.error)}</p>}
-      {layout.conflict&&<div><p role="alert">{content.conflict}</p><button disabled={layout.loading} onClick={()=>void layout.readLatest()}>{content.readLatest}</button></div>}
-      {layout.unknownSave&&<div><p role="alert">{content.unknownSave}</p><button disabled={layout.loading} onClick={()=>void layout.readLatest()}>{content.readResult}</button>{layout.canRetryOriginal&&<button disabled={layout.saving} onClick={()=>void layout.retryOriginal()}>{content.retryOriginal}</button>}</div>}
-      {layout.review&&<div><p>{content.review}</p><p>{content.latestVersion} {layout.state?.version}</p><p>{content.latestItems}: {layout.state?.placements.map(item=>layout.state?.catalog.find(d=>d.item_key===item.item_key)?.name).join('、')}</p><button onClick={layout.confirmReview}>{content.confirmReview}</button><button className="secondary" onClick={cancel}>{content.useLatest}</button></div>}
-    </section>
-    {editing&&view&&<SpatialInventory state={view} selected={selection} space={space} expanded={panelOpen} busy={busy} saving={layout.saving} sceneNames={Object.fromEntries(scenes.map(item=>[item.scene_key,item.name]))} saveDisabled={!!issue||layout.conflict||layout.review} panelRef={panel} onToggle={()=>setPanelOpen(value=>!value)} onSpace={focusSpace} onChoose={choose} onMove={nudge} onRotate={rotateItem} onStore={store} onSave={()=>void save()} onCancel={cancel} onEnvironment={layout.setEnvironment}/>}
+    {!editing&&feedback}
+    {editing&&view&&<SpatialInventory feedback={feedback} state={view} selected={selection} space={space} expanded={panelOpen} busy={busy} saving={layout.saving} sceneNames={Object.fromEntries(scenes.map(item=>[item.scene_key,item.name]))} saveDisabled={!!issue||layout.conflict||layout.inventoryConflict||layout.review} panelRef={panel} onToggle={()=>setPanelOpen(value=>!value)} onSpace={focusSpace} onChoose={choose} onMove={nudge} onRotate={rotateItem} onStore={store} onSave={()=>void save()} onCancel={cancel} onEnvironment={layout.setEnvironment}/>}
     <footer ref={dock} className={`spatial-dock ${editing?'is-editing':''}`}>
       {!editing&&<div className="spatial-activities" aria-label={content.activitiesTitle}>{(Object.keys(content.activities) as SpatialActorActivity[]).map(key=><button className={`secondary ${key!=='walk'&&key!=='rest'&&!allowed.includes(key)?'is-locked':''}`} key={key} onClick={()=>activity(key)}>{content.activities[key]}</button>)}</div>}
       <div className="spatial-toolbar">{!editing&&<button onClick={begin} disabled={!view||layout.loading}>{content.edit}</button>}<button className="secondary" aria-pressed={indoor} disabled={!view?.scene.house} onClick={()=>focusSpace(indoor?'outdoor':'indoor',true)}>{indoor?content.outdoor:content.indoor}</button>{!editing&&<button className="secondary" disabled={!view?.scene.house} onClick={()=>{setIntent(current=>({sequence:(current?.sequence??0)+1,activity:'walk',space:actor.space==='indoor'?'outdoor':'indoor'}));}}>{actor.space==='indoor'?content.exit:content.enter}</button>}{onShop&&<button className="secondary" disabled={layout.saving} onClick={()=>leave('shop')}>{content.shop}</button>}{!editing&&<button className="secondary" aria-pressed={paused} onClick={()=>setPaused(value=>!value)}>{paused?content.resume:content.pause}</button>}</div>
@@ -248,6 +259,6 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
     </footer>
     {scenePickerOpen&&<ScenePicker scenes={scenes} current={sceneKey} loading={scenesLoading} error={scenesError} onChoose={key=>{const target=scenes.find(item=>item.scene_key===key);if(!target||(!target.owned&&!target.free))return;sceneInteracted.current=true;setScenePickerOpen(false);leave({sceneKey:key});}} {...(onShop?{onPurchase:()=>{setScenePickerOpen(false);leave({shopGroup:'scene'});}}:{})} onRetry={()=>setScenesAttempt(value=>value+1)} onClose={()=>setScenePickerOpen(false)}/>}
     {locked&&<Modal title={content.lockedTitle} onClose={()=>setLocked(null)}><p>{content.lockedHint}</p><ul>{access.access?.activity_access.find(item=>item.activity===locked)?.tasks.map(task=><li key={task.id}>{task.name}{!task.enabled?` · ${content.inactiveTask}`:''}</li>)}</ul><div className="button-row">{onCamp&&<button onClick={()=>{setLocked(null);leave('camp');}}>{content.goCamp}</button>}<button className="secondary" onClick={()=>setLocked(null)}>{content.close}</button></div></Modal>}
-    {leaving&&<Modal title={content.leaveTitle} onClose={()=>setLeaving(null)} closeDisabled={layout.saving}><p>{layout.unknownSave?content.unknownSave:!editing?content.saved:content.leaveHint}</p><div className="button-row">{!editing&&!layout.unknownSave?<button onClick={()=>{const destination=leaving;setLeaving(null);navigate(destination);}}>{content.continueLeave}</button>:layout.unknownSave?<button disabled={layout.loading} onClick={()=>void layout.readLatest()}>{content.readResult}</button>:<><button disabled={layout.saving||!!issue||layout.conflict||layout.review} onClick={()=>void save(leaving)}>{content.saveLeave}</button><button className="secondary" disabled={layout.saving} onClick={discardLeave}>{content.discardLeave}</button></>}<button className="secondary" disabled={layout.saving} onClick={()=>setLeaving(null)}>{content.stay}</button></div></Modal>}
+    {leaving&&<Modal title={content.leaveTitle} onClose={()=>setLeaving(null)} closeDisabled={layout.saving}><p>{layout.unknownSave?content.unknownSave:layout.inventoryConflict?content.inventoryConflict:!editing?content.saved:content.leaveHint}</p><div className="button-row">{!editing&&!layout.unknownSave?<button onClick={()=>{const destination=leaving;setLeaving(null);navigate(destination);}}>{content.continueLeave}</button>:layout.unknownSave?<button disabled={layout.loading} onClick={()=>void layout.readLatest()}>{content.readResult}</button>:<>{layout.inventoryConflict&&<button disabled={layout.loading} onClick={()=>void layout.readLatest()}>{content.readInventory}</button>}<button disabled={layout.saving||!!issue||layout.conflict||layout.inventoryConflict||layout.review} onClick={()=>void save(leaving)}>{content.saveLeave}</button><button className="secondary" disabled={layout.saving} onClick={discardLeave}>{content.discardLeave}</button></>}<button className="secondary" disabled={layout.saving} onClick={()=>setLeaving(null)}>{content.stay}</button></div></Modal>}
   </main>;
 }

@@ -1028,11 +1028,29 @@ components:
         wall_url: {"type": "string", "minLength": 1}
         doorway_url: {"type": "string", "minLength": 1}
         roof_url: {"type": "string", "minLength": 1}
+    SpatialWalkVertex:
+      type: "object"
+      additionalProperties: false
+      description: "实际floor节点的房屋局部厘米坐标，glTF +Y向上。"
+      required: ["x_cm", "y_cm", "z_cm"]
+      properties:
+        x_cm: {"type": "number"}
+        y_cm: {"type": "number"}
+        z_cm: {"type": "number"}
+    SpatialWalkSurface:
+      type: "object"
+      additionalProperties: false
+      description: "floor节点朝上的支撑面；最高命中面用于脚下高度，三角索引引用去重顶点。"
+      required: ["vertices", "triangles"]
+      properties:
+        vertices: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialWalkVertex"}}
+        triangles: {"type": "array", "items": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "integer", "minimum": 0}}}
     SpatialHouse:
       type: "object"
       additionalProperties: false
       required: ["interior", "floor_height_cm", "wall_height_cm", "door_center", "door_width_cm", "door_height_cm", "door_clearance", "walls", "interior_clearances"]
       properties:
+        walk_surfaces: {"$ref": "#/components/schemas/SpatialWalkSurface"}
         entry_height_profile: {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["z_cm", "y_cm"], "properties": {"z_cm": {"type": "number"}, "y_cm": {"type": "number"}}}}
         house_key: {"type": "string", "minLength": 1}
         model_url: {"type": "string", "minLength": 1}

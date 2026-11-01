@@ -76,4 +76,30 @@ describe('素材商品分页', () => {
     expect(screen.queryByText('这个分类暂时没有商品。')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '继续加载' })).toBeInTheDocument();
   });
+
+  it('背包首次读取中重复提交相同搜索仍能结束加载', async () => {
+    const first = deferred<unknown>();
+    const request = vi.fn(() => first.promise);
+    render(<BackpackPage client={{ request: request as ApiClient['request'] }} session={session} onBack={vi.fn()} onIsland={vi.fn()} onAppearance={vi.fn()} />);
+    await waitFor(() => expect(request).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole('button', { name: '搜索' }));
+    await act(async () => first.resolve({ items: [purchase], next_cursor: null }));
+    expect(await screen.findByRole('heading', { name: purchase.name_snapshot })).toBeInTheDocument();
+    expect(screen.queryByText('正在加载……')).not.toBeInTheDocument();
+  });
+
+  it('背包翻页中重复提交相同搜索不会丢弃该页或卡住翻页', async () => {
+    const next = deferred<unknown>();
+    const request = vi.fn(async (path: string) => new URL(path, 'http://fixture').searchParams.has('cursor')
+      ? next.promise : { items: [purchase], next_cursor: 'next-owned' });
+    render(<BackpackPage client={{ request: request as ApiClient['request'] }} session={session} onBack={vi.fn()} onIsland={vi.fn()} onAppearance={vi.fn()} />);
+    await screen.findByRole('heading', { name: purchase.name_snapshot });
+    fireEvent.click(screen.getByRole('button', { name: '继续加载' }));
+    await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+    fireEvent.click(screen.getByRole('button', { name: '搜索' }));
+    await act(async () => next.resolve({ items: [{ ...purchase, id: 'next-owned', name_snapshot: '后页物品' }], next_cursor: null }));
+    expect(await screen.findByRole('heading', { name: '后页物品' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '继续加载' })).not.toBeInTheDocument();
+  });
+
 });

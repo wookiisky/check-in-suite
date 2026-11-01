@@ -7,6 +7,40 @@ import sys
 
 import bpy
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
+
+
+# 配置插值与实际floor射线逐点比较，覆盖侧平台、倒角、重叠面和房屋局部坐标。
+def verify_walk_surface(house):
+    surface = house['walk_surfaces']
+    vertices = surface['vertices']
+    assert len({tuple(vertex.values()) for vertex in vertices}) == len(vertices)
+    floor = bpy.data.objects['floor']
+    floor.data.calc_loop_triangles()
+    actual_vertices = [floor.matrix_world @ vertex.co for vertex in floor.data.vertices]
+    bvh = BVHTree.FromPolygons(actual_vertices, [triangle.vertices[:] for triangle in floor.data.loop_triangles], all_triangles=True)
+    samples = []
+    for face in surface['triangles']:
+        assert len(face) == 3 and all(isinstance(index, int) and 0 <= index < len(vertices) for index in face)
+        points = [vertices[index] for index in face]
+        a, b, c = [Vector((point['x_cm'], -point['z_cm'], point['y_cm'])) for point in points]
+        assert (b - a).cross(c - a).z > 0, ('支撑面必须朝上', face)
+        samples.append((sum(point['x_cm'] for point in points) / 3, sum(point['z_cm'] for point in points) / 3))
+    samples.extend([(0, house['door_center']['z_cm']), (120, 250), (-120, 250), (200, 350), (-200, 350)])
+    for x, z in samples:
+        heights = []
+        for face in surface['triangles']:
+            a, b, c = [vertices[index] for index in face]
+            denominator = (b['z_cm'] - c['z_cm']) * (a['x_cm'] - c['x_cm']) + (c['x_cm'] - b['x_cm']) * (a['z_cm'] - c['z_cm'])
+            u = ((b['z_cm'] - c['z_cm']) * (x - c['x_cm']) + (c['x_cm'] - b['x_cm']) * (z - c['z_cm'])) / denominator
+            v = ((c['z_cm'] - a['z_cm']) * (x - c['x_cm']) + (a['x_cm'] - c['x_cm']) * (z - c['z_cm'])) / denominator
+            if min(u, v, 1 - u - v) >= -1e-8:
+                heights.append(u * a['y_cm'] + v * b['y_cm'] + (1 - u - v) * c['y_cm'])
+        actual, *_ = bvh.ray_cast(Vector((x / 100, -z / 100, 1)), Vector((0, 0, -1)))
+        assert bool(heights) == (actual is not None), ('支撑面覆盖与GLB不符', x, z)
+        if actual is not None:
+            assert abs(max(heights) - actual.z * 100) < .001, ('支撑高度与GLB不符', x, z, heights, actual.z * 100)
+    print('实际支撑面检查通过', house['house_key'], len(vertices), len(surface['triangles']), len(samples), flush=True)
 
 
 # 射线使用 glTF 的米制位置，统一转换到 Blender Z 向上的坐标。
@@ -64,6 +98,7 @@ def verify_house(house, directory):
     south = hit_at((house['door_width_cm'] / 200 + .15, 1.5, center[2]), (0, 0, 1))
     assert abs(south[2] - room['max_z_cm']) < .001, south
     verify_entry_profile(house)
+    verify_walk_surface(house)
     print('实际房屋几何检查通过', house['house_key'], flush=True)
 
 

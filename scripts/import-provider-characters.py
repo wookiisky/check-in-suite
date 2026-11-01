@@ -11,6 +11,32 @@ ROOT = Path(__file__).resolve().parents[1]
 BUILTIN = ROOT / 'internal/assets/builtin'
 MANIFEST = ROOT / 'internal/assets/provider-character-manifest.json'
 CONFIGURATION = ROOT / 'scripts/provider-character-sources.json'
+THUMBNAIL_RECIPE = 'metadata-free-cycles-preview-v1'  # 日期等元数据不参与交付缩略图。
+
+
+# 同一版本的不同字节必须由新身份交付，已有文件保持原样。
+def write_immutable(path, data):
+    if path.exists():
+        if path.read_bytes() != data:
+            raise ValueError('immutable-resource-changed: ' + path.name)
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+
+
+# Cycles仍会独立写入耗时；去掉元数据chunk，保留原始像素和色彩配置。
+def png_without_metadata(data):
+    if data[:8] != b'\x89PNG\r\n\x1a\n':
+        raise ValueError('invalid-rendered-png')
+    result = bytearray(data[:8])
+    offset = 8
+    while offset < len(data):
+        length = int.from_bytes(data[offset:offset+4], 'big')
+        end = offset + length + 12
+        if data[offset+4:offset+8] not in {b'tEXt', b'zTXt', b'iTXt', b'eXIf'}:
+            result.extend(data[offset:end])
+        offset = end
+    return bytes(result)
 
 
 # 固定以实际交付 GLB 与加工规范计算资源版本，不覆盖旧文件身份。
@@ -52,9 +78,24 @@ def import_characters(options):
     previous = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {'characters': [], 'assets': []}
     entries = {entry['definition']['character_key']: entry for entry in previous['characters'] if entry.get('status') == 'imported'}
     assets = {asset['key']: asset for asset in previous['assets']}
-    failures = []
+    unknown = set(options.only) - (entries.keys() if options.evidence else source_specs.keys())
+    if unknown:
+        raise ValueError('unknown character source: ' + ', '.join(sorted(unknown)))
+    failures = {item['character_key']: item for item in previous.get('failures', [])}
+    processed = False
     base = json.loads((ROOT/'internal/character/character-catalog.json').read_text())['characters'][0]
     seams = config['seams']
+
+    # 分批保留未选记录；加工成功不替代结构与画面验收。
+    def save_progress():
+        result={**previous,'body_key':config['body_key'],'characters':list(entries.values()),'assets':list(assets.values()),'failures':list(failures.values())}
+        if 'pending' in result:
+            result['pending']=[item for item in result['pending'] if item['character_key'] not in entries or item['character_key'] in failures]
+        if failures or source_specs.keys() - entries.keys():
+            result.update(complete=False,status='incomplete')
+        elif processed or not previous.get('complete', False):
+            result.update(complete=False,status='pending-validation')
+        MANIFEST.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 
     # 真实网格范围用于缩略图构图和统一身体证据。
     def bounds(objects):
@@ -156,7 +197,12 @@ def import_characters(options):
                 modifier.object = target_rig
 
     # 角色与衣服缩略图均渲染交付网格，无示意模型或占位图片。
-    def render(objects, path):
+    def render(objects, path, immutable=False):
+        destination = path
+        if immutable:
+            path = ROOT/'.local/3d-sources/provider-character-work'/(path.stem+'-render.png')
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.unlink(missing_ok=True)
         all_meshes = [obj for obj in bpy.data.objects if obj.type == 'MESH']
         for obj in all_meshes:
             obj.hide_render = obj not in objects
@@ -168,6 +214,10 @@ def import_characters(options):
         scene.render.resolution_percentage = 100
         scene.render.image_settings.file_format = 'PNG'
         scene.render.image_settings.color_mode = 'RGBA'
+        # Blender默认写日期、耗时等PNG元数据，同一配方重试必须生成相同字节。
+        for property in scene.render.bl_rna.properties:
+            if property.identifier.startswith('use_stamp'):
+                setattr(scene.render, property.identifier, False)
         scene.render.film_transparent = True
         if scene.world is None:
             scene.world = bpy.data.worlds.new('CharacterWorld')
@@ -202,12 +252,24 @@ def import_characters(options):
             bpy.data.objects.remove(obj, do_unlink=True)
         for obj in all_meshes:
             obj.hide_render = False
+        if immutable:
+            try:
+                write_immutable(destination, png_without_metadata(path.read_bytes()))
+            finally:
+                path.unlink(missing_ok=True)
 
     for spec in sources:
         if options.only and spec['key'] not in options.only:
             continue
-        if not options.force and spec['key'] in entries:
-            continue
+        if not options.force and spec['key'] in entries and spec['key'] not in failures:
+            entry = entries[spec['key']]
+            declarations = [entry['definition'], *entry['wearables']]
+            outputs = [(item.get('model_asset_key'), 'glb') for item in declarations]
+            outputs += [(item.get('thumbnail_asset_key'), 'png') for item in declarations]
+            # 已有记录不能替代实际文件；缺失项在本次运行直接重建。
+            if all(not key or (BUILTIN/(key+'.'+extension)).is_file() for key, extension in outputs):
+                continue
+        processed = True
         try:
             if spec.get('normalization',{}).get('head_envelope_verified') is False:
                 raise ValueError('head envelope and shared hairstyle geometry are not verified; source stays pending')
@@ -413,8 +475,8 @@ def import_characters(options):
                 obj.select_set(True)
             bpy.context.view_layer.objects.active=rig
             bpy.ops.export_scene.gltf(filepath=str(temporary),export_format='GLB',use_selection=True,export_animations=False,export_skins=True,export_def_bones=False)
-            model_key = asset_version(spec['key'],temporary.read_bytes(),spec)
-            (BUILTIN/(model_key+'.glb')).write_bytes(temporary.read_bytes())
+            model_key = asset_version(spec['key'],temporary.read_bytes(),{**spec,'thumbnail_recipe':THUMBNAIL_RECIPE})
+            write_immutable(BUILTIN/(model_key+'.glb'),temporary.read_bytes())
             url = '/api/v1/assets/'+model_key
             definition=copy.deepcopy(base)
             definition.update(character_key=spec['key'],body_key=config['body_key'],name=spec['name'],provider=spec['provider'],pack_key=spec['pack_key'],rig_key=config['rig_key'],model_asset_key=model_key,model_url=url)
@@ -427,7 +489,7 @@ def import_characters(options):
                     continue
                 wearable_key = spec['key']+'-'+slot
                 thumbnail_key=model_key+'-'+slot
-                render([obj] if obj is not None else [head],BUILTIN/(thumbnail_key+'.png'))
+                render([obj] if obj is not None else [head],BUILTIN/(thumbnail_key+'.png'),immutable=True)
                 thumbnail_asset={**model_asset,'key':thumbnail_key,'name':spec['name'],'kind':'wearable','url':'/api/v1/assets/'+thumbnail_key,'format':'png'}
                 assets[thumbnail_key]=thumbnail_asset
                 covers={'hair':['scalp'],'upper':['torso','arms'],'lower':['legs'],'shoes':['feet']}[slot]
@@ -443,7 +505,7 @@ def import_characters(options):
                 if existing['wearable_key'] in fallback.values():
                     default_covers.update(existing['covers'])
             visible_support=[obj for obj in keep if obj.name.removeprefix('body_') not in default_covers]
-            render([head,hand]+visible_support+[obj for obj in prepared.values() if obj is not None],BUILTIN/(thumbnail_key+'.png'))
+            render([head,hand]+visible_support+[obj for obj in prepared.values() if obj is not None],BUILTIN/(thumbnail_key+'.png'),immutable=True)
             definition.update(thumbnail_asset_key=thumbnail_key,thumbnail_url='/api/v1/assets/'+thumbnail_key)
             assets[thumbnail_key]={**model_asset,'key':thumbnail_key,'name':spec['name'],'kind':'character','url':definition['thumbnail_url'],'format':'png'}
             entry={'status':'imported','provider':spec['provider'],'pack_key':spec['pack_key'],'source':str(source.relative_to(ROOT)),'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'source_archive_sha256':pack['archive_sha256'],'definition':definition,'wearables':wearables,'binding_error':binding_error,'face_hair_disjoint':face_hair_disjoint,'bones':sorted(canonical_names),'mesh_counts':{obj.name:len(obj.data.polygons) for obj in deliver},'seams':seams,'coordinate_system':'+Y up in GLB, meters before shared scale','normalization':normalization_evidence or {'method':'Per-vertex weighted source bind to canonical rest matrices, shared seam geometry and target inverse bind matrices.'},'augmentation':spec.get('normalization',{}).get('augmentation',[]),'support_material':spec.get('support_material')}
@@ -455,15 +517,13 @@ def import_characters(options):
                     entry['scalp_partition']['method'] = 'Planar source head projected onto canonical scalp extended to complete head height; front half below the canonical face top remains fixed, rear and upper shell become coverable scalp.'
                     entry['scalp_partition']['fixed_face_plane_y'] = (canonical_head_bounds[1][0]+canonical_head_bounds[1][1])/2
             entries[spec['key']]=entry
+            failures.pop(spec['key'], None)
             print('CHARACTER_IMPORTED',spec['key'],model_key,flush=True)
         except Exception as error:
             import traceback
             traceback.print_exc()
-            failures.append({'character_key':spec['key'],'status':'failed','error':str(error)})
-        result={**previous,'body_key':config['body_key'],'characters':list(entries.values()),'assets':list(assets.values()),'failures':failures}
-        if 'pending' in result:
-            result['pending']=[item for item in result['pending'] if item['character_key'] not in entries]
-        MANIFEST.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+            failures[spec['key']]={'character_key':spec['key'],'status':'failed','error':str(error)}
+        save_progress()
     if options.evidence:
         evidence_directory=options.evidence_output
         evidence_directory.mkdir(parents=True,exist_ok=True)
@@ -518,7 +578,8 @@ def import_characters(options):
             bpy.context.view_layer.update()
             render(fixed+outfit,evidence_directory/(key+'-shared-outfit.png'))
         print('CHARACTER_EVIDENCE',len(evidence_entries),str(evidence_directory),flush=True)
-        return
+        return 0
+    save_progress()
     catalog=json.loads((ROOT/'internal/character/character-catalog.json').read_text())
     original_characters=[definition for definition in catalog['characters'] if definition['character_key'] not in entries]
     original_wearables=[wearable for wearable in catalog['wearables'] if wearable['character_key'] not in entries]
@@ -526,6 +587,7 @@ def import_characters(options):
     catalog['wearables']=original_wearables+[wearable for entry in entries.values() for wearable in entry['wearables']]
     (ROOT/'internal/character/character-catalog.json').write_text(json.dumps(catalog,ensure_ascii=False,indent=2)+'\n')
     print('CHARACTER_SUMMARY',json.dumps({'imported':len(entries),'failed':len(failures)}),flush=True)
+    return int(bool(failures))
 
 
 if __name__ == '__main__':
@@ -535,4 +597,4 @@ if __name__ == '__main__':
     parser.add_argument('--evidence',action='store_true')
     parser.add_argument('--evidence-output',type=Path,default=ROOT/'.local/3d-sources/provider-character-work/evidence')
     arguments=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else sys.argv[1:]
-    import_characters(parser.parse_args(arguments))
+    raise SystemExit(import_characters(parser.parse_args(arguments)))

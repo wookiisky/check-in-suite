@@ -1,11 +1,41 @@
 import { describe, expect, it } from 'vitest';
-import { SpatialActorController, spatialBallPosition } from './spatial-actor';
+import { SpatialActorController, spatialBallPosition, spatialWalkSurfaceHeight } from './spatial-actor';
 import type { SpatialActorEnvironment } from './spatial-actor';
 import { navigationFixture, spatialActorFixture } from './spatial-actor-fixture';
 import type { SpatialLayout } from './spatial-navigation';
 import { spatialLocalToWorld } from './spatial-navigation';
+import houses from '../../../../../internal/island/spatial-houses.json';
 
 describe('三维角色统一活动执行器',()=>{
+  it.each([
+    ['tiny-treats-courtyard-v1',200,350,40],
+    ['tiny-treats-courtyard-v1',-200,350,40],
+    ['tiny-treats-cottage-v1',120,250,20.665],
+  ] as const)('沿实际%s侧平台高度行走，移动房屋后保持局部高度', (key,x,z,height)=>{
+    const {environment}=spatialActorFixture();
+    const layout=environment.layout;
+    layout.catalog.push(...houses.catalog as SpatialLayout['catalog']);
+    layout.scene.house=houses.houses.find(house=>house.house_key===key)!;
+    layout.placements=[{instance_id:'house',item_key:key,space:'outdoor',x_cm:7,z_cm:13,rotation:0}];
+    const actor=new SpatialActorController(environment);
+    const destination={x_cm:7+Number(x),z_cm:13+Number(z)};
+    expect(actor.navigation.walkable(destination)).toBe(true);
+    expect(actor.request({sequence:1,activity:'walk',destination},environment)).toBeNull();
+    actor.advance(30,environment);
+    expect(actor.position.x_cm).toBe(destination.x_cm);
+    expect(actor.position.z_cm).toBe(destination.z_cm);
+    expect(actor.position.y_cm).toBeCloseTo(Number(height),2);
+  });
+  it('实际楼板插值取最高面并包含共边，外部及退化面不产生高度',()=>{
+    const vertices=[{x_cm:0,y_cm:10,z_cm:0},{x_cm:100,y_cm:20,z_cm:0},{x_cm:0,y_cm:30,z_cm:100}];
+    const upper=vertices.map(vertex=>({...vertex,y_cm:vertex.y_cm+20}));
+    const surface={vertices:[...vertices,...upper],triangles:[[0,1,2],[3,4,5],[0,0,0]]};
+    expect(spatialWalkSurfaceHeight({x_cm:25,z_cm:25},surface)).toBeCloseTo(37.5);
+    expect(spatialWalkSurfaceHeight({x_cm:50,z_cm:50},surface)).toBeCloseTo(45);
+    expect(spatialWalkSurfaceHeight({x_cm:0,z_cm:0},surface)).toBe(30);
+    expect(spatialWalkSurfaceHeight({x_cm:75,z_cm:75},surface)).toBeNull();
+    expect(spatialWalkSurfaceHeight({x_cm:0,z_cm:0},{vertices:[],triangles:[]})).toBeNull();
+  });
   it('高地板房屋沿实际门外通路连续抬高人物，离开后回到地面',()=>{
     const {environment}=spatialActorFixture();
     environment.layout.placements=environment.layout.placements.filter(item=>environment.layout.catalog.find(definition=>definition.item_key===item.item_key)?.assembly==='house');

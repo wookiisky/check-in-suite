@@ -18,18 +18,32 @@ export async function readSpatial(page: Page): Promise<SpatialState> {
   return response.json() as Promise<SpatialState>;
 }
 
-// 每条流程都从正式登录开始，结束时按最新版本恢复同一账户的原布局。
+// 每条流程明确准备动效前提，结束时恢复同一账户的原布局与偏好。
 export const test = base.extend<{ originalLayout: SpatialState }>({
   originalLayout: async ({ page }, use) => {
     await openCharacterPreview(page);
     const original = await readSpatial(page);
-    try { await use(original); }
-    finally {
-      const current = await readSpatial(page);
-      const { expected_version: _originalVersion, ...originalValues } = spatialRequest(original);
-      const { expected_version: _currentVersion, ...currentValues } = spatialRequest(current);
-      if (JSON.stringify(originalValues) !== JSON.stringify(currentValues)) {
-        const restored = await appearanceAPI(page, '/island/layout', 'PUT', { ...originalValues, expected_version: current.version });
+    const sessionResponse = await appearanceAPI(page, '/session');
+    expect(sessionResponse.ok()).toBe(true);
+    const session = await sessionResponse.json() as components['schemas']['SessionResponse'];
+    const preferences = session.account.preferences;
+    try {
+      // 行走场景明确准备动效偏好，不能依赖上一条流程或上一浏览器项目的状态。
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      const prepared = await appearanceAPI(page, '/account/preferences', 'PATCH', { ...preferences, reduce_motion: false });
+      expect(prepared.ok()).toBe(true);
+      await use(original);
+    } finally {
+      try {
+        const current = await readSpatial(page);
+        const { expected_version: _originalVersion, ...originalValues } = spatialRequest(original);
+        const { expected_version: _currentVersion, ...currentValues } = spatialRequest(current);
+        if (JSON.stringify(originalValues) !== JSON.stringify(currentValues)) {
+          const restored = await appearanceAPI(page, '/island/layout', 'PUT', { ...originalValues, expected_version: current.version });
+          expect(restored.ok()).toBe(true);
+        }
+      } finally {
+        const restored = await appearanceAPI(page, '/account/preferences', 'PATCH', preferences);
         expect(restored.ok()).toBe(true);
       }
     }

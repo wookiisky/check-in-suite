@@ -22,6 +22,7 @@ interface LayoutSnapshot {
   saving: boolean; // 原始保存请求是否在途。
   error: unknown; // 最近一次实际失败。
   conflict: boolean; // 保存明确返回版本冲突。
+  inventoryConflict: boolean; // 保存因实例已在其他场景占用而被明确拒绝。
   review: boolean; // 新版本与草稿需要用户核对。
   unknownSave: boolean; // 原请求是否可能仍在服务端提交。
   canRetryOriginal: boolean; // 已读回原版本，可显式重发原请求。
@@ -50,7 +51,7 @@ function journalFor(client: LayoutClient, sceneKey: string): LayoutJournal {
   if (existing) return existing;
   const journal: LayoutJournal = {
     sceneKey,
-    snapshot: { state: null, draft: null, loading: true, saving: false, error: null, conflict: false, review: false, unknownSave: false, canRetryOriginal: false },
+    snapshot: { state: null, draft: null, loading: true, saving: false, error: null, conflict: false, inventoryConflict: false, review: false, unknownSave: false, canRetryOriginal: false },
     original: null, read: null, generation: 0, consumers: 0, listeners: new Set(),
     subscribe: (listener) => { journal.listeners.add(listener); return () => { journal.listeners.delete(listener); }; },
     getSnapshot: () => journal.snapshot,
@@ -98,7 +99,7 @@ async function readJournal(client: LayoutClient, journal: LayoutJournal) {
     const before = journal.snapshot;
     if (before.state && next.version < before.state.version) return;
     const original = journal.original;
-    const update: Partial<LayoutSnapshot> = { state: next, conflict: false };
+    const update: Partial<LayoutSnapshot> = { state: next, conflict: false, inventoryConflict: false };
     if (before.unknownSave && original) {
       if (next.version <= original.expected_version) {
         update.canRetryOriginal = next.version === original.expected_version;
@@ -130,13 +131,14 @@ async function writeOriginal(client: LayoutClient, journal: LayoutJournal): Prom
     const next = await client.request<SpatialIslandState>('/island/layout', { method: 'PUT', body: structuredClone(original) });
     if (next.scene_key !== journal.sceneKey) throw new ApiFailure(502, { code: 'INVALID_RESPONSE', field_errors: {}, request_id: '' });
     journal.original = null;
-    publish(journal, { state: next, draft: null, conflict: false, review: false, unknownSave: false });
+    publish(journal, { state: next, draft: null, conflict: false, inventoryConflict: false, review: false, unknownSave: false });
     return true;
   } catch (reason) {
     const conflict = reason instanceof ApiFailure && reason.detail.code === 'VERSION_CONFLICT';
+    const inventoryConflict = reason instanceof ApiFailure && reason.status === 400 && reason.detail.code === 'INVALID_REQUEST' && reason.detail.field_errors.placements === 'PLACED_IN_OTHER_SCENE';
     const unknownSave = !(reason instanceof ApiFailure) || reason.status === 0 || reason.status >= 500 || reason.detail.code === 'INVALID_RESPONSE';
     if (!unknownSave) journal.original = null;
-    publish(journal, { error: reason, conflict, unknownSave });
+    publish(journal, { error: reason, conflict, inventoryConflict, unknownSave });
     return false;
   } finally {
     publish(journal, { saving: false });
@@ -168,7 +170,7 @@ export function useSpatialLayout(client: LayoutClient, sceneKey = 'seaside-v1') 
   function cancel(): boolean {
     if (journal.snapshot.saving || journal.snapshot.unknownSave) return false;
     journal.original = null;
-    publish(journal, { draft: null, conflict: false, review: false, error: null, canRetryOriginal: false });
+    publish(journal, { draft: null, conflict: false, inventoryConflict: false, review: false, error: null, canRetryOriginal: false });
     return true;
   }
   // 未知保存和在途保存期间保持提交值不变。
@@ -184,7 +186,7 @@ export function useSpatialLayout(client: LayoutClient, sceneKey = 'seaside-v1') 
   // 普通保存只使用已确认版本，不能绕过冲突、核对或未知结果。
   async function save(): Promise<boolean> {
     const before = journal.snapshot;
-    if (before.saving || !before.state || !before.draft || before.conflict || before.review || before.unknownSave) return false;
+    if (before.saving || !before.state || !before.draft || before.conflict || before.inventoryConflict || before.review || before.unknownSave) return false;
     if (layoutIssue(before.state, before.draft.placements)) return false;
     journal.original = structuredClone({ expected_version: before.state.version, scene_key: before.state.scene_key, ...before.draft });
     return writeOriginal(client, journal);
@@ -194,7 +196,7 @@ export function useSpatialLayout(client: LayoutClient, sceneKey = 'seaside-v1') 
     if (!journal.snapshot.unknownSave || !journal.snapshot.canRetryOriginal) return false;
     return writeOriginal(client, journal);
   }
-  // 只有读到推进后的不同布局才能核对，未知原版本不能被确认跳过。
+  // 显式读取后允许核对布局和库存；未知原版本不能被确认跳过。
   function confirmReview() {
     if (journal.snapshot.review && !journal.snapshot.unknownSave && !journal.snapshot.saving) publish(journal, { review: false, error: null });
   }

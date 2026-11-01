@@ -146,5 +146,156 @@ class ProviderCharacterDeliveryTest(unittest.TestCase):
         self.assertEqual(before, {path: hashlib.sha256(path.read_bytes()).digest() for path in before})
 
 
+@unittest.skipUnless(os.environ.get('BLENDER_PATH'), '设置 BLENDER_PATH 后验证真实 Blender CLI')
+class ProviderCharacterCLITest(unittest.TestCase):
+    """真实子进程只在临时仓库中加工和落盘，验证失败、恢复及只读边界。"""
+
+    # 临时库保留一个完成项，目标人物使用真实来源及标准身体。
+    def setUp(self):
+        import shutil
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        for name in ['scripts', 'internal/assets/builtin', 'internal/character']:
+            (self.root/name).mkdir(parents=True)
+        shutil.copy2(MODULE, self.root/'scripts/import-provider-characters.py')
+        self.configuration = json.loads((ROOT/'scripts/provider-character-sources.json').read_text())
+        self.source = self.configuration['sources'][0]
+        self.configuration['sources'] = [self.source]
+        self.key = self.source['key']
+        self.pack_manifest = json.loads((ROOT/'internal/assets/provider-pack-manifest.json').read_text())
+        for pack in self.pack_manifest['packs']:
+            directory = self.root/pack['directory']
+            directory.parent.mkdir(parents=True, exist_ok=True)
+            directory.symlink_to(ROOT/pack['directory'], target_is_directory=True)
+        canonical = self.root/self.configuration['canonical_model']
+        shutil.copy2(ROOT/self.configuration['canonical_model'], canonical)
+        self.previous_entry = {'status': 'imported', 'definition': {'character_key': 'previous', 'model_asset_key': canonical.stem}, 'wearables': []}
+        self.write('internal/assets/provider-character-manifest.json', {'characters': [self.previous_entry], 'assets': [], 'complete': True, 'status': 'complete'})
+        self.write('internal/assets/provider-pack-manifest.json', self.pack_manifest)
+        self.write('internal/character/character-catalog.json', json.loads((ROOT/'internal/character/character-catalog.json').read_text()))
+        self.write('scripts/provider-character-sources.json', self.configuration)
+
+    # 序列化配置和清单到独立临时库。
+    def write(self, path, value):
+        (self.root/path).write_text(json.dumps(value))
+
+    # 执行交付使用的真实Blender，不以mock退出码替代CLI行为。
+    def run_cli(self, *arguments):
+        result = subprocess.run([os.environ['BLENDER_PATH'], '--background', '--factory-startup', '--python-exit-code', '1', '--python', str(self.root/'scripts/import-provider-characters.py'), '--', *arguments], cwd=self.root, capture_output=True, text=True, timeout=180)
+        manifest = json.loads((self.root/'internal/assets/provider-character-manifest.json').read_text())
+        return result, manifest
+
+    # 失败后必须非零；修复并重试清除失败，但不能自动继承旧画面验收。
+    def test_failed_character_recovers_without_losing_success_or_claiming_validation(self):
+        self.source.setdefault('normalization', {})['head_envelope_verified'] = False
+        self.write('scripts/provider-character-sources.json', self.configuration)
+        result, manifest = self.run_cli('--only', self.key, '--force')
+        self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertFalse(manifest['complete'])
+        self.assertEqual(manifest['status'], 'incomplete')
+        self.assertEqual(manifest['characters'], [self.previous_entry])
+        self.assertEqual([item['character_key'] for item in manifest['failures']], [self.key])
+        self.source['normalization']['head_envelope_verified'] = True
+        self.write('scripts/provider-character-sources.json', self.configuration)
+        result, manifest = self.run_cli('--only', self.key)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertEqual(manifest['failures'], [])
+        self.assertFalse(manifest['complete'])
+        self.assertEqual(manifest['status'], 'pending-validation')
+        entries = {item['definition']['character_key']: item for item in manifest['characters']}
+        self.assertEqual(entries['previous'], self.previous_entry)
+        self.assertIn(self.key, entries)
+        model = self.root/'internal/assets/builtin'/(entries[self.key]['definition']['model_asset_key']+'.glb')
+        self.assertEqual(read_glb(model)['asset']['version'], '2.0')
+
+    # 同身份同字节允许重用，GLB或PNG已有不同字节时都失败并保留原文件。
+    def test_existing_model_and_thumbnail_versions_are_immutable(self):
+        self.source.setdefault('normalization', {})['head_envelope_verified'] = True
+        self.write('scripts/provider-character-sources.json', self.configuration)
+        result, manifest = self.run_cli('--only', self.key, '--force')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        entry = next(item for item in manifest['characters'] if item['definition']['character_key'] == self.key)
+        directory = self.root/'internal/assets/builtin'
+        paths = [directory/(entry['definition']['model_asset_key']+'.glb'), directory/(entry['definition']['thumbnail_asset_key']+'.png')]
+        before = {path: path.read_bytes() for path in paths}
+        result, _ = self.run_cli('--only', self.key, '--force')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertEqual(before, {path: path.read_bytes() for path in paths})
+        for path in paths:
+            with self.subTest(resource=path.suffix):
+                path.write_bytes(b'different existing version')
+                result, manifest = self.run_cli('--only', self.key, '--force')
+                self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
+                self.assertEqual(path.read_bytes(), b'different existing version')
+                self.assertFalse(manifest['complete'])
+                self.assertEqual(entry, next(item for item in manifest['characters'] if item['definition']['character_key'] == self.key))
+                path.write_bytes(before[path])
+
+    # 缺失模型、人物图或服装图时，本次普通恢复直接重建，无需第二次force。
+    def test_missing_deliveries_are_rebuilt_without_force(self):
+        self.source.setdefault('normalization', {})['head_envelope_verified'] = True
+        self.write('scripts/provider-character-sources.json', self.configuration)
+        result, manifest = self.run_cli('--only', self.key)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        entry = next(item for item in manifest['characters'] if item['definition']['character_key'] == self.key)
+        directory = self.root/'internal/assets/builtin'
+        paths = [directory/(entry['definition']['model_asset_key']+'.glb'), directory/(entry['definition']['thumbnail_asset_key']+'.png'), directory/(entry['wearables'][0]['thumbnail_asset_key']+'.png')]
+        before = {path: path.read_bytes() for path in paths}
+        for path in paths:
+            with self.subTest(resource=path.name):
+                manifest.update(complete=True, status='complete')
+                self.write('internal/assets/provider-character-manifest.json', manifest)
+                path.unlink()
+                result, manifest = self.run_cli('--only', self.key)
+                self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+                self.assertTrue(path.exists())
+                self.assertTrue(all(path.read_bytes() == content for path, content in before.items()))
+                self.assertFalse(manifest['complete'])
+                self.assertEqual(manifest['status'], 'pending-validation')
+                self.assertEqual(manifest['failures'], [])
+                self.assertEqual(entry, next(item for item in manifest['characters'] if item['definition']['character_key'] == self.key))
+        paths[0].unlink()
+        self.source['normalization']['head_envelope_verified'] = False
+        self.write('scripts/provider-character-sources.json', self.configuration)
+        result, manifest = self.run_cli('--only', self.key)
+        self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertFalse(manifest['complete'])
+        self.assertEqual(manifest['status'], 'incomplete')
+        self.assertFalse(paths[0].exists())
+        self.assertEqual(paths[1].read_bytes(), before[paths[1]])
+        self.assertEqual(entry, next(item for item in manifest['characters'] if item['definition']['character_key'] == self.key))
+
+    # 分批失败不能清空没有选择的失败记录，已有成果也继续保留。
+    def test_partial_retry_preserves_unselected_failures(self):
+        self.configuration['sources'] = [{'key': key, 'normalization': {'head_envelope_verified': False}} for key in ['first', 'second']]
+        self.write('scripts/provider-character-sources.json', self.configuration)
+        for key in ['first', 'second']:
+            result, manifest = self.run_cli('--only', key)
+            self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertEqual({item['character_key'] for item in manifest['failures']}, {'first', 'second'})
+        self.assertEqual(manifest['characters'], [self.previous_entry])
+
+    # 没有实际重加工时可以保留此前明确完成的状态和有效字节。
+    def test_skipping_completed_sources_preserves_validation(self):
+        self.configuration['sources'] = [{'key': 'previous'}]
+        self.write('scripts/provider-character-sources.json', self.configuration)
+        canonical = self.root/self.configuration['canonical_model']
+        before = canonical.read_bytes()
+        result, manifest = self.run_cli('--only', 'previous')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertTrue(manifest['complete'])
+        self.assertEqual(manifest['status'], 'complete')
+        self.assertEqual(canonical.read_bytes(), before)
+
+    # 拼错选择范围必须失败，且不能改写旧清单或目录。
+    def test_unknown_only_is_nonzero_and_preserves_manifests(self):
+        paths = [self.root/'internal/assets/provider-character-manifest.json', self.root/'internal/character/character-catalog.json']
+        before = {path: path.read_bytes() for path in paths}
+        result, _ = self.run_cli('--only', 'unknown-character')
+        self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertEqual(before, {path: path.read_bytes() for path in paths})
+
+
 if __name__ == '__main__':
     unittest.main()

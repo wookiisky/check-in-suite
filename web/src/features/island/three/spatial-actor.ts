@@ -49,6 +49,23 @@ interface ActorTarget {
   pose:SpatialPoint & {y_cm:number;rotation:number}; // 表演根点允许进入座面体积。
 }
 
+// 在房屋局部XZ上插值实际floor三角面；重叠面取最高处，边界共享不产生高度缝隙。
+export function spatialWalkSurfaceHeight(point:SpatialPoint,surface:components['schemas']['SpatialWalkSurface']):number|null {
+  let height:number|null=null;
+  for(const [ia,ib,ic] of surface.triangles) {
+    const a=surface.vertices[ia!]!,b=surface.vertices[ib!]!,c=surface.vertices[ic!]!;
+    const denominator=(b.z_cm-c.z_cm)*(a.x_cm-c.x_cm)+(c.x_cm-b.x_cm)*(a.z_cm-c.z_cm);
+    if(Math.abs(denominator)<1e-9)continue;
+    const u=((b.z_cm-c.z_cm)*(point.x_cm-c.x_cm)+(c.x_cm-b.x_cm)*(point.z_cm-c.z_cm))/denominator;
+    const v=((c.z_cm-a.z_cm)*(point.x_cm-c.x_cm)+(a.x_cm-c.x_cm)*(point.z_cm-c.z_cm))/denominator;
+    const w=1-u-v;
+    if(Math.min(u,v,w)<-1e-8)continue;
+    const candidate=u*a.y_cm+v*b.y_cm+w*c.y_cm;
+    height=height===null?candidate:Math.max(height,candidate);
+  }
+  return height;
+}
+
 /** 同一执行器处理按钮、自主活动和物件点击；位置由渲染器直接读取。 */
 export class SpatialActorController {
   navigation:SpatialNavigation; // 最终布局对应的厘米导航。
@@ -182,6 +199,8 @@ export class SpatialActorController {
     if(!house||!geometry){this.position.y_cm=0;return;}
     if(this.navigation.space(this.position)==='indoor'){this.position.y_cm=geometry.floor_height_cm;return;}
     const local=spatialWorldToLocal(this.position,house),clearance=geometry.door_clearance;
+    const surfaceHeight=geometry.walk_surfaces?spatialWalkSurfaceHeight(local,geometry.walk_surfaces):null;
+    if(surfaceHeight!==null){this.position.y_cm=surfaceHeight;return;}
     const profile=geometry.entry_height_profile;
     const start=Math.min(clearance.min_z_cm,geometry.interior.max_z_cm,geometry.door_center.z_cm);
     const end=Math.max(clearance.max_z_cm,profile?.at(-1)?.z_cm??clearance.max_z_cm);

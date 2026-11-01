@@ -657,6 +657,7 @@ def main():
     report = {'snapshot_at': packages['snapshot_at'], 'scope': 'reviewed-standalone-3d-decorations', 'counts': counts, 'assets': assets, 'definitions': definitions, 'selected_assets': published_assets, 'selection': {'selected': sum(item.get('selected', False) for item in records), 'library_only': sum(item['status'] == 'prepared' and not item.get('selected', False) for item in records)}, 'items': records}
     (ROOT/'internal/assets/provider-asset-manifest.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps(counts, ensure_ascii=False))
+    return int(bool(counts.get('failed')))
 
 
 if __name__ == '__main__':
@@ -665,4 +666,4 @@ if __name__ == '__main__':
     elif '--render-jobs' in sys.argv:
         render_jobs(json.loads(Path(sys.argv[sys.argv.index('--render-jobs')+1]).read_text()))
     else:
-        main()
+        raise SystemExit(main())

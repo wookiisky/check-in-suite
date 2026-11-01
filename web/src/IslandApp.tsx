@@ -30,7 +30,6 @@ import content from './content/zh-CN.json';
 import islandContent from './features/island/three/spatial-content.json';
 import titleContent from './features/character/title-picker-content.json';
 import shopContent from './features/shop/content.json';
-import scenePickerContent from './features/island/three/scene-picker-content.json';
 
 // 小岛素材与活动代码只在进入页面时加载。
 const IslandPage = lazy(() => import('./features/island/IslandPage3D').then((module) => ({ default: module.IslandPage3D })));
@@ -70,6 +69,7 @@ export function IslandApp() {
   const [page, setPage] = useState<Page>('camp');
   const [shopInitialGroup, setShopInitialGroup] = useState<'scene' | undefined>();
   const [islandReturnPage, setIslandReturnPage] = useState<Exclude<Page, 'island'>>('camp');
+  const [islandInitialScene, setIslandInitialScene] = useState<string | undefined>(); // 只传递本次明确选择的目的地。
   const [soundOpen, setSoundOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
@@ -190,6 +190,7 @@ export function IslandApp() {
   }
   function titleSaved(equipment:Equipment){equipmentCache.current=equipment;equipmentRecipient.current?.(equipment);setTitleEditor(equipment);}
   function navigate(next: Page) {
+    setIslandInitialScene(undefined);
     titleGeneration.current += 1;titleRequest.current?.abort();setTitleEditor(null);setTitleLoading(false);setTitleReadError(null);
     if (next === 'island' && page !== 'island') setIslandReturnPage(management ? 'camp' : page);
     if (next === 'shop') setShopInitialGroup(undefined);
@@ -201,13 +202,10 @@ export function IslandApp() {
     navigate('shop');
     setShopInitialGroup(group);
   }
-  // 背包只保存本机目的地，不修改其他设备正在浏览的场景。
+  // 明确目的地属于本次导航；营地核对资格后再记录本机偏好。
   function openIsland(sceneKey?: string) {
-    if (sceneKey) {
-      try { localStorage.setItem(scenePickerContent.storageKey, sceneKey); }
-      catch { /* 浏览器禁用本地存储时仍允许进入营地并重新选择。 */ }
-    }
     navigate('island');
+    setIslandInitialScene(sceneKey);
   }
   async function logout() {
     setBusy(true); setError(null); setManagement(false); setUnlocking(false);
@@ -259,7 +257,7 @@ export function IslandApp() {
               <FamilyPanel client={client} session={session} />
             </>} />
           </>}
-          {page === 'island' && <Suspense fallback={<section className="island-loading"><button className="secondary" onClick={() => navigate(islandReturnPage)}>{islandContent.back}</button><p role="status">{content.common.loading}</p></section>}><IslandPage client={client} session={session} onCamp={() => navigate('camp')} onShop={openSceneShop} onBack={() => navigate(islandReturnPage)} onSettings={() => setSoundOpen(true)} /></Suspense>}
+          {page === 'island' && <Suspense fallback={<section className="island-loading"><button className="secondary" onClick={() => navigate(islandReturnPage)}>{islandContent.back}</button><p role="status">{content.common.loading}</p></section>}><IslandPage client={client} session={session} {...(islandInitialScene ? { initialSceneKey: islandInitialScene } : {})} onCamp={() => navigate('camp')} onShop={openSceneShop} onBack={() => navigate(islandReturnPage)} onSettings={() => setSoundOpen(true)} /></Suspense>}
           {page === 'shop' && <ShopPage client={client} session={session} {...(shopInitialGroup ? { initialGroup: shopInitialGroup } : {})} onBackpack={() => navigate('backpack')} />}
           {page === 'backpack' && <BackpackPage client={client} session={session} onBack={() => navigate('camp')} onIsland={openIsland} onAppearance={openAppearance} onTitle={()=>void openTitle()} />}
           {page === 'achievements' && <AchievementPage client={client} session={session} />}

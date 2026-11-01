@@ -92,8 +92,22 @@ type SpatialEntryHeight struct {
 	YCM float64 `json:"y_cm"` // 对应地面上方高度，包含实际倒角。
 }
 
+// SpatialWalkVertex 是实际floor节点的房屋局部厘米坐标，+Y向上。
+type SpatialWalkVertex struct {
+	XCM float64 `json:"x_cm"` // 房屋局部横坐标。
+	YCM float64 `json:"y_cm"` // 支撑面高度。
+	ZCM float64 `json:"z_cm"` // 房屋局部纵深。
+}
+
+// SpatialWalkSurface 以去重顶点和三角索引保存朝上的真实楼板、平台和台阶。
+type SpatialWalkSurface struct {
+	Vertices  []SpatialWalkVertex `json:"vertices"`  // 共享顶点，单位厘米。
+	Triangles [][3]int            `json:"triangles"` // 每面引用三个顶点，按glTF +Y朝上。
+}
+
 // SpatialHouse 保持室内地面、门洞、建筑绘制和门外通路使用同一数据。
 type SpatialHouse struct {
+	WalkSurfaces       *SpatialWalkSurface  `json:"walk_surfaces,omitempty"`        // 可选实际floor支撑面；旧房型沿用地板高度与入口profile。
 	EntryHeightProfile []SpatialEntryHeight `json:"entry_height_profile,omitempty"` // 门前平台和台阶高度；与通路范围分别配置。
 	Key                string               `json:"house_key,omitempty"`            // 稳定房型身份。
 	ModelURL           string               `json:"model_url,omitempty"`            // 可按节点剖切的自包含房屋GLB。

@@ -133,5 +133,7 @@
   "hidePanControls": "收起平移控制",
   "showPanControls": "展开平移控制",
   "showCamera": "展开视角控制",
-  "hideCamera": "收起视角控制"
+  "hideCamera": "收起视角控制",
+  "inventoryConflict": "这件物品已摆放在其他场景。草稿已保留，请读取最新库存后核对。",
+  "readInventory": "读取最新库存和布局"
 }

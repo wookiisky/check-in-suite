@@ -63,6 +63,32 @@ function deferred<T>() {
 const networkFailure=()=>new ApiFailure(0,{code:'NETWORK_ERROR',field_errors:{},request_id:''});
 
 describe('独立场景草稿',()=>{
+  it('跨场景占用拒绝后可读取同版本的新库存，草稿保留且不会自动重发',async()=>{
+    const failure=new ApiFailure(400,{code:'INVALID_REQUEST',field_errors:{placements:'PLACED_IN_OTHER_SCENE'},request_id:'occupancy-conflict'});
+    const test=setup(failure);
+    await waitFor(()=>expect(test.result.current.state).not.toBeNull());
+    act(()=>test.result.current.begin());act(()=>test.result.current.setEnvironment('dusk'));
+    await act(async()=>{expect(await test.result.current.save()).toBe(false);});
+    expect(test.result.current.inventoryConflict).toBe(true);
+    expect(test.result.current.conflict).toBe(false);
+    expect(test.result.current.unknownSave).toBe(false);
+    await act(async()=>{expect(await test.result.current.save()).toBe(false);});
+    expect(test.request.mock.calls.filter(call=>call[1]?.method==='PUT')).toHaveLength(1);
+    test.request.mockRejectedValueOnce(networkFailure());
+    await act(async()=>{await test.result.current.readLatest();});
+    expect(test.result.current.inventoryConflict).toBe(true);
+    expect(test.result.current.view?.environment_key).toBe('dusk');
+    const latest={...initial,inventory:initial.inventory.map(item=>({...item,placed_scene_key:'forest-courtyard-v1'}))};
+    test.setLatest(latest);
+    await act(async()=>{await test.result.current.readLatest();});
+    expect(test.result.current.state?.version).toBe(1);
+    expect(test.result.current.inventoryConflict).toBe(false);
+    expect(test.result.current.review).toBe(true);
+    expect(test.result.current.view?.environment_key).toBe('dusk');
+    expect(test.result.current.state?.inventory[0]?.placed_scene_key).toBe('forest-courtyard-v1');
+    expect(test.request.mock.calls.filter(call=>call[1]?.method==='PUT')).toHaveLength(1);
+  });
+
   it('读回其他场景不能成为当前保存基线',async()=>{
     const client={request:vi.fn().mockResolvedValue(structuredClone(initial)) as never};
     const test=renderHook(()=>useSpatialLayout(client,'forest-courtyard-v1'));

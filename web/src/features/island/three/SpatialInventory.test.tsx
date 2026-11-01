@@ -6,6 +6,18 @@ import content from './spatial-content.json';
 import browserContent from './spatial-inventory-content.json';
 
 describe('营地完整库存浏览', () => {
+  it('冲突实例仍在本地草稿时允许选择并收起，但禁止移动和旋转',()=>{
+    const props=inventoryFixture(2);
+    const existing={instance_id:'owned-0',item_key:'item-0',space:'outdoor' as const,x_cm:0,z_cm:0,rotation:0};
+    props.state.placements=[existing];props.state.inventory[0]!.placed_scene_key='forest-courtyard-v1';
+    render(<SpatialInventory {...props} selected={existing} />);
+    const select=screen.getByRole('button',{name:content.select.replace('{name}','摆设 0')});
+    expect(select).toBeEnabled();fireEvent.click(select);expect(props.onChoose).toHaveBeenCalledWith('owned-0');
+    expect(screen.getByRole('button',{name:content.moveRight})).toBeDisabled();
+    expect(screen.getByRole('button',{name:content.rotate})).toBeDisabled();
+    fireEvent.click(screen.getByRole('button',{name:content.store}));expect(props.onStore).toHaveBeenCalledOnce();
+  });
+
   it('其他场景占用的实例显示去向并禁止直接复制摆放', () => {
     const props = inventoryFixture(2);
     props.state.inventory[0]!.placed_scene_key = 'forest-courtyard-v1';

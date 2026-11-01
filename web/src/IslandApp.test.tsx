@@ -7,6 +7,7 @@ import { campFixture } from './features/checkin/test-fixtures';
 import checkinContent from './features/checkin/content.json';
 import shopContent from './features/shop/content.json';
 import islandContent from './features/island/three/spatial-content.json';
+import sceneContent from './features/island/three/scene-picker-content.json';
 import spatialConfiguration from '../../internal/island/spatial-scene.json';
 import { appearanceFixture } from './features/shop/appearance-test-fixtures';
 import appearanceContent from './features/shop/appearance-content.json';
@@ -372,6 +373,42 @@ describe('账户页面与管理授权', () => {
 
 
 describe('背包、四槽形象与独立称号入口',()=>{
+  it.each([false,true])('背包明确目的地不依赖本地存储，之后重进不复用旧导航意图（禁用存储=%s）',async(storageDisabled)=>{
+    localStorage.clear();
+    const server=installServer(true),original=server.getMockImplementation()!;
+    const choices=[{scene_key:'seaside-v1',name:'海边营地',thumbnail_url:'/sea.png',free:true,owned:true},{scene_key:'forest-courtyard-v1',name:'林间草地庭院',thumbnail_url:'/forest.png',free:false,owned:true},{scene_key:'lakeside-garden-v1',name:'湖畔花园',thumbnail_url:'/lake.png',free:false,owned:true}];
+    server.mockImplementation(async(input,init)=>{
+      const path=String(input);
+      if(path.endsWith('/island/scenes'))return Response.json({items:choices});
+      if(path.includes('/island/layout?scene_key=')){
+        const key=new URL(path,'https://example.test').searchParams.get('scene_key')!;
+        return Response.json({version:1,scene_key:key,environment_key:'day',scene:{...spatialConfiguration.scene,scene_key:key,house:null},catalog:spatialConfiguration.catalog,placements:[],inventory:[]});
+      }
+      if(path.includes('/purchases'))return Response.json({items:[{...titlePurchase,id:'forest-purchase',type_snapshot:'scene',scene_key:'forest-courtyard-v1',name_snapshot:'林间草地庭院'}],next_cursor:null});
+      return original(input,init);
+    });
+    const write=storageDisabled?vi.spyOn(Storage.prototype,'setItem').mockImplementation(()=>{throw new DOMException('Storage blocked','SecurityError');}):null;
+    const read=storageDisabled?vi.spyOn(Storage.prototype,'getItem').mockImplementation(()=>{throw new DOMException('Storage blocked','SecurityError');}):null;
+    try{
+      render(<IslandApp/>);
+      fireEvent.click(await screen.findByRole('button',{name:shopContent.backpack}));
+      fireEvent.click(await screen.findByRole('button',{name:`${shopContent.enterScene} 林间草地庭院`}));
+      await screen.findByRole('heading',{name:'林间草地庭院'});
+      const requests=server.mock.calls.map(([path])=>String(path));
+      expect(requests.findIndex(path=>path.endsWith('/island/scenes'))).toBeLessThan(requests.findIndex(path=>path.includes('scene_key=forest-courtyard-v1')));
+      fireEvent.click(screen.getByRole('button',{name:sceneContent.open}));
+      fireEvent.click(await screen.findByRole('button',{name:sceneContent.go.replace('{name}','湖畔花园')}));
+      await screen.findByRole('heading',{name:'湖畔花园'});
+      fireEvent.click(screen.getByRole('button',{name:islandContent.back}));
+      await screen.findByRole('heading',{name:shopContent.backpack});
+      const calls=server.mock.calls.length;
+      fireEvent.click(screen.getByRole('button',{name:content.navigation.island}));
+      await screen.findByRole('heading',{name:storageDisabled?'海边营地':'湖畔花园'});
+      await waitFor(()=>expect(server.mock.calls.slice(calls).some(([path])=>String(path).endsWith('/island/scenes'))).toBe(true));
+      expect(server.mock.calls.slice(calls).some(([path])=>String(path).includes('scene_key=forest-courtyard-v1'))).toBe(false);
+    }finally{write?.mockRestore();read?.mockRestore();localStorage.clear();}
+  });
+
   it('背包称号缺少首页快照时显式读取，失败可重试且不伪造当前称号',async()=>{
     const server=installServer(true),original=server.getMockImplementation()!;
     let mode:'pending'|'failure'|'success'='pending';

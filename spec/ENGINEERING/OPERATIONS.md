@@ -23,6 +23,7 @@ source:
 - scripts/prepare-kenney-characters.py
 - scripts/verify-kenney-character-appearance.py
 - scripts/import-provider-animations.py
+- scripts/update-tiny-treats-walk-surfaces.py
 - scripts/check-gltf-assets.mjs
 - scripts/preview-gltf-assets.py
 - scripts/render-gltf-previews.py
@@ -121,11 +122,13 @@ go test ./internal/httpapi -run 'TestGraphicsAssetsHTTP'
 
 除了 Go 素材检查，`npm run test:assets` 会逐个读取正式人物与服装的实际 GLB，核对身体分区范围、骨骼层级、逆绑定矩阵和蒙皮权重。这证明当前交付数据满足结构约束，仍需结合真实换装画面检查头饰、接缝和遮挡。资源获取、静态整理、人物整理与动作整理的 Python 检查各位于相应脚本旁，可单独执行；制作需要 Blender，正式运行不依赖制作工具。
 
+人物与静态物件加工只要出现实际失败，本次命令即返回非零并保留已完成记录供恢复；明确排除的来源不算加工失败。人物清单在失败后标为未完成，重新加工成功也须重新验证，不能沿用旧画面检查自动宣称完成。恢复跳过前会检查已声明模型与缩略图是否存在，缺失时在本次运行直接重建。正式资源不可覆写：同标识同字节可复用，异字节拒绝并保留已有文件；人物 PNG 先在暂存位置渲染，制作时关闭日期、耗时等非确定元数据。新缩略图加工配方使用新资源身份，当前已交付文件不因工具升级被批量改写。
+
 发行包运行不需要 Python 或 Blender。构建验证需检查实际 GLB 内嵌数据、目录引用与缩略图解码，正式包还需验证新进程能从持久素材目录读取相同字节。素材制作检查不代表已完成真实手机性能验收。
 
-动作来源按 `scripts/provider-animation-sources.json` 中的审核批次处理，不按骨名扫描结果自动纳入非人形资源。导入脚本的 `--list` 查看批次，`--batch` 或 `--only` 选择范围，`--all` 处理全部审核来源；`--first-medium` 保留首批复现入口。增量执行核对来源与产物哈希，保留已完成记录；失败保留原因并返回非零。不同来源的相同曲线合并为一份交付资源，来源记录仍分别保留。原始水平根位移留在本地源文件，正式动作移除导航方向的根位移，垂直动作与身体摇摆继续保留。
+动作来源按 `scripts/provider-animation-sources.json` 中的审核批次处理，不按骨名扫描结果自动纳入非人形资源。导入脚本的 `--list` 查看批次，`--batch` 或 `--only` 选择范围，`--all` 处理全部审核来源；`--first-medium` 保留首批复现入口。增量执行核对来源与产物哈希，保留已完成记录；失败保留原因并返回非零。新加工在同一来源族内合并实际目标骨架和曲线相同的输出，来源记录仍分别保留；共享元数据登记该族的官方出处与许可，逐条来源登记实际素材包。原始水平根位移留在本地源文件，正式动作移除导航方向的根位移，垂直动作与身体摇摆继续保留。恢复时逐来源核对其实际使用的目标骨架，不能因第一批已更新全局检查点而跳过其他旧批次；缺少该依据的旧记录重新加工。去重和新资源身份包含来源族元数据、实际输出骨架与动作，目标骨架变化而曲线数值相同时也不能覆盖旧资源。当前动作列表只包含成功来源正在引用的定义；待处理批次不会把旧骨架动作留在当前列表，历史资源和文件继续保留。
 
-Tiny Treats 房屋与景物由 `scripts/prepare-tiny-treats.py` 整理，来源与产物清单为 `internal/assets/tiny-treats-manifest.json`。普通 Python 使用 `--fetch-only` 获取审核过的免费源包；制作时在后台 Blender 中执行该脚本并传 `--only all`。`scripts/tiny-treats-blender-test.py` 在实际 GLB 上核对门洞、墙体和地板，`scripts/render-tiny-treats-previews.py` 生成四向外观与剖墙。原包、工程及中间产物保留在 `.local/3d-sources/tiny-treats/`，正式包只安装选入 GLB、PNG 和元数据。
+Tiny Treats 房屋与景物由 `scripts/prepare-tiny-treats.py` 整理，来源与产物清单为 `internal/assets/tiny-treats-manifest.json`。普通 Python 使用 `--fetch-only` 获取审核过的免费源包；制作时在后台 Blender 中执行该脚本并传 `--only all`。`scripts/tiny-treats-blender-test.py` 在实际 GLB 上核对门洞、墙体和地板，`scripts/render-tiny-treats-previews.py` 生成四向外观与剖墙。原包、工程及中间产物保留在 `.local/3d-sources/tiny-treats/`，正式包只安装选入 GLB、PNG 和元数据。已有房屋无需重导出模型即可补齐支撑面：执行 `/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python-exit-code 1 --python scripts/update-tiny-treats-walk-surfaces.py`，再运行实际 GLB 检查。该入口只更新房型配置和清单，可用 `--models`、`--configuration`、`--manifest` 指向隔离路径。
 
 ### 素材工具环境、检查与预览
 

@@ -1,6 +1,16 @@
 {
   "version": 1,
   "scope": "仅审核的人形人物源与免费专用人形动作包；非人形来源不自动因骨骼名称相同进入。",
+  "shared_asset_metadata": {
+    "kaykit": {
+      "source_url": "https://kaylousberg.itch.io/",
+      "license": "CC0-1.0"
+    },
+    "kenney": {
+      "source_url": "https://kenney.nl/",
+      "license": "CC0-1.0"
+    }
+  },
   "content": {
     "description": "离线分批整理已审核的人形动作，保留已完成批次和来源。",
     "select_batch": "至少选择一个 --batch，或明确使用 --all；--list 仅列出批次。",

@@ -49,6 +49,8 @@ describe('三维外观编辑弹窗', () => {
     expect(write?.[1]?.body).toEqual({ expected_version: 1, character_key: 'body-fixture', hair_purchase_id: 'hair-purchase', upper_purchase_id: 'upper-purchase', lower_purchase_id: null, shoes_purchase_id: null });
     expect(onSaved.mock.calls[0]![0].version).toBe(2);
     expect(request.mock.calls.some(([path]) => path === '/camp')).toBe(false);
+    // 保存回调早于画面提交；先等待真实保存反馈，再模拟后续模型失败。
+    await screen.findByText('外观已保存。');
     fireEvent.click(screen.getByRole('button', { name: '模拟模型失败' }));
     expect(await screen.findByText('外观已保存，但人物暂时无法显示。请重新加载模型。')).toBeVisible();
     expect(screen.getByRole('button', { name: '保存外观' })).toBeDisabled();

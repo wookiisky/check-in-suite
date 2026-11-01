@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/character"
 	"log/slog"
 	"strings"
@@ -28,12 +27,7 @@ func scanPurchase(row rowScanner) (Purchase, error) {
 	var created int64
 	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created, &p.ItemKeySnapshot, &p.WearableKey, &p.CharacterKey, &p.SceneKey)
 	p.CreatedAt = core.Timestamp(created)
-	if asset, ok := assets.Get(p.AssetKeySnapshot); ok {
-		p.Provider, p.PackKey, p.PackName = asset.Provider, asset.PackKey, asset.PackName
-	}
-	if body, ok := character.Get(p.CharacterKey); ok {
-		p.Provider, p.PackKey = body.Provider, body.PackKey
-	}
+	p.Provider, p.PackKey, p.PackName = purchaseSourceMetadata(p.AssetKeySnapshot, p.CharacterKey, p.ItemKeySnapshot)
 	if spatial, found := island.SpatialFind(p.ItemKeySnapshot); found {
 		p.IslandItemKey = spatial.Key
 	}

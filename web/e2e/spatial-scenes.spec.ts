@@ -112,7 +112,12 @@ test('两栋房屋真实进出与四向剖墙，替换草稿可取消再保存',
   test.setTimeout(210_000);
   const houses=await prepareScenes(page),errors=renderErrors(page);
   const original=await Promise.all(sceneKeys.map(key=>readScene(page,key)));
+  const session=await shopAPI<components['schemas']['SessionResponse']>(page,'/session');
+  const preferences=session.account.preferences;
   try {
+    // 实际行走需要明确的动效前提；其他流程可合法保留减少动效的账户偏好。
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await shopAPI(page,'/account/preferences','PATCH',{...preferences,reduce_motion:false});
     for(const key of sceneKeys.slice(1))await saveScene(page,await readScene(page,key),[]);
     await openScenes(page);await chooseScene(page,sceneKeys[1]);await expectScene(page,sceneKeys[1]);
     let previous:SpatialState|null=null;
@@ -150,7 +155,10 @@ test('两栋房屋真实进出与四向剖墙，替换草稿可取消再保存',
       previous=saved;
     }
     expect(errors).toEqual([]);
-  } finally {await restoreScenes(page,original);}
+  } finally {
+    try {await restoreScenes(page,original);}
+    finally {await shopAPI(page,'/account/preferences','PATCH',preferences);}
+  }
 });
 
 // 已提交响应丢失时，核对原场景后才能继续前往；普通未保存草稿可继续编辑。

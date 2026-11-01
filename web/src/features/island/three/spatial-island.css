@@ -78,6 +78,10 @@
 .spatial-access-error { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 550px; padding: 10px; border-radius: 16px; background: #fffffff2; }
 
 .spatial-inventory { position: absolute; top: var(--spatial-hud-top); right: 16px; bottom: 16px; z-index: 4; display: flex; flex-direction: column; gap: 12px; width: 360px; padding: 16px; border: 1px solid #dbe4d2; border-radius: 24px; background: #fbfcf7fa; box-shadow: 0 15px 50px #28553d21; }
+.spatial-inventory { max-height: calc(100dvh - var(--spatial-hud-top) - 32px); }
+.spatial-inventory-body { display: flex; flex: 1; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.spatial-inventory-body > .spatial-inventory-browser { flex: 0 0 auto; overflow: visible; }
+.spatial-inventory-body > .spatial-feedback { position: static; flex-shrink: 0; width: auto; max-width: none; transform: none; }
 .spatial-inventory header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .spatial-inventory header button { flex: 0 0 56px; padding: 6px; border: 0 !important; background: transparent !important; }
 .spatial-inventory-browser { flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 56px; overflow-y: auto; overscroll-behavior: contain; }

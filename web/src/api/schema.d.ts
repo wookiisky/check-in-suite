@@ -1135,7 +1135,19 @@ export interface components {
             doorway_url: string;
             roof_url: string;
         };
+        /** @description 实际floor节点的房屋局部厘米坐标，glTF +Y向上。 */
+        SpatialWalkVertex: {
+            x_cm: number;
+            y_cm: number;
+            z_cm: number;
+        };
+        /** @description floor节点朝上的支撑面；最高命中面用于脚下高度，三角索引引用去重顶点。 */
+        SpatialWalkSurface: {
+            vertices: components["schemas"]["SpatialWalkVertex"][];
+            triangles: number[][];
+        };
         SpatialHouse: {
+            walk_surfaces?: components["schemas"]["SpatialWalkSurface"];
             entry_height_profile?: {
                 z_cm: number;
                 y_cm: number;
