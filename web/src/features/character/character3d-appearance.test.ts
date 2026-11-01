@@ -24,4 +24,15 @@ describe('正式人物外观解析', () => {
     snapshot.wearables.find((item) => item.wearable_key === 'upper-b')!.character_key = 'other-body';
     expect(() => resolveAppearance(snapshot, { ...draft, upper_purchase_id: 'purchase-upper' })).toThrow();
   });
+
+  it('活动道具及其精确变换属于一次异步准备的身份', () => {
+    const snapshot = appearanceFixture();
+    const matrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.1, 0.2, 0.3, 1];
+    const attachment = { model_url: '/book.glb', bone: 'handslotl', matrix };
+    const resolved = resolveAppearance(snapshot, undefined, [attachment]);
+    expect(resolved.key).not.toBe(resolveAppearance(snapshot).key);
+    matrix[12] = 0.8;
+    expect(resolved.attachments[0]!.matrix[12]).toBe(0.1);
+    expect(resolveAppearance(snapshot, undefined, [attachment]).key).not.toBe(resolved.key);
+  });
 });

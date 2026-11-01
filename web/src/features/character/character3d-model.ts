@@ -1,4 +1,4 @@
-import { Bone, Mesh, Skeleton, SkinnedMesh } from 'three';
+import { Bone, Group, Matrix4, Mesh, Skeleton, SkinnedMesh } from 'three';
 import type { AnimationAction, AnimationClip, Object3D } from 'three';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { createAnimatedModel } from '../../graphics/animated-model';
@@ -8,7 +8,7 @@ import type { ResolvedAppearance } from './character3d-appearance';
 
 // 准备好的实例独占骨骼和播放器，通过 dispose 归还其使用的共享源资源。
 export interface PreparedCharacter {
-  key: string; // 当前完整外观的资源身份。
+  key: string; // 当前人物与活动道具的完整准备身份。
   root: Object3D; // 可放入任意营地或预览 Canvas 的根节点。
   play: (action: string, immediate?: boolean) => void; // 使用目录中的语义动作。
   advance: (seconds: number, paused: boolean) => void; // 逐帧推进，不触发 React 状态更新。
@@ -40,13 +40,30 @@ function attachWearables(root: Object3D, source: GLTFSource, visibleNames: Set<s
 }
 
 // 先取得全部资源并验证节点，再返回完整实例；错误不会交付半套人物。
-export async function prepareCharacter(resolved: ResolvedAppearance, cache: GltfResourceCache = characterResources): Promise<PreparedCharacter> {
-  const { definition, wearables } = resolved;
-  const urls = [...new Set([definition.model_url, ...wearables.map((item) => item.model_url), ...Object.values(definition.animations).map((item) => item.url)])];
+export async function prepareCharacter(resolved: ResolvedAppearance, cache: GltfResourceCache = characterResources, signal?: AbortSignal): Promise<PreparedCharacter> {
+  if (signal?.aborted) throw signal.reason;
+  const { definition, wearables, attachments } = resolved;
+  const attachmentMatrices = attachments.map((attachment) => {
+    const values = attachment.matrix;
+    if (values.length !== 16 || !values.every(Number.isFinite) || values[3] !== 0 || values[7] !== 0 || values[11] !== 0 || values[15] !== 1) throw new Error('CHARACTER_ATTACHMENT_MATRIX_INVALID');
+    const matrix = new Matrix4().fromArray(values);
+    const determinant = matrix.determinant();
+    if (!Number.isFinite(determinant) || determinant === 0) throw new Error('CHARACTER_ATTACHMENT_MATRIX_INVALID');
+    return matrix;
+  });
+  const urls = [...new Set([definition.model_url, ...wearables.map((item) => item.model_url), ...Object.values(definition.animations).map((item) => item.url), ...attachments.map((item) => item.model_url)])];
   const leases = urls.map((url) => cache.acquire(url));
+  const attachedRoots: Object3D[] = [];
   let instance: ReturnType<typeof createAnimatedModel> | undefined;
+  let abortListener: (() => void) | undefined;
   try {
-    const loaded = await Promise.all(leases.map((lease) => lease.ready));
+    const loading = Promise.all(leases.map((lease) => lease.ready));
+    // 取消只归还本次引用，不中断其他视图仍在使用的共享下载。
+    const loaded = await (signal ? new Promise<GLTFSource[]>((resolve, reject) => {
+      abortListener = () => reject(signal.reason);
+      signal.addEventListener('abort', abortListener, { once: true });
+      loading.then(resolve, reject);
+    }) : loading);
     const sources = new Map(urls.map((url, index) => [url, loaded[index]!]));
     const base = sources.get(definition.model_url)!;
     instance = createAnimatedModel(base.scene);
@@ -65,6 +82,14 @@ export async function prepareCharacter(resolved: ResolvedAppearance, cache: Gltf
     for (const url of new Set(wearables.map((item) => item.model_url))) {
       if (url === definition.model_url) continue;
       attachWearables(root, sources.get(url)!, new Set(wearables.filter((item) => item.model_url === url).flatMap((item) => item.nodes)));
+    }
+    for (const [index, attachment] of attachments.entries()) {
+      const bone = root.getObjectByName(attachment.bone);
+      if (!(bone instanceof Bone)) throw new Error(`CHARACTER_ATTACHMENT_BONE_MISSING: ${attachment.bone}`);
+      const holder = new Group();
+      holder.matrixAutoUpdate = false; holder.matrix.copy(attachmentMatrices[index]!); holder.matrixWorldNeedsUpdate = true;
+      holder.add(sources.get(attachment.model_url)!.scene.clone(true));
+      bone.add(holder); attachedRoots.push(holder);
     }
     root.traverse((node) => { if (node instanceof Mesh) { node.castShadow = node.visible; node.receiveShadow = node.visible; } });
     const clips = new Map<string, AnimationClip>();
@@ -95,12 +120,17 @@ export async function prepareCharacter(resolved: ResolvedAppearance, cache: Gltf
       resetDelta() { skipFrame = true; },
       dispose() {
         if (disposed) return;
-        disposed = true; animated.dispose(); for (const lease of leases) lease.release();
+        disposed = true;
+        for (const attachment of attachedRoots) attachment.removeFromParent();
+        animated.dispose(); for (const lease of leases) lease.release();
       },
     };
     prepared.play('idle', true);
     return prepared;
   } catch (error) {
+    for (const attachment of attachedRoots) attachment.removeFromParent();
     instance?.dispose(); for (const lease of leases) lease.release(); throw error;
+  } finally {
+    if (abortListener) signal?.removeEventListener('abort', abortListener);
   }
 }

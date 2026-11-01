@@ -14,12 +14,13 @@ export function usePreparedCharacter(resolution: CharacterResolution, attempt = 
   useEffect(() => {
     if (!resolved) { setStatus({ phase: 'error', error: resolution.error }); return; }
     let active = true;
+    const controller = new AbortController();
     setStatus({ phase: 'loading' });
-    void prepareCharacter(resolved).then((next) => {
+    void prepareCharacter(resolved, undefined, controller.signal).then((next) => {
       if (!active) { next.dispose(); return; }
       setCharacter(next); setStatus({ phase: 'ready' });
     }).catch((error: unknown) => { if (active) setStatus({ phase: 'error', error }); });
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, [resolved?.key, resolution.error, attempt]);
   // 新实例完成 React 提交后才释放旧实例；等待或错误期间继续持有旧画面的资源。
   useEffect(() => () => character?.dispose(), [character]);

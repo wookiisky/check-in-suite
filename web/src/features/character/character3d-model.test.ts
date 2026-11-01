@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { SkinnedMesh } from 'three';
+import { Matrix4, Mesh, SkinnedMesh, Vector3 } from 'three';
 import { GltfResourceCache } from '../../graphics/gltf-resources';
-import { appearanceFixture, characterSource } from './character3d-test-fixtures';
+import { activityBookSource, appearanceFixture, characterSource, characterWithBookBone, deferred } from './character3d-test-fixtures';
 import { resolveAppearance } from './character3d-appearance';
 import { prepareCharacter } from './character3d-model';
+import type { GLTFSource } from '../../graphics/gltf-resources';
 
 describe('正式人物组装与动画', () => {
   it('所有视图使用独立骨架，未选择部件隐藏并能恢复身体覆盖', async () => {
@@ -51,5 +52,67 @@ describe('正式人物组装与动画', () => {
     const resolved = resolveAppearance(appearanceFixture()); resolved.wearables[0]!.nodes = ['absent'];
     const cache = new GltfResourceCache(async () => characterSource());
     await expect(prepareCharacter(resolved, cache)).rejects.toThrow(); expect(cache.size).toBe(0);
+  });
+
+  it('活动书按完整矩阵挂接实例骨骼，卸载不会影响另一个人物或共享资源', async () => {
+    const body = characterWithBookBone(); const book = activityBookSource();
+    const bookGeometry = (book.scene.getObjectByName('activity-book') as Mesh).geometry;
+    const disposeBook = vi.spyOn(bookGeometry, 'dispose');
+    const matrix = new Matrix4().makeRotationY(Math.PI / 3).setPosition(0.1, 0.2, 0.3);
+    const attachment = { model_url: '/book.glb', bone: 'handslotl', matrix: matrix.elements };
+    const resolved = resolveAppearance(appearanceFixture(), undefined, [attachment]);
+    const cache = new GltfResourceCache(async (url) => url === '/book.glb' ? book : body);
+    const first = await prepareCharacter(resolved, cache); const second = await prepareCharacter(resolved, cache);
+    const hand = first.root.getObjectByName('handslotl')!; const wrapper = hand.children[0]!;
+    expect(wrapper).not.toBe(second.root.getObjectByName('handslotl')!.children[0]);
+    expect(wrapper.matrix.equals(matrix)).toBe(true);
+    first.root.updateMatrixWorld(true);
+    const expected = hand.matrixWorld.clone().multiply(matrix);
+    expect(wrapper.getWorldPosition(new Vector3()).distanceTo(new Vector3().setFromMatrixPosition(expected))).toBeLessThan(1e-10);
+    expect((first.root.getObjectByName('activity-book') as Mesh).geometry).toBe(bookGeometry);
+    first.dispose(); expect(wrapper.parent).toBeNull(); expect(disposeBook).not.toHaveBeenCalled();
+    expect(second.root.getObjectByName('activity-book')).toBeDefined();
+    second.dispose(); expect(disposeBook).toHaveBeenCalledTimes(1); expect(cache.size).toBe(0);
+    expect(book.scene.getObjectByName('activity-book')!.parent).toBe(book.scene);
+  });
+
+  it('书本未就绪时不交付无书人物，完成后释放取消结果的资源', async () => {
+    const pending = deferred<GLTFSource>(); const book = activityBookSource();
+    const cache = new GltfResourceCache((url) => url === '/book.glb' ? pending.promise : Promise.resolve(characterWithBookBone()));
+    const attachment = { model_url: '/book.glb', bone: 'handslotl', matrix: new Matrix4().elements };
+    let finished = false;
+    const preparation = prepareCharacter(resolveAppearance(appearanceFixture(), undefined, [attachment]), cache).then((value) => { finished = true; return value; });
+    await Promise.resolve(); await Promise.resolve(); expect(finished).toBe(false);
+    pending.resolve(book); const instance = await preparation;
+    expect(instance.root.getObjectByName('activity-book')).toBeDefined(); instance.dispose(); expect(cache.size).toBe(0);
+  });
+
+  it('挂点缺失或矩阵损坏返回准备错误，并归还全部资源引用', async () => {
+    const cache = new GltfResourceCache(async (url) => url === '/book.glb' ? activityBookSource() : characterWithBookBone());
+    for (const attachment of [
+      { model_url: '/book.glb', bone: 'not-a-bone', matrix: new Matrix4().elements },
+      { model_url: '/book.glb', bone: 'handslotl', matrix: [1, 2] },
+      { model_url: '/book.glb', bone: 'handslotl', matrix: new Array<number>(16).fill(0) },
+      { model_url: '/book.glb', bone: 'handslotl', matrix: new Matrix4().elements.map((value, index) => index === 0 ? Number.NaN : value) },
+    ]) {
+      await expect(prepareCharacter(resolveAppearance(appearanceFixture(), undefined, [attachment]), cache)).rejects.toThrow();
+      expect(cache.size).toBe(0);
+    }
+  });
+
+  it('书本仍在下载时取消准备，立即归还引用并回收迟到的静态资源', async () => {
+    const pending = deferred<GLTFSource>(); const body = characterWithBookBone(); const book = activityBookSource();
+    const bodyDispose = vi.spyOn((body.scene.getObjectByName('face') as Mesh).geometry, 'dispose');
+    const bookDispose = vi.spyOn((book.scene.getObjectByName('activity-book') as Mesh).geometry, 'dispose');
+    const cache = new GltfResourceCache((url) => url === '/book.glb' ? pending.promise : Promise.resolve(body));
+    const controller = new AbortController();
+    const attachment = { model_url: '/book.glb', bone: 'handslotl', matrix: new Matrix4().elements };
+    const preparation = prepareCharacter(resolveAppearance(appearanceFixture(), undefined, [attachment]), cache, controller.signal);
+    await Promise.resolve(); await Promise.resolve();
+    controller.abort();
+    await expect(preparation).rejects.toMatchObject({ name: 'AbortError' });
+    expect(cache.size).toBe(0); expect(bodyDispose).toHaveBeenCalledTimes(1);
+    pending.resolve(book); await pending.promise; await Promise.resolve(); await Promise.resolve();
+    expect(bookDispose).toHaveBeenCalledTimes(1);
   });
 });

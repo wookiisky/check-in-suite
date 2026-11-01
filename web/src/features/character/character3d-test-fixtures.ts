@@ -1,4 +1,4 @@
-import { AnimationClip, Bone, BoxGeometry, Float32BufferAttribute, Group, MeshBasicMaterial, Skeleton, SkinnedMesh, Uint16BufferAttribute, VectorKeyframeTrack } from 'three';
+import { AnimationClip, Bone, BoxGeometry, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, Skeleton, SkinnedMesh, Uint16BufferAttribute, VectorKeyframeTrack } from 'three';
 import type { components } from '../../api/schema';
 import type { GLTFSource } from '../../graphics/gltf-resources';
 
@@ -15,6 +15,21 @@ export function characterSource(names = ['face', 'body', 'hair-a', 'hair-b', 'up
   for (const name of names) { const mesh = new SkinnedMesh(geometry, material); mesh.name = name; scene.add(mesh); mesh.bind(skeleton); }
   const animation = new AnimationClip('Stand', 1, [new VectorKeyframeTrack('root.position', [0, 1], [0, 0.2, 0, 0, 1.2, 0])]);
   return { scene, animations: [animation] };
+}
+
+// 活动挂点保留加载器已经清理后的骨骼名，不在运行时推测另一种命名。
+export function characterWithBookBone(): GLTFSource {
+  const source = characterSource();
+  const hand = new Bone(); hand.name = 'handslotl'; hand.position.set(0.3, 0.4, 0.2);
+  source.scene.getObjectByName('root')!.add(hand);
+  return source;
+}
+
+// 活动书是静态网格，几何和材质由共享资源缓存持有。
+export function activityBookSource(): GLTFSource {
+  const scene = new Group();
+  const book = new Mesh(new BoxGeometry(0.5, 0.05, 0.3), new MeshBasicMaterial()); book.name = 'activity-book';
+  scene.add(book); return { scene, animations: [] };
 }
 
 // 四槽定义和所有权是服务响应，不依赖商品名称或 key 前缀。

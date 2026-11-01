@@ -4,7 +4,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { OrthographicCamera, PCFShadowMap } from 'three';
 import { useGraphicsMotion } from '../../graphics/useGraphicsMotion';
 import { CharacterModel3D } from './CharacterModel3D';
-import type { AppearanceDraft, AppearanceState, CharacterLoadStatus } from './character3d-appearance';
+import type { AppearanceDraft, AppearanceState, CharacterAttachment, CharacterLoadStatus } from './character3d-appearance';
 import content from './character3d-content.json';
 import './character3d-preview.css';
 
@@ -17,6 +17,7 @@ export interface CharacterPreview3DProps {
   onStatus?: (status: CharacterLoadStatus) => void; // 供编辑器区分显示与保存状态。
   className?: string; // 宿主页面的布局样式。
   label?: string; // 该视图的可访问名称。
+  attachments?: readonly CharacterAttachment[]; // 需要在预览中检查的活动道具。
 }
 
 // WebGL 初始化或渲染崩溃不能让保存与关闭等 HTML 操作一起消失。
@@ -48,7 +49,7 @@ function PreviewEnvironment({ onError }: { onError: (error: unknown) => void }) 
 }
 
 // 所有业务页面复用单人物取景，但每个视图持有自己的 Canvas 与骨架实例。
-export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = false, onStatus, className = '', label = content.label }: CharacterPreview3DProps) {
+export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = false, onStatus, className = '', label = content.label, attachments }: CharacterPreview3DProps) {
   const stopped = useGraphicsMotion(paused);
   const statusCallback = useRef(onStatus);
   useLayoutEffect(() => { statusCallback.current = onStatus; }, [onStatus]);
@@ -67,7 +68,7 @@ export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = 
     {!fatal && <CharacterCanvasBoundary key={canvasGeneration} onError={failed}>
       <Canvas orthographic shadows={{ type: PCFShadowMap }} dpr={[1, 1.5]} frameloop={stopped ? 'demand' : 'always'} camera={{ near: 0.1, far: 50 }} fallback={<p>{content.unsupported}</p>}>
         <PreviewEnvironment onError={failed} />
-        <CharacterModel3D snapshot={snapshot} {...(draft ? { draft } : {})} action={action} paused={stopped} onStatus={changed} attempt={attempt} />
+        <CharacterModel3D snapshot={snapshot} {...(draft ? { draft } : {})} {...(attachments ? { attachments } : {})} action={action} paused={stopped} onStatus={changed} attempt={attempt} />
       </Canvas>
     </CharacterCanvasBoundary>}
     {status.phase === 'loading' && <p className="character3d-notice" role="status">{content.loading}</p>}

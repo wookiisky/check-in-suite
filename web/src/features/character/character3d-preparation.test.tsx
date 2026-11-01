@@ -33,6 +33,7 @@ describe('人物异步准备', () => {
     const pending = deferred<PreparedCharacter>(); prepare.mockReset().mockReturnValueOnce(pending.promise).mockRejectedValueOnce(new Error('network')).mockResolvedValueOnce(preparedCharacterFixture('retry'));
     const resolved = resolveAppearance(appearanceFixture());
     const first = renderHook(() => usePreparedCharacter({ resolved })); first.unmount();
+    expect((prepare.mock.calls[0]?.[2] as AbortSignal).aborted).toBe(true);
     const abandoned = preparedCharacterFixture('abandoned'); const dispose = vi.spyOn(abandoned, 'dispose');
     await act(async () => { pending.resolve(abandoned); }); expect(dispose).toHaveBeenCalledTimes(1);
     const { result, rerender } = renderHook(({ attempt }) => usePreparedCharacter({ resolved }, attempt), { initialProps: { attempt: 0 } });
