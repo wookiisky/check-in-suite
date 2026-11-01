@@ -13,6 +13,9 @@ source:
 - cmd/island/database_status.go
 - cmd/island/database_reset.go
 - internal/demo/settings.json
+- scripts/prepare-3d-resources.py
+- internal/assets/assets.go
+- internal/character/character-catalog.json
 tests:
 - scripts/release.test.mjs
 - scripts/deploy.test.mjs
@@ -21,6 +24,8 @@ tests:
 - cmd/island/asset_upgrade_test.go
 - cmd/island/database_reset_test.go
 - internal/demo/seed_test.go
+- internal/assets/graphics_assets_test.go
+- internal/httpapi/assets_test.go
 ---
 # 成长营地运行手册
 
@@ -63,6 +68,23 @@ SHA256SUMS              # 包含 release.json 的文件校验清单
 ```
 
 基础建表脚本和受控图标、形象、饰品嵌入在二进制中。首次启动将受控素材安装到 `assets_directory`；已有素材标识的图片字节或元数据不同会拒绝启动，具体版本规则见[素材与兼容边界](../FEATURES/SHOP.md#素材与兼容边界)。
+
+## 三维资源制作与安装
+
+正式人物、服装缩略图、建筑和离线动作同样嵌入二进制，并在启动时通过原有受控素材安装流程进入 `assets_directory`。GLB 使用单文件同源读取，模型和动画不会作为管理页图片选项返回。资源的身份、元数据或内容变化必须采用新的版本标识，不能覆盖持久目录中的同名资源。
+
+首批资源以已经验收的样片文件为输入。只整理 GLB 时使用 Python；需要重绘八张透明服装缩略图时显式指定 Blender：
+
+```sh
+python3 scripts/prepare-3d-resources.py
+python3 scripts/prepare-3d-resources.py --blender /path/to/blender
+go test ./internal/character ./internal/assets
+go test ./internal/httpapi -run 'TestGraphicsAssetsHTTP'
+```
+
+该脚本复制已经整理的人物及动作，将 Kenney 建筑的纹理写入 GLB，并从交付人物模型渲染缩略图；它不生成新服装，也不自动适配新骨架。模型与服装定义由 `internal/character/character-catalog.json` 管理，文件格式、显示名称、来源及许可由受控素材目录管理。模型与动作的来源和权利分别登记，原始 FBX 与加工工程仍留在 `.local/3d-sources/`。
+
+发行包运行不需要 Python 或 Blender。构建验证需检查实际 GLB 内嵌数据、目录引用与缩略图解码，正式包还需验证新进程能从持久素材目录读取相同字节。素材制作检查不代表已完成真实手机性能验收。
 
 ## 自动部署与远程发布
 

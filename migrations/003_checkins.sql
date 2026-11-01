@@ -17,9 +17,10 @@ CREATE INDEX media_cleanup ON media_files(state,unreferenced_at);
 
 CREATE TABLE products (
     id TEXT PRIMARY KEY,
-    type TEXT NOT NULL CHECK(type IN ('title','avatar','accessory','background','effect','reward','island')),
+    type TEXT NOT NULL CHECK(type IN ('title','avatar','accessory','background','effect','reward','island','wearable')),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     asset_key TEXT NOT NULL,
+    wearable_key TEXT NOT NULL DEFAULT '',
     description TEXT NOT NULL DEFAULT '',
     coin_price INTEGER NOT NULL CHECK(coin_price >= 0),
     diamond_price INTEGER NOT NULL CHECK(diamond_price >= 0),
@@ -37,7 +38,8 @@ CREATE TABLE purchases (
     product_id TEXT NOT NULL REFERENCES products(id),
     repeatable INTEGER NOT NULL DEFAULT 0 CHECK(repeatable IN (0,1)),
     item_key_snapshot TEXT NOT NULL DEFAULT '',
-    type_snapshot TEXT NOT NULL CHECK(type_snapshot IN ('title','avatar','accessory','background','effect','reward','island')),
+    wearable_key_snapshot TEXT NOT NULL DEFAULT '',
+    type_snapshot TEXT NOT NULL CHECK(type_snapshot IN ('title','avatar','accessory','background','effect','reward','island','wearable')),
     name_snapshot TEXT NOT NULL,
     description_snapshot TEXT NOT NULL,
     asset_key_snapshot TEXT NOT NULL,
@@ -202,5 +204,25 @@ CREATE TABLE idempotency_requests (
 CREATE TABLE island_state (
     id INTEGER PRIMARY KEY CHECK(id=1),
     version INTEGER NOT NULL CHECK(version>0),
+    placements TEXT NOT NULL CHECK(json_valid(placements))
+) STRICT;
+
+-- A complete three-dimensional appearance has its own optimistic version.
+CREATE TABLE appearance_state (
+    id INTEGER PRIMARY KEY CHECK(id=1),
+    version INTEGER NOT NULL CHECK(version>0),
+    character_key TEXT NOT NULL,
+    hair_purchase_id TEXT REFERENCES purchases(id),
+    upper_purchase_id TEXT REFERENCES purchases(id),
+    lower_purchase_id TEXT REFERENCES purchases(id),
+    shoes_purchase_id TEXT REFERENCES purchases(id)
+) STRICT;
+
+-- The 3D layout keeps centimeter coordinates independently from the retiring 2D layout.
+CREATE TABLE island_spatial_state (
+    id INTEGER PRIMARY KEY CHECK(id=1),
+    version INTEGER NOT NULL CHECK(version>0),
+    scene_key TEXT NOT NULL,
+    environment_key TEXT NOT NULL,
     placements TEXT NOT NULL CHECK(json_valid(placements))
 ) STRICT;

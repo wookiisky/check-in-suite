@@ -773,5 +773,131 @@
     "name": "玻璃淋浴间",
     "kind": "island",
     "url": "/api/v1/assets/island-shower-v1"
+  },
+  {
+    "key": "character-medium-v1",
+    "name": "规范营地人物",
+    "kind": "model",
+    "url": "/api/v1/assets/character-medium-v1",
+    "format": "glb",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "character-exercise-v1",
+    "name": "营地运动动作",
+    "kind": "animation",
+    "url": "/api/v1/assets/character-exercise-v1",
+    "format": "glb",
+    "source_url": "https://www.mixamo.com/",
+    "license": "Mixamo project-use terms"
+  },
+  {
+    "key": "camp-wall-v1",
+    "name": "营地墙面",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-wall-v1",
+    "format": "glb",
+    "source_url": "https://kenney-assets.itch.io/building-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-doorway-v1",
+    "name": "营地门洞",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-doorway-v1",
+    "format": "glb",
+    "source_url": "https://kenney-assets.itch.io/building-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-floor-v1",
+    "name": "营地地板",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-floor-v1",
+    "format": "glb",
+    "source_url": "https://kenney-assets.itch.io/building-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "camp-roof-v1",
+    "name": "营地屋顶",
+    "kind": "model",
+    "url": "/api/v1/assets/camp-roof-v1",
+    "format": "glb",
+    "source_url": "https://kenney-assets.itch.io/building-kit",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "wearable-hair-rogue-v1",
+    "name": "短发",
+    "kind": "wearable",
+    "url": "/api/v1/assets/wearable-hair-rogue-v1",
+    "format": "png",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "wearable-hair-barbarian-v1",
+    "name": "光头短须",
+    "kind": "wearable",
+    "url": "/api/v1/assets/wearable-hair-barbarian-v1",
+    "format": "png",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "wearable-upper-rogue-v1",
+    "name": "绿色旅行装",
+    "kind": "wearable",
+    "url": "/api/v1/assets/wearable-upper-rogue-v1",
+    "format": "png",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "wearable-upper-barbarian-v1",
+    "name": "蓝色皮甲",
+    "kind": "wearable",
+    "url": "/api/v1/assets/wearable-upper-barbarian-v1",
+    "format": "png",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "wearable-lower-rogue-v1",
+    "name": "旅行短装",
+    "kind": "wearable",
+    "url": "/api/v1/assets/wearable-lower-rogue-v1",
+    "format": "png",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "wearable-lower-barbarian-v1",
+    "name": "皮质短装",
+    "kind": "wearable",
+    "url": "/api/v1/assets/wearable-lower-barbarian-v1",
+    "format": "png",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "wearable-shoes-rogue-v1",
+    "name": "旅行靴",
+    "kind": "wearable",
+    "url": "/api/v1/assets/wearable-shoes-rogue-v1",
+    "format": "png",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0"
+  },
+  {
+    "key": "wearable-shoes-barbarian-v1",
+    "name": "护边靴",
+    "kind": "wearable",
+    "url": "/api/v1/assets/wearable-shoes-barbarian-v1",
+    "format": "png",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0"
   }
 ]

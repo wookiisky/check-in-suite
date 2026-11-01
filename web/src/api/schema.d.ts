@@ -25,6 +25,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/island/layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取整数厘米的三维营地布局与统一空间定义 */
+        get: operations["getSpatialIsland"];
+        /**
+         * 按独立版本保存完整三维营地布局
+         * @description 只需登录，不需管理授权。地面位置为整数厘米，朝向为0到3个四分之一圈；每个实例的全部字段都必须出现。服务端校验真实所有权、完整占地、空间、碰撞和门口通路；相机状态不进入布局。
+         */
+        put: operations["saveSpatialIsland"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health/live": {
         parameters: {
             query?: never;
@@ -517,6 +538,27 @@ export interface paths {
         put?: never;
         /** 原子扣除双币并生成订单 */
         post: operations["createPurchase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appearance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取三维人物外观、完整服装库存和资源定义 */
+        get: operations["getAppearance"];
+        /**
+         * 校验所有权与兼容性后原子保存整套四槽外观
+         * @description 四个购买实例字段都必须出现；null 恢复该部位的免费默认装备，缺省或空字符串无效。版本冲突保留客户端草稿，不能盲目替换版本重试。称号和徽章独立保存。
+         */
+        put: operations["saveAppearance"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1157,7 +1199,103 @@ export interface components {
             expected_version: number;
             placements: components["schemas"]["IslandPlacement"][];
         };
+        /** @enum {string} */
+        SpatialSpace: "outdoor" | "indoor";
+        /** @enum {string} */
+        SpatialTerrain: "grass" | "sand" | "water";
+        SpatialPoint: {
+            x_cm: number;
+            z_cm: number;
+        };
+        SpatialRect: {
+            min_x_cm: number;
+            max_x_cm: number;
+            min_z_cm: number;
+            max_z_cm: number;
+        };
+        SpatialFootprint: {
+            width_cm: number;
+            depth_cm: number;
+        };
+        SpatialInteraction: {
+            activity: string;
+            x_cm: number;
+            z_cm: number;
+            rotation: number;
+        };
+        SpatialDefinition: {
+            item_key: string;
+            name: string;
+            assembly?: string;
+            model_url?: string;
+            footprint: components["schemas"]["SpatialFootprint"];
+            walk_obstacle?: components["schemas"]["SpatialFootprint"];
+            interaction?: components["schemas"]["SpatialInteraction"];
+            blocks_placement: boolean;
+            movable: boolean;
+            repeatable: boolean;
+            spaces: components["schemas"]["SpatialSpace"][];
+            rotations: number[];
+            allowed_terrain: components["schemas"]["SpatialTerrain"][];
+        };
+        SpatialTerrainRegion: {
+            terrain: components["schemas"]["SpatialTerrain"];
+            polygon: components["schemas"]["SpatialPoint"][];
+        };
+        SpatialHouseModels: {
+            floor_url: string;
+            wall_url: string;
+            doorway_url: string;
+            roof_url: string;
+        };
+        SpatialHouse: {
+            interior: components["schemas"]["SpatialRect"];
+            floor_height_cm: number;
+            wall_height_cm: number;
+            door_center: components["schemas"]["SpatialPoint"];
+            door_width_cm: number;
+            door_height_cm: number;
+            door_clearance: components["schemas"]["SpatialRect"];
+            models: components["schemas"]["SpatialHouseModels"];
+        };
+        SpatialScene: {
+            scene_key: string;
+            regions: components["schemas"]["SpatialTerrainRegion"][];
+            environments: string[];
+            house: components["schemas"]["SpatialHouse"];
+        };
+        SpatialPlacement: {
+            instance_id: string;
+            item_key: string;
+            space: components["schemas"]["SpatialSpace"];
+            x_cm: number;
+            z_cm: number;
+            rotation: number;
+        };
+        SpatialOwnedItem: {
+            instance_id: string;
+            item_key: string;
+        };
+        SpatialIslandState: {
+            version: number;
+            scene_key: string;
+            environment_key: string;
+            placements: components["schemas"]["SpatialPlacement"][];
+            inventory: components["schemas"]["SpatialOwnedItem"][];
+            catalog: components["schemas"]["SpatialDefinition"][];
+            scene: components["schemas"]["SpatialScene"];
+        };
+        SpatialIslandSave: {
+            expected_version: number;
+            scene_key: string;
+            environment_key: string;
+            placements: components["schemas"]["SpatialPlacement"][];
+        };
+        /** @enum {string} */
+        ProductType: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island" | "wearable";
         Product: {
+            /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
+            wearable_key?: string;
             wearable_slot?: components["schemas"]["WearableSlot"];
             /** @description 同一穿戴物的后层素材，穿戴时随前层整体切换。 */
             back_asset_key?: string;
@@ -1169,8 +1307,7 @@ export interface components {
             /** @description 当前画像展示素材；物品能力后续追加时已购者也可使用。 */
             portrait_asset_key?: string;
             id: string;
-            /** @enum {string} */
-            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
+            type: components["schemas"]["ProductType"];
             name: string;
             asset_key: string;
             description: string;
@@ -1189,8 +1326,9 @@ export interface components {
             owned: boolean;
         };
         ProductCreate: {
-            /** @enum {string} */
-            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
+            /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
+            wearable_key?: string;
+            type: components["schemas"]["ProductType"];
             name: string;
             asset_key: string;
             description: string;
@@ -1200,8 +1338,9 @@ export interface components {
             enabled: boolean;
         };
         ProductUpdate: {
-            /** @enum {string} */
-            type: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
+            /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
+            wearable_key?: string;
+            type: components["schemas"]["ProductType"];
             name: string;
             asset_key: string;
             description: string;
@@ -1215,6 +1354,8 @@ export interface components {
             items: components["schemas"]["Product"][];
         };
         Purchase: {
+            /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
+            wearable_key?: string;
             wearable_slot?: components["schemas"]["WearableSlot"];
             /** @description 同一穿戴物的后层素材，穿戴时随前层整体切换。 */
             back_asset_key?: string;
@@ -1229,8 +1370,7 @@ export interface components {
             /** @description 根据稳定物品身份读取的当前营地能力，可随资源更新增加。 */
             island_item_key?: string;
             product_id: string;
-            /** @enum {string} */
-            type_snapshot: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
+            type_snapshot: components["schemas"]["ProductType"];
             name_snapshot: string;
             asset_key_snapshot: string;
             description_snapshot: string;
@@ -1255,6 +1395,82 @@ export interface components {
         PurchaseList: {
             items: components["schemas"]["Purchase"][];
             next_cursor: string | null;
+        };
+        /**
+         * @description 三维人物的四个独立穿戴部位。
+         * @enum {string}
+         */
+        CharacterSlot: "hair" | "upper" | "lower" | "shoes";
+        CharacterSelection: {
+            hair: string;
+            upper: string;
+            lower: string;
+            shoes: string;
+        };
+        CharacterAnimation: {
+            clip: string;
+            asset_key: string;
+            url: string;
+        };
+        CharacterDefinition: {
+            /** @description 资源目录中维护的显示名称。 */
+            name: string;
+            character_key: string;
+            /** @description 骨架层级、绑定姿势和比例的兼容身份。 */
+            rig_key: string;
+            model_asset_key: string;
+            model_url: string;
+            scale: number;
+            fixed_nodes: string[];
+            body_regions: {
+                [key: string]: string[];
+            };
+            defaults: components["schemas"]["CharacterSelection"];
+            animations: {
+                [key: string]: components["schemas"]["CharacterAnimation"];
+            };
+        };
+        CharacterWearable: {
+            /** @description 资源目录中维护的显示名称。 */
+            name: string;
+            wearable_key: string;
+            slot: components["schemas"]["CharacterSlot"];
+            character_key: string;
+            rig_key: string;
+            model_asset_key: string;
+            model_url: string;
+            thumbnail_asset_key: string;
+            thumbnail_url: string;
+            nodes: string[];
+            covers: string[];
+        };
+        AppearanceOwnedItem: {
+            purchase_id: string;
+            wearable_key: string;
+        };
+        AppearanceState: {
+            version: number;
+            character_key: string;
+            hair_purchase_id: string | null;
+            upper_purchase_id: string | null;
+            lower_purchase_id: string | null;
+            shoes_purchase_id: string | null;
+            characters: components["schemas"]["CharacterDefinition"][];
+            wearables: components["schemas"]["CharacterWearable"][];
+            /** @description 全部已拥有的三维服装实例，不受订单列表分页影响。 */
+            inventory: components["schemas"]["AppearanceOwnedItem"][];
+        };
+        AppearanceSave: {
+            expected_version: number;
+            character_key: string;
+            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
+            hair_purchase_id: string | null;
+            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
+            upper_purchase_id: string | null;
+            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
+            lower_purchase_id: string | null;
+            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
+            shoes_purchase_id: string | null;
         };
         Equipment: {
             /** @description 当前免费基础形象；装备动物时仍保存此选择。 */
@@ -1331,13 +1547,17 @@ export interface components {
             key: string;
             name: string;
             /** @enum {string} */
-            kind: "icon" | "avatar" | "background" | "accessory" | "effect" | "title" | "reward" | "badge" | "island";
+            kind: "icon" | "avatar" | "background" | "accessory" | "effect" | "title" | "reward" | "badge" | "island" | "model" | "animation" | "wearable";
             url: string;
             /**
              * @description 省略时为 svg。
              * @enum {string}
              */
-            format?: "svg" | "png" | "webp";
+            format?: "svg" | "png" | "webp" | "glb";
+            /** @description 素材来源页面。 */
+            source_url?: string;
+            /** @description 当前资源的许可或项目使用条款；模型与动作分别登记。 */
+            license?: string;
         };
         AssetList: {
             items: components["schemas"]["Asset"][];
@@ -1531,6 +1751,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IslandState"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSpatialIsland: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpatialIslandState"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    saveSpatialIsland: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpatialIslandSave"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpatialIslandState"];
                 };
             };
             default: components["responses"]["Error"];
@@ -2451,7 +2719,7 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
-                type?: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island";
+                type?: components["schemas"]["ProductType"];
                 status?: "owned" | "pending" | "redeemed";
             };
             header?: never;
@@ -2496,6 +2764,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurchaseResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getAppearance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppearanceState"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    saveAppearance: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppearanceSave"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppearanceState"];
                 };
             };
             default: components["responses"]["Error"];
@@ -2768,6 +3084,7 @@ export interface operations {
                     "image/svg+xml": string;
                     "image/png": string;
                     "image/webp": string;
+                    "model/gltf-binary": string;
                 };
             };
             default: components["responses"]["Error"];

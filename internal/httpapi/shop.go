@@ -10,6 +10,7 @@ import (
 
 // RegisterShop keeps management authority fixed by the route and delegates economic writes to the service.
 func (app *App) RegisterShop(service *shop.Service) {
+	app.registerAppearance(service)
 	app.Mux.HandleFunc("GET /api/v1/products", func(w http.ResponseWriter, r *http.Request) {
 		p, err := app.Authenticate(r)
 		if err != nil {

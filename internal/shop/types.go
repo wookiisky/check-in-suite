@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	TypeWearable      = "wearable"        // Three-dimensional clothing with a stable definition identity.
 	TypeIsland        = "island"          // Controlled island construction item.
 	TypeTitle         = "title"           // One equipped title, permanently owned after purchase.
 	TypeAvatar        = "avatar"          // One equipped character; nil restores the default.
@@ -43,6 +44,7 @@ func New(db *sql.DB, cfg config.Config, accounts *account.Service) *Service {
 
 // Product describes the current offer; its fields never rewrite existing purchase snapshots.
 type Product struct {
+	WearableKey      string              `json:"wearable_key,omitempty"`       // Stable three-dimensional clothing definition.
 	WearableSlot     assets.WearableSlot `json:"wearable_slot,omitempty"`      // Fixed attachment resolved from controlled artwork.
 	BackAssetKey     string              `json:"back_asset_key,omitempty"`     // Optional rear hair layer.
 	PortraitType     string              `json:"portrait_type,omitempty"`      // Current optional portrait equipment role.
@@ -66,14 +68,15 @@ type Product struct {
 
 // ProductInput is the complete mutable merchandise configuration.
 type ProductInput struct {
-	Type         string `json:"type"`          // Selected product type.
-	Name         string `json:"name"`          // Required name, trimmed before storage.
-	AssetKey     string `json:"asset_key"`     // Artwork of the matching controlled kind.
-	Description  string `json:"description"`   // Optional plain text.
-	CoinPrice    int64  `json:"coin_price"`    // Coins required for a new purchase.
-	DiamondPrice int64  `json:"diamond_price"` // Diamonds required at the same time.
-	Stock        *int64 `json:"stock"`         // Unlimited or nonnegative finite stock.
-	Enabled      bool   `json:"enabled"`       // Whether the product is currently purchasable.
+	WearableKey  string `json:"wearable_key,omitempty"` // Required for three-dimensional clothing, empty for other types.
+	Type         string `json:"type"`                   // Selected product type.
+	Name         string `json:"name"`                   // Required name, trimmed before storage.
+	AssetKey     string `json:"asset_key"`              // Artwork of the matching controlled kind.
+	Description  string `json:"description"`            // Optional plain text.
+	CoinPrice    int64  `json:"coin_price"`             // Coins required for a new purchase.
+	DiamondPrice int64  `json:"diamond_price"`          // Diamonds required at the same time.
+	Stock        *int64 `json:"stock"`                  // Unlimited or nonnegative finite stock.
+	Enabled      bool   `json:"enabled"`                // Whether the product is currently purchasable.
 }
 
 // ProductUpdate carries the version the household reviewed before editing.
@@ -89,6 +92,7 @@ type ProductList struct {
 
 // Purchase is a permanent transaction snapshot plus the independent redemption state.
 type Purchase struct {
+	WearableKey         string              `json:"wearable_key,omitempty"`       // Clothing identity copied at purchase time, independent of the live offer.
 	WearableSlot        assets.WearableSlot `json:"wearable_slot,omitempty"`      // Fixed attachment from the purchased controlled artwork.
 	BackAssetKey        string              `json:"back_asset_key,omitempty"`     // Optional rear hair layer.
 	ItemKeySnapshot     string              `json:"-"`                            // Stable item identity retained independently from versioned sale artwork.

@@ -8,10 +8,17 @@ source:
 - internal/shop/purchases.go
 - internal/shop/products.go
 - internal/shop/equipment.go
+- internal/shop/appearance.go
+- internal/shop/appearance_types.go
+- internal/character/character_types.go
+- internal/character/character-catalog.json
 - internal/shop/base_avatar.go
 - internal/shop/accessory_layout.go
 - internal/assets/assets.go
 - internal/assets/builtin/catalog.json
+- internal/character/character-catalog.json
+- internal/character/character_types.go
+- scripts/prepare-3d-resources.py
 - web/src/features/shop/ShopPage.tsx
 - web/src/features/shop/BackpackPage.tsx
 - web/src/features/shop/WardrobeDialog.tsx
@@ -28,7 +35,12 @@ tests:
 - internal/shop/credential_race_test.go
 - internal/shop/accessory_layout_test.go
 - internal/shop/wearable_equipment_test.go
+- internal/shop/appearance_test.go
+- internal/httpapi/appearance_test.go
 - internal/assets/assets_test.go
+- internal/assets/graphics_assets_test.go
+- internal/character/catalog_test.go
+- internal/httpapi/assets_test.go
 - internal/assets/badge_upgrade_test.go
 - internal/httpapi/wearable_routes_test.go
 - web/src/features/shop/ShopPage.test.tsx
@@ -76,6 +88,14 @@ tests:
 
 所有商品购买成功后关闭确认框、显示结果并刷新余额、库存和已拥有数量，保留商店当前的一级与二级分类，不自动进入背包。购买成功不自动装备或摆放，装扮操作也不再次收费。已拥有列表按订单分页，切换筛选时不能沿用另一筛选的游标；营地所有权读取全部订单，不以当前商店页作为完整库存。
 
+## 三维外观保存
+
+三维外观使用独立的读取与整套保存接口，一次取得人物定义、四槽服装、完整已购库存和已保存选择，不受商店订单分页影响。每个部位的空值表示免费默认项；缺省字段、空字符串、未拥有实例、错误部位，以及不适配身体或骨架的定义均不能保存。称号和徽章不进入人物骨架或四槽版本。
+
+外观保存携带独立的预期版本。服务端在同一写事务中复核会话、当前版本和全部四槽，再一次写入并递增版本；任一验证或提交失败都不能留下部分外观。版本冲突不覆盖已保存内容，客户端应保留草稿并读取当前状态。新增购买只增加库存，不递增外观版本，因此同版本读取仍可能包含新服装。
+
+三维服装使用 `wearable` 商品类型，购买在原有扣款事务中将稳定服装身份复制到订单。商品下架或删除不撤销已购资格；已售商品不能改指另一服装定义。三维衣物不能调用旧二维单槽或自由饰品接口。当前二维页面与新契约在重构期间分别保留，新人物模块接入时使用三维契约。
+
 ## 角色与装备
 
 营地与衣柜展示同一份已保存装备。称号、整体形象、背景各有一个槽位；饰品和特效允许多件。背景位于画布底部，角色与自由饰品参与前后排序，特效固定覆盖画布。姓名和币种的通用呈现见 [界面](INTERFACE.md)。
@@ -121,6 +141,12 @@ tests:
 商品素材来自内置目录，不提供上传入口。内部人物组合层使用 `character-part` 类型，不出现在可选素材列表或商品配置中；免费基础人物也不能创建为商品。素材的文件格式、可用类型、免费属性和穿戴槽位由目录定义，管理页只能选择适用的素材。
 
 素材以不可覆写的版本标识安装到独立持久目录。名称、类型、格式和穿戴属性等元数据与图片字节都属于该版本，修改其中任何内容都须采用新标识。发布目录被替换后，历史订单仍可读取已安装素材；退役素材可以从源码和当前可选目录移除，持久目录中的旧素材继续保留。已购物品可以通过稳定物品身份获得新增的营地能力，成交事实保持原样。
+
+三维人物与服装使用独立的版本定义。人物定义登记身体、骨架绑定规格、模型、身体分区、四槽默认项和整理后的动作；服装定义登记所属部位、适配身体与骨架、实际网格及覆盖区域。定义不代表购买或装备，所有权仍由订单提供。首批默认项不需要购买，也不通过将缩略图标为免费基础形象来实现。
+
+三维模型与动作以自包含的 GLB 安装，文件中的纹理不依赖相对外链。它们复用登录后的同源素材路径，响应类型为 `model/gltf-binary`，不进入管理页的可选图片目录。服装卡片使用从实际模型渲染的透明 PNG；该缩略图属于 `wearable`，不沿用二维自由饰品的穿戴槽或后层图片属性。原始包、Blender 工程与原始 Mixamo FBX 不进入运行下载包。
+
+三维资源元数据分别保留官方来源与许可。KayKit 人物和 Kenney 建筑使用各自的 CC0 资源，Mixamo 补充动作按其项目使用条款登记，不能因为目标骨架来自 KayKit 就把整个动作标为 CC0。资源整理和缩略图重绘见 [运行手册](../ENGINEERING/OPERATIONS.md#三维资源制作与安装)。
 
 家庭家具作为新素材版本加入目录，同时提供可购买的营地商品。启动时为已有账户补入明确标记需要补录的商品，使用稳定商品身份避免重复；已存在商品的价格、库存、上下架及软删除状态保持不变。家具不会自动赠送或摆入房屋，摆放空间与房屋升级规则见 [营地](ISLAND.md#角色活动与屋内展示)。
 

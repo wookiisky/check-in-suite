@@ -1,0 +1,26 @@
+{
+  "scene": {
+    "scene_key": "seaside-v1",
+    "regions": [
+      {"terrain": "grass", "polygon": [{"x_cm": -1500, "z_cm": -1500}, {"x_cm": 1500, "z_cm": -1500}, {"x_cm": 1500, "z_cm": 600}, {"x_cm": -1500, "z_cm": 600}]},
+      {"terrain": "sand", "polygon": [{"x_cm": -1500, "z_cm": 600}, {"x_cm": 1500, "z_cm": 600}, {"x_cm": 1500, "z_cm": 1000}, {"x_cm": -1500, "z_cm": 1000}]},
+      {"terrain": "water", "polygon": [{"x_cm": -1500, "z_cm": 1000}, {"x_cm": 1500, "z_cm": 1000}, {"x_cm": 1500, "z_cm": 2200}, {"x_cm": -1500, "z_cm": 2200}]}
+    ],
+    "environments": ["day", "dusk"],
+    "house": {
+      "interior": {"min_x_cm": -300, "max_x_cm": 300, "min_z_cm": -300, "max_z_cm": 300},
+      "floor_height_cm": 10,
+      "wall_height_cm": 240,
+      "door_center": {"x_cm": 0, "z_cm": 300},
+      "door_width_cm": 90,
+      "door_height_cm": 210,
+      "door_clearance": {"min_x_cm": -55, "max_x_cm": 55, "min_z_cm": 300, "max_z_cm": 420},
+      "models": {"floor_url": "/api/v1/assets/camp-floor-v1", "wall_url": "/api/v1/assets/camp-wall-v1", "doorway_url": "/api/v1/assets/camp-doorway-v1", "roof_url": "/api/v1/assets/camp-roof-v1"}
+    }
+  },
+  "catalog": [
+    {"item_key": "camp-house-v1", "name": "海边小屋", "assembly": "house", "footprint": {"width_cm": 620, "depth_cm": 620}, "walk_obstacle": {"width_cm": 620, "depth_cm": 620}, "blocks_placement": true, "movable": true, "repeatable": false, "spaces": ["outdoor"], "rotations": [0], "allowed_terrain": ["grass", "sand"]}
+  ],
+  "default_environment": "day",
+  "default_placements": [{"instance_id": "base:house3d", "item_key": "camp-house-v1", "space": "outdoor", "x_cm": 0, "z_cm": 0, "rotation": 0}]
+}

@@ -5,6 +5,11 @@ owns:
 - island.activity-access
 source:
 - internal/island/service.go
+- internal/island/spatial_types.go
+- internal/island/spatial_service.go
+- internal/island/spatial_geometry.go
+- internal/island/spatial-scene.json
+- web/src/features/island/spatial-geometry.ts
 - internal/island/activity_access.go
 - internal/island/catalog.json
 - internal/island/house-layout.json
@@ -36,6 +41,10 @@ source:
 - web/src/features/island/island-object-art.css
 tests:
 - internal/island/housing_test.go
+- internal/island/spatial_service_test.go
+- internal/island/spatial_geometry_test.go
+- internal/httpapi/island_spatial_test.go
+- web/src/features/island/spatial-geometry.test.ts
 - internal/island/housing_upgrade_test.go
 - internal/httpapi/island_routes_test.go
 - internal/httpapi/island_unlock_test.go
@@ -77,6 +86,16 @@ tests:
 四槽样片使用经过加工的身体、发型、上衣、下装和鞋子。每槽各两个真实几何选项，可逐槽调整主角色，或同时查看 16 种组合；旁边的参照人物保留默认外观和独立待机。身体分区按所选服装声明隐藏，换装时重新计算，不能沿用上一套的遮盖状态。两个头部选项分别为短发和光头短须；衣服内部的支撑身体不作为裸露形象交付。每个人物实例持有独立骨骼和播放器，共享的模型、几何、材质和纹理不能被某个实例卸载时释放。
 
 人物 GLB 保留待机、行走、跑步、坐下和抬手动作；补充运动动作另从 Mixamo 下载并离线转换到同一骨架，运行时直接播放整理后的轨道。运动的过顶举臂已按当前体型调整，具体来源、许可和加工说明由素材目录维护；不能将 Mixamo 动作误标为 KayKit 的 CC0 素材。人物描述、模型和补充动作读取失败均可重试；取消或被取代的描述请求不能覆盖新读取。
+
+## 新版三维布局契约
+
+`/island/layout` 为新版人物与场景提供独立布局，重构期间不读取或改写旧二维布局。位置使用整数厘米的 `x/z`，朝向为零到三的四分之一圈；相机平移、缩放和旋转不进入保存内容。室内位置相对固定朝向的主屋，环境单独选择，不再作为地面物件摆放。
+
+新版读取在同一数据库快照中取得版本、有限场景、物件定义、完整库存和布局。空状态只返回默认布局，不在读取时写库。保存一次提交完整草稿，在事务内复核会话、版本、实例所有权、重复摆放、允许空间、完整占地、互斥与门外通路；任何失败都不改变已保存版本或布局。
+
+Go 与 TypeScript 使用相同场景数据及几何案例。允许地形按完整占地内的区域并集判断，草地与沙滩可以联合覆盖；凹岸缺口不能因中心或四角落在岸上而放行，也不能用同类区域的重叠面积掩盖缺口。地形之外与水域目前都不是可保存的物件区域。摆放占地、行走阻挡和互动位置分别声明；只有双方均声明摆放互斥时才禁止重叠，边界接触不视为覆盖。
+
+新版目录当前仅登记已交付构件组成的主屋及环境，不提前提供尚无模型的陈设。房屋完整室外占地包括墙厚和屋顶边沿，室内地板范围另行定义；后续增加家具时须再检查实际墙体体积，不能把地板范围当作净可用范围。正式三维营地在后续阶段接入这套契约，下述二维规则在旧入口仍然适用。
 
 ## 整体场景与地形
 

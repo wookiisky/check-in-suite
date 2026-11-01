@@ -136,3 +136,50 @@ func jsonCSRF(t *testing.T, data []byte) string {
 	}
 	return session.Token
 }
+
+// 正式模型从持久素材目录同源读取，保留鉴权和真实二进制媒体类型。
+func TestGraphicsAssetsHTTP(t *testing.T) {
+	app := accountApplication(t)
+	service := assets.New(t.TempDir())
+	if err := service.Install(); err != nil {
+		t.Fatal(err)
+	}
+	app.RegisterAssets(service)
+	private := apiRequest(app, "GET", "/api/v1/assets/character-medium-v1", "", nil, "")
+	if private.Code != 401 {
+		t.Fatalf("private GLB exposed: %d", private.Code)
+	}
+	login := apiRequest(app, "POST", "/api/v1/auth/login", `{"username":"family","password":"login-password"}`, nil, "")
+	if login.Code != 200 {
+		t.Fatalf("login: %d %s", login.Code, login.Body)
+	}
+	cookie := login.Result().Cookies()[0]
+	for _, key := range []string{"character-medium-v1", "character-exercise-v1", "camp-wall-v1", "camp-doorway-v1", "camp-floor-v1", "camp-roof-v1"} {
+		response := apiRequest(app, "GET", "/api/v1/assets/"+key, "", cookie, "")
+		if response.Code != 200 || response.Header().Get("Content-Type") != "model/gltf-binary" || !bytes.HasPrefix(response.Body.Bytes(), []byte("glTF")) {
+			t.Fatalf("GLB response %s: %d %v", key, response.Code, response.Header())
+		}
+		if response.Header().Get("Cache-Control") != "private, no-store" || response.Header().Get("X-Content-Type-Options") != "nosniff" {
+			t.Fatalf("private GLB headers: %v", response.Header())
+		}
+	}
+	response := apiRequest(app, "GET", "/api/v1/assets/wearable-upper-rogue-v1", "", cookie, "")
+	if response.Code != 200 || response.Header().Get("Content-Type") != "image/png" {
+		t.Fatalf("wearable image response: %d %v", response.Code, response.Header())
+	}
+	if _, err := png.Decode(bytes.NewReader(response.Body.Bytes())); err != nil {
+		t.Fatal(err)
+	}
+	listed := apiRequest(app, "GET", "/api/v1/assets", "", cookie, "")
+	var catalog struct {
+		Items []assets.Asset `json:"items"`
+	} // 管理可选图片。
+	if err := json.Unmarshal(listed.Body.Bytes(), &catalog); err != nil {
+		t.Fatal(err)
+	}
+	for _, item := range catalog.Items {
+		if item.Kind == assets.KindModel || item.Kind == assets.KindAnimation {
+			t.Fatalf("model in image catalog: %#v", item)
+		}
+	}
+}

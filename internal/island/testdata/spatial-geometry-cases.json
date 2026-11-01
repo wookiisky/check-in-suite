@@ -1,0 +1,510 @@
+{
+  "regions": {
+    "shore": [
+      {
+        "terrain": "grass",
+        "polygon": [
+          {
+            "x_cm": -100,
+            "z_cm": -100
+          },
+          {
+            "x_cm": 100,
+            "z_cm": -100
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 0
+          },
+          {
+            "x_cm": -100,
+            "z_cm": 0
+          }
+        ]
+      },
+      {
+        "terrain": "sand",
+        "polygon": [
+          {
+            "x_cm": -100,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 100
+          },
+          {
+            "x_cm": -100,
+            "z_cm": 100
+          }
+        ]
+      },
+      {
+        "terrain": "water",
+        "polygon": [
+          {
+            "x_cm": -100,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 200
+          },
+          {
+            "x_cm": -100,
+            "z_cm": 200
+          }
+        ]
+      }
+    ],
+    "notched": [
+      {
+        "terrain": "grass",
+        "polygon": [
+          {
+            "x_cm": 0,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 40,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 40,
+            "z_cm": 30
+          },
+          {
+            "x_cm": 20,
+            "z_cm": 30
+          },
+          {
+            "x_cm": 20,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 0,
+            "z_cm": 100
+          }
+        ]
+      }
+    ],
+    "overlap-gap": [
+      {
+        "terrain": "grass",
+        "polygon": [
+          {
+            "x_cm": 0,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 60,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 60,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 0,
+            "z_cm": 100
+          }
+        ]
+      },
+      {
+        "terrain": "grass",
+        "polygon": [
+          {
+            "x_cm": 0,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 40,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 40,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 0,
+            "z_cm": 100
+          }
+        ]
+      }
+    ],
+    "overlap-covered": [
+      {
+        "terrain": "grass",
+        "polygon": [
+          {
+            "x_cm": 0,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 70,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 70,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 0,
+            "z_cm": 100
+          }
+        ]
+      },
+      {
+        "terrain": "sand",
+        "polygon": [
+          {
+            "x_cm": 40,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 40,
+            "z_cm": 100
+          }
+        ]
+      }
+    ],
+    "triangle": [
+      {
+        "terrain": "grass",
+        "polygon": [
+          {
+            "x_cm": 0,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 0,
+            "z_cm": 100
+          }
+        ]
+      }
+    ],
+    "crossing-diagonals-gap": [
+      {
+        "terrain": "grass",
+        "polygon": [
+          {
+            "x_cm": 0,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 0,
+            "z_cm": 100
+          }
+        ]
+      },
+      {
+        "terrain": "sand",
+        "polygon": [
+          {
+            "x_cm": 0,
+            "z_cm": 0
+          },
+          {
+            "x_cm": 100,
+            "z_cm": 100
+          },
+          {
+            "x_cm": 0,
+            "z_cm": 100
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "grass edge touches sand",
+      "regions": "shore",
+      "x_cm": 0,
+      "z_cm": -50,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass"
+      ],
+      "valid": true
+    },
+    {
+      "name": "combined grass and sand",
+      "regions": "shore",
+      "x_cm": 0,
+      "z_cm": 0,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": true
+    },
+    {
+      "name": "sand is not grass",
+      "regions": "shore",
+      "x_cm": 0,
+      "z_cm": 0,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass"
+      ],
+      "valid": false
+    },
+    {
+      "name": "cross shoreline",
+      "regions": "shore",
+      "x_cm": 0,
+      "z_cm": 75,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": false
+    },
+    {
+      "name": "finite scene edge touches",
+      "regions": "shore",
+      "x_cm": -50,
+      "z_cm": 0,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": true
+    },
+    {
+      "name": "one centimetre outside finite scene",
+      "regions": "shore",
+      "x_cm": -51,
+      "z_cm": 0,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": false
+    },
+    {
+      "name": "outside land is not water",
+      "regions": "shore",
+      "x_cm": 250,
+      "z_cm": 150,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "water"
+      ],
+      "valid": false
+    },
+    {
+      "name": "explicit finite water region",
+      "regions": "shore",
+      "x_cm": 0,
+      "z_cm": 150,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "water"
+      ],
+      "valid": true
+    },
+    {
+      "name": "wide unrotated overflow",
+      "regions": "shore",
+      "x_cm": 75,
+      "z_cm": 0,
+      "rotation": 0,
+      "width_cm": 150,
+      "depth_cm": 50,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": false
+    },
+    {
+      "name": "quarter turn swaps footprint",
+      "regions": "shore",
+      "x_cm": 75,
+      "z_cm": 0,
+      "rotation": 1,
+      "width_cm": 150,
+      "depth_cm": 50,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": true
+    },
+    {
+      "name": "half turn keeps footprint",
+      "regions": "shore",
+      "x_cm": 75,
+      "z_cm": 0,
+      "rotation": 2,
+      "width_cm": 150,
+      "depth_cm": 50,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": false
+    },
+    {
+      "name": "three quarter turn swaps footprint",
+      "regions": "shore",
+      "x_cm": 75,
+      "z_cm": 0,
+      "rotation": 3,
+      "width_cm": 150,
+      "depth_cm": 50,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": true
+    },
+    {
+      "name": "centre and corners cannot admit a concave gap",
+      "regions": "notched",
+      "x_cm": 50,
+      "z_cm": 50,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass"
+      ],
+      "valid": false
+    },
+    {
+      "name": "concave usable side",
+      "regions": "notched",
+      "x_cm": 70,
+      "z_cm": 50,
+      "rotation": 0,
+      "width_cm": 40,
+      "depth_cm": 100,
+      "allowed": [
+        "grass"
+      ],
+      "valid": true
+    },
+    {
+      "name": "overlap cannot double count and hide a gap",
+      "regions": "overlap-gap",
+      "x_cm": 50,
+      "z_cm": 50,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass"
+      ],
+      "valid": false
+    },
+    {
+      "name": "overlapping allowed polygons cover union",
+      "regions": "overlap-covered",
+      "x_cm": 50,
+      "z_cm": 50,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": true
+    },
+    {
+      "name": "diagonal edge touches",
+      "regions": "triangle",
+      "x_cm": 25,
+      "z_cm": 25,
+      "rotation": 0,
+      "width_cm": 50,
+      "depth_cm": 50,
+      "allowed": [
+        "grass"
+      ],
+      "valid": true
+    },
+    {
+      "name": "one centimetre across diagonal",
+      "regions": "triangle",
+      "x_cm": 26,
+      "z_cm": 25,
+      "rotation": 0,
+      "width_cm": 50,
+      "depth_cm": 50,
+      "allowed": [
+        "grass"
+      ],
+      "valid": false
+    },
+    {
+      "name": "intersecting diagonal edges cannot hide internal gap",
+      "regions": "crossing-diagonals-gap",
+      "x_cm": 50,
+      "z_cm": 50,
+      "rotation": 0,
+      "width_cm": 100,
+      "depth_cm": 100,
+      "allowed": [
+        "grass",
+        "sand"
+      ],
+      "valid": false
+    }
+  ]
+}

@@ -127,7 +127,7 @@ func (s *Service) SetSlot(ctx context.Context, p account.Principal, slot string,
 		if item.WearableSlot != "" {
 			role = string(item.WearableSlot)
 		}
-		if role != slot || item.Status != StatusOwned {
+		if item.TypeSnapshot == TypeWearable || role != slot || item.Status != StatusOwned {
 			return Equipment{}, core.Fail(422, "INVALID_EQUIPMENT")
 		}
 	}
@@ -172,7 +172,7 @@ func (s *Service) setDecoration(ctx context.Context, p account.Principal, purcha
 	if err != nil {
 		return result, err
 	}
-	if equipmentType(item) != kind || item.Status != StatusOwned || item.WearableSlot != "" {
+	if item.TypeSnapshot == TypeWearable || equipmentType(item) != kind || item.Status != StatusOwned || item.WearableSlot != "" {
 		return result, core.Fail(422, "INVALID_EQUIPMENT")
 	}
 	if !equipped {

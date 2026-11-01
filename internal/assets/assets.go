@@ -21,6 +21,9 @@ type Kind string
 
 const (
 	KindCharacterPart Kind = "character-part" // Internal layer installed for composition, never sold.
+	KindModel         Kind = "model"          // Versioned GLB geometry, not an image choice.
+	KindAnimation     Kind = "animation"      // Offline prepared GLB animation clips.
+	KindWearable      Kind = "wearable"       // Rendered thumbnail for a 3D wearable definition.
 	KindIsland        Kind = "island"         // Controlled island construction thumbnail.
 	KindIcon          Kind = "icon"           // Task icon rendered in current and historical records.
 	KindAvatar        Kind = "avatar"         // Full character illustration.
@@ -63,6 +66,8 @@ type Asset struct {
 	Kind         Kind         `json:"kind"`                     // Allowed business use.
 	URL          string       `json:"url"`                      // Same-origin authenticated content endpoint.
 	Format       string       `json:"format,omitempty"`         // SVG by default; explicit PNG and WebP retain transparency.
+	SourceURL    string       `json:"source_url,omitempty"`     // Official source or recorded derivative provenance.
+	License      string       `json:"license,omitempty"`        // Resource-specific license; animation rights are separate.
 }
 
 // extension keeps historical SVG metadata and filenames compatible.
@@ -82,6 +87,8 @@ func (item Asset) ContentType() string {
 		return "image/png"
 	case "webp":
 		return "image/webp"
+	case "glb":
+		return "model/gltf-binary"
 	default:
 		return ""
 	}
@@ -142,6 +149,10 @@ func (service *Service) Install() error {
 	for _, item := range items {
 		if !keyPattern.MatchString(item.Key) || item.ContentType() == "" || (item.WearableSlot != "" && (!item.WearableSlot.Valid() || item.Kind != KindAccessory)) || (item.Free && item.Kind != KindAvatar) {
 			return fmt.Errorf("invalid controlled asset key %q", item.Key)
+		}
+		model := item.Kind == KindModel || item.Kind == KindAnimation
+		if model != (item.extension() == "glb") || (item.Kind == KindWearable && item.extension() != "png") {
+			return fmt.Errorf("controlled asset format does not match kind %q", item.Key)
 		}
 		drawing, err := builtin.ReadFile("builtin/" + item.Key + "." + item.extension())
 		if err != nil {
@@ -257,7 +268,7 @@ func (service *Service) List() ([]Asset, error) {
 		if !entry.IsDir() || !keyPattern.MatchString(entry.Name()) {
 			continue
 		}
-		if choice, selectable := Get(entry.Name()); !selectable || choice.Kind == KindCharacterPart {
+		if choice, selectable := Get(entry.Name()); !selectable || choice.Kind == KindCharacterPart || choice.Kind == KindModel || choice.Kind == KindAnimation {
 			continue
 		}
 		item, err := service.Lookup(entry.Name())

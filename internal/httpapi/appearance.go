@@ -1,0 +1,44 @@
+package httpapi
+
+import (
+	"net/http"
+
+	"github.com/wookiisky/check-in-suite/internal/shop"
+)
+
+// registerAppearance separates complete 3D appearance writes from the legacy single-slot endpoints.
+func (app *App) registerAppearance(service *shop.Service) {
+	app.Mux.HandleFunc("GET /api/v1/appearance", func(w http.ResponseWriter, r *http.Request) {
+		principal, err := app.Authenticate(r)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		state, err := service.Appearance(r.Context(), principal)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		WriteJSON(w, http.StatusOK, state)
+	})
+	app.Mux.HandleFunc("PUT /api/v1/appearance", func(w http.ResponseWriter, r *http.Request) {
+		principal, err := app.authenticatedWrite(r)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		var input shop.SaveAppearanceInput
+		if err := decodeRequiredJSON(w, r, &input,
+			[]string{"expected_version", "character_key", "hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"},
+			"hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"); err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		state, err := service.SaveAppearance(r.Context(), principal, input)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		WriteJSON(w, http.StatusOK, state)
+	})
+}
