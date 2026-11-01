@@ -1,0 +1,7 @@
+.character3d-preview { position: relative; width: 100%; min-height: 260px; height: 320px; overflow: hidden; border-radius: 18px; background: #edf2e5; }
+.character3d-preview canvas { display: block; }
+.character3d-notice { position: absolute; left: 12px; right: 12px; bottom: 12px; margin: 0; padding: 10px 12px; border-radius: 10px; background: #fffffff0; color: #3a5145; font-size: 14px; line-height: 1.5; }
+.character3d-error { color: #7a3d32; }
+.character3d-error p { margin: 0 0 8px; }
+.character3d-error button { min-height: 44px; padding: 8px 14px; border: 1px solid #afbfaf; border-radius: 8px; color: #304c3c; background: #fff; cursor: pointer; }
+.character3d-error button:focus-visible { outline: 3px solid #5a8668; outline-offset: 2px; }
