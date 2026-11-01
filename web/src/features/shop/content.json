@@ -1,5 +1,14 @@
 {
   "title": "商店",
+  "searchLabel": "搜索商品",
+  "search": "搜索",
+  "assetSearchLabel": "搜索素材",
+  "moreAssets": "显示更多素材",
+  "providerLabel": "素材来源",
+  "packLabel": "素材包",
+  "allProviders": "全部来源",
+  "allPacks": "全部素材包",
+  "providerNames": { "kaykit": "KayKit", "kenney": "Kenney" },
   "browse": "逛商店",
   "wardrobe": "我的装扮",
   "construction": "营地建设",
@@ -15,6 +24,7 @@
   "typeFilter": "商品类型",
   "allTypes": "全部类型",
   "types": {
+    "character": "人物",
     "title": "称号",
     "wearable": "人物服装",
     "reward": "文本奖励",

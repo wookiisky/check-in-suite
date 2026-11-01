@@ -1,0 +1,19 @@
+{
+  "description": "在独立 Blender 进程中为自包含 GLB 生成固定视角预览。",
+  "jobs_help": "批次 JSON 文件路径",
+  "invalid_glb": "输入必须是有效的 GLB 2.0 文件。",
+  "external_resource": "预览仅接受自包含 GLB，请先内嵌外链缓冲和图片。",
+  "no_geometry": "模型没有可渲染的网格。",
+  "missing_nodes": "模型缺少声明的可见网格：{nodes}",
+  "invalid_scale": "预览缩放必须是大于零的有限数值。",
+  "invalid_bounds": "模型边界为空或包含非法数值。",
+  "invalid_settings": "预览尺寸、视角或取景设置无效。",
+  "input_output_conflict": "预览输出不能覆盖输入文件。",
+  "defaults": {
+    "size": 256,
+    "views": ["front", "right", "back", "left"],
+    "padding": 1.18,
+    "elevation": 0.12,
+    "pose": "rest"
+  }
+}

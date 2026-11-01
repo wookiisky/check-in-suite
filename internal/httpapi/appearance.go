@@ -30,7 +30,7 @@ func (app *App) registerAppearance(service *shop.Service) {
 		var input shop.SaveAppearanceInput
 		if err := decodeRequiredJSON(w, r, &input,
 			[]string{"expected_version", "character_key", "hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"},
-			"hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"); err != nil {
+			"hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "hair_free_wearable_key", "upper_free_wearable_key", "lower_free_wearable_key", "shoes_free_wearable_key"); err != nil {
 			WriteError(w, r, err)
 			return
 		}

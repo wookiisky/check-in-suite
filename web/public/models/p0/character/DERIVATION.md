@@ -14,12 +14,14 @@
 
 ## 复现与检查
 
-先将原始 `Rogue.glb` 与 `Barbarian.glb` 放入仓库的 `.local/3d-sources/kaykit-adventurers/Characters/gltf/`，并将原许可放入该源目录。使用 Blender 4.5 执行：
+现有样片使用 Blender 4.5 制作。再次加工前，先将原始 `Rogue.glb` 与 `Barbarian.glb` 放入仓库的 `.local/3d-sources/kaykit-adventurers/Characters/gltf/`，并将原许可放入该源目录。当前统一调用全局安装的 Blender，以下使用本机 macOS 路径：
 
 ```sh
-blender --background --factory-startup --python scripts/prepare-p0-character.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python scripts/prepare-p0-character.py
 node --test scripts/p0-character-assets.test.mjs
 ```
+
+全局安装与版本验证边界见[运行手册](../../../../../spec/ENGINEERING/OPERATIONS.md#codex-连接-blender)。切换全局工具后尚未重新加工本样片，因此不能据此认定新版本的加工结果与 Blender 4.5 一致。
 
 脚本将运行资源写入本目录，将可继续编辑的 Blender 工程保存在 `.local/3d-sources/character-work/`。测试检查实际 GLB 中的独立几何、共同骨架、蒙皮权重、原地动作，以及加工前后的骨骼层级和逆绑定矩阵；这些结构检查不能替代混搭与动作的视觉检查。
 

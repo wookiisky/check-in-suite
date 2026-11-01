@@ -29,7 +29,7 @@ describe('商店页面读取与动作边界', () => {
     const item = { ...product, ...ownership, island_item_key: 'book' };
     const request = vi.fn().mockImplementation(async (path: string) => {
       if (path === '/camp') return camp;
-      if (path === '/products') return { items: [item] };
+      if (path.startsWith('/products')) return { items: [item] };
       throw new Error(`Unexpected path ${path}`);
     });
     render(<ShopPage client={{ request }} session={session} />);
@@ -99,13 +99,14 @@ describe('商店页面读取与动作边界', () => {
         }
         return camp;
       }
-      if (path === '/products') return { items: [{ ...garment, owned: purchased, owned_count: purchased ? 1 : 0 }] };
+      if (path.startsWith('/products')) return { items: [{ ...garment, owned: purchased, owned_count: purchased ? 1 : 0 }] };
       throw new Error(`Unexpected path ${path}`);
     });
     render(<ShopPage client={{ request }} session={session} />);
     await screen.findByRole('button', { name: `${content.buy} ${garment.name}` });
     fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
     fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.upper }));
+    await screen.findByRole('button', { name: `${content.buy} ${garment.name}` });
     fireEvent.click(screen.getByRole('button', { name: `${content.buy} ${garment.name}` }));
     fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
     await screen.findByText(content.purchaseSuccess);
@@ -130,7 +131,7 @@ describe('商店页面读取与动作边界', () => {
     const item = { ...product, type, island_item_key, repeatable: true };
     const request = vi.fn().mockImplementation(async (path: string) => {
       if (path === '/camp') return camp;
-      if (path === '/products') return { items: [{ ...item, owned_count: purchased ? 1 : 0 }] };
+      if (path.startsWith('/products')) return { items: [{ ...item, owned_count: purchased ? 1 : 0 }] };
       if (path === '/purchases') {
         purchased = true;
         return { purchase: { ...purchase, type_snapshot: type, island_item_key }, wallet: camp.wallet };
@@ -140,6 +141,7 @@ describe('商店页面读取与动作边界', () => {
     render(<ShopPage client={{ request }} session={session} />);
     await screen.findByRole('heading', { name: item.name });
     fireEvent.click(screen.getByRole('tab', { name: group }));
+    await screen.findByRole('button', { name: `${content.buy} ${item.name}` });
     fireEvent.click(screen.getByRole('button', { name: `${content.buy} ${item.name}` }));
     fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
     await screen.findByText(message);
@@ -158,15 +160,15 @@ describe('商店页面读取与动作边界', () => {
     await screen.findByRole('heading', { name: hair.name });
     fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
     fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.hair }));
-    expect(screen.getByRole('heading', { name: hair.name })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: hair.name })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: island.name })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: '营地物品' }));
-    expect(screen.getByRole('heading', { name: island.name })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: island.name })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: hair.name })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
     expect(within(screen.getByRole('tablist', { name: '装扮分类' })).getByRole('tab', { name: content.allTypes })).toHaveAttribute('aria-selected', 'true');
     expect(screen.queryByRole('heading', { name: island.name })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: hair.name })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: hair.name })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: reward.name })).not.toBeInTheDocument();
   });
 
@@ -191,9 +193,9 @@ describe('商店页面读取与动作边界', () => {
     expect(refresh).toHaveBeenCalledOnce();
     vi.mocked(useAppearance).mockReturnValue({ ...unavailable, snapshot: appearanceFixture(), loading: false });
     view.rerender(<ShopPage {...props} />);
-    expect(screen.getByRole('heading', { name: garment.name })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: garment.name })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: content.wearableSlots.hair })).toHaveAttribute('aria-selected', 'true');
-    expect(request).toHaveBeenCalledTimes(2);
+    expect(request.mock.calls.filter(([path]) => path === '/camp')).toHaveLength(1);
   });
 
 });

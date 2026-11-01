@@ -1,0 +1,816 @@
+{
+  "version": 1,
+  "range_format": "[start inclusive,end exclusive] in original glTF triangle order, preserved by Blender glTF import",
+  "notes": [
+    "只复用已审核源的固定面组，不按运行时颜色或名称猜发型。",
+    "固定脸保留眼、嘴、耳、眼镜；发型含头发、帽子、发带。混合头皮面保留几何并将UV移到明确肤色列。",
+    "head_landmark_bounds_blender使用Z向上，排除发髻和帽子高度，保证头部体型不会随发型缩放。"
+  ],
+  "heads": [
+    {
+      "key": "kenney-mini-characters-female-a",
+      "source_sha256": "8cfcff43460da8b421f2a7fdfb43ec177321cad2746db9497cbf128d5806e2a8",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 298,
+      "hair_polygon_ranges": [
+        [
+          0,
+          30
+        ],
+        [
+          50,
+          174
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        0,
+        4
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-female-b",
+      "source_sha256": "2288438e7baf9acc91a870c82dc00d66710bb486592cfc3474ef8ed93a03863a",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 340,
+      "hair_polygon_ranges": [
+        [
+          0,
+          182
+        ],
+        [
+          202,
+          216
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        0,
+        1,
+        2,
+        6
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-female-c",
+      "source_sha256": "3cd9e1b5d6409fce0ba1af617d9e008c3069493185a4c100f49fb99a2626a055",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 312,
+      "hair_polygon_ranges": [
+        [
+          0,
+          154
+        ],
+        [
+          174,
+          188
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        0,
+        1,
+        5
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-female-d",
+      "source_sha256": "67f61708743bd34f91a4c2ba8160b61bf2e7d4ec2ca6647dfe99873422561410",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 322,
+      "hair_polygon_ranges": [
+        [
+          20,
+          174
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        3,
+        4
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-female-e",
+      "source_sha256": "3ee3939f80d718945fcb9199f909a92c39669e38aeec7f544536b5dce6e79f98",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 322,
+      "hair_polygon_ranges": [
+        [
+          0,
+          178
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        0,
+        1
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-female-f",
+      "source_sha256": "2ff4311897bfaf99be80d2fa13918db30f506607da0291640b2609d82b70e0ca",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 288,
+      "hair_polygon_ranges": [
+        [
+          124,
+          264
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        3
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-male-a",
+      "source_sha256": "77572792bfe2773b715b8cd8e18644b52b3e1f155fe10450254b50f9c364382a",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 273,
+      "hair_polygon_ranges": [
+        [
+          20,
+          97
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        3
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-male-b",
+      "source_sha256": "791fc0c203924c175c0a3d5b60d030daf36797b039506689cf7cd01ef5253b3c",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 288,
+      "hair_polygon_ranges": [],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-male-c",
+      "source_sha256": "672a6506f7475bbd655da1d7ff712c1729a430f134c62385a4e5d3c1378acb40",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 299,
+      "hair_polygon_ranges": [
+        [
+          0,
+          73
+        ],
+        [
+          117,
+          145
+        ],
+        [
+          269,
+          299
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        0,
+        5,
+        9
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-male-d",
+      "source_sha256": "dd12b2e75ffb1cdb45aaec3916c3d6e732929ccb4a8b89b946f69baaabfa64da",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 221,
+      "hair_polygon_ranges": [
+        [
+          144,
+          221
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        6
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-male-e",
+      "source_sha256": "cd76681090ce29861b055b0f8b2bdcf84bfccc4ca816f428df42a9bb76d6e1b6",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 288,
+      "hair_polygon_ranges": [
+        [
+          144,
+          236
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        6,
+        7
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-characters-male-f",
+      "source_sha256": "ed151fc47c5cd6be9693c524e92f045170c965819f4f81b28ed66dcc3c1085bf",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 213,
+      "hair_polygon_ranges": [
+        [
+          0,
+          73
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        0
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-arcade-employee",
+      "source_sha256": "f9b627a6fe1b7ce12f67c05c8e045967ec278b543816804e44686a1b669b9871",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 246,
+      "hair_polygon_ranges": [
+        [
+          72,
+          208
+        ],
+        [
+          232,
+          246
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [
+        [
+          72,
+          120
+        ]
+      ],
+      "fixed_fill_uv_u": 0.96875,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        3,
+        4,
+        8
+      ],
+      "mixed_component": [
+        2,
+        12
+      ]
+    },
+    {
+      "key": "kenney-mini-arcade-gamer",
+      "source_sha256": "7709431fc39cb60dffe81e3e047e7f1dbaae4a5b13019d3230c7759ad50612d5",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 183,
+      "hair_polygon_ranges": [
+        [
+          0,
+          47
+        ],
+        [
+          139,
+          183
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [
+        [
+          0,
+          47
+        ]
+      ],
+      "fixed_fill_uv_u": 0.71875,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        6
+      ],
+      "mixed_component": [
+        0,
+        2
+      ]
+    },
+    {
+      "key": "kenney-mini-arena-soldier",
+      "source_sha256": "0bb906e70fff3f10a76e9704a8df18e6757670cdc6784ff6864e1bc1ecea66c6",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 241,
+      "hair_polygon_ranges": [
+        [
+          86,
+          199
+        ],
+        [
+          207,
+          241
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [
+        [
+          86,
+          137
+        ]
+      ],
+      "fixed_fill_uv_u": 0.96875,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        6
+      ],
+      "mixed_component": [
+        2,
+        8
+      ]
+    },
+    {
+      "key": "kenney-mini-dungeon-human",
+      "source_sha256": "6a149b22f52f5ea6b2983dd38cb164b112be66bad5a51d640d089aafd2647a7b",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 251,
+      "hair_polygon_ranges": [
+        [
+          0,
+          149
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [
+        [
+          0,
+          95
+        ]
+      ],
+      "fixed_fill_uv_u": 0.34375,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        1,
+        2,
+        3
+      ],
+      "mixed_component": [
+        0,
+        4
+      ]
+    },
+    {
+      "key": "kenney-mini-dungeon-orc",
+      "source_sha256": "e0b021c98b34a633567ca79f7c129cca48fd7919aa9e959464deba226767c284",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 176,
+      "hair_polygon_ranges": [
+        [
+          0,
+          54
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        0,
+        1,
+        2
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-forest-archer",
+      "source_sha256": "0fd0f92e452ffab13529e51037cc804edf6ff3134f6bdd614b7aaea9ae6feb3b",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 248,
+      "hair_polygon_ranges": [
+        [
+          72,
+          139
+        ],
+        [
+          174,
+          248
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [
+        [
+          100,
+          139
+        ]
+      ],
+      "fixed_fill_uv_u": 0.21875,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        3,
+        10,
+        11
+      ],
+      "mixed_component": [
+        2,
+        2
+      ]
+    },
+    {
+      "key": "kenney-mini-market-employee",
+      "source_sha256": "8774b93a5ff11af146176505035cc351d37a8a69ad0b1fde612bba9c8ffa84cc",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 246,
+      "hair_polygon_ranges": [
+        [
+          72,
+          112
+        ],
+        [
+          136,
+          246
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [
+        [
+          72,
+          112
+        ],
+        [
+          136,
+          144
+        ]
+      ],
+      "fixed_fill_uv_u": 0.71875,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        6,
+        7,
+        8
+      ],
+      "mixed_component": [
+        2,
+        2
+      ]
+    },
+    {
+      "key": "kenney-mini-skate-skate-boy",
+      "source_sha256": "8279011b450a94850962aa99357e1e835a0f5c320377c6201938c18c7a582d55",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 278,
+      "hair_polygon_ranges": [
+        [
+          0,
+          68
+        ],
+        [
+          212,
+          278
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        0,
+        7
+      ],
+      "mixed_component": null
+    },
+    {
+      "key": "kenney-mini-skate-skate-girl",
+      "source_sha256": "e39ace66b57e16b77e4a65c388e3faf08be04ac1fcc8ff96e8e9ac9af453ac00",
+      "source_head_node": "head-mesh",
+      "source_polygon_count": 322,
+      "hair_polygon_ranges": [
+        [
+          0,
+          178
+        ]
+      ],
+      "fixed_fill_polygon_ranges": [],
+      "fixed_fill_uv_u": null,
+      "head_landmark_bounds_blender": [
+        [
+          -0.16,
+          0.16
+        ],
+        [
+          -0.1576,
+          0.1624
+        ],
+        [
+          0.34325,
+          0.661325
+        ]
+      ],
+      "review_reference": ".local/3d-sources/character-inspection/kenney/mini-review.png",
+      "selected_components": [
+        0,
+        1
+      ],
+      "mixed_component": null
+    }
+  ]
+}

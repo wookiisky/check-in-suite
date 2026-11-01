@@ -1,0 +1,737 @@
+{
+  "body_key": "kaykit-medium-body-v1",
+  "rig_key": "kaykit-adventurers-medium-v1",
+  "canonical_model": "internal/assets/builtin/character-medium-v1.glb",
+  "notes": [
+    "该旧包的八个原模型均为无蒙皮、无动画的悬浮半身形象。",
+    "统一双足身体时明确使用项目标准下肢与免费默认裤装、鞋子，不宣称下肢来自源包。",
+    "四个战损变体具有独立几何（箭、裂痕），不是四个正常模型的重复格式。",
+    "源头部、眼睛与下颚作为固定身份保留；hair仅包含独立头饰，不包含脸。"
+  ],
+  "sources": [
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeleton-pack",
+      "filename": "character_skeleton_archer.gltf",
+      "source_relative_path": "Models/characters/gltf/character_skeleton_archer.gltf",
+      "key": "kaykit-legacy-skeleton-archer",
+      "name": "旧版骷髅弓手",
+      "prefix": "character_skeleton_archer",
+      "head_nodes": [
+        "character_skeleton_archer_head",
+        "character_skeleton_archer_eyes",
+        "character_skeleton_archer_jaw"
+      ],
+      "hair_nodes": [
+        "character_skeleton_archer_hood",
+        "character_skeleton_archer_mask"
+      ],
+      "hair_uv_regions": [],
+      "body_nodes": [
+        "character_skeleton_archer_body"
+      ],
+      "left_arm_nodes": [
+        "character_skeleton_archer_armLeft"
+      ],
+      "right_arm_nodes": [
+        "character_skeleton_archer_armRight"
+      ],
+      "left_leg_nodes": [],
+      "right_leg_nodes": [],
+      "upper_nodes": [],
+      "bone_map": {},
+      "requires_standard_body_augmentation": true,
+      "default_wearables": {
+        "lower": "lower-rogue-v1",
+        "shoes": "shoes-rogue-v1"
+      },
+      "source_geometry": {
+        "rigged": false,
+        "animated": false,
+        "has_legs": false,
+        "has_separate_shoes": false,
+        "head_parts_are_separate": true,
+        "hair_is_empty": false,
+        "battleworn_variant": false
+      },
+      "normalization": {
+        "binding": "bind-static-segments-to-canonical-rig",
+        "source_parts": [
+          "fixed-face",
+          "headwear",
+          "upper-outfit"
+        ],
+        "augmentation": [
+          "canonical-lower-body",
+          "canonical-default-lower",
+          "canonical-default-shoes"
+        ],
+        "head_binding": "head",
+        "head_nodes_include_complete_skull": true,
+        "empty_hair_policy": "independent-headwear"
+      },
+      "evidence": {
+        "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+        "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_archer.png",
+        "source_bounds_z_up": {
+          "min": [
+            -0.5594391226768494,
+            -0.5614029169082642,
+            -2.2351741790771484e-08
+          ],
+          "max": [
+            0.5594359040260315,
+            0.519874095916748,
+            1.7818753719329834
+          ]
+        }
+      },
+      "support_material": {
+        "nodes": [
+          "character_skeleton_archer_head",
+          "character_skeleton_archer_eyes",
+          "character_skeleton_archer_jaw"
+        ],
+        "material": "White",
+        "regions": [
+          "scalp"
+        ],
+        "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      }
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeleton-pack",
+      "filename": "character_skeleton_archer_broken.gltf",
+      "source_relative_path": "Models/characters/gltf/character_skeleton_archer_broken.gltf",
+      "key": "kaykit-legacy-skeleton-archer-battleworn",
+      "name": "旧版骷髅弓手（战损）",
+      "prefix": "character_skeleton_archer_broken",
+      "head_nodes": [
+        "character_skeleton_archer_head_broken",
+        "character_skeleton_archer_eyes_broken",
+        "character_skeleton_archer_jaw_broken"
+      ],
+      "hair_nodes": [
+        "character_skeleton_archer_hood_broken",
+        "character_skeleton_archer_mask_broken"
+      ],
+      "hair_uv_regions": [],
+      "body_nodes": [
+        "character_template.553"
+      ],
+      "left_arm_nodes": [
+        "character_skeleton_archer_armLeft_broken"
+      ],
+      "right_arm_nodes": [
+        "character_skeleton_archer_armRight_broken"
+      ],
+      "left_leg_nodes": [],
+      "right_leg_nodes": [],
+      "upper_nodes": [],
+      "bone_map": {},
+      "requires_standard_body_augmentation": true,
+      "default_wearables": {
+        "lower": "lower-rogue-v1",
+        "shoes": "shoes-rogue-v1"
+      },
+      "source_geometry": {
+        "rigged": false,
+        "animated": false,
+        "has_legs": false,
+        "has_separate_shoes": false,
+        "head_parts_are_separate": true,
+        "hair_is_empty": false,
+        "battleworn_variant": true
+      },
+      "normalization": {
+        "binding": "bind-static-segments-to-canonical-rig",
+        "source_parts": [
+          "fixed-face",
+          "headwear",
+          "upper-outfit"
+        ],
+        "augmentation": [
+          "canonical-lower-body",
+          "canonical-default-lower",
+          "canonical-default-shoes"
+        ],
+        "head_binding": "head",
+        "head_nodes_include_complete_skull": true,
+        "empty_hair_policy": "independent-headwear"
+      },
+      "evidence": {
+        "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+        "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_archer_broken.png",
+        "source_bounds_z_up": {
+          "min": [
+            -0.5594391226768494,
+            -0.7907553315162659,
+            -2.2351741790771484e-08
+          ],
+          "max": [
+            0.5594359040260315,
+            0.7411051988601685,
+            1.781875491142273
+          ]
+        }
+      },
+      "support_material": {
+        "nodes": [
+          "character_skeleton_archer_head_broken",
+          "character_skeleton_archer_eyes_broken",
+          "character_skeleton_archer_jaw_broken"
+        ],
+        "material": "White",
+        "regions": [
+          "scalp"
+        ],
+        "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      }
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeleton-pack",
+      "filename": "character_skeleton_mage.gltf",
+      "source_relative_path": "Models/characters/gltf/character_skeleton_mage.gltf",
+      "key": "kaykit-legacy-skeleton-mage",
+      "name": "旧版骷髅法师",
+      "prefix": "character_skeleton_mage",
+      "head_nodes": [
+        "character_skeleton_mage_head",
+        "character_skeleton_mage_eyes",
+        "character_skeleton_mage_jaw"
+      ],
+      "hair_nodes": [
+        "character_skeleton_mage_cowl"
+      ],
+      "hair_uv_regions": [],
+      "body_nodes": [
+        "character_skeleton_mage_body"
+      ],
+      "left_arm_nodes": [
+        "character_skeleton_mage_armLeft"
+      ],
+      "right_arm_nodes": [
+        "character_skeleton_mage_armRight"
+      ],
+      "left_leg_nodes": [],
+      "right_leg_nodes": [],
+      "upper_nodes": [
+        "character_skeleton_mage_cloak"
+      ],
+      "bone_map": {},
+      "requires_standard_body_augmentation": true,
+      "default_wearables": {
+        "lower": "lower-rogue-v1",
+        "shoes": "shoes-rogue-v1"
+      },
+      "source_geometry": {
+        "rigged": false,
+        "animated": false,
+        "has_legs": false,
+        "has_separate_shoes": false,
+        "head_parts_are_separate": true,
+        "hair_is_empty": false,
+        "battleworn_variant": false
+      },
+      "normalization": {
+        "binding": "bind-static-segments-to-canonical-rig",
+        "source_parts": [
+          "fixed-face",
+          "headwear",
+          "upper-outfit"
+        ],
+        "augmentation": [
+          "canonical-lower-body",
+          "canonical-default-lower",
+          "canonical-default-shoes"
+        ],
+        "head_binding": "head",
+        "head_nodes_include_complete_skull": true,
+        "empty_hair_policy": "independent-headwear"
+      },
+      "evidence": {
+        "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+        "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_mage.png",
+        "source_bounds_z_up": {
+          "min": [
+            -0.5323613882064819,
+            -0.47211509943008423,
+            -2.2351741790771484e-08
+          ],
+          "max": [
+            0.5323537588119507,
+            0.5391244292259216,
+            1.6339221000671387
+          ]
+        }
+      },
+      "support_material": {
+        "nodes": [
+          "character_skeleton_mage_head",
+          "character_skeleton_mage_eyes",
+          "character_skeleton_mage_jaw"
+        ],
+        "material": "White",
+        "regions": [
+          "scalp"
+        ],
+        "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      },
+      "hair_covers": [],
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "character_skeleton_mage_head"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeleton-pack",
+      "filename": "character_skeleton_mage_broken.gltf",
+      "source_relative_path": "Models/characters/gltf/character_skeleton_mage_broken.gltf",
+      "key": "kaykit-legacy-skeleton-mage-battleworn",
+      "name": "旧版骷髅法师（战损）",
+      "prefix": "character_skeleton_mage_broken",
+      "head_nodes": [
+        "character_skeleton_mage_head_broken",
+        "character_skeleton_mage_eyes_broken",
+        "character_skeleton_mage_jaw_broken"
+      ],
+      "hair_nodes": [
+        "character_skeleton_mage_cowl_broken"
+      ],
+      "hair_uv_regions": [],
+      "body_nodes": [
+        "character_skeleton_mage_body_broken"
+      ],
+      "left_arm_nodes": [
+        "character_skeleton_mage_armLeft_broken"
+      ],
+      "right_arm_nodes": [
+        "character_skeleton_mage_armRight_broken"
+      ],
+      "left_leg_nodes": [],
+      "right_leg_nodes": [],
+      "upper_nodes": [
+        "character_skeleton_mage_cloak_broken"
+      ],
+      "bone_map": {},
+      "requires_standard_body_augmentation": true,
+      "default_wearables": {
+        "lower": "lower-rogue-v1",
+        "shoes": "shoes-rogue-v1"
+      },
+      "source_geometry": {
+        "rigged": false,
+        "animated": false,
+        "has_legs": false,
+        "has_separate_shoes": false,
+        "head_parts_are_separate": true,
+        "hair_is_empty": false,
+        "battleworn_variant": true
+      },
+      "normalization": {
+        "binding": "bind-static-segments-to-canonical-rig",
+        "source_parts": [
+          "fixed-face",
+          "headwear",
+          "upper-outfit"
+        ],
+        "augmentation": [
+          "canonical-lower-body",
+          "canonical-default-lower",
+          "canonical-default-shoes"
+        ],
+        "head_binding": "head",
+        "head_nodes_include_complete_skull": true,
+        "empty_hair_policy": "independent-headwear"
+      },
+      "evidence": {
+        "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+        "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_mage_broken.png",
+        "source_bounds_z_up": {
+          "min": [
+            -0.8080112934112549,
+            -0.617362916469574,
+            -2.2351741790771484e-08
+          ],
+          "max": [
+            0.6715819835662842,
+            0.5391244292259216,
+            1.910546064376831
+          ]
+        }
+      },
+      "support_material": {
+        "nodes": [
+          "character_skeleton_mage_head_broken",
+          "character_skeleton_mage_eyes_broken",
+          "character_skeleton_mage_jaw_broken"
+        ],
+        "material": "White",
+        "regions": [
+          "scalp"
+        ],
+        "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      },
+      "hair_covers": [],
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "character_skeleton_mage_head_broken"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeleton-pack",
+      "filename": "character_skeleton_minion.gltf",
+      "source_relative_path": "Models/characters/gltf/character_skeleton_minion.gltf",
+      "key": "kaykit-legacy-skeleton-minion",
+      "name": "旧版骷髅侍从",
+      "prefix": "character_skeleton_minion",
+      "head_nodes": [
+        "character_skeleton_minion_head",
+        "character_skeleton_minion_eyes",
+        "character_skeleton_minion_jaw"
+      ],
+      "hair_nodes": [],
+      "hair_uv_regions": [],
+      "body_nodes": [
+        "character_skeleton_minion_body"
+      ],
+      "left_arm_nodes": [
+        "character_skeleton_minion_armLeft"
+      ],
+      "right_arm_nodes": [
+        "character_skeleton_minion_armRight"
+      ],
+      "left_leg_nodes": [],
+      "right_leg_nodes": [],
+      "upper_nodes": [],
+      "bone_map": {},
+      "requires_standard_body_augmentation": true,
+      "default_wearables": {
+        "lower": "lower-rogue-v1",
+        "shoes": "shoes-rogue-v1"
+      },
+      "source_geometry": {
+        "rigged": false,
+        "animated": false,
+        "has_legs": false,
+        "has_separate_shoes": false,
+        "head_parts_are_separate": true,
+        "hair_is_empty": true,
+        "battleworn_variant": false
+      },
+      "normalization": {
+        "binding": "bind-static-segments-to-canonical-rig",
+        "source_parts": [
+          "fixed-face",
+          "headwear",
+          "upper-outfit"
+        ],
+        "augmentation": [
+          "canonical-lower-body",
+          "canonical-default-lower",
+          "canonical-default-shoes"
+        ],
+        "head_binding": "head",
+        "head_nodes_include_complete_skull": true,
+        "empty_hair_policy": "empty-default-without-replacing-fixed-skull"
+      },
+      "evidence": {
+        "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+        "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_minion.png",
+        "source_bounds_z_up": {
+          "min": [
+            -0.5323613882064819,
+            -0.4461822211742401,
+            -2.2351741790771484e-08
+          ],
+          "max": [
+            0.5323613882064819,
+            0.47003865242004395,
+            1.6339221000671387
+          ]
+        }
+      },
+      "support_material": {
+        "nodes": [
+          "character_skeleton_minion_head",
+          "character_skeleton_minion_eyes",
+          "character_skeleton_minion_jaw"
+        ],
+        "material": "White",
+        "regions": [
+          "scalp"
+        ],
+        "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      }
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeleton-pack",
+      "filename": "character_skeleton_minion_broken.gltf",
+      "source_relative_path": "Models/characters/gltf/character_skeleton_minion_broken.gltf",
+      "key": "kaykit-legacy-skeleton-minion-battleworn",
+      "name": "旧版骷髅侍从（战损）",
+      "prefix": "character_skeleton_minion_broken",
+      "head_nodes": [
+        "character_skeleton_minion_head_broken",
+        "character_skeleton_minion_eyes_broken",
+        "character_skeleton_minion_jaw_broken"
+      ],
+      "hair_nodes": [],
+      "hair_uv_regions": [],
+      "body_nodes": [
+        "character_skeleton_minion_body_broken"
+      ],
+      "left_arm_nodes": [
+        "character_skeleton_minion_armLeft_broken"
+      ],
+      "right_arm_nodes": [
+        "character_skeleton_minion_armRight_broken"
+      ],
+      "left_leg_nodes": [],
+      "right_leg_nodes": [],
+      "upper_nodes": [],
+      "bone_map": {},
+      "requires_standard_body_augmentation": true,
+      "default_wearables": {
+        "lower": "lower-rogue-v1",
+        "shoes": "shoes-rogue-v1"
+      },
+      "source_geometry": {
+        "rigged": false,
+        "animated": false,
+        "has_legs": false,
+        "has_separate_shoes": false,
+        "head_parts_are_separate": true,
+        "hair_is_empty": true,
+        "battleworn_variant": true
+      },
+      "normalization": {
+        "binding": "bind-static-segments-to-canonical-rig",
+        "source_parts": [
+          "fixed-face",
+          "headwear",
+          "upper-outfit"
+        ],
+        "augmentation": [
+          "canonical-lower-body",
+          "canonical-default-lower",
+          "canonical-default-shoes"
+        ],
+        "head_binding": "head",
+        "head_nodes_include_complete_skull": true,
+        "empty_hair_policy": "empty-default-without-replacing-fixed-skull"
+      },
+      "evidence": {
+        "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+        "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_minion_broken.png",
+        "source_bounds_z_up": {
+          "min": [
+            -0.7447632551193237,
+            -0.6571403741836548,
+            -0.003018975257873535
+          ],
+          "max": [
+            0.5600544810295105,
+            0.7669525742530823,
+            1.9061905145645142
+          ]
+        }
+      },
+      "support_material": {
+        "nodes": [
+          "character_skeleton_minion_head_broken",
+          "character_skeleton_minion_eyes_broken",
+          "character_skeleton_minion_jaw_broken"
+        ],
+        "material": "White",
+        "regions": [
+          "scalp"
+        ],
+        "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      }
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeleton-pack",
+      "filename": "character_skeleton_warrior.gltf",
+      "source_relative_path": "Models/characters/gltf/character_skeleton_warrior.gltf",
+      "key": "kaykit-legacy-skeleton-warrior",
+      "name": "旧版骷髅战士",
+      "prefix": "character_skeleton_warrior",
+      "head_nodes": [
+        "character_skeleton_warrior_head",
+        "character_skeleton_warrior_eyes",
+        "character_skeleton_warrior_jaw"
+      ],
+      "hair_nodes": [
+        "character_skeleton_warrior_helmet"
+      ],
+      "hair_uv_regions": [],
+      "body_nodes": [
+        "character_skeleton_warrior_body"
+      ],
+      "left_arm_nodes": [
+        "character_skeleton_warrior_armLeft"
+      ],
+      "right_arm_nodes": [
+        "character_skeleton_warrior_armRight"
+      ],
+      "left_leg_nodes": [],
+      "right_leg_nodes": [],
+      "upper_nodes": [],
+      "bone_map": {},
+      "requires_standard_body_augmentation": true,
+      "default_wearables": {
+        "lower": "lower-rogue-v1",
+        "shoes": "shoes-rogue-v1"
+      },
+      "source_geometry": {
+        "rigged": false,
+        "animated": false,
+        "has_legs": false,
+        "has_separate_shoes": false,
+        "head_parts_are_separate": true,
+        "hair_is_empty": false,
+        "battleworn_variant": false
+      },
+      "normalization": {
+        "binding": "bind-static-segments-to-canonical-rig",
+        "source_parts": [
+          "fixed-face",
+          "headwear",
+          "upper-outfit"
+        ],
+        "augmentation": [
+          "canonical-lower-body",
+          "canonical-default-lower",
+          "canonical-default-shoes"
+        ],
+        "head_binding": "head",
+        "head_nodes_include_complete_skull": true,
+        "empty_hair_policy": "independent-headwear"
+      },
+      "evidence": {
+        "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+        "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_warrior.png",
+        "source_bounds_z_up": {
+          "min": [
+            -0.6959787607192993,
+            -0.5423132181167603,
+            -2.2351741790771484e-08
+          ],
+          "max": [
+            0.6827869415283203,
+            0.5423130989074707,
+            2.0166666507720947
+          ]
+        }
+      },
+      "support_material": {
+        "nodes": [
+          "character_skeleton_warrior_head",
+          "character_skeleton_warrior_eyes",
+          "character_skeleton_warrior_jaw"
+        ],
+        "material": "White",
+        "regions": [
+          "scalp"
+        ],
+        "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      }
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeleton-pack",
+      "filename": "character_skeleton_warrior_broken.gltf",
+      "source_relative_path": "Models/characters/gltf/character_skeleton_warrior_broken.gltf",
+      "key": "kaykit-legacy-skeleton-warrior-battleworn",
+      "name": "旧版骷髅战士（战损）",
+      "prefix": "character_skeleton_warrior_broken",
+      "head_nodes": [
+        "character_skeleton_warrior_head_broken",
+        "character_skeleton_warrior_eyes_broken",
+        "character_skeleton_warrior_jaw_broken"
+      ],
+      "hair_nodes": [
+        "character_skeleton_warrior_helmet_broken"
+      ],
+      "hair_uv_regions": [],
+      "body_nodes": [
+        "character_skeleton_warrior_body_broken"
+      ],
+      "left_arm_nodes": [
+        "character_skeleton_warrior_armLeft_broken"
+      ],
+      "right_arm_nodes": [
+        "character_skeleton_warrior_armRight_broken"
+      ],
+      "left_leg_nodes": [],
+      "right_leg_nodes": [],
+      "upper_nodes": [],
+      "bone_map": {},
+      "requires_standard_body_augmentation": true,
+      "default_wearables": {
+        "lower": "lower-rogue-v1",
+        "shoes": "shoes-rogue-v1"
+      },
+      "source_geometry": {
+        "rigged": false,
+        "animated": false,
+        "has_legs": false,
+        "has_separate_shoes": false,
+        "head_parts_are_separate": true,
+        "hair_is_empty": false,
+        "battleworn_variant": true
+      },
+      "normalization": {
+        "binding": "bind-static-segments-to-canonical-rig",
+        "source_parts": [
+          "fixed-face",
+          "headwear",
+          "upper-outfit"
+        ],
+        "augmentation": [
+          "canonical-lower-body",
+          "canonical-default-lower",
+          "canonical-default-shoes"
+        ],
+        "head_binding": "head",
+        "head_nodes_include_complete_skull": true,
+        "empty_hair_policy": "independent-headwear"
+      },
+      "evidence": {
+        "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+        "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_warrior_broken.png",
+        "source_bounds_z_up": {
+          "min": [
+            -0.826213538646698,
+            -0.7569377422332764,
+            -2.2351741790771484e-08
+          ],
+          "max": [
+            0.8744199275970459,
+            0.8030306696891785,
+            2.0166666507720947
+          ]
+        }
+      },
+      "support_material": {
+        "nodes": [
+          "character_skeleton_warrior_head_broken",
+          "character_skeleton_warrior_eyes_broken",
+          "character_skeleton_warrior_jaw_broken"
+        ],
+        "material": "White",
+        "regions": [
+          "scalp"
+        ],
+        "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      }
+    }
+  ]
+}

@@ -15,6 +15,33 @@ const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
 afterEach(() => vi.unstubAllGlobals());
 
 describe('商品配置', () => {
+  it('大量素材先限制选项数量，搜索仍能选中目录后面的素材', () => {
+    const manyAssets = Array.from({ length: 140 }, (_, index) => ({ key: `island-${index}`, name: `摆设${index}`, kind: 'island' as const, url: `/island-${index}.png` }));
+    render(<ProductEditor client={{ request: vi.fn() }} session={session} product={null} assets={manyAssets} onClose={vi.fn()} onSaved={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'island' } });
+    expect(screen.getByLabelText(content.asset).querySelectorAll('option')).toHaveLength(101);
+    fireEvent.change(screen.getByLabelText(content.assetSearchLabel), { target: { value: '摆设139' } });
+    fireEvent.change(screen.getByLabelText(content.asset), { target: { value: 'island-139' } });
+    expect(screen.getByLabelText(content.asset)).toHaveValue('island-139');
+  });
+
+  it('完整人物商品提交稳定人物身份，切换为其他类型时清除旧身份', async () => {
+    const character = { ...productCatalog.characters[0]!, character_key: 'knight', name: '骑士', thumbnail_asset_key: 'knight-thumbnail' };
+    const characterAsset = { key: 'knight-thumbnail', name: '骑士', kind: 'character' as const, url: '/knight.png' };
+    const request = vi.fn().mockResolvedValue({ ...product, type: 'character', character_key: 'knight' });
+    render(<ProductEditor client={{ request }} session={session} product={null} assets={[...assets, characterAsset]} characters={[...productCatalog.characters, character]} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'character' } });
+    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '骑士商品' } });
+    fireEvent.click(screen.getByRole('button', { name: content.save }));
+    await waitFor(() => expect(request).toHaveBeenCalled());
+    expect(request.mock.calls[0]?.[1].body).toMatchObject({ type: 'character', asset_key: 'knight-thumbnail', character_key: 'knight' });
+    expect(request.mock.calls[0]?.[1].body.wearable_key).toBeUndefined();
+    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'reward' } });
+    fireEvent.click(screen.getByRole('button', { name: content.save }));
+    await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+    expect(request.mock.calls[1]?.[1].body.character_key).toBeUndefined();
+  });
+
   it('按定义部位选择服装并提交准确身份，默认款不售卖', async () => {
     const request = vi.fn().mockResolvedValue(managedWearable);
     render(<ProductEditor client={{ request }} session={session} product={null} assets={assets} characters={productCatalog.characters} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);

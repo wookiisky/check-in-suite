@@ -146,7 +146,7 @@ describe('背包分类与奖励', () => {
     expect(request.mock.calls.filter(([path]) => String(path).endsWith('/redeem'))).toHaveLength(1);
   });
 
-  it('两个槽位共用服装查询路径，切换后旧第一页和后续页都不能覆盖当前槽位', async () => {
+  it('槽位查询保留服装类型，切换后旧第一页和后续页都不能覆盖当前槽位', async () => {
     const staleFirst = deferred<PurchaseList>();
     const staleMore = deferred<PurchaseList>();
     const upper: Purchase = { ...purchase, id: 'upper', type_snapshot: 'wearable', wearable_key: 'upper-owned', name_snapshot: '上装实例' };
@@ -174,7 +174,8 @@ describe('背包分类与奖励', () => {
     await act(async () => staleMore.resolve({ items: [upper], next_cursor: 'stale-more' }));
     await waitFor(() => expect(screen.queryByRole('button', { name: content.more })).not.toBeInTheDocument());
     expect(screen.queryByRole('heading', { name: upper.name_snapshot })).not.toBeInTheDocument();
-    expect(request.mock.calls.filter(([path]) => path === '/purchases?status=owned&type=wearable')).toHaveLength(3);
+    const queries = request.mock.calls.map(([path]) => new URL(String(path), 'http://test').searchParams).filter((query) => query.get('type') === 'wearable' && !query.has('cursor'));
+    expect(queries.map((query) => query.get('slot'))).toEqual(['hair', 'upper', 'hair']);
   });
 
   it('缺少服装目录时显示读取失败与重试，不误报空库存', async () => {

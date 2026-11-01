@@ -82,12 +82,27 @@ func readHistory(ctx context.Context, tx *sql.Tx, expected []migration) (int, er
 }
 
 // Migrate applies all pending SQL and history rows atomically; serving never calls this function.
-func Migrate(ctx context.Context, db *sql.DB, files fs.FS) error {
+func Migrate(ctx context.Context, db *sql.DB, files fs.FS) (resultErr error) {
 	all, err := loadMigrations(files)
 	if err != nil {
 		return err
 	}
-	tx, err := db.BeginTx(ctx, nil)
+	// SQLite 重建被引用的表时必须在事务外关闭外键；只占用这一条迁移连接。
+	connection, err := db.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	defer connection.Close()
+	if _, err = connection.ExecContext(ctx, "PRAGMA foreign_keys=OFF"); err != nil {
+		return err
+	}
+	defer func() {
+		_, restoreErr := connection.ExecContext(context.Background(), "PRAGMA foreign_keys=ON")
+		if resultErr == nil {
+			resultErr = restoreErr
+		}
+	}()
+	tx, err := connection.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -103,6 +118,20 @@ func Migrate(ctx context.Context, db *sql.DB, files fs.FS) error {
 		if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version, name, checksum, applied_at) VALUES (?, ?, ?, ?)", item.version, item.name, item.checksum, time.Now().UTC().UnixMilli()); err != nil {
 			return fmt.Errorf("record migration %s: %w", item.name, err)
 		}
+	}
+	// 关闭即时检查只允许表重建，不能让有断裂引用的迁移提交。
+	rows, err := tx.QueryContext(ctx, "PRAGMA foreign_key_check")
+	if err != nil {
+		return err
+	}
+	violated := rows.Next()
+	readErr := rows.Err()
+	rows.Close()
+	if readErr != nil {
+		return readErr
+	}
+	if violated {
+		return fmt.Errorf("migration leaves foreign key violations")
 	}
 	return tx.Commit()
 }

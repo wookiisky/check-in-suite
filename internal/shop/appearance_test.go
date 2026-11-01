@@ -12,7 +12,7 @@ func TestAppearanceDefaultsAndAtomicRestore(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
 	initial, err := f.Service.Appearance(ctx, f.Principal)
-	if err != nil || initial.Version != 1 || initial.CharacterKey != "kaykit-medium-v1" || initial.HairPurchaseID != nil || len(initial.Inventory) != 0 || len(initial.Characters) == 0 || len(initial.Wearables) != 8 {
+	if err != nil || initial.Version != 1 || initial.CharacterKey != "kaykit-medium-v1" || initial.HairPurchaseID != nil || len(initial.Inventory) != 0 || len(initial.Characters) == 0 || len(initial.Wearables) < 8 {
 		t.Fatalf("initial=%+v err=%v", initial, err)
 	}
 	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase

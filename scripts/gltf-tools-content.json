@@ -1,0 +1,7 @@
+{
+  "help": "用法：npm run assets:check -- [GLB 文件或目录 ...] [--output 报告路径]\n默认递归检查正式 builtin 目录。模型仅被读取，错误使命令返回非零；警告单独记录。\nnpm run assets:inspect -- 模型.glb 可查看 glTF Transform 的体积与结构分析。",
+  "noAssets": "没有找到可检查的 GLB 文件。",
+  "unsupportedInput": "指定文件不是 GLB。",
+  "overwriteInput": "报告路径不能覆盖输入模型。",
+  "externalResource": "交付 GLB 必须自包含，不读取外部资源。"
+}

@@ -3,11 +3,13 @@
 
 # 依赖与日志（包含各工作区）
 node_modules/
+/.venv/
 *.log
 
 # 构建产物
 /web/dist/
 *.tsbuildinfo
+__pycache__/
 /island
 /island.exe
 *.test

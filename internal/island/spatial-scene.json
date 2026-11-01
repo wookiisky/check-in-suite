@@ -5,54 +5,161 @@
       {
         "terrain": "grass",
         "polygon": [
-          {"x_cm": -1500, "z_cm": -1500},
-          {"x_cm": 1500, "z_cm": -1500},
-          {"x_cm": 1500, "z_cm": 600},
-          {"x_cm": -1500, "z_cm": 600}
+          {
+            "x_cm": -1500,
+            "z_cm": -1500
+          },
+          {
+            "x_cm": 1500,
+            "z_cm": -1500
+          },
+          {
+            "x_cm": 1500,
+            "z_cm": 600
+          },
+          {
+            "x_cm": -1500,
+            "z_cm": 600
+          }
         ]
       },
       {
         "terrain": "sand",
         "polygon": [
-          {"x_cm": -1500, "z_cm": 600},
-          {"x_cm": 1500, "z_cm": 600},
-          {"x_cm": 1500, "z_cm": 1000},
-          {"x_cm": -1500, "z_cm": 1000}
+          {
+            "x_cm": -1500,
+            "z_cm": 600
+          },
+          {
+            "x_cm": 1500,
+            "z_cm": 600
+          },
+          {
+            "x_cm": 1500,
+            "z_cm": 1000
+          },
+          {
+            "x_cm": -1500,
+            "z_cm": 1000
+          }
         ]
       },
       {
         "terrain": "water",
         "polygon": [
-          {"x_cm": -1500, "z_cm": 1000},
-          {"x_cm": 1500, "z_cm": 1000},
-          {"x_cm": 1500, "z_cm": 2200},
-          {"x_cm": -1500, "z_cm": 2200}
+          {
+            "x_cm": -1500,
+            "z_cm": 1000
+          },
+          {
+            "x_cm": 1500,
+            "z_cm": 1000
+          },
+          {
+            "x_cm": 1500,
+            "z_cm": 2200
+          },
+          {
+            "x_cm": -1500,
+            "z_cm": 2200
+          }
         ]
       }
     ],
-    "environments": ["day", "dusk"],
+    "environments": [
+      "day",
+      "dusk"
+    ],
     "house": {
-      "interior": {"min_x_cm": -300, "max_x_cm": 300, "min_z_cm": -300, "max_z_cm": 300},
+      "interior": {
+        "min_x_cm": -300,
+        "max_x_cm": 300,
+        "min_z_cm": -300,
+        "max_z_cm": 300
+      },
       "floor_height_cm": 10,
       "wall_height_cm": 240,
-      "door_center": {"x_cm": 0, "z_cm": 300},
+      "door_center": {
+        "x_cm": 0,
+        "z_cm": 300
+      },
       "door_width_cm": 90,
       "door_height_cm": 210,
-      "door_clearance": {"min_x_cm": -55, "max_x_cm": 55, "min_z_cm": 300, "max_z_cm": 420},
-      "models": {"floor_url": "/api/v1/assets/camp-floor-v1", "wall_url": "/api/v1/assets/camp-wall-v1", "doorway_url": "/api/v1/assets/camp-doorway-v1", "roof_url": "/api/v1/assets/camp-roof-v1"},
+      "door_clearance": {
+        "min_x_cm": -55,
+        "max_x_cm": 55,
+        "min_z_cm": 300,
+        "max_z_cm": 420
+      },
+      "models": {
+        "floor_url": "/api/v1/assets/camp-floor-v1",
+        "wall_url": "/api/v1/assets/camp-wall-v1",
+        "doorway_url": "/api/v1/assets/camp-doorway-v1",
+        "roof_url": "/api/v1/assets/camp-roof-v1"
+      },
       "walls": [
-        {"min_x_cm": -300, "max_x_cm": -290, "min_z_cm": -300, "max_z_cm": 300},
-        {"min_x_cm": 290, "max_x_cm": 300, "min_z_cm": -300, "max_z_cm": 300},
-        {"min_x_cm": -290, "max_x_cm": 290, "min_z_cm": -300, "max_z_cm": -290},
-        {"min_x_cm": -290, "max_x_cm": -45, "min_z_cm": 290, "max_z_cm": 300},
-        {"min_x_cm": 45, "max_x_cm": 290, "min_z_cm": 290, "max_z_cm": 300},
-        {"min_x_cm": 100, "max_x_cm": 110, "min_z_cm": -290, "max_z_cm": -220},
-        {"min_x_cm": 100, "max_x_cm": 110, "min_z_cm": -130, "max_z_cm": -90},
-        {"min_x_cm": 110, "max_x_cm": 290, "min_z_cm": -100, "max_z_cm": -90}
+        {
+          "min_x_cm": -300,
+          "max_x_cm": -290,
+          "min_z_cm": -300,
+          "max_z_cm": 300
+        },
+        {
+          "min_x_cm": 290,
+          "max_x_cm": 300,
+          "min_z_cm": -300,
+          "max_z_cm": 300
+        },
+        {
+          "min_x_cm": -290,
+          "max_x_cm": 290,
+          "min_z_cm": -300,
+          "max_z_cm": -290
+        },
+        {
+          "min_x_cm": -290,
+          "max_x_cm": -45,
+          "min_z_cm": 290,
+          "max_z_cm": 300
+        },
+        {
+          "min_x_cm": 45,
+          "max_x_cm": 290,
+          "min_z_cm": 290,
+          "max_z_cm": 300
+        },
+        {
+          "min_x_cm": 100,
+          "max_x_cm": 110,
+          "min_z_cm": -290,
+          "max_z_cm": -220
+        },
+        {
+          "min_x_cm": 100,
+          "max_x_cm": 110,
+          "min_z_cm": -130,
+          "max_z_cm": -90
+        },
+        {
+          "min_x_cm": 110,
+          "max_x_cm": 290,
+          "min_z_cm": -100,
+          "max_z_cm": -90
+        }
       ],
       "interior_clearances": [
-        {"min_x_cm": -55, "max_x_cm": 55, "min_z_cm": 180, "max_z_cm": 300},
-        {"min_x_cm": 25, "max_x_cm": 180, "min_z_cm": -220, "max_z_cm": -130}
+        {
+          "min_x_cm": -55,
+          "max_x_cm": 55,
+          "min_z_cm": 180,
+          "max_z_cm": 300
+        },
+        {
+          "min_x_cm": 25,
+          "max_x_cm": 180,
+          "min_z_cm": -220,
+          "max_z_cm": -130
+        }
       ]
     },
     "activity_presentations": {
@@ -61,11 +168,32 @@
         "attachment": {
           "model_url": "/api/v1/assets/activity-reading-book-v1",
           "bone": "handslotl",
-          "matrix": [0.8603424520169254, -0.46344967822942357, 0.212192946544305, 0, -0.4738308795345004, -0.5737358222998188, 0.668066093607832, 0, -0.18787257760648296, -0.6753084338661607, -0.7132059455704735, 0, -0.1623446987584709, 0.1416639365310146, 0.006838380136453576, 1]
+          "matrix": [
+            0.8603424520169254,
+            -0.46344967822942357,
+            0.212192946544305,
+            0,
+            -0.4738308795345004,
+            -0.5737358222998188,
+            0.668066093607832,
+            0,
+            -0.18787257760648296,
+            -0.6753084338661607,
+            -0.7132059455704735,
+            0,
+            -0.1623446987584709,
+            0.1416639365310146,
+            0.006838380136453576,
+            1
+          ]
         }
       },
-      "run": {"action": "exercise"},
-      "ball": {"action": "play"}
+      "run": {
+        "action": "exercise"
+      },
+      "ball": {
+        "action": "play"
+      }
     }
   },
   "catalog": [
@@ -73,14 +201,27 @@
       "item_key": "camp-house-v1",
       "name": "海边小屋",
       "assembly": "house",
-      "footprint": {"width_cm": 620, "depth_cm": 620},
-      "walk_obstacle": {"width_cm": 620, "depth_cm": 620},
+      "footprint": {
+        "width_cm": 620,
+        "depth_cm": 620
+      },
+      "walk_obstacle": {
+        "width_cm": 620,
+        "depth_cm": 620
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": false,
-      "spaces": ["outdoor"],
-      "rotations": [0],
-      "allowed_terrain": ["grass", "sand"],
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
       "thumbnail_asset_key": "camp-house-v1-thumbnail",
       "thumbnail_url": "/api/v1/assets/camp-house-v1-thumbnail",
       "coin_price": 0,
@@ -96,14 +237,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-bed-v1",
-      "footprint": {"width_cm": 125, "depth_cm": 235},
+      "footprint": {
+        "width_cm": 125,
+        "depth_cm": 235
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 116, "depth_cm": 226}
+      "walk_obstacle": {
+        "width_cm": 116,
+        "depth_cm": 226
+      }
     },
     {
       "item_key": "camp-dining-table-v1",
@@ -114,14 +268,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-dining-table-v1",
-      "footprint": {"width_cm": 179, "depth_cm": 100},
+      "footprint": {
+        "width_cm": 179,
+        "depth_cm": 100
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 170, "depth_cm": 90}
+      "walk_obstacle": {
+        "width_cm": 170,
+        "depth_cm": 90
+      }
     },
     {
       "item_key": "camp-dining-chair-v1",
@@ -132,14 +299,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-dining-chair-v1",
-      "footprint": {"width_cm": 67, "depth_cm": 67},
+      "footprint": {
+        "width_cm": 67,
+        "depth_cm": 67
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 58, "depth_cm": 58}
+      "walk_obstacle": {
+        "width_cm": 58,
+        "depth_cm": 58
+      }
     },
     {
       "item_key": "camp-sofa-v1",
@@ -150,14 +330,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-sofa-v1",
-      "footprint": {"width_cm": 206, "depth_cm": 93},
+      "footprint": {
+        "width_cm": 206,
+        "depth_cm": 93
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 196, "depth_cm": 84}
+      "walk_obstacle": {
+        "width_cm": 196,
+        "depth_cm": 84
+      }
     },
     {
       "item_key": "camp-coffee-table-v1",
@@ -168,14 +361,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-coffee-table-v1",
-      "footprint": {"width_cm": 143, "depth_cm": 91},
+      "footprint": {
+        "width_cm": 143,
+        "depth_cm": 91
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 134, "depth_cm": 82}
+      "walk_obstacle": {
+        "width_cm": 134,
+        "depth_cm": 82
+      }
     },
     {
       "item_key": "camp-television-v1",
@@ -186,14 +392,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-television-v1",
-      "footprint": {"width_cm": 171, "depth_cm": 60},
+      "footprint": {
+        "width_cm": 171,
+        "depth_cm": 60
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 162, "depth_cm": 50}
+      "walk_obstacle": {
+        "width_cm": 162,
+        "depth_cm": 50
+      }
     },
     {
       "item_key": "camp-cabinet-v1",
@@ -204,14 +423,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-cabinet-v1",
-      "footprint": {"width_cm": 91, "depth_cm": 60},
+      "footprint": {
+        "width_cm": 91,
+        "depth_cm": 60
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 82, "depth_cm": 50}
+      "walk_obstacle": {
+        "width_cm": 82,
+        "depth_cm": 50
+      }
     },
     {
       "item_key": "camp-refrigerator-v1",
@@ -222,14 +454,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-refrigerator-v1",
-      "footprint": {"width_cm": 97, "depth_cm": 69},
+      "footprint": {
+        "width_cm": 97,
+        "depth_cm": 69
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 88, "depth_cm": 60}
+      "walk_obstacle": {
+        "width_cm": 88,
+        "depth_cm": 60
+      }
     },
     {
       "item_key": "camp-kitchen-counter-v1",
@@ -240,14 +485,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-kitchen-counter-v1",
-      "footprint": {"width_cm": 97, "depth_cm": 100},
+      "footprint": {
+        "width_cm": 97,
+        "depth_cm": 100
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 88, "depth_cm": 90}
+      "walk_obstacle": {
+        "width_cm": 88,
+        "depth_cm": 90
+      }
     },
     {
       "item_key": "camp-toilet-v1",
@@ -258,14 +516,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-toilet-v1",
-      "footprint": {"width_cm": 61, "depth_cm": 87},
+      "footprint": {
+        "width_cm": 61,
+        "depth_cm": 87
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 52, "depth_cm": 78}
+      "walk_obstacle": {
+        "width_cm": 52,
+        "depth_cm": 78
+      }
     },
     {
       "item_key": "camp-washbasin-v1",
@@ -276,14 +547,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-washbasin-v1",
-      "footprint": {"width_cm": 65, "depth_cm": 57},
+      "footprint": {
+        "width_cm": 65,
+        "depth_cm": 57
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 56, "depth_cm": 48}
+      "walk_obstacle": {
+        "width_cm": 56,
+        "depth_cm": 48
+      }
     },
     {
       "item_key": "camp-shower-v1",
@@ -294,14 +578,27 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-shower-v1",
-      "footprint": {"width_cm": 109, "depth_cm": 112},
+      "footprint": {
+        "width_cm": 109,
+        "depth_cm": 112
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["indoor"],
-      "rotations": [0, 1, 2, 3],
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
       "allowed_terrain": [],
-      "walk_obstacle": {"width_cm": 100, "depth_cm": 102}
+      "walk_obstacle": {
+        "width_cm": 100,
+        "depth_cm": 102
+      }
     },
     {
       "item_key": "camp-reading-desk-v1",
@@ -312,20 +609,42 @@
       "diamond_price": 0,
       "free": true,
       "model_url": "/api/v1/assets/camp-reading-desk-v1",
-      "footprint": {"width_cm": 157, "depth_cm": 172},
+      "footprint": {
+        "width_cm": 157,
+        "depth_cm": 172
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": false,
-      "spaces": ["outdoor", "indoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"],
-      "walk_obstacle": {"width_cm": 148, "depth_cm": 162},
+      "spaces": [
+        "outdoor",
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "walk_obstacle": {
+        "width_cm": 148,
+        "depth_cm": 162
+      },
       "interaction": {
         "activity": "read",
         "x_cm": 0,
         "z_cm": 126,
         "rotation": 2,
-        "pose": {"x_cm": 0, "y_cm": 10, "z_cm": 10, "rotation": 2}
+        "pose": {
+          "x_cm": 0,
+          "y_cm": 10,
+          "z_cm": 10,
+          "rotation": 2
+        }
       }
     },
     {
@@ -337,14 +656,30 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-tree-v1",
-      "footprint": {"width_cm": 198, "depth_cm": 213},
+      "footprint": {
+        "width_cm": 198,
+        "depth_cm": 213
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["outdoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"],
-      "walk_obstacle": {"width_cm": 22, "depth_cm": 22}
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "walk_obstacle": {
+        "width_cm": 22,
+        "depth_cm": 22
+      }
     },
     {
       "item_key": "camp-rocks-v1",
@@ -355,14 +690,30 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-rocks-v1",
-      "footprint": {"width_cm": 89, "depth_cm": 112},
+      "footprint": {
+        "width_cm": 89,
+        "depth_cm": 112
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["outdoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"],
-      "walk_obstacle": {"width_cm": 80, "depth_cm": 102}
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "walk_obstacle": {
+        "width_cm": 80,
+        "depth_cm": 102
+      }
     },
     {
       "item_key": "camp-flowers-v1",
@@ -373,13 +724,26 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-flowers-v1",
-      "footprint": {"width_cm": 90, "depth_cm": 71},
+      "footprint": {
+        "width_cm": 90,
+        "depth_cm": 71
+      },
       "blocks_placement": false,
       "movable": true,
       "repeatable": true,
-      "spaces": ["outdoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"]
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ]
     },
     {
       "item_key": "camp-bench-v1",
@@ -390,20 +754,41 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-bench-v1",
-      "footprint": {"width_cm": 171, "depth_cm": 60},
+      "footprint": {
+        "width_cm": 171,
+        "depth_cm": 60
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["outdoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"],
-      "walk_obstacle": {"width_cm": 162, "depth_cm": 50},
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "walk_obstacle": {
+        "width_cm": 162,
+        "depth_cm": 50
+      },
       "interaction": {
         "activity": "read",
         "x_cm": 0,
         "z_cm": 70,
         "rotation": 0,
-        "pose": {"x_cm": 0, "y_cm": 12, "z_cm": 33, "rotation": 0}
+        "pose": {
+          "x_cm": 0,
+          "y_cm": 12,
+          "z_cm": 33,
+          "rotation": 0
+        }
       }
     },
     {
@@ -415,14 +800,30 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-tent-v1",
-      "footprint": {"width_cm": 235, "depth_cm": 235},
+      "footprint": {
+        "width_cm": 235,
+        "depth_cm": 235
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["outdoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"],
-      "walk_obstacle": {"width_cm": 226, "depth_cm": 226}
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "walk_obstacle": {
+        "width_cm": 226,
+        "depth_cm": 226
+      }
     },
     {
       "item_key": "camp-fence-v1",
@@ -433,14 +834,30 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-fence-v1",
-      "footprint": {"width_cm": 171, "depth_cm": 19},
+      "footprint": {
+        "width_cm": 171,
+        "depth_cm": 19
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["outdoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"],
-      "walk_obstacle": {"width_cm": 162, "depth_cm": 10}
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "walk_obstacle": {
+        "width_cm": 162,
+        "depth_cm": 10
+      }
     },
     {
       "item_key": "camp-lamp-v1",
@@ -451,14 +868,30 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-lamp-v1",
-      "footprint": {"width_cm": 35, "depth_cm": 35},
+      "footprint": {
+        "width_cm": 35,
+        "depth_cm": 35
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["outdoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"],
-      "walk_obstacle": {"width_cm": 26, "depth_cm": 26}
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "walk_obstacle": {
+        "width_cm": 26,
+        "depth_cm": 26
+      }
     },
     {
       "item_key": "camp-sports-area-v1",
@@ -469,14 +902,32 @@
       "diamond_price": 0,
       "free": true,
       "model_url": "/api/v1/assets/camp-sports-area-v1",
-      "footprint": {"width_cm": 253, "depth_cm": 253},
+      "footprint": {
+        "width_cm": 253,
+        "depth_cm": 253
+      },
       "blocks_placement": false,
       "movable": true,
       "repeatable": false,
-      "spaces": ["outdoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"],
-      "interaction": {"activity": "run", "x_cm": 0, "z_cm": 0, "rotation": 0}
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "interaction": {
+        "activity": "run",
+        "x_cm": 0,
+        "z_cm": 0,
+        "rotation": 0
+      }
     },
     {
       "item_key": "camp-ball-v1",
@@ -487,20 +938,3889 @@
       "diamond_price": 0,
       "free": false,
       "model_url": "/api/v1/assets/camp-ball-v1",
-      "footprint": {"width_cm": 35, "depth_cm": 36},
-      "interaction": {"activity": "ball", "x_cm": 0, "z_cm": 50, "rotation": 2},
+      "footprint": {
+        "width_cm": 35,
+        "depth_cm": 36
+      },
+      "interaction": {
+        "activity": "ball",
+        "x_cm": 0,
+        "z_cm": 50,
+        "rotation": 2
+      },
       "blocks_placement": true,
       "movable": true,
       "repeatable": true,
-      "spaces": ["outdoor"],
-      "rotations": [0, 1, 2, 3],
-      "allowed_terrain": ["grass", "sand"]
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ]
+    },
+    {
+      "item_key": "kaykit-furniture-bits-cactus-medium-a-fe0b9b",
+      "name": "仙人掌盆栽",
+      "thumbnail_asset_key": "kaykit-furniture-bits-cactus-medium-a-fe0b9b-88e625aa-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-furniture-bits-cactus-medium-a-fe0b9b-88e625aa-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-furniture-bits-cactus-medium-a-fe0b9b-88e625aa",
+      "footprint": {
+        "width_cm": 53,
+        "depth_cm": 51
+      },
+      "walk_obstacle": {
+        "width_cm": 53,
+        "depth_cm": 51
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "furniture-bits",
+      "pack_name": "KayKit : Furniture Bits",
+      "category": "nature"
+    },
+    {
+      "item_key": "kaykit-halloween-bits-pumpkin-orange-6bfd2a",
+      "name": "南瓜",
+      "thumbnail_asset_key": "kaykit-halloween-bits-pumpkin-orange-6bfd2a-a4e134f3-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-halloween-bits-pumpkin-orange-6bfd2a-a4e134f3-thumb",
+      "coin_price": 12,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-halloween-bits-pumpkin-orange-6bfd2a-a4e134f3",
+      "footprint": {
+        "width_cm": 51,
+        "depth_cm": 51
+      },
+      "walk_obstacle": {
+        "width_cm": 51,
+        "depth_cm": 51
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "halloween-bits",
+      "pack_name": "KayKit : Halloween Bits",
+      "category": "nature"
+    },
+    {
+      "item_key": "kaykit-holiday-bits-christmas-tree-decorated-ce2461",
+      "name": "圣诞树",
+      "thumbnail_asset_key": "kaykit-holiday-bits-christmas-tree-decorated-ce2461-53939273-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-holiday-bits-christmas-tree-decorated-ce2461-53939273-thumb",
+      "coin_price": 40,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-holiday-bits-christmas-tree-decorated-ce2461-53939273",
+      "footprint": {
+        "width_cm": 190,
+        "depth_cm": 190
+      },
+      "walk_obstacle": {
+        "width_cm": 190,
+        "depth_cm": 190
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "holiday-bits",
+      "pack_name": "KayKit : Holiday Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-holiday-bits-present-a-red-10b20d",
+      "name": "礼物盒",
+      "thumbnail_asset_key": "kaykit-holiday-bits-present-a-red-10b20d-c305bbce-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-holiday-bits-present-a-red-10b20d-c305bbce-thumb",
+      "coin_price": 15,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-holiday-bits-present-a-red-10b20d-c305bbce",
+      "footprint": {
+        "width_cm": 34,
+        "depth_cm": 34
+      },
+      "walk_obstacle": {
+        "width_cm": 34,
+        "depth_cm": 34
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "holiday-bits",
+      "pack_name": "KayKit : Holiday Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-holiday-bits-snowman-a-cf6779",
+      "name": "雪人摆件",
+      "thumbnail_asset_key": "kaykit-holiday-bits-snowman-a-cf6779-a2aadaca-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-holiday-bits-snowman-a-cf6779-a2aadaca-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-holiday-bits-snowman-a-cf6779-a2aadaca",
+      "footprint": {
+        "width_cm": 163,
+        "depth_cm": 103
+      },
+      "walk_obstacle": {
+        "width_cm": 163,
+        "depth_cm": 103
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "holiday-bits",
+      "pack_name": "KayKit : Holiday Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-holiday-bits-train-locomotive-1aec5e",
+      "name": "玩具火车头",
+      "thumbnail_asset_key": "kaykit-holiday-bits-train-locomotive-1aec5e-94b5c238-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-holiday-bits-train-locomotive-1aec5e-94b5c238-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-holiday-bits-train-locomotive-1aec5e-94b5c238",
+      "footprint": {
+        "width_cm": 44,
+        "depth_cm": 86
+      },
+      "walk_obstacle": {
+        "width_cm": 44,
+        "depth_cm": 86
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "holiday-bits",
+      "pack_name": "KayKit : Holiday Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-kaykit-dungeon-potc-decorated-7c6c69",
+      "name": "落地陶罐",
+      "thumbnail_asset_key": "kaykit-kaykit-dungeon-potc-decorated-7c6c69-aab40ee9-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-dungeon-potc-decorated-7c6c69-aab40ee9-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-dungeon-potc-decorated-7c6c69-aab40ee9",
+      "footprint": {
+        "width_cm": 68,
+        "depth_cm": 68
+      },
+      "walk_obstacle": {
+        "width_cm": 68,
+        "depth_cm": 68
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-dungeon",
+      "pack_name": "(Legacy) KayKit - Dungeon Pack",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-kaykit-dungeon-pack-barrel-large-f57a89",
+      "name": "木桶",
+      "thumbnail_asset_key": "kaykit-kaykit-dungeon-pack-barrel-large-f57a89-ad7975af-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-dungeon-pack-barrel-large-f57a89-ad7975af-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-dungeon-pack-barrel-large-f57a89-ad7975af",
+      "footprint": {
+        "width_cm": 82,
+        "depth_cm": 81
+      },
+      "walk_obstacle": {
+        "width_cm": 82,
+        "depth_cm": 81
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-dungeon-pack",
+      "pack_name": "KayKit - Dungeon Pack",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-kaykit-dungeon-pack-chest-64a76b",
+      "name": "收纳箱",
+      "thumbnail_asset_key": "kaykit-kaykit-dungeon-pack-chest-64a76b-91314621-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-dungeon-pack-chest-64a76b-91314621-thumb",
+      "coin_price": 30,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-dungeon-pack-chest-64a76b-91314621",
+      "footprint": {
+        "width_cm": 111,
+        "depth_cm": 94
+      },
+      "walk_obstacle": {
+        "width_cm": 111,
+        "depth_cm": 94
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-dungeon-pack",
+      "pack_name": "KayKit - Dungeon Pack",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-kaykit-forest-bush-1-a-color1-6e9c7e",
+      "name": "灌木丛",
+      "thumbnail_asset_key": "kaykit-kaykit-forest-bush-1-a-color1-6e9c7e-2d8ef782-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-forest-bush-1-a-color1-6e9c7e-2d8ef782-thumb",
+      "coin_price": 15,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-forest-bush-1-a-color1-6e9c7e-2d8ef782",
+      "footprint": {
+        "width_cm": 81,
+        "depth_cm": 71
+      },
+      "walk_obstacle": {
+        "width_cm": 81,
+        "depth_cm": 71
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-forest",
+      "pack_name": "KayKit - Forest Nature Pack",
+      "category": "nature"
+    },
+    {
+      "item_key": "kaykit-kaykit-forest-grass-1-c-color1-8ae8f2",
+      "name": "草丛",
+      "thumbnail_asset_key": "kaykit-kaykit-forest-grass-1-c-color1-8ae8f2-aca8d060-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-forest-grass-1-c-color1-8ae8f2-aca8d060-thumb",
+      "coin_price": 10,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-forest-grass-1-c-color1-8ae8f2-aca8d060",
+      "footprint": {
+        "width_cm": 46,
+        "depth_cm": 44
+      },
+      "walk_obstacle": {
+        "width_cm": 46,
+        "depth_cm": 44
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-forest",
+      "pack_name": "KayKit - Forest Nature Pack",
+      "category": "nature"
+    },
+    {
+      "item_key": "kaykit-kaykit-forest-tree-1-a-color1-44aa25",
+      "name": "阔叶树",
+      "thumbnail_asset_key": "kaykit-kaykit-forest-tree-1-a-color1-44aa25-bc04b3e8-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-forest-tree-1-a-color1-44aa25-bc04b3e8-thumb",
+      "coin_price": 30,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-forest-tree-1-a-color1-44aa25-bc04b3e8",
+      "footprint": {
+        "width_cm": 319,
+        "depth_cm": 326
+      },
+      "walk_obstacle": {
+        "width_cm": 319,
+        "depth_cm": 326
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-forest",
+      "pack_name": "KayKit - Forest Nature Pack",
+      "category": "nature"
+    },
+    {
+      "item_key": "kaykit-kaykit-forest-tree-4-a-color1-ba172d",
+      "name": "松树",
+      "thumbnail_asset_key": "kaykit-kaykit-forest-tree-4-a-color1-ba172d-55f7e6c3-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-forest-tree-4-a-color1-ba172d-55f7e6c3-thumb",
+      "coin_price": 30,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-forest-tree-4-a-color1-ba172d-55f7e6c3",
+      "footprint": {
+        "width_cm": 201,
+        "depth_cm": 201
+      },
+      "walk_obstacle": {
+        "width_cm": 201,
+        "depth_cm": 201
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-forest",
+      "pack_name": "KayKit - Forest Nature Pack",
+      "category": "nature"
+    },
+    {
+      "item_key": "kaykit-kaykit-medieval-builder-p-market-6d907b",
+      "name": "集市小铺",
+      "thumbnail_asset_key": "kaykit-kaykit-medieval-builder-p-market-6d907b-77e7c39a-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-medieval-builder-p-market-6d907b-77e7c39a-thumb",
+      "coin_price": 60,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-medieval-builder-p-market-6d907b-77e7c39a",
+      "footprint": {
+        "width_cm": 515,
+        "depth_cm": 587
+      },
+      "walk_obstacle": {
+        "width_cm": 515,
+        "depth_cm": 587
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-builder-pack",
+      "pack_name": "(Legacy) KayKit - Medieval Builder Pack",
+      "category": "building"
+    },
+    {
+      "item_key": "kaykit-kaykit-medieval-builder-p-well-283a9a",
+      "name": "水井",
+      "thumbnail_asset_key": "kaykit-kaykit-medieval-builder-p-well-283a9a-8c736981-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-medieval-builder-p-well-283a9a-8c736981-thumb",
+      "coin_price": 55,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-medieval-builder-p-well-283a9a-8c736981",
+      "footprint": {
+        "width_cm": 306,
+        "depth_cm": 306
+      },
+      "walk_obstacle": {
+        "width_cm": 306,
+        "depth_cm": 306
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-builder-pack",
+      "pack_name": "(Legacy) KayKit - Medieval Builder Pack",
+      "category": "building"
+    },
+    {
+      "item_key": "kaykit-kaykit-medieval-hexagon-sack-f10588",
+      "name": "储物袋",
+      "thumbnail_asset_key": "kaykit-kaykit-medieval-hexagon-sack-f10588-ce740d7c-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-medieval-hexagon-sack-f10588-ce740d7c-thumb",
+      "coin_price": 15,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-medieval-hexagon-sack-f10588-ce740d7c",
+      "footprint": {
+        "width_cm": 43,
+        "depth_cm": 64
+      },
+      "walk_obstacle": {
+        "width_cm": 43,
+        "depth_cm": 64
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-hexagon",
+      "pack_name": "KayKit - Medieval Hexagon Pack",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-kaykit-medieval-hexagon-tree-single-a-cut-d47e92",
+      "name": "树桩",
+      "thumbnail_asset_key": "kaykit-kaykit-medieval-hexagon-tree-single-a-cut-d47e92-33d94cc8-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-medieval-hexagon-tree-single-a-cut-d47e92-33d94cc8-thumb",
+      "coin_price": 15,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-medieval-hexagon-tree-single-a-cut-d47e92-33d94cc8",
+      "footprint": {
+        "width_cm": 51,
+        "depth_cm": 49
+      },
+      "walk_obstacle": {
+        "width_cm": 51,
+        "depth_cm": 49
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-hexagon",
+      "pack_name": "KayKit - Medieval Hexagon Pack",
+      "category": "nature"
+    },
+    {
+      "item_key": "kaykit-kaykit-medieval-hexagon-wheelbarrow-7c9352",
+      "name": "独轮手推车",
+      "thumbnail_asset_key": "kaykit-kaykit-medieval-hexagon-wheelbarrow-7c9352-1d4db053-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-medieval-hexagon-wheelbarrow-7c9352-1d4db053-thumb",
+      "coin_price": 35,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-medieval-hexagon-wheelbarrow-7c9352-1d4db053",
+      "footprint": {
+        "width_cm": 96,
+        "depth_cm": 203
+      },
+      "walk_obstacle": {
+        "width_cm": 96,
+        "depth_cm": 203
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-hexagon",
+      "pack_name": "KayKit - Medieval Hexagon Pack",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kaykit-kaykit-platformer-flag-a-blue-964cc5",
+      "name": "营地旗",
+      "thumbnail_asset_key": "kaykit-kaykit-platformer-flag-a-blue-964cc5-7c55adce-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-platformer-flag-a-blue-964cc5-7c55adce-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-platformer-flag-a-blue-964cc5-7c55adce",
+      "footprint": {
+        "width_cm": 73,
+        "depth_cm": 195
+      },
+      "walk_obstacle": {
+        "width_cm": 73,
+        "depth_cm": 195
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-platformer",
+      "pack_name": "KayKit - Platformer Pack",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-kaykit-platformer-signage-arrow-stand-blue-8da232",
+      "name": "方向指示牌",
+      "thumbnail_asset_key": "kaykit-kaykit-platformer-signage-arrow-stand-blue-8da232-dda00b81-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-kaykit-platformer-signage-arrow-stand-blue-8da232-dda00b81-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-kaykit-platformer-signage-arrow-stand-blue-8da232-dda00b81",
+      "footprint": {
+        "width_cm": 90,
+        "depth_cm": 36
+      },
+      "walk_obstacle": {
+        "width_cm": 90,
+        "depth_cm": 36
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "kaykit-platformer",
+      "pack_name": "KayKit - Platformer Pack",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-mixed-bag-1-chicken-plushie-a-f726b7",
+      "name": "小鸡玩偶",
+      "thumbnail_asset_key": "kaykit-mixed-bag-1-chicken-plushie-a-f726b7-af2037ec-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-mixed-bag-1-chicken-plushie-a-f726b7-af2037ec-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-mixed-bag-1-chicken-plushie-a-f726b7-af2037ec",
+      "footprint": {
+        "width_cm": 50,
+        "depth_cm": 56
+      },
+      "walk_obstacle": {
+        "width_cm": 50,
+        "depth_cm": 56
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "pack_name": "KayKit - Mixed Bag 1",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-mixed-bag-1-comicbox-filled-a7c427",
+      "name": "漫画收纳盒",
+      "thumbnail_asset_key": "kaykit-mixed-bag-1-comicbox-filled-a7c427-e2215b8d-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-mixed-bag-1-comicbox-filled-a7c427-e2215b8d-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-mixed-bag-1-comicbox-filled-a7c427-e2215b8d",
+      "footprint": {
+        "width_cm": 32,
+        "depth_cm": 40
+      },
+      "walk_obstacle": {
+        "width_cm": 32,
+        "depth_cm": 40
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "pack_name": "KayKit - Mixed Bag 1",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-mixed-bag-1-flax-flower-a-361d20",
+      "name": "亚麻花",
+      "thumbnail_asset_key": "kaykit-mixed-bag-1-flax-flower-a-361d20-7803a78c-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-mixed-bag-1-flax-flower-a-361d20-7803a78c-thumb",
+      "coin_price": 12,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-mixed-bag-1-flax-flower-a-361d20-7803a78c",
+      "footprint": {
+        "width_cm": 35,
+        "depth_cm": 24
+      },
+      "walk_obstacle": {
+        "width_cm": 35,
+        "depth_cm": 24
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "pack_name": "KayKit - Mixed Bag 1",
+      "category": "nature"
+    },
+    {
+      "item_key": "kaykit-mixed-bag-1-puzzlecube-complete-34ee1c",
+      "name": "魔方",
+      "thumbnail_asset_key": "kaykit-mixed-bag-1-puzzlecube-complete-34ee1c-6dfec173-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-mixed-bag-1-puzzlecube-complete-34ee1c-6dfec173-thumb",
+      "coin_price": 15,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-mixed-bag-1-puzzlecube-complete-34ee1c-6dfec173",
+      "footprint": {
+        "width_cm": 17,
+        "depth_cm": 17
+      },
+      "walk_obstacle": {
+        "width_cm": 17,
+        "depth_cm": 17
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "pack_name": "KayKit - Mixed Bag 1",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-mixed-bag-1-rollerskate-pair-ac4536",
+      "name": "双排轮滑鞋",
+      "thumbnail_asset_key": "kaykit-mixed-bag-1-rollerskate-pair-ac4536-1776d14e-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-mixed-bag-1-rollerskate-pair-ac4536-1776d14e-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-mixed-bag-1-rollerskate-pair-ac4536-1776d14e",
+      "footprint": {
+        "width_cm": 37,
+        "depth_cm": 39
+      },
+      "walk_obstacle": {
+        "width_cm": 37,
+        "depth_cm": 39
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "pack_name": "KayKit - Mixed Bag 1",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-mixed-bag-1-woodstove-e893a5",
+      "name": "柴火炉",
+      "thumbnail_asset_key": "kaykit-mixed-bag-1-woodstove-e893a5-3fef513c-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-mixed-bag-1-woodstove-e893a5-3fef513c-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-mixed-bag-1-woodstove-e893a5-3fef513c",
+      "footprint": {
+        "width_cm": 79,
+        "depth_cm": 80
+      },
+      "walk_obstacle": {
+        "width_cm": 79,
+        "depth_cm": 80
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "pack_name": "KayKit - Mixed Bag 1",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kaykit-prototype-bits-target-stand-a-decorated-a9fa97",
+      "name": "投掷靶架",
+      "thumbnail_asset_key": "kaykit-prototype-bits-target-stand-a-decorated-a9fa97-c78f93e6-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-prototype-bits-target-stand-a-decorated-a9fa97-c78f93e6-thumb",
+      "coin_price": 30,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-prototype-bits-target-stand-a-decorated-a9fa97-c78f93e6",
+      "footprint": {
+        "width_cm": 156,
+        "depth_cm": 121
+      },
+      "walk_obstacle": {
+        "width_cm": 156,
+        "depth_cm": 121
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "prototype-bits",
+      "pack_name": "KayKit : Prototype Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-resource-bits-fuel-a-jerrycan-58c032",
+      "name": "燃油罐",
+      "thumbnail_asset_key": "kaykit-resource-bits-fuel-a-jerrycan-58c032-2b66dcd3-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-resource-bits-fuel-a-jerrycan-58c032-2b66dcd3-thumb",
+      "coin_price": 15,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-resource-bits-fuel-a-jerrycan-58c032-2b66dcd3",
+      "footprint": {
+        "width_cm": 26,
+        "depth_cm": 47
+      },
+      "walk_obstacle": {
+        "width_cm": 26,
+        "depth_cm": 47
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "resource-bits",
+      "pack_name": "KayKit : Resource Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-resource-bits-pallet-wood-dbf538",
+      "name": "木托盘",
+      "thumbnail_asset_key": "kaykit-resource-bits-pallet-wood-dbf538-2b8ecc3b-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-resource-bits-pallet-wood-dbf538-2b8ecc3b-thumb",
+      "coin_price": 15,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-resource-bits-pallet-wood-dbf538-2b8ecc3b",
+      "footprint": {
+        "width_cm": 125,
+        "depth_cm": 121
+      },
+      "walk_obstacle": {
+        "width_cm": 125,
+        "depth_cm": 121
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "resource-bits",
+      "pack_name": "KayKit : Resource Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-resource-bits-textiles-stack-large-201b83",
+      "name": "毛毯堆",
+      "thumbnail_asset_key": "kaykit-resource-bits-textiles-stack-large-201b83-8a4a5887-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-resource-bits-textiles-stack-large-201b83-8a4a5887-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-resource-bits-textiles-stack-large-201b83-8a4a5887",
+      "footprint": {
+        "width_cm": 82,
+        "depth_cm": 84
+      },
+      "walk_obstacle": {
+        "width_cm": 82,
+        "depth_cm": 84
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "resource-bits",
+      "pack_name": "KayKit : Resource Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-resource-bits-wood-log-stack-92ed77",
+      "name": "木柴堆",
+      "thumbnail_asset_key": "kaykit-resource-bits-wood-log-stack-92ed77-c4023893-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-resource-bits-wood-log-stack-92ed77-c4023893-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-resource-bits-wood-log-stack-92ed77-c4023893",
+      "footprint": {
+        "width_cm": 135,
+        "depth_cm": 121
+      },
+      "walk_obstacle": {
+        "width_cm": 135,
+        "depth_cm": 121
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "resource-bits",
+      "pack_name": "KayKit : Resource Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-restaurant-bits-crate-carrots-8a677c",
+      "name": "胡萝卜筐",
+      "thumbnail_asset_key": "kaykit-restaurant-bits-crate-carrots-8a677c-8b659def-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-restaurant-bits-crate-carrots-8a677c-8b659def-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-restaurant-bits-crate-carrots-8a677c-8b659def",
+      "footprint": {
+        "width_cm": 91,
+        "depth_cm": 91
+      },
+      "walk_obstacle": {
+        "width_cm": 91,
+        "depth_cm": 91
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "restaurant-bits",
+      "pack_name": "KayKit : Restaurant Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-restaurant-bits-pot-large-b6ddbe",
+      "name": "露营炖锅",
+      "thumbnail_asset_key": "kaykit-restaurant-bits-pot-large-b6ddbe-bfe7b846-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-restaurant-bits-pot-large-b6ddbe-bfe7b846-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-restaurant-bits-pot-large-b6ddbe-bfe7b846",
+      "footprint": {
+        "width_cm": 80,
+        "depth_cm": 49
+      },
+      "walk_obstacle": {
+        "width_cm": 80,
+        "depth_cm": 49
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "restaurant-bits",
+      "pack_name": "KayKit : Restaurant Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-rpg-tools-bits-bucket-metal-58c55c",
+      "name": "铁水桶",
+      "thumbnail_asset_key": "kaykit-rpg-tools-bits-bucket-metal-58c55c-23a29028-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-rpg-tools-bits-bucket-metal-58c55c-23a29028-thumb",
+      "coin_price": 15,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-rpg-tools-bits-bucket-metal-58c55c-23a29028",
+      "footprint": {
+        "width_cm": 37,
+        "depth_cm": 33
+      },
+      "walk_obstacle": {
+        "width_cm": 37,
+        "depth_cm": 33
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "rpg-tools-bits",
+      "pack_name": "KayKit : RPG Tools Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-rpg-tools-bits-lantern-f8913d",
+      "name": "露营提灯",
+      "thumbnail_asset_key": "kaykit-rpg-tools-bits-lantern-f8913d-17f1f4c2-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-rpg-tools-bits-lantern-f8913d-17f1f4c2-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-rpg-tools-bits-lantern-f8913d-17f1f4c2",
+      "footprint": {
+        "width_cm": 31,
+        "depth_cm": 31
+      },
+      "walk_obstacle": {
+        "width_cm": 31,
+        "depth_cm": 31
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "rpg-tools-bits",
+      "pack_name": "KayKit : RPG Tools Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kaykit-rpg-tools-bits-rope-bundle-a-909938",
+      "name": "绳圈",
+      "thumbnail_asset_key": "kaykit-rpg-tools-bits-rope-bundle-a-909938-78a41bcc-thumb",
+      "thumbnail_url": "/api/v1/assets/kaykit-rpg-tools-bits-rope-bundle-a-909938-78a41bcc-thumb",
+      "coin_price": 10,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kaykit-rpg-tools-bits-rope-bundle-a-909938-78a41bcc",
+      "footprint": {
+        "width_cm": 70,
+        "depth_cm": 27
+      },
+      "walk_obstacle": {
+        "width_cm": 70,
+        "depth_cm": 27
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kaykit",
+      "pack_key": "rpg-tools-bits",
+      "pack_name": "KayKit : RPG Tools Bits",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-car-kit-ambulance-8ab83b",
+      "name": "救护车",
+      "thumbnail_asset_key": "kenney-car-kit-ambulance-8ab83b-191d51b0-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-car-kit-ambulance-8ab83b-191d51b0-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-car-kit-ambulance-8ab83b-191d51b0",
+      "footprint": {
+        "width_cm": 210,
+        "depth_cm": 455
+      },
+      "walk_obstacle": {
+        "width_cm": 210,
+        "depth_cm": 455
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "pack_name": "Car Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-car-kit-delivery-80a0a8",
+      "name": "配送货车",
+      "thumbnail_asset_key": "kenney-car-kit-delivery-80a0a8-9bd3c871-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-car-kit-delivery-80a0a8-9bd3c871-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-car-kit-delivery-80a0a8-9bd3c871",
+      "footprint": {
+        "width_cm": 210,
+        "depth_cm": 455
+      },
+      "walk_obstacle": {
+        "width_cm": 210,
+        "depth_cm": 455
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "pack_name": "Car Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-car-kit-firetruck-90c2e8",
+      "name": "消防车",
+      "thumbnail_asset_key": "kenney-car-kit-firetruck-90c2e8-8c82bfc2-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-car-kit-firetruck-90c2e8-8c82bfc2-thumb",
+      "coin_price": 55,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-car-kit-firetruck-90c2e8-8c82bfc2",
+      "footprint": {
+        "width_cm": 210,
+        "depth_cm": 476
+      },
+      "walk_obstacle": {
+        "width_cm": 210,
+        "depth_cm": 476
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "pack_name": "Car Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-car-kit-garbage-truck-dc9f5f",
+      "name": "垃圾清运车",
+      "thumbnail_asset_key": "kenney-car-kit-garbage-truck-dc9f5f-a9b3d6e4-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-car-kit-garbage-truck-dc9f5f-a9b3d6e4-thumb",
+      "coin_price": 55,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-car-kit-garbage-truck-dc9f5f-a9b3d6e4",
+      "footprint": {
+        "width_cm": 225,
+        "depth_cm": 483
+      },
+      "walk_obstacle": {
+        "width_cm": 225,
+        "depth_cm": 483
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "pack_name": "Car Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-car-kit-police-b50d9e",
+      "name": "警车",
+      "thumbnail_asset_key": "kenney-car-kit-police-b50d9e-d00bd573-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-car-kit-police-b50d9e-d00bd573-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-car-kit-police-b50d9e-d00bd573",
+      "footprint": {
+        "width_cm": 210,
+        "depth_cm": 434
+      },
+      "walk_obstacle": {
+        "width_cm": 210,
+        "depth_cm": 434
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "pack_name": "Car Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-car-kit-sedan-517ce0",
+      "name": "家庭轿车",
+      "thumbnail_asset_key": "kenney-car-kit-sedan-517ce0-35912661-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-car-kit-sedan-517ce0-35912661-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-car-kit-sedan-517ce0-35912661",
+      "footprint": {
+        "width_cm": 210,
+        "depth_cm": 357
+      },
+      "walk_obstacle": {
+        "width_cm": 210,
+        "depth_cm": 357
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "pack_name": "Car Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-car-kit-tractor-f55e10",
+      "name": "农用拖拉机",
+      "thumbnail_asset_key": "kenney-car-kit-tractor-f55e10-04d53898-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-car-kit-tractor-f55e10-04d53898-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-car-kit-tractor-f55e10-04d53898",
+      "footprint": {
+        "width_cm": 175,
+        "depth_cm": 287
+      },
+      "walk_obstacle": {
+        "width_cm": 175,
+        "depth_cm": 287
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "pack_name": "Car Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-city-kit-industrial-water-tower-d12e19",
+      "name": "供水塔",
+      "thumbnail_asset_key": "kenney-city-kit-industrial-water-tower-d12e19-b19947ba-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-city-kit-industrial-water-tower-d12e19-b19947ba-thumb",
+      "coin_price": 55,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-city-kit-industrial-water-tower-d12e19-b19947ba",
+      "footprint": {
+        "width_cm": 239,
+        "depth_cm": 233
+      },
+      "walk_obstacle": {
+        "width_cm": 239,
+        "depth_cm": 233
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "city-kit-industrial",
+      "pack_name": "City Kit (Industrial)",
+      "category": "building"
+    },
+    {
+      "item_key": "kenney-city-kit-roads-construction-cone-5cc772",
+      "name": "交通锥",
+      "thumbnail_asset_key": "kenney-city-kit-roads-construction-cone-5cc772-b59de145-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-city-kit-roads-construction-cone-5cc772-b59de145-thumb",
+      "coin_price": 10,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-city-kit-roads-construction-cone-5cc772-b59de145",
+      "footprint": {
+        "width_cm": 38,
+        "depth_cm": 38
+      },
+      "walk_obstacle": {
+        "width_cm": 38,
+        "depth_cm": 38
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "city-kit-roads",
+      "pack_name": "City Kit (Roads)",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-city-kit-roads-dumpster-e15e1b",
+      "name": "户外垃圾箱",
+      "thumbnail_asset_key": "kenney-city-kit-roads-dumpster-e15e1b-c02e948e-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-city-kit-roads-dumpster-e15e1b-c02e948e-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-city-kit-roads-dumpster-e15e1b-c02e948e",
+      "footprint": {
+        "width_cm": 111,
+        "depth_cm": 149
+      },
+      "walk_obstacle": {
+        "width_cm": 111,
+        "depth_cm": 149
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "city-kit-roads",
+      "pack_name": "City Kit (Roads)",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-city-kit-roads-traffic-light-bd519c",
+      "name": "交通信号灯",
+      "thumbnail_asset_key": "kenney-city-kit-roads-traffic-light-bd519c-90234c81-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-city-kit-roads-traffic-light-bd519c-90234c81-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-city-kit-roads-traffic-light-bd519c-90234c81",
+      "footprint": {
+        "width_cm": 71,
+        "depth_cm": 54
+      },
+      "walk_obstacle": {
+        "width_cm": 71,
+        "depth_cm": 54
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "city-kit-roads",
+      "pack_name": "City Kit (Roads)",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-coaster-kit-stall-toilets-11742d",
+      "name": "公共卫生间",
+      "thumbnail_asset_key": "kenney-coaster-kit-stall-toilets-11742d-e864fd99-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-coaster-kit-stall-toilets-11742d-e864fd99-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-coaster-kit-stall-toilets-11742d-e864fd99",
+      "footprint": {
+        "width_cm": 450,
+        "depth_cm": 477
+      },
+      "walk_obstacle": {
+        "width_cm": 450,
+        "depth_cm": 477
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "coaster-kit",
+      "pack_name": "Coaster Kit",
+      "category": "building"
+    },
+    {
+      "item_key": "kenney-cube-pets-animal-beaver-d761f1",
+      "name": "河狸摆件",
+      "thumbnail_asset_key": "kenney-cube-pets-animal-beaver-d761f1-e2cd06a1-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-cube-pets-animal-beaver-d761f1-e2cd06a1-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-cube-pets-animal-beaver-d761f1-e2cd06a1",
+      "footprint": {
+        "width_cm": 50,
+        "depth_cm": 74
+      },
+      "walk_obstacle": {
+        "width_cm": 50,
+        "depth_cm": 74
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "pack_name": "Cube Pets",
+      "category": "nature"
+    },
+    {
+      "item_key": "kenney-cube-pets-animal-bunny-a4488d",
+      "name": "兔子摆件",
+      "thumbnail_asset_key": "kenney-cube-pets-animal-bunny-a4488d-0e9bc1c8-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-cube-pets-animal-bunny-a4488d-0e9bc1c8-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-cube-pets-animal-bunny-a4488d-0e9bc1c8",
+      "footprint": {
+        "width_cm": 50,
+        "depth_cm": 54
+      },
+      "walk_obstacle": {
+        "width_cm": 50,
+        "depth_cm": 54
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "pack_name": "Cube Pets",
+      "category": "nature"
+    },
+    {
+      "item_key": "kenney-cube-pets-animal-cat-aac855",
+      "name": "猫咪摆件",
+      "thumbnail_asset_key": "kenney-cube-pets-animal-cat-aac855-2b2e3984-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-cube-pets-animal-cat-aac855-2b2e3984-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-cube-pets-animal-cat-aac855-2b2e3984",
+      "footprint": {
+        "width_cm": 50,
+        "depth_cm": 73
+      },
+      "walk_obstacle": {
+        "width_cm": 50,
+        "depth_cm": 73
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "pack_name": "Cube Pets",
+      "category": "nature"
+    },
+    {
+      "item_key": "kenney-cube-pets-animal-crab-fa879f",
+      "name": "螃蟹摆件",
+      "thumbnail_asset_key": "kenney-cube-pets-animal-crab-fa879f-cf61bb8f-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-cube-pets-animal-crab-fa879f-cf61bb8f-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-cube-pets-animal-crab-fa879f-cf61bb8f",
+      "footprint": {
+        "width_cm": 94,
+        "depth_cm": 54
+      },
+      "walk_obstacle": {
+        "width_cm": 94,
+        "depth_cm": 54
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "pack_name": "Cube Pets",
+      "category": "nature"
+    },
+    {
+      "item_key": "kenney-cube-pets-animal-deer-8f4f43",
+      "name": "小鹿摆件",
+      "thumbnail_asset_key": "kenney-cube-pets-animal-deer-8f4f43-4aa0c00a-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-cube-pets-animal-deer-8f4f43-4aa0c00a-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-cube-pets-animal-deer-8f4f43-4aa0c00a",
+      "footprint": {
+        "width_cm": 62,
+        "depth_cm": 63
+      },
+      "walk_obstacle": {
+        "width_cm": 62,
+        "depth_cm": 63
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "pack_name": "Cube Pets",
+      "category": "nature"
+    },
+    {
+      "item_key": "kenney-cube-pets-animal-dog-ba17c4",
+      "name": "小狗摆件",
+      "thumbnail_asset_key": "kenney-cube-pets-animal-dog-ba17c4-6fcaa2e6-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-cube-pets-animal-dog-ba17c4-6fcaa2e6-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-cube-pets-animal-dog-ba17c4-6fcaa2e6",
+      "footprint": {
+        "width_cm": 51,
+        "depth_cm": 61
+      },
+      "walk_obstacle": {
+        "width_cm": 51,
+        "depth_cm": 61
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "pack_name": "Cube Pets",
+      "category": "nature"
+    },
+    {
+      "item_key": "kenney-cube-pets-animal-parrot-27c110",
+      "name": "鹦鹉摆件",
+      "thumbnail_asset_key": "kenney-cube-pets-animal-parrot-27c110-8f7e37a0-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-cube-pets-animal-parrot-27c110-8f7e37a0-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-cube-pets-animal-parrot-27c110-8f7e37a0",
+      "footprint": {
+        "width_cm": 88,
+        "depth_cm": 77
+      },
+      "walk_obstacle": {
+        "width_cm": 88,
+        "depth_cm": 77
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "pack_name": "Cube Pets",
+      "category": "nature"
+    },
+    {
+      "item_key": "kenney-cube-pets-animal-penguin-a055fd",
+      "name": "企鹅摆件",
+      "thumbnail_asset_key": "kenney-cube-pets-animal-penguin-a055fd-40fa8d92-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-cube-pets-animal-penguin-a055fd-40fa8d92-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-cube-pets-animal-penguin-a055fd-40fa8d92",
+      "footprint": {
+        "width_cm": 88,
+        "depth_cm": 55
+      },
+      "walk_obstacle": {
+        "width_cm": 88,
+        "depth_cm": 55
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "pack_name": "Cube Pets",
+      "category": "nature"
+    },
+    {
+      "item_key": "kenney-fantasy-town-kit-fountain-round-2ab0d6",
+      "name": "庭院喷泉",
+      "thumbnail_asset_key": "kenney-fantasy-town-kit-fountain-round-2ab0d6-be768f75-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-fantasy-town-kit-fountain-round-2ab0d6-be768f75-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-fantasy-town-kit-fountain-round-2ab0d6-be768f75",
+      "footprint": {
+        "width_cm": 200,
+        "depth_cm": 200
+      },
+      "walk_obstacle": {
+        "width_cm": 200,
+        "depth_cm": 200
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "fantasy-town-kit",
+      "pack_name": "Fantasy Town Kit",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-furniture-kit-bathtub-4a180b",
+      "name": "浴缸",
+      "thumbnail_asset_key": "kenney-furniture-kit-bathtub-4a180b-89697f3e-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-bathtub-4a180b-89697f3e-thumb",
+      "coin_price": 55,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-bathtub-4a180b-89697f3e",
+      "footprint": {
+        "width_cm": 238,
+        "depth_cm": 113
+      },
+      "walk_obstacle": {
+        "width_cm": 238,
+        "depth_cm": 113
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-bedbunk-2e845d",
+      "name": "双层床",
+      "thumbnail_asset_key": "kenney-furniture-kit-bedbunk-2e845d-01e01411-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-bedbunk-2e845d-01e01411-thumb",
+      "coin_price": 55,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-bedbunk-2e845d-01e01411",
+      "footprint": {
+        "width_cm": 115,
+        "depth_cm": 219
+      },
+      "walk_obstacle": {
+        "width_cm": 115,
+        "depth_cm": 219
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-beddouble-419d36",
+      "name": "双人床",
+      "thumbnail_asset_key": "kenney-furniture-kit-beddouble-419d36-a0ce16ae-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-beddouble-419d36-a0ce16ae-thumb",
+      "coin_price": 60,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-beddouble-419d36-a0ce16ae",
+      "footprint": {
+        "width_cm": 192,
+        "depth_cm": 225
+      },
+      "walk_obstacle": {
+        "width_cm": 192,
+        "depth_cm": 225
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-bookcaseopen-b2f795",
+      "name": "开放书架",
+      "thumbnail_asset_key": "kenney-furniture-kit-bookcaseopen-b2f795-ca0b7d33-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-bookcaseopen-b2f795-ca0b7d33-thumb",
+      "coin_price": 35,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-bookcaseopen-b2f795-ca0b7d33",
+      "footprint": {
+        "width_cm": 80,
+        "depth_cm": 50
+      },
+      "walk_obstacle": {
+        "width_cm": 80,
+        "depth_cm": 50
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-coatrackstanding-0f2d0a",
+      "name": "落地衣帽架",
+      "thumbnail_asset_key": "kenney-furniture-kit-coatrackstanding-0f2d0a-5017bf05-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-coatrackstanding-0f2d0a-5017bf05-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-coatrackstanding-0f2d0a-5017bf05",
+      "footprint": {
+        "width_cm": 55,
+        "depth_cm": 55
+      },
+      "walk_obstacle": {
+        "width_cm": 55,
+        "depth_cm": 55
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-dryer-540c07",
+      "name": "烘干机",
+      "thumbnail_asset_key": "kenney-furniture-kit-dryer-540c07-7294cefd-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-dryer-540c07-7294cefd-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-dryer-540c07-7294cefd",
+      "footprint": {
+        "width_cm": 79,
+        "depth_cm": 77
+      },
+      "walk_obstacle": {
+        "width_cm": 79,
+        "depth_cm": 77
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-kitchenbar-7635e0",
+      "name": "早餐吧台",
+      "thumbnail_asset_key": "kenney-furniture-kit-kitchenbar-7635e0-eb428369-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-kitchenbar-7635e0-eb428369-thumb",
+      "coin_price": 40,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-kitchenbar-7635e0-eb428369",
+      "footprint": {
+        "width_cm": 86,
+        "depth_cm": 42
+      },
+      "walk_obstacle": {
+        "width_cm": 86,
+        "depth_cm": 42
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-kitchenstoveelectric-19e96c",
+      "name": "电灶与烤箱",
+      "thumbnail_asset_key": "kenney-furniture-kit-kitchenstoveelectric-19e96c-25903a28-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-kitchenstoveelectric-19e96c-25903a28-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-kitchenstoveelectric-19e96c-25903a28",
+      "footprint": {
+        "width_cm": 86,
+        "depth_cm": 90
+      },
+      "walk_obstacle": {
+        "width_cm": 86,
+        "depth_cm": 90
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-lamproundfloor-fab5b4",
+      "name": "室内落地灯",
+      "thumbnail_asset_key": "kenney-furniture-kit-lamproundfloor-fab5b4-d1f1459b-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-lamproundfloor-fab5b4-d1f1459b-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-lamproundfloor-fab5b4-d1f1459b",
+      "footprint": {
+        "width_cm": 31,
+        "depth_cm": 36
+      },
+      "walk_obstacle": {
+        "width_cm": 31,
+        "depth_cm": 36
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-loungechairrelax-e55568",
+      "name": "休闲躺椅",
+      "thumbnail_asset_key": "kenney-furniture-kit-loungechairrelax-e55568-db87ac16-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-loungechairrelax-e55568-db87ac16-thumb",
+      "coin_price": 35,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-loungechairrelax-e55568-db87ac16",
+      "footprint": {
+        "width_cm": 98,
+        "depth_cm": 135
+      },
+      "walk_obstacle": {
+        "width_cm": 98,
+        "depth_cm": 135
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-rugdoormat-894d0e",
+      "name": "门口地垫",
+      "thumbnail_asset_key": "kenney-furniture-kit-rugdoormat-894d0e-c5afd61b-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-rugdoormat-894d0e-c5afd61b-thumb",
+      "coin_price": 10,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-rugdoormat-894d0e-c5afd61b",
+      "footprint": {
+        "width_cm": 86,
+        "depth_cm": 48
+      },
+      "walk_obstacle": {
+        "width_cm": 86,
+        "depth_cm": 48
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-furniture-kit-ruground-05c0e5",
+      "name": "圆地毯",
+      "thumbnail_asset_key": "kenney-furniture-kit-ruground-05c0e5-cfd6a6c6-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-ruground-05c0e5-cfd6a6c6-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-ruground-05c0e5-cfd6a6c6",
+      "footprint": {
+        "width_cm": 184,
+        "depth_cm": 184
+      },
+      "walk_obstacle": {
+        "width_cm": 184,
+        "depth_cm": 184
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-furniture-kit-sidetabledrawers-83ed0b",
+      "name": "床头抽屉柜",
+      "thumbnail_asset_key": "kenney-furniture-kit-sidetabledrawers-83ed0b-f540f930-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-sidetabledrawers-83ed0b-f540f930-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-sidetabledrawers-83ed0b-f540f930",
+      "footprint": {
+        "width_cm": 107,
+        "depth_cm": 45
+      },
+      "walk_obstacle": {
+        "width_cm": 107,
+        "depth_cm": 45
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-speaker-e1c5df",
+      "name": "落地音箱",
+      "thumbnail_asset_key": "kenney-furniture-kit-speaker-e1c5df-4c64589e-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-speaker-e1c5df-4c64589e-thumb",
+      "coin_price": 30,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-speaker-e1c5df-4c64589e",
+      "footprint": {
+        "width_cm": 30,
+        "depth_cm": 30
+      },
+      "walk_obstacle": {
+        "width_cm": 30,
+        "depth_cm": 30
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-stoolbar-8db5f7",
+      "name": "高脚凳",
+      "thumbnail_asset_key": "kenney-furniture-kit-stoolbar-8db5f7-f995c1eb-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-stoolbar-8db5f7-f995c1eb-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-stoolbar-8db5f7-f995c1eb",
+      "footprint": {
+        "width_cm": 54,
+        "depth_cm": 46
+      },
+      "walk_obstacle": {
+        "width_cm": 54,
+        "depth_cm": 46
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-furniture-kit-trashcan-efba05",
+      "name": "室内垃圾桶",
+      "thumbnail_asset_key": "kenney-furniture-kit-trashcan-efba05-d6fb7b97-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-trashcan-efba05-d6fb7b97-thumb",
+      "coin_price": 15,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-trashcan-efba05-d6fb7b97",
+      "footprint": {
+        "width_cm": 42,
+        "depth_cm": 47
+      },
+      "walk_obstacle": {
+        "width_cm": 42,
+        "depth_cm": 47
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-furniture-kit-washer-8250f7",
+      "name": "洗衣机",
+      "thumbnail_asset_key": "kenney-furniture-kit-washer-8250f7-dc35caea-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-furniture-kit-washer-8250f7-dc35caea-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-furniture-kit-washer-8250f7-dc35caea",
+      "footprint": {
+        "width_cm": 79,
+        "depth_cm": 79
+      },
+      "walk_obstacle": {
+        "width_cm": 79,
+        "depth_cm": 79
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "pack_name": "Furniture Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-arcade-air-hockey-cb7616",
+      "name": "气垫球桌",
+      "thumbnail_asset_key": "kenney-mini-arcade-air-hockey-cb7616-70090994-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arcade-air-hockey-cb7616-70090994-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arcade-air-hockey-cb7616-70090994",
+      "footprint": {
+        "width_cm": 150,
+        "depth_cm": 105
+      },
+      "walk_obstacle": {
+        "width_cm": 150,
+        "depth_cm": 105
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "pack_name": "Mini Arcade",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-arcade-arcade-machine-77aa7c",
+      "name": "游戏街机",
+      "thumbnail_asset_key": "kenney-mini-arcade-arcade-machine-77aa7c-195cce59-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arcade-arcade-machine-77aa7c-195cce59-thumb",
+      "coin_price": 40,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arcade-arcade-machine-77aa7c-195cce59",
+      "footprint": {
+        "width_cm": 97,
+        "depth_cm": 129
+      },
+      "walk_obstacle": {
+        "width_cm": 97,
+        "depth_cm": 129
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "pack_name": "Mini Arcade",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-arcade-basketball-game-b29a09",
+      "name": "投篮机",
+      "thumbnail_asset_key": "kenney-mini-arcade-basketball-game-b29a09-f0f2a922-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arcade-basketball-game-b29a09-f0f2a922-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arcade-basketball-game-b29a09-f0f2a922",
+      "footprint": {
+        "width_cm": 163,
+        "depth_cm": 254
+      },
+      "walk_obstacle": {
+        "width_cm": 163,
+        "depth_cm": 254
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "pack_name": "Mini Arcade",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-arcade-claw-machine-9da488",
+      "name": "抓娃娃机",
+      "thumbnail_asset_key": "kenney-mini-arcade-claw-machine-9da488-b0349ad1-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arcade-claw-machine-9da488-b0349ad1-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arcade-claw-machine-9da488-b0349ad1",
+      "footprint": {
+        "width_cm": 131,
+        "depth_cm": 139
+      },
+      "walk_obstacle": {
+        "width_cm": 131,
+        "depth_cm": 139
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "pack_name": "Mini Arcade",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-arcade-dance-machine-2d3ab6",
+      "name": "跳舞机",
+      "thumbnail_asset_key": "kenney-mini-arcade-dance-machine-2d3ab6-b182be7c-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arcade-dance-machine-2d3ab6-b182be7c-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arcade-dance-machine-2d3ab6-b182be7c",
+      "footprint": {
+        "width_cm": 145,
+        "depth_cm": 205
+      },
+      "walk_obstacle": {
+        "width_cm": 145,
+        "depth_cm": 205
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "pack_name": "Mini Arcade",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-arcade-pinball-29ef9b",
+      "name": "弹珠台",
+      "thumbnail_asset_key": "kenney-mini-arcade-pinball-29ef9b-b6db5b8e-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arcade-pinball-29ef9b-b6db5b8e-thumb",
+      "coin_price": 40,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arcade-pinball-29ef9b-b6db5b8e",
+      "footprint": {
+        "width_cm": 60,
+        "depth_cm": 90
+      },
+      "walk_obstacle": {
+        "width_cm": 60,
+        "depth_cm": 90
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "pack_name": "Mini Arcade",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-arcade-prize-wheel-872f8b",
+      "name": "幸运转盘",
+      "thumbnail_asset_key": "kenney-mini-arcade-prize-wheel-872f8b-bbe67bda-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arcade-prize-wheel-872f8b-bbe67bda-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arcade-prize-wheel-872f8b-bbe67bda",
+      "footprint": {
+        "width_cm": 121,
+        "depth_cm": 61
+      },
+      "walk_obstacle": {
+        "width_cm": 121,
+        "depth_cm": 61
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "pack_name": "Mini Arcade",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-mini-arcade-ticket-machine-03fe46",
+      "name": "自助售票机",
+      "thumbnail_asset_key": "kenney-mini-arcade-ticket-machine-03fe46-8ba3886b-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arcade-ticket-machine-03fe46-8ba3886b-thumb",
+      "coin_price": 35,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arcade-ticket-machine-03fe46-8ba3886b",
+      "footprint": {
+        "width_cm": 81,
+        "depth_cm": 80
+      },
+      "walk_obstacle": {
+        "width_cm": 81,
+        "depth_cm": 80
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "pack_name": "Mini Arcade",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-arcade-vending-machine-59359b",
+      "name": "自动售货机",
+      "thumbnail_asset_key": "kenney-mini-arcade-vending-machine-59359b-0f014548-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arcade-vending-machine-59359b-0f014548-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arcade-vending-machine-59359b-0f014548",
+      "footprint": {
+        "width_cm": 120,
+        "depth_cm": 114
+      },
+      "walk_obstacle": {
+        "width_cm": 120,
+        "depth_cm": 114
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "pack_name": "Mini Arcade",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-arena-statue-c4ee53",
+      "name": "石雕像",
+      "thumbnail_asset_key": "kenney-mini-arena-statue-c4ee53-b8b98ab9-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-arena-statue-c4ee53-b8b98ab9-thumb",
+      "coin_price": 30,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-arena-statue-c4ee53-b8b98ab9",
+      "footprint": {
+        "width_cm": 91,
+        "depth_cm": 91
+      },
+      "walk_obstacle": {
+        "width_cm": 91,
+        "depth_cm": 91
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-arena",
+      "pack_name": "Mini Arena",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-mini-characters-wheelchair-87e388",
+      "name": "手动轮椅",
+      "thumbnail_asset_key": "kenney-mini-characters-wheelchair-87e388-613de0ba-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-characters-wheelchair-87e388-613de0ba-thumb",
+      "coin_price": 30,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-characters-wheelchair-87e388-613de0ba",
+      "footprint": {
+        "width_cm": 101,
+        "depth_cm": 117
+      },
+      "walk_obstacle": {
+        "width_cm": 101,
+        "depth_cm": 117
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-characters",
+      "pack_name": "Mini Characters",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-mini-market-bottle-return-167b9c",
+      "name": "饮料瓶回收机",
+      "thumbnail_asset_key": "kenney-mini-market-bottle-return-167b9c-dee62474-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-market-bottle-return-167b9c-dee62474-thumb",
+      "coin_price": 40,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-market-bottle-return-167b9c-dee62474",
+      "footprint": {
+        "width_cm": 90,
+        "depth_cm": 97
+      },
+      "walk_obstacle": {
+        "width_cm": 90,
+        "depth_cm": 97
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-market",
+      "pack_name": "Mini Market",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-market-freezer-d2019e",
+      "name": "卧式冷柜",
+      "thumbnail_asset_key": "kenney-mini-market-freezer-d2019e-ca7bc900-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-market-freezer-d2019e-ca7bc900-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-market-freezer-d2019e-ca7bc900",
+      "footprint": {
+        "width_cm": 161,
+        "depth_cm": 121
+      },
+      "walk_obstacle": {
+        "width_cm": 161,
+        "depth_cm": 121
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-market",
+      "pack_name": "Mini Market",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-market-shelf-boxes-2d1364",
+      "name": "商品货架",
+      "thumbnail_asset_key": "kenney-mini-market-shelf-boxes-2d1364-bf5d064b-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-market-shelf-boxes-2d1364-bf5d064b-thumb",
+      "coin_price": 35,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-market-shelf-boxes-2d1364-bf5d064b",
+      "footprint": {
+        "width_cm": 161,
+        "depth_cm": 141
+      },
+      "walk_obstacle": {
+        "width_cm": 161,
+        "depth_cm": 141
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-market",
+      "pack_name": "Mini Market",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-mini-skate-half-pipe-701b7b",
+      "name": "滑板弧面坡道",
+      "thumbnail_asset_key": "kenney-mini-skate-half-pipe-701b7b-65ce3478-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-skate-half-pipe-701b7b-65ce3478-thumb",
+      "coin_price": 45,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-skate-half-pipe-701b7b-65ce3478",
+      "footprint": {
+        "width_cm": 200,
+        "depth_cm": 200
+      },
+      "walk_obstacle": {
+        "width_cm": 200,
+        "depth_cm": 200
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-skate",
+      "pack_name": "Mini Skate",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-mini-skate-rail-high-d9bda5",
+      "name": "滑板磨杆",
+      "thumbnail_asset_key": "kenney-mini-skate-rail-high-d9bda5-598007fe-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-skate-rail-high-d9bda5-598007fe-thumb",
+      "coin_price": 25,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-skate-rail-high-d9bda5-598007fe",
+      "footprint": {
+        "width_cm": 11,
+        "depth_cm": 101
+      },
+      "walk_obstacle": {
+        "width_cm": 11,
+        "depth_cm": 101
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-skate",
+      "pack_name": "Mini Skate",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-mini-skate-scooter-31c0b8",
+      "name": "滑板车",
+      "thumbnail_asset_key": "kenney-mini-skate-scooter-31c0b8-5e9c3ffb-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-skate-scooter-31c0b8-5e9c3ffb-thumb",
+      "coin_price": 30,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-skate-scooter-31c0b8-5e9c3ffb",
+      "footprint": {
+        "width_cm": 65,
+        "depth_cm": 138
+      },
+      "walk_obstacle": {
+        "width_cm": 65,
+        "depth_cm": 138
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-skate",
+      "pack_name": "Mini Skate",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-mini-skate-skateboard-e94b08",
+      "name": "滑板",
+      "thumbnail_asset_key": "kenney-mini-skate-skateboard-e94b08-69870dac-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-mini-skate-skateboard-e94b08-69870dac-thumb",
+      "coin_price": 20,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-mini-skate-skateboard-e94b08-69870dac",
+      "footprint": {
+        "width_cm": 32,
+        "depth_cm": 69
+      },
+      "walk_obstacle": {
+        "width_cm": 32,
+        "depth_cm": 69
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "mini-skate",
+      "pack_name": "Mini Skate",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-nature-kit-campfire-stones-3bab27",
+      "name": "石圈营火",
+      "thumbnail_asset_key": "kenney-nature-kit-campfire-stones-3bab27-29a2fafb-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-nature-kit-campfire-stones-3bab27-29a2fafb-thumb",
+      "coin_price": 30,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-nature-kit-campfire-stones-3bab27-29a2fafb",
+      "footprint": {
+        "width_cm": 109,
+        "depth_cm": 104
+      },
+      "walk_obstacle": {
+        "width_cm": 109,
+        "depth_cm": 104
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "nature-kit",
+      "pack_name": "Nature Kit",
+      "category": "decoration"
+    },
+    {
+      "item_key": "kenney-nature-kit-canoe-80f7d6",
+      "name": "独木舟",
+      "thumbnail_asset_key": "kenney-nature-kit-canoe-80f7d6-363db3e3-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-nature-kit-canoe-80f7d6-363db3e3-thumb",
+      "coin_price": 35,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-nature-kit-canoe-80f7d6-363db3e3",
+      "footprint": {
+        "width_cm": 90,
+        "depth_cm": 345
+      },
+      "walk_obstacle": {
+        "width_cm": 90,
+        "depth_cm": 345
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "nature-kit",
+      "pack_name": "Nature Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-racing-kit-grandstandcovered-b9c2ae",
+      "name": "遮阳看台",
+      "thumbnail_asset_key": "kenney-racing-kit-grandstandcovered-b9c2ae-3496998c-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-racing-kit-grandstandcovered-b9c2ae-3496998c-thumb",
+      "coin_price": 55,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-racing-kit-grandstandcovered-b9c2ae-3496998c",
+      "footprint": {
+        "width_cm": 300,
+        "depth_cm": 306
+      },
+      "walk_obstacle": {
+        "width_cm": 300,
+        "depth_cm": 306
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "racing-kit",
+      "pack_name": "Racing Kit",
+      "category": "building"
+    },
+    {
+      "item_key": "kenney-survival-kit-workbench-670bfa",
+      "name": "木工作台",
+      "thumbnail_asset_key": "kenney-survival-kit-workbench-670bfa-362de67b-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-survival-kit-workbench-670bfa-362de67b-thumb",
+      "coin_price": 35,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-survival-kit-workbench-670bfa-362de67b",
+      "footprint": {
+        "width_cm": 98,
+        "depth_cm": 89
+      },
+      "walk_obstacle": {
+        "width_cm": 98,
+        "depth_cm": 89
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "survival-kit",
+      "pack_name": "Survival Kit",
+      "category": "furniture"
+    },
+    {
+      "item_key": "kenney-train-kit-train-tram-classic-291115",
+      "name": "观光电车",
+      "thumbnail_asset_key": "kenney-train-kit-train-tram-classic-291115-adb463e0-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-train-kit-train-tram-classic-291115-adb463e0-thumb",
+      "coin_price": 60,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-train-kit-train-tram-classic-291115-adb463e0",
+      "footprint": {
+        "width_cm": 176,
+        "depth_cm": 366
+      },
+      "walk_obstacle": {
+        "width_cm": 176,
+        "depth_cm": 366
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "train-kit",
+      "pack_name": "Train Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-watercraft-kit-boat-fishing-small-c16664",
+      "name": "小渔船",
+      "thumbnail_asset_key": "kenney-watercraft-kit-boat-fishing-small-c16664-ac0c5200-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-watercraft-kit-boat-fishing-small-c16664-ac0c5200-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-watercraft-kit-boat-fishing-small-c16664-ac0c5200",
+      "footprint": {
+        "width_cm": 179,
+        "depth_cm": 387
+      },
+      "walk_obstacle": {
+        "width_cm": 179,
+        "depth_cm": 387
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "watercraft-kit",
+      "pack_name": "Watercraft Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-watercraft-kit-boat-sail-a-0cb10a",
+      "name": "小帆船",
+      "thumbnail_asset_key": "kenney-watercraft-kit-boat-sail-a-0cb10a-d6c16b5b-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-watercraft-kit-boat-sail-a-0cb10a-d6c16b5b-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-watercraft-kit-boat-sail-a-0cb10a-d6c16b5b",
+      "footprint": {
+        "width_cm": 179,
+        "depth_cm": 377
+      },
+      "walk_obstacle": {
+        "width_cm": 179,
+        "depth_cm": 377
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "watercraft-kit",
+      "pack_name": "Watercraft Kit",
+      "category": "vehicle"
+    },
+    {
+      "item_key": "kenney-watercraft-kit-boat-speed-a-766e02",
+      "name": "快艇",
+      "thumbnail_asset_key": "kenney-watercraft-kit-boat-speed-a-766e02-2a9a5efd-thumb",
+      "thumbnail_url": "/api/v1/assets/kenney-watercraft-kit-boat-speed-a-766e02-2a9a5efd-thumb",
+      "coin_price": 50,
+      "diamond_price": 0,
+      "free": false,
+      "model_url": "/api/v1/assets/kenney-watercraft-kit-boat-speed-a-766e02-2a9a5efd",
+      "footprint": {
+        "width_cm": 179,
+        "depth_cm": 338
+      },
+      "walk_obstacle": {
+        "width_cm": 179,
+        "depth_cm": 338
+      },
+      "blocks_placement": true,
+      "movable": true,
+      "repeatable": true,
+      "spaces": [
+        "outdoor"
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowed_terrain": [
+        "grass",
+        "sand"
+      ],
+      "provider": "kenney",
+      "pack_key": "watercraft-kit",
+      "pack_name": "Watercraft Kit",
+      "category": "vehicle"
     }
   ],
   "default_environment": "day",
   "default_placements": [
-    {"instance_id": "base:house3d", "item_key": "camp-house-v1", "space": "outdoor", "x_cm": 0, "z_cm": 0, "rotation": 0},
-    {"instance_id": "base:reading3d", "item_key": "camp-reading-desk-v1", "space": "indoor", "x_cm": -150, "z_cm": 0, "rotation": 0},
-    {"instance_id": "base:sport3d", "item_key": "camp-sports-area-v1", "space": "outdoor", "x_cm": 650, "z_cm": 0, "rotation": 0}
+    {
+      "instance_id": "base:house3d",
+      "item_key": "camp-house-v1",
+      "space": "outdoor",
+      "x_cm": 0,
+      "z_cm": 0,
+      "rotation": 0
+    },
+    {
+      "instance_id": "base:reading3d",
+      "item_key": "camp-reading-desk-v1",
+      "space": "indoor",
+      "x_cm": -150,
+      "z_cm": 0,
+      "rotation": 0
+    },
+    {
+      "instance_id": "base:sport3d",
+      "item_key": "camp-sports-area-v1",
+      "space": "outdoor",
+      "x_cm": 650,
+      "z_cm": 0,
+      "rotation": 0
+    }
   ]
 }

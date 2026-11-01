@@ -65,6 +65,8 @@ npm start
 
 ## 检查与构建
 
+素材工具测试使用 uv 锁定的 Python 环境。首次运行 `npm test` 或 `npm run verify` 前，先安装 uv 并执行 `uv sync --locked`；素材检查、批量预览与 Blender 专项见[运行手册](spec/ENGINEERING/OPERATIONS.md#素材工具环境检查与预览)。
+
 ```sh
 npm run check:spec  # 文档结构及本地引用
 npm run check       # 文档、Go 静态检查、接口类型及 TypeScript

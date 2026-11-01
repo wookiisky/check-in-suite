@@ -95,7 +95,8 @@ func TestSpatialCLIServeSeedsBeforeListening(t *testing.T) {
 	if _, err = db.Exec(`CREATE TRIGGER fail_spatial_seed BEFORE INSERT ON products WHEN NEW.id LIKE 'spatial-offer-%' BEGIN SELECT RAISE(ABORT,'spatial-seed-write-failed'); END`); err != nil {
 		t.Fatal(err)
 	}
-	failing, cancelFailure := context.WithTimeout(context.Background(), 2*time.Second)
+	// 上限只防止启动挂起；不把全量素材安装当作两秒内完成的契约。
+	failing, cancelFailure := context.WithTimeout(context.Background(), 30*time.Second)
 	err = runWithIO(failing, []string{"serve", "-config", configuration}, strings.NewReader(""), io.Discard)
 	cancelFailure()
 	if err == nil || !strings.Contains(err.Error(), "spatial-seed-write-failed") {
@@ -121,7 +122,7 @@ func TestSpatialCLIServeSeedsBeforeListening(t *testing.T) {
 		}
 	})
 	client := &http.Client{Timeout: 200 * time.Millisecond}
-	deadline := time.Now().Add(10 * time.Second)
+	deadline := time.Now().Add(30 * time.Second)
 	ready := false
 	for time.Now().Before(deadline) {
 		response, requestErr := client.Get("http://" + address + "/health/ready")

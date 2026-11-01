@@ -1,0 +1,9 @@
+# 本项目连接全局安装的 Blender Lab MCP 服务端。
+[mcp_servers.blender]
+command = "/opt/homebrew/bin/uv"
+args = ["--directory", "/Users/air/toolkit/blender_mcp/mcp", "run", "--locked", "blender-mcp"]
+startup_timeout_sec = 60
+tool_timeout_sec = 300
+
+[mcp_servers.blender.env]
+BLENDER_PATH = "/Applications/Blender.app/Contents/MacOS/Blender"

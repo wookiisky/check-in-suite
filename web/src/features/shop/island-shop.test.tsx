@@ -27,7 +27,7 @@ describe('小岛商店与多件所有权', () => {
     const onBackpack = vi.fn();
     const request = vi.fn().mockImplementation(async (path: string) => {
       if (path === '/camp') return camp;
-      if (path === '/products') return { items: [tree, book, product] };
+      if (path.startsWith('/products')) return { items: [tree, book, product] };
       if (path === '/purchases') return { purchase: treePurchase, wallet };
       if (path.startsWith('/purchases?')) return { items: [treePurchase], next_cursor: null };
       throw new Error(`Unexpected request ${path}`);
@@ -49,7 +49,7 @@ describe('小岛商店与多件所有权', () => {
   it('过滤后的第一页没有岛屿物品时保留翻页，不误报空库存', async () => {
     const request = vi.fn().mockImplementation(async (path: string) => {
       if (path === '/camp') return camp;
-      if (path === '/products') return { items: [] };
+      if (path.startsWith('/products')) return { items: [] };
       if (path.includes('cursor=')) return { items: [treePurchase], next_cursor: null };
       return { items: [purchase], next_cursor: 'next' };
     });

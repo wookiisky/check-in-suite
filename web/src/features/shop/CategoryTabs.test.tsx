@@ -39,8 +39,8 @@ describe('两级商品分类', () => {
     const detailAll = details.getByRole('tab', { name: content.allTypes });
     detailAll.focus();
     fireEvent.keyDown(detailAll, { key: 'ArrowRight' });
-    expect(details.getByRole('tab', { name: content.wearableSlots.hair })).toHaveFocus();
-    expect(screen.getByText('appearance/hair')).toBeInTheDocument();
+    expect(details.getByRole('tab', { name: content.types.character })).toHaveFocus();
+    expect(screen.getByText('appearance/character')).toBeInTheDocument();
     fireEvent.keyDown(appearance, { key: 'End' });
     expect(groups.getByRole('tab', { name: '奖励' })).toHaveFocus();
     expect(screen.queryByRole('tablist', { name: '装扮分类' })).not.toBeInTheDocument();

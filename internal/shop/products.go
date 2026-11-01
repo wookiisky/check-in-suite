@@ -15,17 +15,6 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/island"
 )
 
-// ownershipMatch associates offers with stable island instances without changing sale snapshots.
-func ownershipMatch() string {
-	matches := []string{"x.product_id=p.id"}
-	for _, item := range island.SpatialCatalog() {
-		asset := strings.ReplaceAll(item.ThumbnailAssetKey, "'", "''")
-		key := strings.ReplaceAll(item.Key, "'", "''")
-		matches = append(matches, "(p.asset_key='"+asset+"' AND x.item_key_snapshot='"+key+"')")
-	}
-	return "(" + strings.Join(matches, " OR ") + ")"
-}
-
 // productIslandItemKey resolves the controlled three-dimensional placement identity.
 func productIslandItemKey(assetKey string) string {
 	if item, ok := island.SpatialForThumbnail(assetKey); ok {
@@ -34,7 +23,7 @@ func productIslandItemKey(assetKey string) string {
 	return ""
 }
 
-var productColumns = "p.id,p.type,p.name,p.asset_key,p.wearable_key,p.description,p.coin_price,p.diamond_price,p.stock,p.enabled,p.version,p.deleted_at,EXISTS(SELECT 1 FROM purchases x WHERE " + ownershipMatch() + " AND x.type_snapshot!='reward'),(SELECT COUNT(*) FROM purchases x WHERE " + ownershipMatch() + " AND x.status='owned')"
+const productColumns = "p.id,p.type,p.name,p.asset_key,p.wearable_key,p.character_key,p.description,p.coin_price,p.diamond_price,p.stock,p.enabled,p.version,p.deleted_at,p.created_at"
 
 // rowScanner is the common Scan boundary shared by database rows and one-row queries.
 type rowScanner interface{ Scan(...any) error }
@@ -43,13 +32,19 @@ type rowScanner interface{ Scan(...any) error }
 func scanProduct(row rowScanner) (Product, error) {
 	var p Product
 	var stock, deleted sql.NullInt64
-	err := row.Scan(&p.ID, &p.Type, &p.Name, &p.AssetKey, &p.WearableKey, &p.Description, &p.CoinPrice, &p.DiamondPrice, &stock, &p.Enabled, &p.Version, &deleted, &p.Owned, &p.OwnedCount)
+	err := row.Scan(&p.ID, &p.Type, &p.Name, &p.AssetKey, &p.WearableKey, &p.CharacterKey, &p.Description, &p.CoinPrice, &p.DiamondPrice, &stock, &p.Enabled, &p.Version, &deleted, &p.CreatedAt)
 	if stock.Valid {
 		p.Stock = &stock.Int64
 	}
 	p.Deleted = deleted.Valid
 	if item, ok := island.SpatialForThumbnail(p.AssetKey); ok {
 		p.IslandItemKey, p.Repeatable = item.Key, item.Repeatable
+	}
+	if asset, ok := assets.Get(p.AssetKey); ok {
+		p.Provider, p.PackKey, p.PackName = asset.Provider, asset.PackKey, asset.PackName
+	}
+	if definition, ok := character.Get(p.CharacterKey); ok {
+		p.Provider, p.PackKey = definition.Provider, definition.PackKey
 	}
 	return p, err
 }
@@ -60,12 +55,17 @@ func readProduct(ctx context.Context, tx *sql.Tx, id string, includeDeleted bool
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && p.Deleted && !includeDeleted) {
 		return Product{}, core.Fail(404, "NOT_FOUND")
 	}
+	if err == nil {
+		items := []Product{p}
+		err = applyProductOwnership(ctx, tx, items)
+		p = items[0]
+	}
 	return p, err
 }
 
 // validType uses the declared product behaviors, never inferred display text.
 func validType(kind string) bool {
-	return kind == TypeWearable || kind == TypeIsland || kind == TypeTitle || kind == TypeReward
+	return kind == TypeCharacter || kind == TypeWearable || kind == TypeIsland || kind == TypeTitle || kind == TypeReward
 }
 
 // validateProduct applies configured numeric and Unicode bounds before any product write.
@@ -92,6 +92,14 @@ func (s *Service) validateProduct(input ProductInput) error {
 		}
 	} else if input.WearableKey != "" {
 		return core.Invalid("wearable_key", "INVALID_VALUE")
+	}
+	if input.Type == TypeCharacter {
+		body, ok := character.Get(input.CharacterKey)
+		if !ok || body.Key == character.DefaultCharacterKey || body.ThumbnailAssetKey != input.AssetKey {
+			return core.Invalid("character_key", "INVALID_VALUE")
+		}
+	} else if input.CharacterKey != "" {
+		return core.Invalid("character_key", "INVALID_VALUE")
 	}
 	if input.CoinPrice < 0 || input.CoinPrice > s.Config.Limits.PriceMax {
 		return core.Invalid("coin_price", "INVALID_VALUE")
@@ -138,6 +146,9 @@ func (s *Service) ListProducts(ctx context.Context, p account.Principal, include
 	if err != nil {
 		return result, err
 	}
+	if err = applyProductOwnership(ctx, tx, result.Items); err != nil {
+		return result, err
+	}
 	return result, tx.Commit()
 }
 
@@ -172,7 +183,7 @@ func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key st
 		return Product{}, err
 	}
 	id := core.ID()
-	_, err = tx.ExecContext(ctx, "INSERT INTO products(id,type,name,asset_key,wearable_key,description,coin_price,diamond_price,stock,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, input.Type, input.Name, input.AssetKey, input.WearableKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), now.UnixMilli())
+	_, err = tx.ExecContext(ctx, "INSERT INTO products(id,type,name,asset_key,wearable_key,character_key,description,coin_price,diamond_price,stock,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", id, input.Type, input.Name, input.AssetKey, input.WearableKey, input.CharacterKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), now.UnixMilli())
 	if err != nil {
 		return Product{}, err
 	}
@@ -210,7 +221,7 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 	}
 	oldItemKey := productIslandItemKey(current.AssetKey)
 	newItemKey := productIslandItemKey(input.AssetKey)
-	if ((oldItemKey != "" || newItemKey != "") && oldItemKey != newItemKey) || (current.Type == TypeWearable && input.Type == TypeWearable && current.WearableKey != input.WearableKey) {
+	if ((oldItemKey != "" || newItemKey != "") && oldItemKey != newItemKey) || (current.Type == TypeWearable && input.Type == TypeWearable && current.WearableKey != input.WearableKey) || (current.Type == TypeCharacter && input.Type == TypeCharacter && current.CharacterKey != input.CharacterKey) {
 		var sold bool
 		if err = tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM purchases WHERE product_id=?)", id).Scan(&sold); err != nil {
 			return Product{}, err
@@ -228,7 +239,7 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 			return Product{}, core.Fail(409, "PRODUCT_TYPE_LOCKED")
 		}
 	}
-	_, err = tx.ExecContext(ctx, "UPDATE products SET type=?,name=?,asset_key=?,wearable_key=?,description=?,coin_price=?,diamond_price=?,stock=?,enabled=?,version=version+1,updated_at=? WHERE id=?", input.Type, input.Name, input.AssetKey, input.WearableKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), id)
+	_, err = tx.ExecContext(ctx, "UPDATE products SET type=?,name=?,asset_key=?,wearable_key=?,character_key=?,description=?,coin_price=?,diamond_price=?,stock=?,enabled=?,version=version+1,updated_at=? WHERE id=?", input.Type, input.Name, input.AssetKey, input.WearableKey, input.CharacterKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), id)
 	if err != nil {
 		return Product{}, err
 	}

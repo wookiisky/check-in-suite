@@ -1,5 +1,7 @@
 {
   "title": "我的三维形象",
+  "characterTitle": "人物",
+  "sharedClothingHint": "人物使用相同体型，已购买的服装可以共用。切换人物后可重新选择服装。",
   "loading": "正在读取已保存外观…",
   "readRetry": "重新读取外观",
   "save": "保存外观",
@@ -11,6 +13,7 @@
   "previewLoading": "正在准备所选外观…",
   "previewLabel": "当前草稿的人物预览",
   "defaultOption": "{name}（默认）",
+  "initialFreeOption": "{name}（初始免费）",
   "additionalInstance": "{name} · {number}",
   "emptyOwned": "还没有这个部位的其他服装，默认款仍可使用。",
   "unavailableCharacter": "这个人物定义暂时不可用，请重新读取外观。",

@@ -1,0 +1,124 @@
+import { expect, test } from '@playwright/test';
+import type { components } from '../src/api/schema';
+import { loginMain, openAppearance, closeAppearance, selectShopCategory, purchaseProduct, shopAPI } from './shop-navigation';
+import shop from '../src/features/shop/content.json' with { type: 'json' };
+import appearance from '../src/features/shop/appearance-content.json' with { type: 'json' };
+import preview from '../src/features/character/character-verification-content.json' with { type: 'json' };
+
+type Appearance = components['schemas']['AppearanceState'];
+type Product = components['schemas']['Product'];
+type Task = components['schemas']['Task'];
+type Camp = components['schemas']['CampResponse'];
+
+// 两个浏览器项目各购买一个未拥有的真实人物，验证同一标准身体上的实际换装。
+test('真实购买人物后切换，并把人物服装用于默认人物且重开保持保存事实', async ({ page }, testInfo) => {
+  test.setTimeout(90_000);
+  const errors: string[] = [];
+  const consoleErrors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await loginMain(page);
+  // 登录前的会话探测会正常返回401；登录后的素材与业务流程必须没有控制台错误。
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  await expect(page.locator('.character3d-preview').first()).toHaveAttribute('data-character-status', 'ready');
+  const before = await shopAPI<Appearance>(page, '/appearance');
+  const defaultKey = before.default_character_key!;
+  const defaultCharacter = before.characters.find((item) => item.character_key === defaultKey)!;
+  expect(defaultCharacter).toBeDefined();
+  await shopAPI(page, '/appearance', 'PUT', { expected_version: before.version, character_key: defaultKey, hair_purchase_id: null, upper_purchase_id: null, lower_purchase_id: null, shoes_purchase_id: null });
+  const offers = await shopAPI<{ items: Product[] }>(page, '/products?type=character');
+  const offer = offers.items.find((item) => !item.owned && item.enabled && item.stock !== 0)!;
+  expect(offer, '每个浏览器项目需要一个尚未购买的正式人物').toBeDefined();
+  const definition = before.characters.find((item) => item.character_key === offer.character_key)!;
+  expect(definition.body_key).toBe(defaultCharacter.body_key);
+  expect(definition.rig_key).toBe(defaultCharacter.rig_key);
+
+  await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
+  const camp = await shopAPI<Camp>(page, '/camp');
+  const task = await shopAPI<Task>(page, '/management/tasks', 'POST', { category_id: null, name: `人物购买准备-${testInfo.project.name}`, icon_key: 'book-v1', coin_reward: Math.max(0, offer.coin_price + 100 - camp.wallet.coins), diamond_reward: Math.max(0, offer.diamond_price - camp.wallet.diamonds), daily_limit: 1, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true });
+  await shopAPI(page, '/checkins', 'POST', { expected_today: camp.today, task_id: task.id, expected_task_version: task.version, text: '', photo_media_id: null, audio_media_id: null });
+  // 记录留在隔离测试库维持真实余额，只停用任务以免影响其他场景的今日排期。
+  await shopAPI(page, `/management/tasks/${task.id}`, 'PATCH', { category_id: task.category_id, name: task.name, icon_key: task.icon_key, coin_reward: task.coin_reward, diamond_reward: task.diamond_reward, daily_limit: task.daily_limit, weekdays: task.weekdays, enabled: false, expected_version: task.version });
+  await shopAPI(page, '/management/lock', 'POST');
+  await page.reload();
+  await selectShopCategory(page, 'appearance', shop.types.character);
+  await page.getByLabel(shop.searchLabel, { exact: true }).fill(offer.name);
+  await page.getByRole('button', { name: shop.search, exact: true }).click();
+  await purchaseProduct(page, offer);
+  const purchased = await shopAPI<Appearance>(page, '/appearance');
+  const owned = purchased.character_inventory!.find((item) => item.character_key === definition.character_key)!;
+  expect(owned).toBeDefined();
+  expect(purchased.inventory.filter((item) => item.purchase_id === owned.purchase_id)).toHaveLength(4);
+
+  await openAppearance(page);
+  let dialog = page.getByRole('dialog', { name: appearance.title, exact: true });
+  await dialog.getByRole('group', { name: appearance.characterTitle, exact: true }).getByRole('radio', { name: definition.name, exact: true }).check();
+  await dialog.locator(`input[name="upper_purchase_id"][value="${defaultCharacter.defaults.upper}"]`).check();
+  await dialog.getByRole('button', { name: appearance.save, exact: true }).click();
+  await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
+  const switched = await shopAPI<Appearance>(page, '/appearance');
+  expect(switched.character_key).toBe(definition.character_key);
+  expect(switched.upper_free_wearable_key).toBe(defaultCharacter.defaults.upper);
+  expect(switched.upper_purchase_id).toBeNull();
+  await page.screenshot({ path: testInfo.outputPath('purchased-character.png'), fullPage: true });
+  await dialog.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('purchased-character-model.png') });
+  await closeAppearance(page);
+  await openAppearance(page);
+  dialog = page.getByRole('dialog', { name: appearance.title, exact: true });
+  await dialog.getByRole('group', { name: appearance.characterTitle, exact: true }).getByRole('radio', { name: defaultCharacter.name, exact: true }).check();
+  await dialog.locator(`input[name="upper_purchase_id"][value="${owned.purchase_id}"]`).check();
+  await dialog.getByRole('button', { name: appearance.save, exact: true }).click();
+  await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
+  const saved = await shopAPI<Appearance>(page, '/appearance');
+  expect(saved.character_key).toBe(defaultKey);
+  expect(saved.upper_purchase_id).toBe(owned.purchase_id);
+  await closeAppearance(page);
+  await openAppearance(page);
+  dialog = page.getByRole('dialog', { name: appearance.title, exact: true });
+  await expect(dialog.getByRole('group', { name: appearance.characterTitle, exact: true }).getByRole('radio', { name: defaultCharacter.name, exact: true })).toBeChecked();
+  await expect(dialog.locator(`input[name="upper_purchase_id"][value="${owned.purchase_id}"]`)).toBeChecked();
+  await expect(dialog.getByText(appearance.previewFailed, { exact: true })).toHaveCount(0);
+  await expect(dialog.getByText(appearance.previewLoading, { exact: true })).toHaveCount(0);
+  await page.screenshot({ path: testInfo.outputPath('shared-character-clothing.png'), fullPage: true });
+  await dialog.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('shared-character-clothing-model.png') });
+  expect(errors).toEqual([]);
+  expect(consoleErrors).toEqual([]);
+});
+
+// 原始动作仍由实际GLB中的clip驱动，只在独立检查页选中时临时加入准备资源。
+test('独立人物检查按需播放原始动作，切换与返回待机不修改保存外观', async ({ page }, testInfo) => {
+  const errors: string[] = [];
+  const consoleErrors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await loginMain(page);
+  await expect(page.locator('.character3d-preview').first()).toHaveAttribute('data-character-status', 'ready');
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  const state = await shopAPI<Appearance>(page, '/appearance');
+  const character = state.characters.find((item) => item.character_key === state.character_key)!;
+  const sourceAnimations = character.preview_animations ?? [];
+  expect(sourceAnimations.length, '完整素材目录必须登记原始动作').toBeGreaterThan(1);
+  const canonicalURLs = new Set([character.model_url, ...Object.values(character.animations).map((item) => item.url), ...state.wearables.map((item) => item.model_url)]);
+  const rawURLs = new Set(sourceAnimations.map((item) => item.url).filter((url) => !canonicalURLs.has(url)));
+  const requested = new Set<string>();
+  page.on('request', (request) => requested.add(new URL(request.url()).pathname));
+  await page.goto('/character-preview.html');
+  await expect(page.getByTestId('character-render-status')).toHaveText(preview.status.ready);
+  expect([...rawURLs].some((url) => requested.has(url))).toBe(false);
+  const first = sourceAnimations.find((item) => rawURLs.has(item.url)) ?? sourceAnimations[0]!;
+  const label = preview.sourceAction.replace('{clip}', first.clip);
+  const picker = page.getByLabel(preview.action, { exact: true });
+  const value = await picker.getByRole('option', { name: label, exact: true }).first().getAttribute('value');
+  await picker.selectOption(value!);
+  await expect(page.locator('.character3d-preview')).toHaveAttribute('data-character-action', '_preview');
+  await expect(page.getByTestId('character-render-status')).toHaveText(preview.status.ready);
+  expect([...rawURLs].filter((url) => requested.has(url))).toEqual(rawURLs.has(first.url) ? [first.url] : []);
+  await page.locator('.character3d-preview').screenshot({ path: testInfo.outputPath('source-character-animation.png') });
+  await picker.selectOption('idle');
+  await expect(page.locator('.character3d-preview')).toHaveAttribute('data-character-action', 'idle');
+  await expect(page.getByTestId('character-render-status')).toHaveText(preview.status.ready);
+  const after = await shopAPI<Appearance>(page, '/appearance');
+  expect(after.version).toBe(state.version);
+  expect(after.character_key).toBe(state.character_key);
+  expect(after.upper_purchase_id).toBe(state.upper_purchase_id);
+  expect(errors).toEqual([]);
+  expect(consoleErrors).toEqual([]);
+});

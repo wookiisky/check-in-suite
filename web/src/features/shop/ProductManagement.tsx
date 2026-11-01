@@ -10,14 +10,16 @@ import content from './content.json';
 import './shop.css';
 import { categoryLabel, itemCategory } from './shop-categories';
 import { ShopItemArtwork } from './ShopItemArtwork';
+import { useProductCatalog, type CatalogSearch } from './useProductCatalog';
+import { CatalogFilters } from './CatalogFilters';
 
 // 管理商品读取包括下架配置，删除只移除销售入口，历史所有权保留。
 export function ProductManagement({ client, session }: ShopProps) {
   const appearance = useAppearance();
   const catalog = appearance.snapshot;
-  const [products, setProducts] = useState<Product[]>([]);
+  const [search, setSearch] = useState<CatalogSearch>({ search: '', provider: '', packKey: '' });
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [assetLoading, setAssetLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [message, setMessage] = useState('');
@@ -25,19 +27,16 @@ export function ProductManagement({ client, session }: ShopProps) {
   const [editing, setEditing] = useState<Product | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Product | null>(null);
   const pending = pendingProducts.get(client);
+  const productCatalog = useProductCatalog(client, { filter: { group: 'all', category: '' }, search, revision, includeInactive: true });
+  const products = productCatalog.products;
+  const loading = assetLoading || productCatalog.loading;
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
+    setAssetLoading(true);
     setError(null);
-    void Promise.all([
-      client.request<{ items: Product[] }>('/products?include_inactive=true', {
-        signal: controller.signal,
-      }),
-      client.request<{ items: Asset[] }>('/assets', { signal: controller.signal }),
-    ])
-      .then(([productList, assetList]) => {
+    void client.request<{ items: Asset[] }>('/assets', { signal: controller.signal })
+      .then((assetList) => {
         if (!controller.signal.aborted) {
-          setProducts(productList.items);
           setAssets(assetList.items);
         }
       })
@@ -45,7 +44,7 @@ export function ProductManagement({ client, session }: ShopProps) {
         if (!controller.signal.aborted) setError(reason);
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) setAssetLoading(false);
       });
     return () => controller.abort();
   }, [client, revision]);
@@ -88,9 +87,9 @@ export function ProductManagement({ client, session }: ShopProps) {
           </button>
         </div>
       )}
-      {(error !== null || appearance.error !== null) && (
+      {(error !== null || productCatalog.error !== null || appearance.error !== null) && (
         <div role="alert">
-          <p className="shop-error">{shopError(error ?? appearance.error)}</p>
+          <p className="shop-error">{shopError(error ?? productCatalog.error ?? appearance.error)}</p>
           <button
             className="secondary"
             onClick={() => {
@@ -113,11 +112,12 @@ export function ProductManagement({ client, session }: ShopProps) {
       >
         {content.addProduct}
       </button>
+      <CatalogFilters value={search} facets={productCatalog.facets} onChange={setSearch} />
       {loading || appearance.loading && !catalog ? (
         <p role="status">{content.loading}</p>
       ) : (
         <div className="shop-product-list">
-          {products.length === 0 && <p>{content.emptyProducts}</p>}
+          {products.length === 0 && !productCatalog.cursor && <p>{content.emptyProducts}</p>}
           {products.map((item) => {
             const category = itemCategory(item, catalog?.wearables);
             return <article key={item.id} className="shop-product-row">
@@ -161,6 +161,7 @@ export function ProductManagement({ client, session }: ShopProps) {
           })}
         </div>
       )}
+      {productCatalog.cursor && <div className="shop-stack"><p>{content.moreHint}</p><button type="button" className="secondary" disabled={loading || productCatalog.loadingMore} onClick={() => void productCatalog.more()}>{productCatalog.loadingMore ? content.loading : content.more}</button></div>}
       {editing !== null && (
         <ProductEditor
           client={client}

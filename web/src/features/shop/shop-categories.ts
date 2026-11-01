@@ -1,10 +1,10 @@
 import type { Asset, CharacterDefinition, CharacterSlot, CharacterWearable, Product, Purchase } from './types';
 import content from './content.json';
 
-export type ShopCategory = CharacterSlot | 'title' | 'reward' | 'island';
+export type ShopCategory = CharacterSlot | 'character' | 'title' | 'reward' | 'island';
 
 // 商品用途由正式类型及服装定义决定，不从名称或素材key推测。
-export const wardrobeCategories: ShopCategory[] = ['hair', 'upper', 'lower', 'shoes', 'title'];
+export const wardrobeCategories: ShopCategory[] = ['character', 'hair', 'upper', 'lower', 'shoes', 'title'];
 export const shopCategories: ShopCategory[] = [...wardrobeCategories, 'reward', 'island'];
 
 // 四个槽位共用人物目录的稳定类型。
@@ -46,6 +46,6 @@ export function matchesCategory(item: Product | Purchase, filter: CategoryFilter
   if (filter.group === 'all') return true;
   const type = 'type_snapshot' in item ? item.type_snapshot : item.type;
   if (filter.group === 'island' || filter.group === 'reward') return type === filter.group;
-  if (type !== 'title' && type !== 'wearable') return false;
+  if (type !== 'character' && type !== 'title' && type !== 'wearable') return false;
   return !filter.category || itemCategory(item, wearables) === filter.category;
 }

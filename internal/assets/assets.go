@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"sync"
 
 	"github.com/wookiisky/check-in-suite/internal/core"
 )
@@ -23,6 +24,7 @@ const (
 	KindModel     Kind = "model"     // Versioned GLB geometry, not an image choice.
 	KindAnimation Kind = "animation" // Offline prepared GLB animation clips.
 	KindWearable  Kind = "wearable"  // Rendered thumbnail for a 3D wearable definition.
+	KindCharacter Kind = "character" // Rendered thumbnail for a complete standardized character.
 	KindIsland    Kind = "island"    // Controlled island construction thumbnail.
 	KindIcon      Kind = "icon"      // Task icon rendered in current and historical records.
 	KindTitle     Kind = "title"     // Emblem shown with the equipped title.
@@ -40,6 +42,10 @@ type Asset struct {
 	Format    string `json:"format,omitempty"`     // SVG by default; explicit PNG and WebP retain transparency.
 	SourceURL string `json:"source_url,omitempty"` // Official source or recorded derivative provenance.
 	License   string `json:"license,omitempty"`    // Resource-specific license; animation rights are separate.
+	Provider  string `json:"provider,omitempty"`   // Official provider used by catalog filters.
+	PackKey   string `json:"pack_key,omitempty"`   // Stable source-pack identity, separate from asset versions.
+	PackName  string `json:"pack_name,omitempty"`  // Official pack display name for catalog browsing.
+	Category  string `json:"category,omitempty"`   // Reviewed category of a complete independently usable item.
 }
 
 // extension keeps historical SVG metadata and filenames compatible.
@@ -79,31 +85,43 @@ var keyPattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,95}$`)
 // New binds the immutable asset store to a persistent directory without changing files.
 func New(directory string) *Service { return &Service{Directory: directory} }
 
-// catalog reads names and controlled identities from the embedded resource.
-func catalog() ([]Asset, error) {
+// builtinCatalog 同时保存不可变列表和按身份读取的索引。
+type builtinCatalog struct {
+	items []Asset          // 安装时使用的目录顺序。
+	byKey map[string]Asset // 常数时间的受控身份查找。
+}
+
+// loadBuiltinCatalog 只解析一次不可变目录，查找与遍历共用同一版本。
+var loadBuiltinCatalog = sync.OnceValues(func() (builtinCatalog, error) {
 	data, err := builtin.ReadFile("builtin/catalog.json")
 	if err != nil {
-		return nil, err
+		return builtinCatalog{}, err
 	}
 	var items []Asset
 	if err := json.Unmarshal(data, &items); err != nil {
-		return nil, err
+		return builtinCatalog{}, err
 	}
-	return items, nil
+	byKey := make(map[string]Asset, len(items))
+	for _, item := range items {
+		byKey[item.Key] = item
+	}
+	return builtinCatalog{items: items, byKey: byKey}, nil
+})
+
+// catalog 返回独立列表，调用者不能改变进程内的目录索引。
+func catalog() ([]Asset, error) {
+	catalog, err := loadBuiltinCatalog()
+	return append([]Asset(nil), catalog.items...), err
 }
 
 // Get returns a current built-in choice; persisted historical lookups use Service.Lookup.
 func Get(key string) (Asset, bool) {
-	items, err := catalog()
+	catalog, err := loadBuiltinCatalog()
 	if err != nil {
 		return Asset{}, false
 	}
-	for _, item := range items {
-		if item.Key == key {
-			return item, true
-		}
-	}
-	return Asset{}, false
+	item, ok := catalog.byKey[key]
+	return item, ok
 }
 
 // Valid checks the allowed business kind of a current built-in choice.
@@ -115,7 +133,7 @@ func (item Asset) validateBuiltinMetadata() error {
 		return fmt.Errorf("invalid controlled asset key %q", item.Key)
 	}
 	model := item.Kind == KindModel || item.Kind == KindAnimation
-	if model != (item.extension() == "glb") || (item.Kind == KindWearable && item.extension() != "png") {
+	if model != (item.extension() == "glb") || ((item.Kind == KindWearable || item.Kind == KindCharacter) && item.extension() != "png") {
 		return fmt.Errorf("controlled asset format does not match kind %q", item.Key)
 	}
 	return nil

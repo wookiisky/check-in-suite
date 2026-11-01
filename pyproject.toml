@@ -1,0 +1,12 @@
+[project]
+name = "check-in-suite-asset-tools"
+version = "0.1.0"
+description = "成长营地的离线素材检查与预览工具环境"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "pillow==13.0.0",
+]
+
+[tool.uv]
+# 素材脚本直接运行；应用发行包不包含 Python 项目或 Blender 依赖。
+package = false

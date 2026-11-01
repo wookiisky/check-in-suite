@@ -64,7 +64,7 @@ export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = 
     if (fatal) setCanvasGeneration((value) => value + 1);
     setFatal(false); setStatus({ phase: 'loading' }); setAttempt((value) => value + 1);
   };
-  return <section className={`character3d-preview ${className}`} aria-label={label} data-appearance-version={snapshot.version} data-character-key={draft?.character_key ?? snapshot.character_key} data-character-status={status.phase}>
+  return <section className={`character3d-preview ${className}`} aria-label={label} data-appearance-version={snapshot.version} data-character-key={draft?.character_key ?? snapshot.character_key} data-character-status={status.phase} data-character-action={action}>
     {!fatal && <CharacterCanvasBoundary key={canvasGeneration} onError={failed}>
       <Canvas orthographic shadows={{ type: PCFShadowMap }} dpr={[1, 1.5]} frameloop={stopped ? 'demand' : 'always'} camera={{ near: 0.1, far: 50 }} fallback={<p>{content.unsupported}</p>}>
         <PreviewEnvironment onError={failed} />

@@ -8,5 +8,5 @@ export function ShopItemArtwork({ item, className = 'shop-item-art', label }: {
   label?: string;
 }) {
   const key = 'asset_key_snapshot' in item ? item.asset_key_snapshot : 'asset_key' in item ? item.asset_key : item.key;
-  return <img className={className} src={assetURL(key)} alt={label ?? ''} />;
+  return <img className={className} src={assetURL(key)} alt={label ?? ''} loading="lazy" decoding="async" />;
 }

@@ -8,7 +8,8 @@
   "reload": "重新读取",
   "version": "已保存版本",
   "action": "人物动作",
+  "sourceAction": "原始动作 · {clip}",
   "preview": "已保存的人物外观",
   "status": { "loading": "正在准备人物", "ready": "人物已显示", "error": "人物暂时无法显示，可在预览中重试" },
-  "actions": { "idle": "待机", "walk": "行走", "run": "跑步", "sit": "坐下", "cheer": "抬手", "exercise": "运动" }
+  "actions": { "idle": "待机", "walk": "行走", "run": "跑步", "sit": "坐下", "cheer": "抬手", "exercise": "运动", "read": "阅读", "play": "玩球", "rest": "休息" }
 }

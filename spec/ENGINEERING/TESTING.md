@@ -14,13 +14,25 @@ source:
 - scripts/retarget-p0-mixamo.py
 - scripts/prepare-camp-assets.py
 - scripts/verify-3d-release.mjs
+- scripts/provider-character-assets.test.mjs
+- scripts/check-gltf-assets.mjs
+- scripts/preview-gltf-assets.py
+- scripts/render-gltf-previews.py
+- scripts/import-provider-assets.py
 tests:
 - scripts/check-spec.test.mjs
 - scripts/inspect-glb.test.mjs
 - scripts/p0-character-assets.test.mjs
 - scripts/retarget-p0-mixamo.test.mjs
 - internal/assets/camp_assets_test.go
+- internal/assets/provider_assets_test.go
+- scripts/provider-character-assets.test.mjs
+- web/e2e/provider-character.spec.ts
 - web/e2e/island-3d.spec.ts
+- scripts/check-gltf-assets.test.mjs
+- scripts/preview-gltf-assets.test.py
+- scripts/render-gltf-previews.test.py
+- scripts/import-provider-assets.test.py
 ---
 # 测试与验证
 
@@ -57,12 +69,17 @@ tests:
 | `npm run test:go` / `npm run test:race` | Go 测试及竞态检查 |
 | `npm run test:web` | 前端组件与状态逻辑测试 |
 | `npm run test:assets` | GLB 检查器与实际人物、换装和离线动作的二进制检查 |
+| `npm run test:asset-tools` | 锁定 Python 环境中的预览调度、缓存与静态物件增量加工检查，无需 Blender |
+| `npm run test:asset-renderer` | 本机 Blender 真实四视图、坐标、缩放及逐项失败恢复专项 |
+| `npm run assets:check` | 使用 Khronos Validator 只读检查当前正式 GLB，报告错误与警告 |
 | `npm run test:deploy` | 构建校验清单、部署编排及发布脚本测试 |
 | `npm run test:e2e` | 桌面 Chromium 和 iPhone 14 尺寸 WebKit 的浏览器流程 |
 | `npm run build` | 类型检查和前后端构建 |
 | `npm run verify` | 全面验证入口，含竞态检查、构建和浏览器流程 |
 
 业务修改先写能失败的目标测试，再实现并运行所需检查。纯文档迁移通常只运行 `check:spec`，无需完整 `verify`。Vite 构建只证明可打包，TypeScript 与 OpenAPI 检查有各自职责。
+
+素材工具的安装、报告与预览入口见[运行手册](OPERATIONS.md#素材工具环境检查与预览)。`npm test` 和 `verify` 包含无需 Blender 的 Python 工具测试，需要先运行 `uv sync --locked`；真实 Blender 专项按需单独执行，没有 Blender 时会标记跳过，不能记为真实渲染通过。预览调度测试使用独立进程替身及实际 PNG 验证缓存、输入变动、部分失败和恢复；真实 Blender 专项才证明模型能被导入并生成四视图。增量加工测试使用序列化 GLB/glTF、实际外链文件和暂存字节，验证依赖变化、缓存损坏及失败后重建；它不代表已重新加工全部候选。
 
 Playwright 用独立 API、前端端口和临时数据库，不复用日常开发服务；配置入口是 `playwright.config.ts`。首次运行前执行 `npx playwright install chromium webkit`。端口冲突时使用隔离配置，不停止未知服务或复用其数据。
 

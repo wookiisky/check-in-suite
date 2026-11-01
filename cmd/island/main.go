@@ -135,10 +135,16 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 	if err := artwork.Install(); err != nil {
 		return err
 	}
-	if err := shop.SeedWearableProducts(startupContext, db, accounts.Now().UnixMilli()); err != nil {
+	// 素材安装是本地文件操作，不能消耗后续数据库种子的请求时限。
+	seedContext, cancelSeed := context.WithTimeout(ctx, cfg.HTTPTimeout)
+	defer cancelSeed()
+	if err := shop.SeedCharacterProducts(seedContext, db, accounts.Now().UnixMilli()); err != nil {
 		return err
 	}
-	if err := shop.SeedSpatialProducts(startupContext, db, accounts.Now().UnixMilli()); err != nil {
+	if err := shop.SeedWearableProducts(seedContext, db, accounts.Now().UnixMilli()); err != nil {
+		return err
+	}
+	if err := shop.SeedSpatialProducts(seedContext, db, accounts.Now().UnixMilli()); err != nil {
 		return err
 	}
 	application.RegisterAssets(artwork)

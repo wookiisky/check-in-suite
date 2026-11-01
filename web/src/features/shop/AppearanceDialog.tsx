@@ -5,7 +5,7 @@ import type { components } from '../../api/schema';
 import { FieldError } from '../../components/FormFeedback';
 import { Modal } from '../../components/Modal';
 import { CharacterPreview3D } from '../character/CharacterPreview3D';
-import { draftFromAppearance } from '../character/character3d-appearance';
+import { draftFromAppearance, wearableFitsCharacter } from '../character/character3d-appearance';
 import type { AppearanceDraft, CharacterLoadStatus } from '../character/character3d-appearance';
 import { shopError, uncertainResult } from './helpers';
 import { useReducedMotion } from './useReducedMotion';
@@ -24,29 +24,29 @@ interface PendingAppearance {
 }
 const pendingAppearances = new WeakMap<AppearanceClient, PendingAppearance>();
 const slots = [
-  { slot: 'hair', field: 'hair_purchase_id' },
-  { slot: 'upper', field: 'upper_purchase_id' },
-  { slot: 'lower', field: 'lower_purchase_id' },
-  { slot: 'shoes', field: 'shoes_purchase_id' },
+  { slot: 'hair', field: 'hair_purchase_id', freeField: 'hair_free_wearable_key' },
+  { slot: 'upper', field: 'upper_purchase_id', freeField: 'upper_free_wearable_key' },
+  { slot: 'lower', field: 'lower_purchase_id', freeField: 'lower_free_wearable_key' },
+  { slot: 'shoes', field: 'shoes_purchase_id', freeField: 'shoes_free_wearable_key' },
 ] as const;
 type Slot = typeof slots[number]['slot'];
 
 // 选择字段的逐项比较不依赖 JSON 键顺序，也不混入目录或版本字段。
 function sameDraft(first: AppearanceDraft, second: AppearanceDraft) {
-  return first.character_key === second.character_key && slots.every(({ field }) => first[field] === second[field]);
+  return first.character_key === second.character_key && slots.every(({ field, freeField }) => first[field] === second[field] && (first[freeField] ?? null) === (second[freeField] ?? null));
 }
 
 // 结果核对比较实际选择，不要求“本请求回执”这一接口并未提供的能力。
 function draftFromInput(input: AppearanceSave): AppearanceDraft {
-  return { character_key: input.character_key, hair_purchase_id: input.hair_purchase_id, upper_purchase_id: input.upper_purchase_id, lower_purchase_id: input.lower_purchase_id, shoes_purchase_id: input.shoes_purchase_id };
+  return { character_key: input.character_key, hair_purchase_id: input.hair_purchase_id, upper_purchase_id: input.upper_purchase_id, lower_purchase_id: input.lower_purchase_id, shoes_purchase_id: input.shoes_purchase_id, ...Object.fromEntries(slots.flatMap(({ freeField }) => input[freeField] ? [[freeField, input[freeField]]] : [])) };
 }
 
 // 名称来自定义，实例选择保留购买身份，不根据名称或资源前缀推断部位。
 function partName(snapshot: AppearanceState, slot: Slot): string {
   const character = snapshot.characters.find((candidate) => candidate.character_key === snapshot.character_key);
-  const field = slots.find((candidate) => candidate.slot === slot)!.field;
+  const { field, freeField } = slots.find((candidate) => candidate.slot === slot)!;
   const id = snapshot[field];
-  const key = id === null ? character?.defaults[slot] : snapshot.inventory.find((item) => item.purchase_id === id)?.wearable_key;
+  const key = id === null ? snapshot[freeField] ?? character?.defaults[slot] : snapshot.inventory.find((item) => item.purchase_id === id && snapshot.wearables.find((definition) => definition.wearable_key === item.wearable_key)?.slot === slot)?.wearable_key;
   return snapshot.wearables.find((item) => item.wearable_key === key)?.name ?? content.unavailablePart;
 }
 
@@ -111,6 +111,8 @@ export function AppearanceDialog({ client, onClose, onSaved, reduceMotion = fals
   const dirty = Boolean(snapshot && draft && !sameDraft(draftFromAppearance(snapshot), draft));
   const busy = saving || checking;
   const character = snapshot?.characters.find((item) => item.character_key === draft?.character_key);
+  const ownedCharacters = new Set(snapshot?.character_inventory?.map((item) => item.character_key));
+  const selectableCharacters = snapshot?.characters.filter((item) => item.character_key === (snapshot.default_character_key ?? snapshot.character_key) || ownedCharacters.has(item.character_key)) ?? [];
 
   // 关闭只处理本地草稿；不取消已经提交的写请求，也不误报其结果。
   function close() {
@@ -122,7 +124,25 @@ export function AppearanceDialog({ client, onClose, onSaved, reduceMotion = fals
   // 每次新选择只改草稿，仍允许模型加载中继续选择下一套。
   function choose(field: typeof slots[number]['field'], purchaseID: string | null) {
     if (busy || pending) return;
-    setDraft((current) => current ? { ...current, [field]: purchaseID } : current);
+    const freeField = slots.find((item) => item.field === field)!.freeField;
+    setDraft((current) => {
+      if (!current) return current;
+      const next = { ...current, [field]: purchaseID }; delete next[freeField]; return next;
+    });
+    setSaved(false); setConfirmed(false); setError(null);
+  }
+
+  // 免费初始衣物用定义身份保存，不伪造订单，也不能与购买实例同时选择。
+  function chooseFree(slot: typeof slots[number], wearableKey: string) {
+    if (busy || pending) return;
+    setDraft((current) => current ? { ...current, [slot.field]: null, [slot.freeField]: wearableKey } : current);
+    setSaved(false); setConfirmed(false); setError(null);
+  }
+
+  // 换人物先展示其默认整套；已购买的共用服装仍可在各槽重新选择。
+  function chooseCharacter(key: string) {
+    if (busy || pending || !selectableCharacters.some((item) => item.character_key === key)) return;
+    setDraft({ character_key: key, hair_purchase_id: null, upper_purchase_id: null, lower_purchase_id: null, shoes_purchase_id: null });
     setSaved(false); setConfirmed(false); setError(null);
   }
 
@@ -185,21 +205,37 @@ export function AppearanceDialog({ client, onClose, onSaved, reduceMotion = fals
           <div className="appearance-preview"><CharacterPreview3D snapshot={snapshot} draft={draft} paused={reduced} onStatus={setPreview} label={content.previewLabel} /></div>
           <div className="appearance-slots">
             {!character && <p role="alert">{content.unavailableCharacter}</p>}
-            {slots.map(({ slot, field }) => {
+            <fieldset disabled={busy || Boolean(pending)}>
+              <legend>{content.characterTitle}</legend>
+              <div className="appearance-options">
+                {selectableCharacters.map((item) => <label key={item.character_key} className={`appearance-option ${draft.character_key === item.character_key ? 'appearance-selected' : ''}`}>
+                  <input type="radio" name="character_key" value={item.character_key} aria-label={item.name} checked={draft.character_key === item.character_key} onChange={() => chooseCharacter(item.character_key)} />
+                  {item.thumbnail_url && <img src={item.thumbnail_url} alt="" loading="lazy" decoding="async" />}
+                  <span>{item.name}</span>
+                </label>)}
+              </div>
+              <p className="appearance-hint">{content.sharedClothingHint}</p>
+              <FieldError error={error} field="character_key" />
+            </fieldset>
+            {slots.map((configuration) => {
+              const { slot, field, freeField } = configuration;
               const defaultWearable = snapshot.wearables.find((item) => item.wearable_key === character?.defaults[slot]);
+              const freeCharacter = snapshot.characters.find((item) => item.character_key === snapshot.default_character_key);
+              const freeWearable = snapshot.wearables.find((item) => item.wearable_key === freeCharacter?.defaults[slot]);
               const owned = snapshot.inventory.flatMap((item) => {
                 const wearable = snapshot.wearables.find((candidate) => candidate.wearable_key === item.wearable_key);
-                return wearable && wearable.slot === slot && wearable.character_key === character?.character_key && wearable.rig_key === character.rig_key ? [{ item, wearable }] : [];
+                return wearable && character && wearable.slot === slot && wearableFitsCharacter(wearable, character, snapshot.characters) ? [{ item, wearable }] : [];
               });
               const instances = new Map<string, number>();
               return <fieldset key={slot} disabled={busy || Boolean(pending) || !character}>
                 <legend>{content.slots[slot]}</legend>
                 <div className="appearance-options">
-                  {defaultWearable && <AppearanceOption name={content.defaultOption.replace('{name}', defaultWearable.name)} wearable={defaultWearable} selected={draft[field] === null} group={field} onChoose={() => choose(field, null)} />}
+                  {defaultWearable && <AppearanceOption name={content.defaultOption.replace('{name}', defaultWearable.name)} wearable={defaultWearable} selected={draft[field] === null && !draft[freeField]} group={field} onChoose={() => choose(field, null)} />}
+                  {freeWearable && freeWearable.wearable_key !== defaultWearable?.wearable_key && character && wearableFitsCharacter(freeWearable, character, snapshot.characters) && <AppearanceOption name={content.initialFreeOption.replace('{name}', freeWearable.name)} wearable={freeWearable} value={freeWearable.wearable_key} selected={draft[field] === null && draft[freeField] === freeWearable.wearable_key} group={field} onChoose={() => chooseFree(configuration, freeWearable.wearable_key)} />}
                   {owned.map(({ item, wearable }) => {
                     const count = (instances.get(wearable.wearable_key) ?? 0) + 1; instances.set(wearable.wearable_key, count);
                     const name = count === 1 ? wearable.name : content.additionalInstance.replace('{name}', wearable.name).replace('{number}', String(count));
-                    return <AppearanceOption key={item.purchase_id} name={name} wearable={wearable} selected={draft[field] === item.purchase_id} group={field} onChoose={() => choose(field, item.purchase_id)} />;
+                    return <AppearanceOption key={`${item.purchase_id}:${wearable.wearable_key}`} name={name} wearable={wearable} selected={draft[field] === item.purchase_id} group={field} value={item.purchase_id} onChoose={() => choose(field, item.purchase_id)} />;
                   })}
                 </div>
                 {!owned.length && <p className="appearance-hint">{content.emptyOwned}</p>}
@@ -214,7 +250,7 @@ export function AppearanceDialog({ client, onClose, onSaved, reduceMotion = fals
         {conflict && <div className="appearance-recovery"><p role="alert">{content.conflict}</p>{!latest && <button disabled={busy} onClick={() => void readLatest()}>{checking ? content.checking : content.readLatest}</button>}</div>}
         {pending && !saving && <div className="appearance-recovery"><p role="alert">{retryOriginal ? content.notConfirmed : content.uncertain}</p><button disabled={busy} onClick={() => void readLatest()}>{checking ? content.checking : content.checkResult}</button></div>}
         {latest && <section className="appearance-recovery" aria-label={content.latestTitle}>
-          <h3>{content.latestTitle}</h3><dl>{slots.map(({ slot }) => <div key={slot}><dt>{content.slots[slot]}</dt><dd>{partName(latest, slot)}</dd></div>)}</dl>
+          <h3>{content.latestTitle}</h3><dl><div><dt>{content.characterTitle}</dt><dd>{latest.characters.find((item) => item.character_key === latest.character_key)?.name ?? content.unavailablePart}</dd></div>{slots.map(({ slot }) => <div key={slot}><dt>{content.slots[slot]}</dt><dd>{partName(latest, slot)}</dd></div>)}</dl>
           <div className="button-row"><button disabled={busy} onClick={() => useCurrent(true)}>{content.keepDraft}</button><button className="secondary" disabled={busy} onClick={() => useCurrent(false)}>{content.useLatest}</button></div>
         </section>}
         <div className="appearance-actions"><button disabled={busy || conflict || !character || !dirty || preview.phase !== 'ready' || Boolean(pending && !retryOriginal)} onClick={() => void save()}>{saving ? content.saving : pending ? content.retryOriginal : content.save}</button><button className="secondary" disabled={busy} onClick={close}>{content.cancel}</button></div>
@@ -224,6 +260,6 @@ export function AppearanceDialog({ client, onClose, onSaved, reduceMotion = fals
 }
 
 // 预览图只是目录缩略图；人物 Canvas 在旁边统一创建，不为每张卡另建。
-function AppearanceOption({ name, wearable, selected, group, onChoose }: { name: string; wearable: Wearable; selected: boolean; group: string; onChoose: () => void }) {
-  return <label className={`appearance-option ${selected ? 'appearance-selected' : ''}`}><input type="radio" name={group} aria-label={name} checked={selected} onChange={onChoose} /><img src={wearable.thumbnail_url} alt="" /><span>{name}</span></label>;
+function AppearanceOption({ name, wearable, selected, group, value = '', onChoose }: { name: string; wearable: Wearable; selected: boolean; group: string; value?: string; onChoose: () => void }) {
+  return <label className={`appearance-option ${selected ? 'appearance-selected' : ''}`}><input type="radio" name={group} value={value} aria-label={name} checked={selected} onChange={onChoose} /><img src={wearable.thumbnail_url} alt="" loading="lazy" decoding="async" /><span>{name}</span></label>;
 }

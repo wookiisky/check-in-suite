@@ -1,0 +1,63 @@
+.spatial-inventory-filters {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.spatial-inventory-filters label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  color: var(--spatial-ink);
+  font-size: 14px;
+}
+
+.spatial-inventory-search,
+.spatial-inventory-pack {
+  grid-column: 1 / -1;
+}
+
+.spatial-inventory-filters input,
+.spatial-inventory-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--spatial-line);
+  border-radius: 12px;
+  color: var(--spatial-ink);
+  background: white;
+  font: inherit;
+}
+
+.spatial-inventory-results {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.spatial-inventory-results > small {
+  color: var(--spatial-ink);
+}
+
+.spatial-inventory-results > button {
+  min-height: 44px;
+  padding: 6px 10px;
+}
+
+.spatial-inventory-more {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+.spatial-item strong {
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,1449 @@
+{
+  "target_count": 100,
+  "scope": "本次仅发布适合海边营地与家庭生活的100件代表性完整地面摆设；其余完整物件保留本地库。",
+  "unselected_reason": "已整理为完整物件，本次未选入；为控制数量并减少同类近款，保留本地库供后续选择。",
+  "csv_headers": {
+    "provider": "来源",
+    "pack_key": "素材包",
+    "model_id": "原模型名称",
+    "name": "物件名称",
+    "category": "类别",
+    "selected": "本次选入",
+    "source_url": "官方来源",
+    "selection_reason": "本次选择说明",
+    "library_model_path": "本地模型路径",
+    "library_thumbnail_path": "本地缩略图路径"
+  },
+  "items": [
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "bedBunk",
+      "name": "双层床",
+      "category": "furniture",
+      "reason": "补充儿童房的上下铺布置，与已有单人床用途不同。",
+      "coin_price": 55,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为1.14、1.70、2.19米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "bedDouble",
+      "name": "双人床",
+      "category": "furniture",
+      "reason": "补充双人卧室布置，与已有单人床和儿童上下铺区分。",
+      "coin_price": 60,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为1.91、0.75、2.25米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "coatRackStanding",
+      "name": "落地衣帽架",
+      "category": "furniture",
+      "reason": "补充玄关的独立落地收纳。",
+      "coin_price": 25,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.55、1.54、0.55米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "washer",
+      "name": "洗衣机",
+      "category": "furniture",
+      "reason": "补充家庭洗衣区的落地家电。",
+      "coin_price": 50,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.78、0.94、0.78米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "dryer",
+      "name": "烘干机",
+      "category": "furniture",
+      "reason": "补充洗衣区的衣物烘干设备展示。",
+      "coin_price": 50,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.78、0.94、0.76米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "bathtub",
+      "name": "浴缸",
+      "category": "furniture",
+      "reason": "补充区别于已有淋浴间的浴室布置。",
+      "coin_price": 55,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为2.38、0.84、1.12米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "kitchenStoveElectric",
+      "name": "电灶与烤箱",
+      "category": "furniture",
+      "reason": "补充厨房中可以独立落地的烹饪设备。",
+      "coin_price": 45,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.86、0.90、0.90米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "kitchenBar",
+      "name": "早餐吧台",
+      "category": "furniture",
+      "reason": "补充家庭早餐区与开放厨房的独立吧台。",
+      "coin_price": 40,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.86、0.84、0.42米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "sideTableDrawers",
+      "name": "床头抽屉柜",
+      "category": "furniture",
+      "reason": "补充卧室床旁的独立小柜。",
+      "coin_price": 25,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为1.07、0.77、0.44米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "loungeChairRelax",
+      "name": "休闲躺椅",
+      "category": "furniture",
+      "reason": "补充区别于餐椅和书桌椅的放松座椅。",
+      "coin_price": 35,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.98、1.26、1.35米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "stoolBar",
+      "name": "高脚凳",
+      "category": "furniture",
+      "reason": "补充早餐吧台配套座椅。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.53、0.87、0.46米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "bookcaseOpen",
+      "name": "开放书架",
+      "category": "furniture",
+      "reason": "补充区别于已有封闭储物柜的书籍展示空间。",
+      "coin_price": 35,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.80、1.76、0.50米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "rugDoormat",
+      "name": "门口地垫",
+      "category": "decoration",
+      "reason": "补充主屋入口的落地软装。",
+      "coin_price": 10,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.86、0.02、0.47米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "rugRound",
+      "name": "圆地毯",
+      "category": "decoration",
+      "reason": "补充客厅中央的落地软装，与入口地垫区分。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为1.84、0.02、1.84米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "speaker",
+      "name": "落地音箱",
+      "category": "furniture",
+      "reason": "补充家庭影音角的独立音箱展示。",
+      "coin_price": 30,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.30、1.27、0.30米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "trashcan",
+      "name": "室内垃圾桶",
+      "category": "decoration",
+      "reason": "补充室内清洁配套。",
+      "coin_price": 15,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.42、0.86、0.47米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-market",
+      "model_id": "freezer",
+      "name": "卧式冷柜",
+      "category": "furniture",
+      "reason": "补充家庭或小卖部的落地冷冻设备，与已有家用冰箱区分。",
+      "coin_price": 45,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为1.60、0.70、1.20米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-market",
+      "model_id": "shelf-boxes",
+      "name": "商品货架",
+      "category": "furniture",
+      "reason": "补充完整小卖部货架的静态陈列。",
+      "coin_price": 35,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为1.60、1.70、1.40米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-market",
+      "model_id": "bottle-return",
+      "name": "饮料瓶回收机",
+      "category": "furniture",
+      "reason": "补充公共区域的独立回收设施。",
+      "coin_price": 40,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为0.90、2.19、0.96米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "model_id": "vending-machine",
+      "name": "自动售货机",
+      "category": "furniture",
+      "reason": "补充营地公共区的落地售货设施展示。",
+      "coin_price": 45,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 2.4,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为1.20、1.80、1.14米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "model_id": "ticket-machine",
+      "name": "自助售票机",
+      "category": "furniture",
+      "reason": "补充公共活动区的完整落地配套展示。",
+      "coin_price": 35,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为0.80、1.85、0.79米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "model_id": "arcade-machine",
+      "name": "游戏街机",
+      "category": "furniture",
+      "reason": "补充家庭游戏角的完整落地设备，仅作静态陈设。",
+      "coin_price": 40,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2.4,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为0.96、1.74、1.29米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "model_id": "claw-machine",
+      "name": "抓娃娃机",
+      "category": "furniture",
+      "reason": "补充游戏角的完整娃娃机外观，仅作静态陈设。",
+      "coin_price": 45,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为1.31、1.90、1.39米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "model_id": "air-hockey",
+      "name": "气垫球桌",
+      "category": "furniture",
+      "reason": "补充室内活动室的独立落地球桌，仅作静态陈设。",
+      "coin_price": 50,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 1.5,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为1.50、0.75、1.05米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "model_id": "basketball-game",
+      "name": "投篮机",
+      "category": "furniture",
+      "reason": "补充室内运动角的完整设备，仅作静态陈设。",
+      "coin_price": 45,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2.5,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为1.63、2.00、2.53米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "model_id": "dance-machine",
+      "name": "跳舞机",
+      "category": "furniture",
+      "reason": "补充室内活动室的完整踏板设备，仅作静态陈设。",
+      "coin_price": 45,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为1.45、1.90、2.05米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "model_id": "pinball",
+      "name": "弹珠台",
+      "category": "furniture",
+      "reason": "补充区别于电子街机的完整落地玩具台，仅作静态陈设。",
+      "coin_price": 40,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 1.2,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为0.60、0.89、0.90米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arcade",
+      "model_id": "prize-wheel",
+      "name": "幸运转盘",
+      "category": "decoration",
+      "reason": "补充公共活动区的独立落地转盘，仅作静态陈设。",
+      "coin_price": 25,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为1.20、1.70、0.60米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-skate",
+      "model_id": "half-pipe",
+      "name": "滑板弧面坡道",
+      "category": "decoration",
+      "reason": "补充带完整底座的户外滑板坡道，仅作静态运动器材陈设。",
+      "coin_price": 45,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为2.00、1.60、2.00米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-skate",
+      "model_id": "rail-high",
+      "name": "滑板磨杆",
+      "category": "decoration",
+      "reason": "补充带完整支腿的滑板运动器材，与建筑栏杆拼件区分。",
+      "coin_price": 25,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1,
+      "scale_reason": "保留运动器材或地面玩具的原尺寸，不按人物高度自动放大。 发布宽、高、深约为0.11、0.45、1.00米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-skate",
+      "model_id": "skateboard",
+      "name": "滑板",
+      "category": "vehicle",
+      "reason": "补充海边运动主题的完整滑板展示。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 1,
+      "scale_reason": "保留运动器材或地面玩具的原尺寸，不按人物高度自动放大。 发布宽、高、深约为0.32、0.18、0.69米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-skate",
+      "model_id": "scooter",
+      "name": "滑板车",
+      "category": "vehicle",
+      "reason": "补充与滑板不同的完整两轮运动器材展示。",
+      "coin_price": 30,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为0.65、0.88、1.38米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "racing-kit",
+      "model_id": "grandStandCovered",
+      "name": "遮阳看台",
+      "category": "building",
+      "reason": "补充户外运动区的完整带顶看台。",
+      "coin_price": 55,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 3,
+      "scale_reason": "按完整户外设施调整体量，避免整栋建筑或棚顶低于标准人物。 发布宽、高、深约为3.00、3.56、3.06米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "city-kit-roads",
+      "model_id": "traffic-light",
+      "name": "交通信号灯",
+      "category": "decoration",
+      "reason": "补充营地入口或交通主题区的完整落地灯柱。",
+      "coin_price": 25,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 6,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为0.71、3.09、0.54米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "city-kit-roads",
+      "model_id": "construction-cone",
+      "name": "交通锥",
+      "category": "decoration",
+      "reason": "补充完整可独立落地的交通配套，与道路拼片区分。",
+      "coin_price": 10,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 5,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为0.38、0.47、0.38米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "city-kit-roads",
+      "model_id": "dumpster",
+      "name": "户外垃圾箱",
+      "category": "decoration",
+      "reason": "补充户外公共清洁设施，与室内小垃圾桶区分。",
+      "coin_price": 25,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 4,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为1.10、0.84、1.48米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "model_id": "sedan",
+      "name": "家庭轿车",
+      "category": "vehicle",
+      "reason": "补充营地入口的家庭车辆停放展示。",
+      "coin_price": 45,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.4,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为2.10、1.82、3.57米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "model_id": "ambulance",
+      "name": "救护车",
+      "category": "vehicle",
+      "reason": "补充公共救护主题的完整车辆展示。",
+      "coin_price": 50,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.4,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为2.10、2.52、4.55米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "model_id": "firetruck",
+      "name": "消防车",
+      "category": "vehicle",
+      "reason": "补充消防主题的完整车辆展示，不增加驾驶或救援玩法。",
+      "coin_price": 55,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.4,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为2.10、2.38、4.76米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "model_id": "police",
+      "name": "警车",
+      "category": "vehicle",
+      "reason": "补充公共服务主题的完整车辆展示。",
+      "coin_price": 50,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.4,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为2.10、1.82、4.34米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "model_id": "garbage-truck",
+      "name": "垃圾清运车",
+      "category": "vehicle",
+      "reason": "补充公共清洁主题的专用车辆展示。",
+      "coin_price": 55,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.4,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为2.24、2.24、4.83米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "model_id": "delivery",
+      "name": "配送货车",
+      "category": "vehicle",
+      "reason": "补充区别于家庭轿车的配送车辆展示。",
+      "coin_price": 45,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.4,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为2.10、2.31、4.55米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "car-kit",
+      "model_id": "tractor",
+      "name": "农用拖拉机",
+      "category": "vehicle",
+      "reason": "补充营地劳动主题的完整车辆展示。",
+      "coin_price": 45,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.3,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为1.74、2.08、2.86米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-characters",
+      "model_id": "wheelchair",
+      "name": "手动轮椅",
+      "category": "vehicle",
+      "reason": "补充无障碍生活主题的完整落地器具展示。",
+      "coin_price": 30,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为1.00、0.99、1.16米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "train-kit",
+      "model_id": "train-tram-classic",
+      "name": "观光电车",
+      "category": "vehicle",
+      "reason": "补充海边步道主题的完整车厢展示，不依赖铁路拼片。",
+      "coin_price": 60,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.4,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为1.75、3.53、3.66米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "nature-kit",
+      "model_id": "canoe",
+      "name": "独木舟",
+      "category": "vehicle",
+      "reason": "补充可在沙滩停放展示的完整轻型小艇。",
+      "coin_price": 35,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 3,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为0.90、0.55、3.45米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "watercraft-kit",
+      "model_id": "boat-sail-a",
+      "name": "小帆船",
+      "category": "vehicle",
+      "reason": "补充可在沙滩停放展示的完整帆船，与独木舟区分。",
+      "coin_price": 50,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为1.78、4.74、3.77米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "watercraft-kit",
+      "model_id": "boat-fishing-small",
+      "name": "小渔船",
+      "category": "vehicle",
+      "reason": "补充海边生活主题的完整渔船，作为岸上停放陈设。",
+      "coin_price": 50,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为1.78、2.60、3.87米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "watercraft-kit",
+      "model_id": "boat-speed-a",
+      "name": "快艇",
+      "category": "vehicle",
+      "reason": "补充与帆船及渔船用途不同的完整快艇，作为岸上停放陈设。",
+      "coin_price": 50,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为1.78、1.50、3.37米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "model_id": "animal-cat",
+      "name": "猫咪摆件",
+      "category": "nature",
+      "reason": "补充常见家庭宠物主题的完整动物摆件。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "作为落地动物摆件保留完整造型，缩为适合家庭营地的陈设体量。 发布宽、高、深约为0.50、0.68、0.72米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "model_id": "animal-dog",
+      "name": "小狗摆件",
+      "category": "nature",
+      "reason": "补充与猫咪不同的常见家庭宠物摆件。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "作为落地动物摆件保留完整造型，缩为适合家庭营地的陈设体量。 发布宽、高、深约为0.50、0.63、0.60米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "model_id": "animal-bunny",
+      "name": "兔子摆件",
+      "category": "nature",
+      "reason": "补充儿童营地常见的小动物摆件。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "作为落地动物摆件保留完整造型，缩为适合家庭营地的陈设体量。 发布宽、高、深约为0.50、0.80、0.53米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "model_id": "animal-crab",
+      "name": "螃蟹摆件",
+      "category": "nature",
+      "reason": "补充与海边环境直接相关的完整动物摆件。",
+      "coin_price": 20,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "作为落地动物摆件保留完整造型，缩为适合家庭营地的陈设体量。 发布宽、高、深约为0.93、0.57、0.54米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "model_id": "animal-parrot",
+      "name": "鹦鹉摆件",
+      "category": "nature",
+      "reason": "补充海边热带主题的完整鸟类摆件。",
+      "coin_price": 25,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "作为落地动物摆件保留完整造型，缩为适合家庭营地的陈设体量。 发布宽、高、深约为0.88、0.67、0.76米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "model_id": "animal-penguin",
+      "name": "企鹅摆件",
+      "category": "nature",
+      "reason": "补充完整海洋动物摆件，与家养动物区分。",
+      "coin_price": 25,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "作为落地动物摆件保留完整造型，缩为适合家庭营地的陈设体量。 发布宽、高、深约为0.88、0.64、0.54米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "model_id": "animal-beaver",
+      "name": "河狸摆件",
+      "category": "nature",
+      "reason": "补充水岸自然主题的完整动物摆件。",
+      "coin_price": 25,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "作为落地动物摆件保留完整造型，缩为适合家庭营地的陈设体量。 发布宽、高、深约为0.50、0.60、0.73米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "cube-pets",
+      "model_id": "animal-deer",
+      "name": "小鹿摆件",
+      "category": "nature",
+      "reason": "补充营地林边主题的完整动物摆件。",
+      "coin_price": 25,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "作为落地动物摆件保留完整造型，缩为适合家庭营地的陈设体量。 发布宽、高、深约为0.62、0.80、0.62米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "mini-arena",
+      "model_id": "statue",
+      "name": "石雕像",
+      "category": "decoration",
+      "reason": "补充公共庭院中可独立落地的完整雕像。",
+      "coin_price": 30,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.3,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为0.91、1.74、0.91米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "city-kit-industrial",
+      "model_id": "water-tower",
+      "name": "供水塔",
+      "category": "building",
+      "reason": "补充公共配套主题的完整供水建筑，不使用分离塔身零件。",
+      "coin_price": 55,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 2.8,
+      "scale_reason": "按完整户外设施调整体量，避免整栋建筑或棚顶低于标准人物。 发布宽、高、深约为2.39、6.00、2.33米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "coaster-kit",
+      "model_id": "stall-toilets",
+      "name": "公共卫生间",
+      "category": "building",
+      "reason": "补充户外公共区域的完整卫生间建筑，与室内马桶物件区分。",
+      "coin_price": 50,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 4.5,
+      "scale_reason": "按完整户外设施调整体量，避免整栋建筑或棚顶低于标准人物。 发布宽、高、深约为4.50、6.30、4.77米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-forest",
+      "model_id": "Tree_1_A_Color1",
+      "name": "阔叶树",
+      "category": "nature",
+      "reason": "补充可直接种植展示的阔叶乔木，区别于已有椰树。",
+      "coin_price": 30,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1,
+      "scale_reason": "复核后保留原有尺寸，与营地人物及其他物件比例协调。 发布宽、高、深约为3.18、4.16、3.25米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-forest",
+      "model_id": "Tree_4_A_Color1",
+      "name": "松树",
+      "category": "nature",
+      "reason": "补充常绿针叶树，丰富营地的树木种类。",
+      "coin_price": 30,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1,
+      "scale_reason": "复核后保留原有尺寸，与营地人物及其他物件比例协调。 发布宽、高、深约为2.01、5.27、2.00米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-forest",
+      "model_id": "Bush_1_A_Color1",
+      "name": "灌木丛",
+      "category": "nature",
+      "reason": "补充能独立落地的低矮绿篱植物。",
+      "coin_price": 15,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 3,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为0.80、0.68、0.70米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-forest",
+      "model_id": "Grass_1_C_Color1",
+      "name": "草丛",
+      "category": "nature",
+      "reason": "补充完整草簇，适合点缀营地空地。",
+      "coin_price": 10,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.6,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.45、0.35、0.43米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "furniture-bits",
+      "model_id": "cactus_medium_A",
+      "name": "仙人掌盆栽",
+      "category": "nature",
+      "reason": "补充带完整花盆的耐旱植物，可直接落地展示。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.6,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.53、0.50、0.50米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-hexagon",
+      "model_id": "tree_single_A_cut",
+      "name": "树桩",
+      "category": "nature",
+      "reason": "补充完整落地的自然木质摆设，不作为建筑零件。",
+      "coin_price": 15,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 3,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为0.51、0.99、0.49米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "model_id": "flax_flower_A",
+      "name": "亚麻花",
+      "category": "nature",
+      "reason": "补充可独立落地的花株，适合营地花园。",
+      "coin_price": 12,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.7,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.35、0.69、0.23米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-builder-pack",
+      "model_id": "well",
+      "name": "水井",
+      "category": "building",
+      "reason": "补充完整井台与井架，作为营地供水主题的静态摆设。",
+      "coin_price": 55,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 3,
+      "scale_reason": "按完整户外设施调整体量，避免整栋建筑或棚顶低于标准人物。 发布宽、高、深约为3.05、2.21、3.05米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-hexagon",
+      "model_id": "wheelbarrow",
+      "name": "独轮手推车",
+      "category": "vehicle",
+      "reason": "补充完整落地的园艺搬运工具，不增加驾驶玩法。",
+      "coin_price": 35,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 4,
+      "scale_reason": "按完整车辆或工具的使用尺寸适配；本次仍仅作为静态摆设。 发布宽、高、深约为0.95、0.75、2.02米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-dungeon-pack",
+      "model_id": "barrel_large",
+      "name": "木桶",
+      "category": "decoration",
+      "reason": "补充能独立摆放的营地储物容器。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.45,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.81、0.90、0.81米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-dungeon-pack",
+      "model_id": "chest",
+      "name": "收纳箱",
+      "category": "decoration",
+      "reason": "补充带完整箱盖的落地收纳容器。",
+      "coin_price": 30,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.65,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为1.11、0.85、0.94米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "restaurant-bits",
+      "model_id": "crate_carrots",
+      "name": "胡萝卜筐",
+      "category": "decoration",
+      "reason": "补充完整食材筐，可合理落地展示营地备餐物资。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.45,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.90、0.42、0.90米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-hexagon",
+      "model_id": "sack",
+      "name": "储物袋",
+      "category": "decoration",
+      "reason": "补充能直接放在地面的袋装物资摆设。",
+      "coin_price": 15,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 4,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为0.43、0.26、0.64米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "resource-bits",
+      "model_id": "Wood_Log_Stack",
+      "name": "木柴堆",
+      "category": "decoration",
+      "reason": "补充整堆露营燃料，作为落地物资展示。",
+      "coin_price": 20,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.8,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为1.34、1.20、1.20米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "rpg-tools-bits",
+      "model_id": "rope_bundle_A",
+      "name": "绳圈",
+      "category": "decoration",
+      "reason": "补充可合理放在地面的成捆露营绳索。",
+      "coin_price": 10,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.5,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.70、0.13、0.26米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "rpg-tools-bits",
+      "model_id": "bucket_metal",
+      "name": "铁水桶",
+      "category": "decoration",
+      "reason": "补充带完整提手的地面园艺容器。",
+      "coin_price": 15,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.36、0.46、0.32米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "rpg-tools-bits",
+      "model_id": "lantern",
+      "name": "露营提灯",
+      "category": "decoration",
+      "reason": "补充完整便携灯具，可独立落地，无需悬挂。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.30、0.44、0.30米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "model_id": "woodstove",
+      "name": "柴火炉",
+      "category": "furniture",
+      "reason": "补充自带炉脚和烟管的完整落地炉具，仅作静态展示。",
+      "coin_price": 45,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.65,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为0.78、1.69、0.79米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "resource-bits",
+      "model_id": "Fuel_A_Jerrycan",
+      "name": "燃油罐",
+      "category": "decoration",
+      "reason": "补充完整落地的营地补给容器。",
+      "coin_price": 15,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.65,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.26、0.51、0.47米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "resource-bits",
+      "model_id": "Pallet_Wood",
+      "name": "木托盘",
+      "category": "decoration",
+      "reason": "补充成品托盘，用于地面物资区装饰，不提供叠放玩法。",
+      "coin_price": 15,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.8,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为1.24、0.24、1.20米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "resource-bits",
+      "model_id": "Textiles_Stack_Large",
+      "name": "毛毯堆",
+      "category": "decoration",
+      "reason": "补充可合理放在营地地面的整叠织物物资。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.5,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.82、0.48、0.83米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-dungeon",
+      "model_id": "potC_decorated",
+      "name": "落地陶罐",
+      "category": "decoration",
+      "reason": "补充底部完整的陶罐，可直接作为地面装饰。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.6,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.67、0.55、0.67米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "restaurant-bits",
+      "model_id": "pot_large",
+      "name": "露营炖锅",
+      "category": "decoration",
+      "reason": "补充可合理放在地面的完整露营炊具，不依赖桌面。",
+      "coin_price": 20,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.80、0.30、0.48米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-platformer",
+      "model_id": "signage_arrow_stand_blue",
+      "name": "方向指示牌",
+      "category": "decoration",
+      "reason": "补充自带立柱的完整落地指示牌。",
+      "coin_price": 20,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.9,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.90、1.80、0.36米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-platformer",
+      "model_id": "flag_A_blue",
+      "name": "营地旗",
+      "category": "decoration",
+      "reason": "补充自带底座的完整旗杆，可直接落地展示。",
+      "coin_price": 20,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1.2,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为0.72、2.48、1.95米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "model_id": "chicken_plushie_A",
+      "name": "小鸡玩偶",
+      "category": "decoration",
+      "reason": "补充可合理放在地面玩耍区的完整毛绒玩偶。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.6,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.50、0.55、0.55米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "model_id": "puzzlecube_complete",
+      "name": "魔方",
+      "category": "decoration",
+      "reason": "补充可在地面玩耍区独立展示的完整益智玩具。",
+      "coin_price": 15,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.4,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.17、0.17、0.17米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "model_id": "rollerskate_pair",
+      "name": "双排轮滑鞋",
+      "category": "decoration",
+      "reason": "补充成对且完整的地面运动装备，不作为角色穿戴。",
+      "coin_price": 25,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.65,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.36、0.25、0.39米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "holiday-bits",
+      "model_id": "train_locomotive",
+      "name": "玩具火车头",
+      "category": "decoration",
+      "reason": "补充可直接放在地面玩耍区的完整玩具，不增加轨道或驾驶玩法。",
+      "coin_price": 25,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 1,
+      "scale_reason": "保留运动器材或地面玩具的原尺寸，不按人物高度自动放大。 发布宽、高、深约为0.43、0.65、0.86米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "holiday-bits",
+      "model_id": "present_A_red",
+      "name": "礼物盒",
+      "category": "decoration",
+      "reason": "补充完整落地的礼物装饰，只选一种款式。",
+      "coin_price": 15,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.6,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.34、0.40、0.34米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "mixed-bag-1",
+      "model_id": "comicbox_filled",
+      "name": "漫画收纳盒",
+      "category": "decoration",
+      "reason": "补充适合落地放置的完整书刊收纳盒。",
+      "coin_price": 20,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.5,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.32、0.44、0.40米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "prototype-bits",
+      "model_id": "target_stand_A_Decorated",
+      "name": "投掷靶架",
+      "category": "decoration",
+      "reason": "补充自带完整支架的落地游戏摆设，不增加射击玩法。",
+      "coin_price": 30,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.8,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为1.55、1.95、1.20米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "halloween-bits",
+      "model_id": "pumpkin_orange",
+      "name": "南瓜",
+      "category": "nature",
+      "reason": "补充可合理直接放在地面的完整收获物，避开墓地装饰。",
+      "coin_price": 12,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.5,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为0.50、0.35、0.50米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "holiday-bits",
+      "model_id": "christmas_tree_decorated",
+      "name": "圣诞树",
+      "category": "decoration",
+      "reason": "补充带完整节日装饰的落地树饰，区别于普通针叶树。",
+      "coin_price": 40,
+      "spaces": [
+        "indoor",
+        "outdoor"
+      ],
+      "source_scale": 0.65,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为1.90、2.75、1.90米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "holiday-bits",
+      "model_id": "snowman_A",
+      "name": "雪人摆件",
+      "category": "decoration",
+      "reason": "补充完整的季节性院落摆件，不依赖新增雪地环境。",
+      "coin_price": 25,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 0.75,
+      "scale_reason": "保留小物件的实际用途，缩小过大的容器、玩具或装饰，避免与人物等高。 发布宽、高、深约为1.63、1.54、1.03米。"
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-medieval-builder-pack",
+      "model_id": "market",
+      "name": "集市小铺",
+      "category": "building",
+      "reason": "补充整体成型的落地集市建筑，作为营地小屋配套静态展示。",
+      "coin_price": 60,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 3.5,
+      "scale_reason": "按完整户外设施调整体量，避免整栋建筑或棚顶低于标准人物。 发布宽、高、深约为5.14、3.02、5.86米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "nature-kit",
+      "model_id": "campfire_stones",
+      "name": "石圈营火",
+      "category": "decoration",
+      "reason": "补充营地中央可独立落地的营火摆设，不新增取暖或烹饪活动。",
+      "coin_price": 30,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "调整微型源模型至可独立落地的营地物件体量，保留模型各轴比例。 发布宽、高、深约为1.08、0.16、1.03米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "furniture-kit",
+      "model_id": "lampRoundFloor",
+      "name": "室内落地灯",
+      "category": "furniture",
+      "reason": "补充室内阅读角的落地灯饰，与已有户外小灯区分。",
+      "coin_price": 25,
+      "spaces": [
+        "indoor"
+      ],
+      "source_scale": 2,
+      "scale_reason": "沿用原有营地家具的两倍源比例，与2.25米单人床及1.8米人物保持一致。 发布宽、高、深约为0.30、1.72、0.35米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "fantasy-town-kit",
+      "model_id": "fountain-round",
+      "name": "庭院喷泉",
+      "category": "decoration",
+      "reason": "补充庭院公共区的完整水景摆设，不使用分离水池或墙片。",
+      "coin_price": 50,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 1,
+      "scale_reason": "复核后保留原有尺寸，与营地人物及其他物件比例协调。 发布宽、高、深约为2.00、0.28、2.00米。"
+    },
+    {
+      "provider": "kenney",
+      "pack_key": "survival-kit",
+      "model_id": "workbench",
+      "name": "木工作台",
+      "category": "furniture",
+      "reason": "补充营地手工劳动主题的完整落地工作台，与阅读书桌区分。",
+      "coin_price": 35,
+      "spaces": [
+        "outdoor"
+      ],
+      "source_scale": 3,
+      "scale_reason": "按1.8米人物的台面、柜体或操作高度调整，保留模型各轴比例。 发布宽、高、深约为0.98、0.86、0.89米。"
+    }
+  ]
+}

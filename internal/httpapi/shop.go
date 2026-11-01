@@ -25,7 +25,26 @@ func (app *App) RegisterShop(service *shop.Service) {
 			}
 			inactive = raw == "true"
 		}
-		result, err := service.ListProducts(r.Context(), p, inactive)
+		query := r.URL.Query()
+		var result shop.ProductList
+		paged := false
+		for _, field := range []string{"limit", "cursor", "type", "group", "slot", "search", "provider", "pack_key"} {
+			paged = paged || query.Has(field)
+		}
+		if paged {
+			limit := 48
+			if query.Has("limit") {
+				var parseErr error
+				limit, parseErr = strconv.Atoi(query.Get("limit"))
+				if parseErr != nil || limit < 1 || limit > 100 {
+					WriteError(w, r, core.Invalid("limit", "INVALID_VALUE"))
+					return
+				}
+			}
+			result, err = service.ListProductsPage(r.Context(), p, inactive, shop.ProductQuery{Limit: limit, Cursor: query.Get("cursor"), Type: query.Get("type"), Group: query.Get("group"), Slot: query.Get("slot"), Search: query.Get("search"), Provider: query.Get("provider"), PackKey: query.Get("pack_key")})
+		} else {
+			result, err = service.ListProducts(r.Context(), p, inactive)
+		}
 		if err != nil {
 			WriteError(w, r, err)
 			return
@@ -112,7 +131,7 @@ func (app *App) RegisterShop(service *shop.Service) {
 			return
 		}
 		query := r.URL.Query()
-		input := shop.PurchaseQuery{Type: query.Get("type"), Status: query.Get("status"), Cursor: query.Get("cursor")}
+		input := shop.PurchaseQuery{Type: query.Get("type"), Status: query.Get("status"), Cursor: query.Get("cursor"), Group: query.Get("group"), Slot: query.Get("slot"), Search: query.Get("search"), Provider: query.Get("provider"), PackKey: query.Get("pack_key")}
 		if query.Has("limit") {
 			input.Limit, err = strconv.Atoi(query.Get("limit"))
 			if err != nil || input.Limit < 1 || input.Limit > 100 {

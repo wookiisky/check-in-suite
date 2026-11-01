@@ -1084,6 +1084,10 @@ export interface components {
             pose?: components["schemas"]["SpatialInteractionPose"];
         };
         SpatialDefinition: {
+            pack_name?: string;
+            provider?: string;
+            pack_key?: string;
+            category?: string;
             item_key: string;
             name: string;
             assembly?: string;
@@ -1172,8 +1176,15 @@ export interface components {
             placements: components["schemas"]["SpatialPlacement"][];
         };
         /** @enum {string} */
-        ProductType: "title" | "reward" | "wearable" | "island";
+        ProductType: "title" | "reward" | "wearable" | "island" | "character";
         Product: {
+            pack_name?: string;
+            /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
+            character_key?: string;
+            /** @description 受控来源标识，例如 kaykit、kenney。 */
+            provider?: string;
+            /** @description 受控素材包身份。 */
+            pack_key?: string;
             /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
             wearable_key?: string;
             id: string;
@@ -1196,6 +1207,8 @@ export interface components {
             owned: boolean;
         };
         ProductCreate: {
+            /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
+            character_key?: string;
             /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
             wearable_key?: string;
             type: components["schemas"]["ProductType"];
@@ -1208,6 +1221,8 @@ export interface components {
             enabled: boolean;
         };
         ProductUpdate: {
+            /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
+            character_key?: string;
             /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
             wearable_key?: string;
             type: components["schemas"]["ProductType"];
@@ -1220,10 +1235,28 @@ export interface components {
             enabled: boolean;
             expected_version: number;
         };
+        ProductPack: {
+            name?: string;
+            key: string;
+            provider: string;
+        };
+        ProductFacets: {
+            providers: string[];
+            packs: components["schemas"]["ProductPack"][];
+        };
         ProductList: {
             items: components["schemas"]["Product"][];
+            /** @description 分页读取时的下一页边界；null 表示没有后续商品。 */
+            next_cursor?: string | null;
+            /** @description 全部可见商品的来源与包选项，不受当前页限制。 */
+            facets?: components["schemas"]["ProductFacets"];
         };
         Purchase: {
+            pack_name?: string;
+            provider?: string;
+            pack_key?: string;
+            /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
+            character_key?: string;
             /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
             wearable_key?: string;
             id: string;
@@ -1253,6 +1286,8 @@ export interface components {
             wallet: components["schemas"]["Wallet"];
         };
         PurchaseList: {
+            /** @description 全部订单来源与包选项，不受当前页限制。 */
+            facets?: components["schemas"]["ProductFacets"];
             items: components["schemas"]["Purchase"][];
             next_cursor: string | null;
         };
@@ -1273,6 +1308,14 @@ export interface components {
             url: string;
         };
         CharacterDefinition: {
+            /** @description 原始动作预览目录，按需加载；不影响正式语义动作。 */
+            preview_animations?: components["schemas"]["CharacterAnimation"][];
+            /** @description 统一身体比例和绑定姿势的兼容身份。 */
+            body_key?: string;
+            thumbnail_asset_key?: string;
+            thumbnail_url?: string;
+            provider?: string;
+            pack_key?: string;
             /** @description 资源目录中维护的显示名称。 */
             name: string;
             character_key: string;
@@ -1291,6 +1334,10 @@ export interface components {
             };
         };
         CharacterWearable: {
+            /** @description 仅用于明确的无发型定义；此时 hair 槽 nodes 与 covers 为空，不能单独作为商品出售。 */
+            empty?: boolean;
+            /** @description 统一身体比例和绑定姿势的兼容身份。 */
+            body_key?: string;
             /** @description 资源目录中维护的显示名称。 */
             name: string;
             wearable_key: string;
@@ -1301,6 +1348,7 @@ export interface components {
             model_url: string;
             thumbnail_asset_key: string;
             thumbnail_url: string;
+            /** @description 实际网格节点；仅明确 empty 的无发型定义可为空。 */
             nodes: string[];
             covers: string[];
         };
@@ -1308,7 +1356,23 @@ export interface components {
             purchase_id: string;
             wearable_key: string;
         };
+        AppearanceOwnedCharacter: {
+            purchase_id: string;
+            character_key: string;
+        };
         AppearanceState: {
+            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            hair_free_wearable_key?: string | null;
+            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            upper_free_wearable_key?: string | null;
+            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            lower_free_wearable_key?: string | null;
+            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            shoes_free_wearable_key?: string | null;
+            /** @description 无需购买的初始角色身份。 */
+            default_character_key?: string;
+            /** @description 完整角色永久所有权，不受订单分页影响。 */
+            character_inventory?: components["schemas"]["AppearanceOwnedCharacter"][];
             version: number;
             character_key: string;
             hair_purchase_id: string | null;
@@ -1317,10 +1381,18 @@ export interface components {
             shoes_purchase_id: string | null;
             characters: components["schemas"]["CharacterDefinition"][];
             wearables: components["schemas"]["CharacterWearable"][];
-            /** @description 全部已拥有的三维服装实例，不受订单列表分页影响。 */
+            /** @description 全部服装权益；角色订单展开四件默认服装，因此同一 purchase_id 可对应多个槽位，须结合服装定义的 slot 解析。不受订单列表分页影响。 */
             inventory: components["schemas"]["AppearanceOwnedItem"][];
         };
         AppearanceSave: {
+            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            hair_free_wearable_key?: string | null;
+            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            upper_free_wearable_key?: string | null;
+            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            lower_free_wearable_key?: string | null;
+            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            shoes_free_wearable_key?: string | null;
             expected_version: number;
             character_key: string;
             /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
@@ -1354,12 +1426,16 @@ export interface components {
             achievements: components["schemas"]["Achievement"][];
         };
         Asset: {
+            pack_name?: string;
+            category?: string;
+            provider?: string;
+            pack_key?: string;
             /** @description 无需购买的免费营地物品资源；仅用于 island 类型。 */
             free?: boolean;
             key: string;
             name: string;
             /** @enum {string} */
-            kind: "icon" | "title" | "reward" | "badge" | "island" | "model" | "animation" | "wearable";
+            kind: "icon" | "title" | "reward" | "badge" | "island" | "model" | "animation" | "wearable" | "character";
             url: string;
             /**
              * @description 省略时为 svg。
@@ -2386,6 +2462,15 @@ export interface operations {
             query?: {
                 /** @description true要求当前会话已解锁管理 */
                 include_inactive?: boolean;
+                /** @description 提供筛选或游标而省略时使用48；无筛选且省略时保留完整配置读取。 */
+                limit?: number;
+                cursor?: string;
+                type?: components["schemas"]["ProductType"];
+                group?: "appearance";
+                slot?: components["schemas"]["CharacterSlot"];
+                search?: string;
+                provider?: string;
+                pack_key?: string;
             };
             header?: never;
             path?: never;
@@ -2506,6 +2591,11 @@ export interface operations {
                 limit?: number;
                 type?: components["schemas"]["ProductType"];
                 status?: "owned" | "pending" | "redeemed";
+                group?: "appearance";
+                slot?: components["schemas"]["CharacterSlot"];
+                search?: string;
+                provider?: string;
+                pack_key?: string;
             };
             header?: never;
             path?: never;

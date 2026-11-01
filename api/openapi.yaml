@@ -296,7 +296,16 @@ paths:
     get:
       operationId: "listProducts"
       summary: "读取配置列表"
-      parameters: [{"name": "include_inactive", "in": "query", "required": false, "schema": {"type": "boolean"}, "description": "true要求当前会话已解锁管理"}]
+      parameters:
+        - {"name": "include_inactive", "in": "query", "required": false, "schema": {"type": "boolean"}, "description": "true要求当前会话已解锁管理"}
+        - {"name": "limit", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1, "maximum": 100}, "description": "提供筛选或游标而省略时使用48；无筛选且省略时保留完整配置读取。"}
+        - {"name": "cursor", "in": "query", "required": false, "schema": {"type": "string"}}
+        - {"name": "type", "in": "query", "required": false, "schema": {"$ref": "#/components/schemas/ProductType"}}
+        - {"name": "group", "in": "query", "required": false, "schema": {"type": "string", "enum": ["appearance"]}}
+        - {"name": "slot", "in": "query", "required": false, "schema": {"$ref": "#/components/schemas/CharacterSlot"}}
+        - {"name": "search", "in": "query", "required": false, "schema": {"type": "string"}}
+        - {"name": "provider", "in": "query", "required": false, "schema": {"type": "string"}}
+        - {"name": "pack_key", "in": "query", "required": false, "schema": {"type": "string"}}
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ProductList"}}}}
         default: {"$ref": "#/components/responses/Error"}
@@ -346,6 +355,11 @@ paths:
         - {"name": "limit", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1, "maximum": 100}}
         - {"name": "type", "in": "query", "required": false, "schema": {"$ref": "#/components/schemas/ProductType"}}
         - {"name": "status", "in": "query", "required": false, "schema": {"type": "string", "enum": ["owned", "pending", "redeemed"]}}
+        - {"name": "group", "in": "query", "required": false, "schema": {"type": "string", "enum": ["appearance"]}}
+        - {"name": "slot", "in": "query", "required": false, "schema": {"$ref": "#/components/schemas/CharacterSlot"}}
+        - {"name": "search", "in": "query", "required": false, "schema": {"type": "string"}}
+        - {"name": "provider", "in": "query", "required": false, "schema": {"type": "string"}}
+        - {"name": "pack_key", "in": "query", "required": false, "schema": {"type": "string"}}
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PurchaseList"}}}}
         default: {"$ref": "#/components/responses/Error"}
@@ -966,6 +980,10 @@ components:
       additionalProperties: false
       required: ["item_key", "name", "footprint", "blocks_placement", "movable", "repeatable", "spaces", "rotations", "allowed_terrain", "thumbnail_asset_key", "thumbnail_url", "coin_price", "diamond_price", "free"]
       properties:
+        pack_name: {"type": "string"}
+        provider: {"type": "string"}
+        pack_key: {"type": "string"}
+        category: {"type": "string"}
         item_key: {"type": "string", "minLength": 1}
         name: {"type": "string", "minLength": 1}
         assembly: {"type": "string", "minLength": 1}
@@ -1081,12 +1099,16 @@ components:
         placements: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialPlacement"}}
     ProductType:
       type: "string"
-      enum: ["title", "reward", "wearable", "island"]
+      enum: ["title", "reward", "wearable", "island", "character"]
     Product:
       type: "object"
       additionalProperties: false
       required: ["id", "type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled", "version", "owned"]
       properties:
+        pack_name: {"type": "string"}
+        character_key: {"type": "string", "minLength": 1, "description": "完整角色的稳定身份；character 商品必须提供，订单保存成交身份。"}
+        provider: {"type": "string", "description": "受控来源标识，例如 kaykit、kenney。"}
+        pack_key: {"type": "string", "description": "受控素材包身份。"}
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
         id: {"type": "string", "minLength": 1}
         type: {"$ref": "#/components/schemas/ProductType"}
@@ -1107,6 +1129,7 @@ components:
       additionalProperties: false
       required: ["type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled"]
       properties:
+        character_key: {"type": "string", "minLength": 1, "description": "完整角色的稳定身份；character 商品必须提供，订单保存成交身份。"}
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
         type: {"$ref": "#/components/schemas/ProductType"}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
@@ -1121,6 +1144,7 @@ components:
       additionalProperties: false
       required: ["type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled", "expected_version"]
       properties:
+        character_key: {"type": "string", "minLength": 1, "description": "完整角色的稳定身份；character 商品必须提供，订单保存成交身份。"}
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
         type: {"$ref": "#/components/schemas/ProductType"}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
@@ -1131,11 +1155,29 @@ components:
         stock: {"anyOf": [{"type": "integer", "minimum": 0, "maximum": 1000000}, {"type": "null"}]}
         enabled: {"type": "boolean"}
         expected_version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+    ProductPack:
+      type: "object"
+      additionalProperties: false
+      required: ["key", "provider"]
+      properties:
+        name: {"type": "string"}
+        key: {"type": "string"}
+        provider: {"type": "string"}
+    ProductFacets:
+      type: "object"
+      additionalProperties: false
+      required: ["providers", "packs"]
+      properties:
+        providers: {"type": "array", "items": {"type": "string"}}
+        packs: {"type": "array", "items": {"$ref": "#/components/schemas/ProductPack"}}
     ProductList:
       type: "object"
       additionalProperties: false
       required: ["items"]
-      properties: {"items": {"type": "array", "items": {"$ref": "#/components/schemas/Product"}}}
+      properties:
+        items: {"type": "array", "items": {"$ref": "#/components/schemas/Product"}}
+        next_cursor: {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "分页读取时的下一页边界；null 表示没有后续商品。"}
+        facets: {"$ref": "#/components/schemas/ProductFacets", "description": "全部可见商品的来源与包选项，不受当前页限制。"}
     Purchase:
       type: "object"
       additionalProperties: false
@@ -1153,6 +1195,10 @@ components:
         - "version"
         - "created_at"
       properties:
+        pack_name: {"type": "string"}
+        provider: {"type": "string"}
+        pack_key: {"type": "string"}
+        character_key: {"type": "string", "minLength": 1, "description": "完整角色的稳定身份；character 商品必须提供，订单保存成交身份。"}
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
         id: {"type": "string", "minLength": 1}
         island_item_key: {"type": "string", "description": "根据稳定物品身份读取的当前营地能力，可随资源更新增加。"}
@@ -1185,6 +1231,7 @@ components:
       additionalProperties: false
       required: ["items", "next_cursor"]
       properties:
+        facets: {"$ref": "#/components/schemas/ProductFacets", "description": "全部订单来源与包选项，不受当前页限制。"}
         items: {"type": "array", "items": {"$ref": "#/components/schemas/Purchase"}}
         next_cursor: {"anyOf": [{"type": "string"}, {"type": "null"}]}
     CharacterSlot:
@@ -1213,6 +1260,12 @@ components:
       additionalProperties: false
       required: ["character_key", "name", "rig_key", "model_asset_key", "model_url", "scale", "fixed_nodes", "body_regions", "defaults", "animations"]
       properties:
+        preview_animations: {"type": "array", "items": {"$ref": "#/components/schemas/CharacterAnimation"}, "description": "原始动作预览目录，按需加载；不影响正式语义动作。"}
+        body_key: {"type": "string", "description": "统一身体比例和绑定姿势的兼容身份。"}
+        thumbnail_asset_key: {"type": "string"}
+        thumbnail_url: {"type": "string"}
+        provider: {"type": "string"}
+        pack_key: {"type": "string"}
         name: {"type": "string", "minLength": 1, "description": "资源目录中维护的显示名称。"}
         character_key: {"type": "string", "minLength": 1}
         rig_key: {"type": "string", "minLength": 1, "description": "骨架层级、绑定姿势和比例的兼容身份。"}
@@ -1228,6 +1281,8 @@ components:
       additionalProperties: false
       required: ["wearable_key", "name", "slot", "character_key", "rig_key", "model_asset_key", "model_url", "thumbnail_asset_key", "thumbnail_url", "nodes", "covers"]
       properties:
+        empty: {"type": "boolean", "description": "仅用于明确的无发型定义；此时 hair 槽 nodes 与 covers 为空，不能单独作为商品出售。"}
+        body_key: {"type": "string", "description": "统一身体比例和绑定姿势的兼容身份。"}
         name: {"type": "string", "minLength": 1, "description": "资源目录中维护的显示名称。"}
         wearable_key: {"type": "string", "minLength": 1}
         slot: {"$ref": "#/components/schemas/CharacterSlot"}
@@ -1237,7 +1292,7 @@ components:
         model_url: {"type": "string", "minLength": 1}
         thumbnail_asset_key: {"type": "string", "minLength": 1}
         thumbnail_url: {"type": "string", "minLength": 1}
-        nodes: {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1}
+        nodes: {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "实际网格节点；仅明确 empty 的无发型定义可为空。"}
         covers: {"type": "array", "items": {"type": "string", "minLength": 1}}
     AppearanceOwnedItem:
       type: "object"
@@ -1246,11 +1301,24 @@ components:
       properties:
         purchase_id: {"type": "string", "minLength": 1}
         wearable_key: {"type": "string", "minLength": 1}
+    AppearanceOwnedCharacter:
+      type: "object"
+      additionalProperties: false
+      required: ["purchase_id", "character_key"]
+      properties:
+        purchase_id: {"type": "string", "minLength": 1}
+        character_key: {"type": "string", "minLength": 1}
     AppearanceState:
       type: "object"
       additionalProperties: false
       required: ["version", "character_key", "hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "characters", "wearables", "inventory"]
       properties:
+        hair_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
+        upper_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
+        lower_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
+        shoes_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
+        default_character_key: {"type": "string", "minLength": 1, "description": "无需购买的初始角色身份。"}
+        character_inventory: {"type": "array", "items": {"$ref": "#/components/schemas/AppearanceOwnedCharacter"}, "description": "完整角色永久所有权，不受订单分页影响。"}
         version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         character_key: {"type": "string", "minLength": 1}
         hair_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
@@ -1259,12 +1327,16 @@ components:
         shoes_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
         characters: {"type": "array", "items": {"$ref": "#/components/schemas/CharacterDefinition"}}
         wearables: {"type": "array", "items": {"$ref": "#/components/schemas/CharacterWearable"}}
-        inventory: {"type": "array", "items": {"$ref": "#/components/schemas/AppearanceOwnedItem"}, "description": "全部已拥有的三维服装实例，不受订单列表分页影响。"}
+        inventory: {"type": "array", "items": {"$ref": "#/components/schemas/AppearanceOwnedItem"}, "description": "全部服装权益；角色订单展开四件默认服装，因此同一 purchase_id 可对应多个槽位，须结合服装定义的 slot 解析。不受订单列表分页影响。"}
     AppearanceSave:
       type: "object"
       additionalProperties: false
       required: ["expected_version", "character_key", "hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"]
       properties:
+        hair_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
+        upper_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
+        lower_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
+        shoes_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
         expected_version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         character_key: {"type": "string", "minLength": 1}
         hair_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "null 恢复该部位免费默认装备；缺省或空字符串无效。"}
@@ -1302,10 +1374,14 @@ components:
       additionalProperties: false
       required: ["key", "name", "kind", "url"]
       properties:
+        pack_name: {"type": "string"}
+        category: {"type": "string"}
+        provider: {"type": "string"}
+        pack_key: {"type": "string"}
         free: {"type": "boolean", "description": "无需购买的免费营地物品资源；仅用于 island 类型。"}
         key: {"type": "string", "minLength": 1}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
-        kind: {"type": "string", "enum": ["icon", "title", "reward", "badge", "island", "model", "animation", "wearable"]}
+        kind: {"type": "string", "enum": ["icon", "title", "reward", "badge", "island", "model", "animation", "wearable", "character"]}
         url: {"type": "string"}
         format: {"type": "string", "enum": ["svg", "png", "webp", "glb"], "description": "省略时为 svg。"}
         source_url: {"type": "string", "description": "素材来源页面。"}

@@ -49,6 +49,10 @@ type SpatialInteractionPose struct {
 type SpatialDefinition struct {
 	Key               string              `json:"item_key"`                // 不可复用的物件身份。
 	Name              string              `json:"name"`                    // 外化目录中的显示名称。
+	Provider          string              `json:"provider,omitempty"`      // 素材官方来源，用于浏览筛选。
+	PackKey           string              `json:"pack_key,omitempty"`      // 来源包身份，与物件版本分开。
+	PackName          string              `json:"pack_name,omitempty"`     // 官方素材包的展示名称。
+	Category          string              `json:"category,omitempty"`      // 已审核完整摆设的用途分类。
 	ThumbnailAssetKey string              `json:"thumbnail_asset_key"`     // 商品与库存使用的受控缩略图身份。
 	ThumbnailURL      string              `json:"thumbnail_url"`           // 缩略图受控资源地址。
 	CoinPrice         int64               `json:"coin_price"`              // 初始化商品的金币价格。

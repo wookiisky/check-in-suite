@@ -10,39 +10,40 @@ import { canBuy, shopError } from './helpers';
 import content from './content.json';
 import { useAppearance } from '../character/AppearanceProvider';
 import './shop.css';
+import { useProductCatalog, type CatalogSearch } from './useProductCatalog';
+import { CatalogFilters } from './CatalogFilters';
 
 // 商店只浏览与购买，分类属于当前页面，成交和恢复均不改变选择。
 export function ShopPage({ client, onBackpack }: ShopProps & { onBackpack?: () => void }) {
   const publishWallet = useWalletSync();
   const appearance = useAppearance();
   const [filter, setFilter] = useState<CategoryFilter>({ group: 'all', category: '' });
-  const [products, setProducts] = useState<Product[]>([]);
+  const [search, setSearch] = useState<CatalogSearch>({ search: '', provider: '', packKey: '' });
   const [snapshot, setSnapshot] = useState<Camp | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<unknown>(null);
+  const [campLoading, setCampLoading] = useState(true);
+  const [campError, setCampError] = useState<unknown>(null);
   const [message, setMessage] = useState('');
   const [revision, refresh] = useState(0);
   const [selected, setSelected] = useState<Product | null>(null);
   const pending = pendingPurchases.get(client);
+  const catalog = useProductCatalog(client, { filter, search, revision });
+  const loading = campLoading || catalog.loading;
+  const error = campError ?? catalog.error;
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
-    setError(null);
+    setCampLoading(true);
+    setCampError(null);
     void (async () => {
       try {
-        const [camp, result] = await Promise.all([
-          client.request<Camp>('/camp', { signal: controller.signal }),
-          client.request<{ items: Product[] }>('/products', { signal: controller.signal }),
-        ]);
+        const camp = await client.request<Camp>('/camp', { signal: controller.signal });
         if (controller.signal.aborted) return;
         setSnapshot(camp);
         publishWallet(camp.wallet);
-        setProducts(result.items);
       } catch (reason) {
-        if (!controller.signal.aborted) setError(reason);
+        if (!controller.signal.aborted) setCampError(reason);
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) setCampLoading(false);
       }
     })();
     return () => controller.abort();
@@ -56,17 +57,18 @@ export function ShopPage({ client, onBackpack }: ShopProps & { onBackpack?: () =
   }
   const catalogReady = !isWearableSlot(filter.category) || appearance.snapshot !== null;
   const readError = error ?? (!catalogReady ? appearance.error : null);
-  const visibleProducts = products.filter((item) => matchesCategory(item, filter, appearance.snapshot?.wearables));
+  const visibleProducts = catalog.products.filter((item) => matchesCategory(item, filter, appearance.snapshot?.wearables));
   const confirmationWallet = pending?.wallet ?? snapshot?.wallet;
   return <div className="shop-workspace">
     <div className="shop-page-heading"><h1>{content.title}</h1>{onBackpack && <button type="button" className="secondary" onClick={onBackpack}>{content.backpack}</button>}</div>
     {message && <p className="shop-warning feedback-success" role="status">{message}</p>}
     {pending && <div className="shop-warning"><p>{content.purchasePending}</p><button onClick={(event) => { event.currentTarget.focus(); setSelected(pending.product); }}>{content.recoverPurchase}</button></div>}
     {readError !== null && <div role="alert"><p className="shop-error">{shopError(readError)}</p><button className="secondary" onClick={() => { if (!catalogReady) void appearance.refresh(); if (catalogReady || error !== null) refresh((value) => value + 1); }}>{content.reload}</button></div>}
+    <CatalogFilters value={search} facets={catalog.facets} onChange={setSearch} />
     <CategoryTabs value={filter} onChange={setFilter}>
       {(loading || !catalogReady && readError === null) && <p role="status">{content.loading}</p>}
       {!loading && snapshot && catalogReady && <>
-        {visibleProducts.length === 0 && error === null && <p>{filter.group === 'all' ? content.emptyProducts : content.emptyCategoryProducts}</p>}
+        {visibleProducts.length === 0 && !catalog.cursor && error === null && <p>{filter.group === 'all' ? content.emptyProducts : content.emptyCategoryProducts}</p>}
         <div className="shop-grid">
           {visibleProducts.map((item) => <article className="shop-card shop-product-card" key={item.id}>
             <h3>{item.name}</h3>
@@ -89,6 +91,7 @@ export function ShopPage({ client, onBackpack }: ShopProps & { onBackpack?: () =
           </article>)}
         </div>
       </>}
+      {catalog.cursor && <div className="shop-stack"><p>{content.moreHint}</p><button type="button" className="secondary" disabled={loading || catalog.loadingMore} onClick={() => void catalog.more()}>{catalog.loadingMore ? content.loading : content.more}</button></div>}
     </CategoryTabs>
     {selected && confirmationWallet && <PurchaseDialog client={client} product={selected} wallet={confirmationWallet}
       onClose={() => { setSelected(null); refresh((value) => value + 1); }} onPurchased={purchased} />}

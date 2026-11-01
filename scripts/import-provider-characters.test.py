@@ -1,0 +1,139 @@
+"""人物加工在真实 GLB 上校验骨架、四槽与脸发分离；不使用模拟网格证明兼容。"""
+import importlib.util
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import struct
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+MODULE = ROOT / 'scripts/import-provider-characters.py'
+
+
+# 读取交付容器中的实际JSON，而非仅检查旁边的配置。
+def read_glb(path):
+    import struct
+    data = path.read_bytes()
+    assert data[:4] == b'glTF'
+    length = struct.unpack_from('<I', data, 12)[0]
+    return json.loads(data[20:20 + length])
+
+
+# 从实际顶点缓冲计算固定脸范围，防止完整头皮留在无法被发型覆盖的网格里。
+def mesh_bounds(path, name):
+    data = path.read_bytes()
+    document = read_glb(path)
+    length = struct.unpack_from('<I', data, 12)[0]
+    binary = data[28+length:]
+    names = {name} if isinstance(name, str) else set(name)
+    points = []
+    for node in document['nodes']:
+        if node.get('name') not in names:
+            continue
+        for primitive in document['meshes'][node['mesh']]['primitives']:
+            accessor = document['accessors'][primitive['attributes']['POSITION']]
+            view = document['bufferViews'][accessor['bufferView']]
+            start = view.get('byteOffset', 0)+accessor.get('byteOffset', 0)
+            points.extend(struct.unpack_from('<fff', binary, start+i*view.get('byteStride', 12))
+                          for i in range(accessor['count']))
+    return [(min(point[axis] for point in points), max(point[axis] for point in points)) for axis in range(3)]
+
+
+class ProviderCharacterDeliveryTest(unittest.TestCase):
+    """每个来源人物必须有真实加工产物，且与标准身体使用同一个骨架。"""
+
+    # 缩略图显隐规则变化时，即使模型字节相同也必须创建新版本。
+    def test_recipe_changes_asset_version(self):
+        specification = importlib.util.spec_from_file_location('provider_characters', MODULE)
+        module = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(module)
+        covered = module.asset_version('sample', b'model', {'covers': ['scalp']})
+        uncovered = module.asset_version('sample', b'model', {'covers': []})
+        self.assertNotEqual(covered, uncovered)
+        self.assertEqual(covered, module.asset_version('sample', b'model', {'covers': ['scalp']}))
+
+    # 配置中的脸发拆分必须是逐角色标注，而不是运行时猜测颜色。
+    def test_sources_declare_head_selection(self):
+        sources = json.loads((ROOT/'scripts/provider-character-sources.json').read_text())['sources']
+        self.assertGreaterEqual(len(sources), 10)
+        for source in sources:
+            self.assertTrue(source['head_nodes'])
+            self.assertTrue(source.get('hair_uv_regions') or source.get('hair_head_above') or source.get('hair_kind'))
+
+    # 同源多格式不产生重复人物，每个导入角色必须交付共用身体与全部四槽。
+    def test_actual_delivered_characters(self):
+        manifest = json.loads((ROOT/'internal/assets/provider-character-manifest.json').read_text())
+        entries = manifest['characters']
+        self.assertGreaterEqual(len(entries), 10)
+        keys = set()
+        for entry in entries:
+            self.assertEqual(entry['status'], 'imported', entry)
+            definition = entry['definition']
+            self.assertNotIn(definition['character_key'], keys)
+            keys.add(definition['character_key'])
+            self.assertEqual(definition['body_key'], 'kaykit-medium-body-v1')
+            self.assertLess(entry['binding_error'], 0.00001)
+            self.assertEqual(set(definition['defaults']), {'hair','upper','lower','shoes'})
+            document = read_glb(ROOT/'internal/assets/builtin'/(definition['model_asset_key']+'.glb'))
+            names = {node.get('name') for node in document['nodes'] if 'mesh' in node}
+            self.assertIn('body_head', names)
+            self.assertIn('body_hands', names)
+            for wearable in entry['wearables']:
+                self.assertTrue(set(wearable['nodes']) <= names)
+                self.assertEqual(wearable['body_key'], definition['body_key'])
+                self.assertEqual(wearable['rig_key'], definition['rig_key'])
+            self.assertTrue(entry['face_hair_disjoint'])
+
+    # 曾穿出共用发型的完整头壳必须分区，完整脸和头皮共同遵守标准头部包络。
+    def test_bald_heads_partition_standard_head_envelope(self):
+        directory = ROOT/'internal/assets/builtin'
+        canonical = mesh_bounds(directory/'character-medium-v1.glb', 'body_head')
+        envelope = mesh_bounds(directory/'character-medium-v1.glb', ['body_head', 'body_scalp'])
+        manifest = json.loads((ROOT/'internal/assets/provider-character-manifest.json').read_text())
+        keys = {'kaykit-adventurers-barbarian', 'kaykit-skeletons-mage', 'kaykit-skeletons-minion',
+                'kaykit-skeletons-rogue', 'kaykit-skeletons-warrior'}
+        entries = {entry['definition']['character_key']: entry for entry in manifest['characters']}
+        self.assertTrue(keys <= entries.keys())
+        for key in sorted(keys):
+            with self.subTest(character=key):
+                definition = entries[key]['definition']
+                model = directory/(definition['model_asset_key']+'.glb')
+                bounds = mesh_bounds(model, 'body_head')
+                self.assertLessEqual(bounds[1][1], canonical[1][1]+0.00001)
+                self.assertGreater(bounds[1][1]-bounds[1][0], 0.5)
+                actual = mesh_bounds(model, ['body_head', 'body_scalp'])
+                for standard_axis, actual_axis in zip(envelope, actual):
+                    self.assertGreaterEqual(actual_axis[0], standard_axis[0]-0.00001)
+                    self.assertLessEqual(actual_axis[1], standard_axis[1]+0.00001)
+                document = read_glb(model)
+                head = next(node for node in document['nodes'] if node.get('name') == 'body_head')
+                materials = {document['materials'][primitive['material']]['name'].split('.')[0]
+                             for primitive in document['meshes'][head['mesh']]['primitives']}
+                if key.startswith('kaykit-skeletons-'):
+                    self.assertIn('Glow', materials, '眼睛必须留在固定脸中')
+
+    # 在真实 Blender 中只检查指定人物，且证据加工不能改写正式交付文件。
+    @unittest.skipUnless(os.environ.get('BLENDER_PATH'), '设置 BLENDER_PATH 后执行真实 Blender 小样')
+    def test_evidence_sample_preserves_delivery(self):
+        manifest = json.loads((ROOT/'internal/assets/provider-character-manifest.json').read_text())
+        key = manifest['characters'][0]['definition']['character_key']
+        paths = [ROOT/'internal/character/character-catalog.json',
+                 ROOT/'internal/assets/provider-character-manifest.json',
+                 *sorted((ROOT/'internal/assets/builtin').glob('*'))]
+        before = {path: hashlib.sha256(path.read_bytes()).digest() for path in paths if path.is_file()}
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run([os.environ['BLENDER_PATH'], '--background', '--factory-startup',
+                                     '--python', str(MODULE), '--', '--evidence', '--only', key,
+                                     '--evidence-output', directory], cwd=ROOT,
+                                    capture_output=True, text=True, timeout=180)
+            self.assertEqual(result.returncode, 0, result.stdout+'\n'+result.stderr)
+            self.assertEqual(sorted(path.name for path in Path(directory).glob('*.png')),
+                             [key+'-shared-outfit.png', key+'-source.png'])
+        self.assertEqual(before, {path: hashlib.sha256(path.read_bytes()).digest() for path in before})
+
+
+if __name__ == '__main__':
+    unittest.main()

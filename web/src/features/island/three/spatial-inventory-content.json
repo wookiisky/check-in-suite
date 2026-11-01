@@ -1,0 +1,27 @@
+{
+  "filters": "查找我的物品",
+  "search": "搜索物品",
+  "searchPlaceholder": "输入物品名称",
+  "provider": "来源",
+  "pack": "素材包",
+  "category": "类别",
+  "allProviders": "全部来源",
+  "allPacks": "全部素材包",
+  "allCategories": "全部类别",
+  "builtin": "内置",
+  "providers": {
+    "kaykit": "KayKit",
+    "kenney": "Kenney"
+  },
+  "categories": {
+    "furniture": "家具",
+    "nature": "自然景物",
+    "vehicle": "车辆",
+    "building": "完整建筑",
+    "decoration": "装饰摆设"
+  },
+  "results": "已显示 {shown} / {total} 件物品",
+  "loadMore": "显示更多物品",
+  "noMatches": "没有符合筛选条件的物品。",
+  "clearFilters": "清除筛选"
+}

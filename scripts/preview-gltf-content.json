@@ -1,0 +1,30 @@
+{
+  "description": "批量生成 GLB 四视角预览与总览图；输入资源只读，变化项增量渲染。",
+  "arguments": {
+    "input": "GLB 文件或递归扫描的目录，可重复传入；省略时读取当前选入摆设。",
+    "kind": "使用本次选入摆设或当前人物目录；人物使用默认服装。",
+    "only": "仅处理指定资源身份，可重复传入。",
+    "limit": "最多处理的模型数量。",
+    "output": "预览、总览图、日志与缓存清单的输出目录。",
+    "blender": "Blender 可执行文件路径。",
+    "size": "每张视图的像素边长。",
+    "page_size": "每张总览图的模型行数。",
+    "font": "总览图字体文件，建议使用包含中文的字体。",
+    "force": "忽略现有预览缓存，重新渲染本次选定模型。"
+  },
+  "errors": {
+    "empty": "没有匹配的 GLB 模型，请核对输入目录、目录类型与资源身份。",
+    "positive": "尺寸、每页数量和限制数量必须为正整数。",
+    "input_kind": "指定输入文件时，请不要同时指定目录类型。",
+    "missing_model": "模型文件不存在或不是 GLB：{path}",
+    "blender_failed": "Blender 批处理未返回此模型结果，请查看 renderer.log。",
+    "missing_image": "渲染结果缺少视图或图片无法读取。",
+    "invalid_visible_nodes": "人物默认衣服引用不存在：{key}",
+    "worker_unavailable": "无法启动 Blender 或读取预览配置：{error}"
+  },
+  "views": {"front": "正面", "right": "右侧", "back": "背面", "left": "左侧"},
+  "failed": "预览失败",
+  "dimensions": "尺寸 x/y/z：{x:.2f} / {y:.2f} / {z:.2f} 米",
+  "summary": "预览完成：新渲染 {rendered}，复用 {cached}，失败 {failed}；清单：{path}",
+  "settings": {"views": ["front", "right", "back", "left"]}
+}

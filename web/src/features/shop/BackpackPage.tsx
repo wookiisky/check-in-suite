@@ -8,6 +8,8 @@ import { ShopItemArtwork } from './ShopItemArtwork';
 import { shopError } from './helpers';
 import content from './content.json';
 import { useAppearance } from '../character/AppearanceProvider';
+import { CatalogFilters } from './CatalogFilters';
+import type { CatalogFacets, CatalogSearch } from './useProductCatalog';
 import './shop.css';
 
 // 交易类型由服务端筛选，服装槽位继续按完整目录过滤。
@@ -29,6 +31,8 @@ export function BackpackPage({ client, onBack, onIsland, onAppearance, onTitle }
 }) {
   const appearance = useAppearance();
   const [filter, setFilter] = useState<CategoryFilter>({ group: 'all', category: '' });
+  const [search, setSearch] = useState<CatalogSearch>({ search: '', provider: '', packKey: '' });
+  const [facets, setFacets] = useState<CatalogFacets>({ providers: [], packs: [] });
   const [status, setStatus] = useState<'pending' | 'redeemed'>('pending');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -39,7 +43,13 @@ export function BackpackPage({ client, onBack, onIsland, onAppearance, onTitle }
   const [reward, setReward] = useState<Purchase | null>(null);
   const [revision, refresh] = useState(0);
   const generation = useRef(0); // 筛选或重新读取后，旧请求不得写入当前列表。
-  const query = purchaseQuery(filter, status);
+  const parameters = new URLSearchParams(purchaseQuery(filter, status));
+  if (filter.group === 'appearance' && !filter.category) parameters.set('group', 'appearance');
+  if (isWearableSlot(filter.category)) parameters.set('slot', filter.category);
+  if (search.search) parameters.set('search', search.search);
+  if (search.provider) parameters.set('provider', search.provider);
+  if (search.packKey) parameters.set('pack_key', search.packKey);
+  const query = parameters.toString();
   const path = `/purchases${query ? `?${query}` : ''}`;
 
   useEffect(() => {
@@ -56,13 +66,14 @@ export function BackpackPage({ client, onBack, onIsland, onAppearance, onTitle }
         if (controller.signal.aborted || generation.current !== current) return;
         setPurchases(result.items);
         setCursor(result.next_cursor);
+        if (result.facets) setFacets(result.facets);
       } catch (reason) {
         if (!controller.signal.aborted && generation.current === current) setError(reason);
       } finally {
         if (!controller.signal.aborted && generation.current === current) setLoading(false);
       }
     })();
-    return () => controller.abort();
+    return () => { controller.abort(); generation.current += 1; };
   }, [client, path, filter.group, filter.category, revision]);
 
   // 后续页沿用当前查询，保留已有内容，去重只按不可变的订单身份。
@@ -113,6 +124,7 @@ export function BackpackPage({ client, onBack, onIsland, onAppearance, onTitle }
       <button type="button" className="secondary" onClick={onIsland}>{content.goToIsland}</button>
     </div>
     {message && <p className="shop-warning feedback-success" role="status">{message}</p>}
+    <CatalogFilters value={search} facets={facets} onChange={(next) => { generation.current += 1; setSearch(next); }} />
     <CategoryTabs value={filter} onChange={changeFilter}>
       {filter.group === 'reward' && <div className="shop-tabs" aria-label={content.rewards}>
         {(['pending', 'redeemed'] as const).map((item) => <button

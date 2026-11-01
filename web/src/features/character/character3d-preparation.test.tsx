@@ -4,11 +4,31 @@ import { appearanceFixture, deferred, preparedCharacterFixture } from './charact
 import { resolveAppearance } from './character3d-appearance';
 import type { PreparedCharacter } from './character3d-model';
 import { usePreparedCharacter } from './character3d-preparation';
+import { previewActionKey, resolveCharacterPreviewAction } from './character-preview-actions';
 
 const prepare = vi.hoisted(() => vi.fn());
 vi.mock('./character3d-model', () => ({ prepareCharacter: prepare }));
 
 describe('人物异步准备', () => {
+  it('原始动作按选择准备，切换时取消旧加载，迟到结果不覆盖当前预览', async () => {
+    const state = appearanceFixture();
+    state.characters[0]!.preview_animations = [{ clip: 'Wave', asset_key: 'wave', url: '/wave.glb' }, { clip: 'Swim', asset_key: 'swim', url: '/swim.glb' }];
+    const pending = [deferred<PreparedCharacter>(), deferred<PreparedCharacter>()];
+    prepare.mockReset().mockReturnValueOnce(pending[0]!.promise).mockReturnValueOnce(pending[1]!.promise);
+    const { result, rerender } = renderHook(({ index }) => usePreparedCharacter({ resolved: resolveAppearance(resolveCharacterPreviewAction(state, previewActionKey('body', index)).snapshot) }), { initialProps: { index: 0 } });
+    rerender({ index: 1 });
+    expect((prepare.mock.calls[0]?.[2] as AbortSignal).aborted).toBe(true);
+    const latest = preparedCharacterFixture('swim');
+    await act(async () => pending[1]!.resolve(latest));
+    expect(result.current.character).toBe(latest);
+    const abandoned = preparedCharacterFixture('wave');
+    const dispose = vi.spyOn(abandoned, 'dispose');
+    await act(async () => pending[0]!.resolve(abandoned));
+    expect(dispose).toHaveBeenCalledOnce();
+    expect(result.current.character).toBe(latest);
+    expect(state.characters[0]!.animations._preview).toBeUndefined();
+  });
+
   it('新结果全部就绪才替换，失败保留上一套，迟到实例立即释放', async () => {
     const pending = Array.from({ length: 4 }, () => deferred<PreparedCharacter>());
     prepare.mockReset(); for (const request of pending) prepare.mockReturnValueOnce(request.promise);

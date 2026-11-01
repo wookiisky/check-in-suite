@@ -98,7 +98,7 @@ test('移动主屋保存后刷新持久化且取消不写入', async ({ page, or
   const environment = originalLayout.scene.environments.find((key) => key !== originalLayout.environment_key)!;
   const showInventory = page.getByRole('button', { name: content.showInventory, exact: true });
   if (await showInventory.isVisible()) await showInventory.click();
-  await page.getByRole('complementary', { name: content.inventory, exact: true }).getByRole('combobox').selectOption(environment);
+  await page.getByRole('complementary', { name: content.inventory, exact: true }).locator('.spatial-environment select').selectOption(environment);
   await page.getByRole('button', { name: content.save, exact: true }).click();
   await expect(page.getByText(content.saved, { exact: true })).toBeVisible();
   const saved = await readSpatial(page);

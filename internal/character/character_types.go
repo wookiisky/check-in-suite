@@ -5,11 +5,12 @@ package character
 type Slot string
 
 const (
-	SlotHair            Slot = "hair"             // 发型。
-	SlotUpper           Slot = "upper"            // 上衣。
-	SlotLower           Slot = "lower"            // 下装。
-	SlotShoes           Slot = "shoes"            // 鞋子。
-	DefaultCharacterKey      = "kaykit-medium-v1" // 首批统一体型的稳定身份。
+	SlotHair            Slot = "hair"                  // 发型。
+	SlotUpper           Slot = "upper"                 // 上衣。
+	SlotLower           Slot = "lower"                 // 下装。
+	SlotShoes           Slot = "shoes"                 // 鞋子。
+	DefaultCharacterKey      = "kaykit-medium-v1"      // 首批统一体型的稳定身份。
+	DefaultBodyKey           = "kaykit-medium-body-v1" // 统一身体比例、骨架绑定姿势及四槽接缝的规格。
 )
 
 // Selection names the resolved definitions for the four required slots.
@@ -29,21 +30,31 @@ type Animation struct {
 
 // Definition describes a complete body and its compatible default outfit.
 type Definition struct {
-	Key           string               `json:"character_key"`   // 身体定义身份。
-	Name          string               `json:"name"`            // 目录提供的显示名称。
-	RigKey        string               `json:"rig_key"`         // 骨架、层级和绑定姿势的身份。
-	ModelAssetKey string               `json:"model_asset_key"` // 身体模型资源身份。
-	ModelURL      string               `json:"model_url"`       // 同源身体 GLB。
-	Scale         float64              `json:"scale"`           // 米制统一高度的倍率。
-	FixedNodes    []string             `json:"fixed_nodes"`     // 始终显示的身体节点。
-	BodyRegions   map[string][]string  `json:"body_regions"`    // 由服装覆盖的身体分区。
-	Defaults      Selection            `json:"defaults"`        // 每槽免费默认部件。
-	Animations    map[string]Animation `json:"animations"`      // 已整理的语义动作。
+	PreviewAnimations []Animation          `json:"preview_animations,omitempty"`  // 独立预览使用的原始动作，按需读取而不进入营地玩法。
+	Key               string               `json:"character_key"`                 // 身体定义身份。
+	BodyKey           string               `json:"body_key"`                      // 可共用服装的统一身体规格。
+	Name              string               `json:"name"`                          // 目录提供的显示名称。
+	Provider          string               `json:"provider,omitempty"`            // 素材官方来源。
+	PackKey           string               `json:"pack_key,omitempty"`            // 来源素材包稳定身份。
+	ThumbnailAssetKey string               `json:"thumbnail_asset_key,omitempty"` // 实际人物渲染缩略图。
+	ThumbnailURL      string               `json:"thumbnail_url,omitempty"`       // 同源缩略图路径。
+	RigKey            string               `json:"rig_key"`                       // 骨架、层级和绑定姿势的身份。
+	ModelAssetKey     string               `json:"model_asset_key"`               // 身体模型资源身份。
+	ModelURL          string               `json:"model_url"`                     // 同源身体 GLB。
+	Scale             float64              `json:"scale"`                         // 米制统一高度的倍率。
+	FixedNodes        []string             `json:"fixed_nodes"`                   // 始终显示的身体节点。
+	BodyRegions       map[string][]string  `json:"body_regions"`                  // 由服装覆盖的身体分区。
+	Defaults          Selection            `json:"defaults"`                      // 每槽免费默认部件。
+	Animations        map[string]Animation `json:"animations"`                    // 已整理的语义动作。
 }
 
 // Wearable describes geometry, body coverage and compatibility independently from ownership.
 type Wearable struct {
+	Empty             bool     `json:"empty,omitempty"`     // 仅明确无发型默认项允许没有网格。
 	Key               string   `json:"wearable_key"`        // 穿戴定义身份。
+	BodyKey           string   `json:"body_key"`            // 适配身体规格，不以角色外观身份限制共用。
+	Provider          string   `json:"provider,omitempty"`  // 素材官方来源。
+	PackKey           string   `json:"pack_key,omitempty"`  // 来源素材包稳定身份。
 	Name              string   `json:"name"`                // 目录提供的服装显示名称。
 	Slot              Slot     `json:"slot"`                // 唯一所属部位。
 	CharacterKey      string   `json:"character_key"`       // 兼容身体身份。

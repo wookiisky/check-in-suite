@@ -1,0 +1,260 @@
+{
+  "body_key": "kaykit-medium-body-v1",
+  "rig_key": "kaykit-adventurers-medium-v1",
+  "canonical_model": "internal/assets/builtin/character-medium-v1.glb",
+  "seams": {
+    "waist": 0.72,
+    "ankle": 0.23,
+    "wrist": 0.76
+  },
+  "sources": [
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-adventurers",
+      "filename": "Barbarian.glb",
+      "key": "kaykit-adventurers-barbarian",
+      "name": "野蛮人",
+      "prefix": "Barbarian",
+      "head_nodes": [
+        "Barbarian_Head"
+      ],
+      "hair_nodes": [
+        "Barbarian_BearHat"
+      ],
+      "hair_uv_regions": [
+        [
+          0.125,
+          0.25,
+          0.75,
+          1
+        ]
+      ],
+      "upper_nodes": [],
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "Barbarian_Head"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-adventurers",
+      "filename": "Knight.glb",
+      "key": "kaykit-adventurers-knight",
+      "name": "骑士",
+      "prefix": "Knight",
+      "head_nodes": [
+        "Knight_Head"
+      ],
+      "hair_nodes": [
+        "Knight_Helmet",
+        "Knight_HelmetVisor"
+      ],
+      "hair_uv_regions": [
+        [
+          0.125,
+          0.25,
+          0.75,
+          1
+        ]
+      ],
+      "upper_nodes": [
+        "Knight_Cape"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-adventurers",
+      "filename": "Mage.glb",
+      "key": "kaykit-adventurers-mage",
+      "name": "法师",
+      "prefix": "Mage",
+      "head_nodes": [
+        "Mage_Head"
+      ],
+      "hair_nodes": [
+        "Mage_Hat"
+      ],
+      "hair_uv_regions": [
+        [
+          0.125,
+          0.25,
+          0.75,
+          1
+        ]
+      ],
+      "upper_nodes": [
+        "Mage_Cape"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-adventurers",
+      "filename": "Rogue.glb",
+      "key": "kaykit-adventurers-rogue",
+      "name": "游侠",
+      "prefix": "Rogue",
+      "head_nodes": [
+        "Rogue_Head"
+      ],
+      "hair_nodes": [],
+      "hair_uv_regions": [
+        [
+          0.125,
+          0.25,
+          0.75,
+          1
+        ]
+      ],
+      "upper_nodes": [
+        "Rogue_Cape"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-adventurers",
+      "filename": "Rogue_Hooded.glb",
+      "key": "kaykit-adventurers-rogue-hooded",
+      "name": "兜帽游侠",
+      "prefix": "RogueHooded",
+      "head_nodes": [
+        "RogueHooded_Head"
+      ],
+      "hair_nodes": [
+        "RogueHooded_Mask"
+      ],
+      "hair_uv_regions": [
+        [
+          0.125,
+          0.25,
+          0.75,
+          1
+        ],
+        [
+          0.125,
+          0.25,
+          0.5,
+          0.75
+        ]
+      ],
+      "upper_nodes": [
+        "RogueHooded_Cape"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-adventurers",
+      "filename": "Ranger.glb",
+      "key": "kaykit-adventurers-ranger",
+      "name": "巡林客",
+      "prefix": "Ranger",
+      "head_nodes": [
+        "Ranger_Head"
+      ],
+      "hair_nodes": [],
+      "hair_uv_regions": [
+        [
+          0.125,
+          0.25,
+          0.75,
+          1
+        ]
+      ],
+      "upper_nodes": [
+        "Ranger_Cape",
+        "Ranger_Quiver"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeletons",
+      "filename": "Skeleton_Mage.glb",
+      "key": "kaykit-skeletons-mage",
+      "name": "骷髅法师",
+      "prefix": "Skeleton_Mage",
+      "head_nodes": [
+        "Skeleton_Mage_Eyes",
+        "Skeleton_Mage_Jaw",
+        "Skeleton_Mage_Skull"
+      ],
+      "hair_nodes": [
+        "Skeleton_Mage_Hat"
+      ],
+      "upper_nodes": [],
+      "hair_kind": "independent",
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "Skeleton_Mage_Skull"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeletons",
+      "filename": "Skeleton_Rogue.glb",
+      "key": "kaykit-skeletons-rogue",
+      "name": "骷髅游侠",
+      "prefix": "Skeleton_Rogue",
+      "head_nodes": [
+        "Skeleton_Rogue_Eyes",
+        "Skeleton_Rogue_Jaw",
+        "Skeleton_Rogue_Head"
+      ],
+      "hair_nodes": [
+        "Skeleton_Rogue_Hood"
+      ],
+      "upper_nodes": [
+        "Skeleton_Rogue_Cape"
+      ],
+      "hair_kind": "independent",
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "Skeleton_Rogue_Head"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeletons",
+      "filename": "Skeleton_Minion.glb",
+      "key": "kaykit-skeletons-minion",
+      "name": "骷髅侍从",
+      "prefix": "Skeleton_Minion",
+      "head_nodes": [
+        "Skeleton_Minion_Eyes",
+        "Skeleton_Minion_Jaw",
+        "Skeleton_Minion_Head"
+      ],
+      "hair_nodes": [],
+      "upper_nodes": [
+        "Skeleton_Minion_Cloak"
+      ],
+      "hair_kind": "none",
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "Skeleton_Minion_Head"
+      ]
+    },
+    {
+      "provider": "kaykit",
+      "pack_key": "kaykit-skeletons",
+      "filename": "Skeleton_Warrior.glb",
+      "key": "kaykit-skeletons-warrior",
+      "name": "骷髅战士",
+      "prefix": "Skeleton_Warrior",
+      "head_nodes": [
+        "Skeleton_Warrior_Eyes",
+        "Skeleton_Warrior_Jaw",
+        "Skeleton_Warrior_Head"
+      ],
+      "hair_nodes": [
+        "Skeleton_Warrior_Helmet"
+      ],
+      "upper_nodes": [
+        "Skeleton_Warrior_Cloak"
+      ],
+      "hair_kind": "independent",
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "Skeleton_Warrior_Head"
+      ]
+    }
+  ]
+}

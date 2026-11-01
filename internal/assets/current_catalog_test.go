@@ -13,7 +13,7 @@ func TestCurrentCatalogUses3DChoices(t *testing.T) {
 	}
 	for _, item := range items {
 		switch item.Kind {
-		case KindIcon, KindTitle, KindReward, KindBadge, KindIsland, KindModel, KindAnimation, KindWearable:
+		case KindIcon, KindTitle, KindReward, KindBadge, KindIsland, KindModel, KindAnimation, KindWearable, KindCharacter:
 		default:
 			t.Fatalf("retired kind remains selectable: %s %s", item.Key, item.Kind)
 		}

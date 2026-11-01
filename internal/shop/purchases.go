@@ -6,7 +6,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"github.com/wookiisky/check-in-suite/internal/assets"
+	"github.com/wookiisky/check-in-suite/internal/character"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
@@ -16,15 +19,21 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/wallet"
 )
 
-const purchaseColumns = `p.id,p.product_id,p.type_snapshot,p.name_snapshot,p.asset_key_snapshot,p.description_snapshot,p.coin_price,p.diamond_price,p.status,p.redeemed_at,p.version,p.created_at,p.item_key_snapshot,p.wearable_key_snapshot`
+const purchaseColumns = `p.id,p.product_id,p.type_snapshot,p.name_snapshot,p.asset_key_snapshot,p.description_snapshot,p.coin_price,p.diamond_price,p.status,p.redeemed_at,p.version,p.created_at,p.item_key_snapshot,p.wearable_key_snapshot,p.character_key_snapshot`
 
 // scanPurchase formats actual instants while preserving nullable redemption time.
 func scanPurchase(row rowScanner) (Purchase, error) {
 	var p Purchase
 	var redeemed sql.NullInt64
 	var created int64
-	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created, &p.ItemKeySnapshot, &p.WearableKey)
+	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created, &p.ItemKeySnapshot, &p.WearableKey, &p.CharacterKey)
 	p.CreatedAt = core.Timestamp(created)
+	if asset, ok := assets.Get(p.AssetKeySnapshot); ok {
+		p.Provider, p.PackKey, p.PackName = asset.Provider, asset.PackKey, asset.PackName
+	}
+	if body, ok := character.Get(p.CharacterKey); ok {
+		p.Provider, p.PackKey = body.Provider, body.PackKey
+	}
 	if spatial, found := island.SpatialFind(p.ItemKeySnapshot); found {
 		p.IslandItemKey = spatial.Key
 	}
@@ -110,7 +119,7 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 	if product.Type == TypeReward {
 		status = StatusPending
 	}
-	_, err = tx.ExecContext(ctx, "INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,repeatable,item_key_snapshot,wearable_key_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", id, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli(), product.Repeatable, product.IslandItemKey, product.WearableKey)
+	_, err = tx.ExecContext(ctx, "INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,repeatable,item_key_snapshot,wearable_key_snapshot,character_key_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli(), product.Repeatable, product.IslandItemKey, product.WearableKey, product.CharacterKey)
 	if err != nil {
 		return result, err
 	}
@@ -139,15 +148,28 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 
 // purchaseCursor binds a stable keyset boundary to the requested filter combination.
 type purchaseCursor struct {
-	CreatedAt int64  `json:"created_at"` // Exact stored milliseconds, not a rounded browser time.
-	ID        string `json:"id"`         // Tie breaker for orders created in the same millisecond.
-	Type      string `json:"type"`       // Filter that produced this boundary.
-	Status    string `json:"status"`     // Status filter that produced this boundary.
+	Group     string `json:"group,omitempty"`    // Broader ownership filter.
+	Slot      string `json:"slot,omitempty"`     // Clothing attachment filter.
+	Search    string `json:"search,omitempty"`   // Normalized name filter.
+	Provider  string `json:"provider,omitempty"` // Source filter.
+	PackKey   string `json:"pack,omitempty"`     // Source pack filter.
+	CreatedAt int64  `json:"created_at"`         // Exact stored milliseconds, not a rounded browser time.
+	ID        string `json:"id"`                 // Tie breaker for orders created in the same millisecond.
+	Type      string `json:"type"`               // Filter that produced this boundary.
+	Status    string `json:"status"`             // Status filter that produced this boundary.
 }
 
 // ListPurchases preserves ownership across product deletion and reports further pages explicitly.
 func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input PurchaseQuery) (PurchaseList, error) {
 	result := PurchaseList{Items: []Purchase{}}
+	input.Search = strings.ToLower(strings.TrimSpace(input.Search))
+	input.Provider = strings.ToLower(input.Provider)
+	if input.Group != "" && input.Group != "appearance" {
+		return result, core.Invalid("group", "INVALID_VALUE")
+	}
+	if input.Slot != "" && input.Slot != "hair" && input.Slot != "upper" && input.Slot != "lower" && input.Slot != "shoes" {
+		return result, core.Invalid("slot", "INVALID_VALUE")
+	}
 	if input.Type != "" && !validType(input.Type) {
 		return result, core.Invalid("type", "INVALID_VALUE")
 	}
@@ -170,17 +192,23 @@ func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input 
 		query += " AND p.status=?"
 		args = append(args, input.Status)
 	}
+	if input.Group == "appearance" {
+		query += " AND p.type_snapshot IN ('character','wearable','title')"
+	}
 	if input.Cursor != "" {
 		var cursor purchaseCursor
 		data, err := base64.RawURLEncoding.DecodeString(input.Cursor)
-		if err != nil || len(data) > 1024 || json.Unmarshal(data, &cursor) != nil || cursor.ID == "" || cursor.Type != input.Type || cursor.Status != input.Status {
+		if err != nil || len(data) > 1024 || json.Unmarshal(data, &cursor) != nil || cursor.ID == "" || cursor.Type != input.Type || cursor.Status != input.Status || cursor.Group != input.Group || cursor.Slot != input.Slot || cursor.Search != input.Search || cursor.Provider != input.Provider || cursor.PackKey != input.PackKey {
 			return result, core.Invalid("cursor", "INVALID_CURSOR")
 		}
 		query += " AND (p.created_at<? OR (p.created_at=? AND p.id<?))"
 		args = append(args, cursor.CreatedAt, cursor.CreatedAt, cursor.ID)
 	}
-	query += " ORDER BY p.created_at DESC,p.id DESC LIMIT ?"
-	args = append(args, input.Limit+1)
+	query += " ORDER BY p.created_at DESC,p.id DESC"
+	if input.Provider == "" && input.PackKey == "" && input.Slot == "" && input.Search == "" {
+		query += " LIMIT ?"
+		args = append(args, input.Limit+1)
+	}
 	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return result, err
@@ -199,7 +227,25 @@ func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input 
 			rows.Close()
 			return result, scanErr
 		}
+		if input.Search != "" && !strings.Contains(strings.ToLower(item.NameSnapshot), input.Search) {
+			continue
+		}
+		if input.Provider != "" && item.Provider != input.Provider {
+			continue
+		}
+		if input.PackKey != "" && item.PackKey != input.PackKey {
+			continue
+		}
+		if input.Slot != "" {
+			wearable, ok := character.GetWearable(item.WearableKey)
+			if !ok || string(wearable.Slot) != input.Slot {
+				continue
+			}
+		}
 		result.Items = append(result.Items, item)
+		if len(result.Items) > input.Limit {
+			break
+		}
 	}
 	err = rows.Err()
 	rows.Close()
@@ -213,12 +259,16 @@ func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input 
 		if err != nil {
 			return result, err
 		}
-		data, err := json.Marshal(purchaseCursor{CreatedAt: created.UnixMilli(), ID: last.ID, Type: input.Type, Status: input.Status})
+		data, err := json.Marshal(purchaseCursor{CreatedAt: created.UnixMilli(), ID: last.ID, Type: input.Type, Status: input.Status, Group: input.Group, Slot: input.Slot, Search: input.Search, Provider: input.Provider, PackKey: input.PackKey})
 		if err != nil {
 			return result, err
 		}
 		cursor := base64.RawURLEncoding.EncodeToString(data)
 		result.NextCursor = &cursor
+	}
+	result.Facets, err = purchaseFacets(ctx, tx)
+	if err != nil {
+		return result, err
 	}
 	return result, tx.Commit()
 }

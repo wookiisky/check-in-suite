@@ -1,0 +1,2138 @@
+{
+  "snapshot_at": "2026-11-01T15:44:44.898798+00:00",
+  "scope": "official-current-free-3d-including-public-legacy",
+  "catalog_pages": {
+    "kenney": [
+      "https://kenney.nl/assets/category:3D",
+      "https://kenney.nl/assets/category:3D/page:2",
+      "https://kenney.nl/assets/category:3D/page:3",
+      "https://kenney.nl/assets/category:3D/page:4"
+    ],
+    "kaykit": [
+      "https://kaylousberg.itch.io/"
+    ]
+  },
+  "packs": [
+    {
+      "provider": "kaykit",
+      "id": "bits-bundle-1",
+      "name": "KayKit : Bits Bundle 1",
+      "source_url": "https://kaylousberg.itch.io/bits-bundle-1",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/bits-bundle-1/extracted",
+      "status": "excluded-paid",
+      "error": "官方包没有零价格下载入口",
+      "source_page_sha256": "d9b14ec86853264fcfaf2a8564d4e1ce276d0334a0830ea83d76fff372e3f1f2",
+      "license_evidence_url": "https://kaylousberg.itch.io/bits-bundle-1"
+    },
+    {
+      "provider": "kaykit",
+      "id": "bits-bundle-2",
+      "name": "KayKit : Bits Bundle 2",
+      "source_url": "https://kaylousberg.itch.io/bits-bundle-2",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/bits-bundle-2/extracted",
+      "status": "excluded-paid",
+      "error": "官方包没有零价格下载入口",
+      "source_page_sha256": "57d6b893bed0219df22502b6f3a9287ef7ec2a09ef6a5eb0ca52d2c8cb5d1367",
+      "license_evidence_url": "https://kaylousberg.itch.io/bits-bundle-2"
+    },
+    {
+      "provider": "kaykit",
+      "id": "block-bits",
+      "name": "KayKit : Block Bits",
+      "source_url": "https://kaylousberg.itch.io/block-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/block-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "13197456",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/block-bits/source-13197456.zip",
+          "archive_sha256": "0729d8e701b79ea20b329eae170bfe2c6ab7843d88b24f208e6675bcb8524334"
+        }
+      ],
+      "archive_sha256": "0729d8e701b79ea20b329eae170bfe2c6ab7843d88b24f208e6675bcb8524334",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/block-bits/source-13197456.zip",
+      "download_url": "https://kaylousberg.itch.io/block-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 80,
+        ".gltf": 40,
+        ".obj": 40
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/block-bits/extracted/KayKit_BlockBits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "e437b86b77c35ecc7de2768470ae8845dc18d69cd9a7942c189d4b0fc97aca31",
+      "license_evidence_url": "https://kaylousberg.itch.io/block-bits",
+      "content_revision": "sha256:0729d8e701b79ea20b329eae170bfe2c6ab7843d88b24f208e6675bcb8524334"
+    },
+    {
+      "provider": "kaykit",
+      "id": "board-game-bits",
+      "name": "KayKit : Board Game Bits",
+      "source_url": "https://kaylousberg.itch.io/board-game-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/board-game-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "17150670",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/board-game-bits/source-17150670.zip",
+          "archive_sha256": "4b593501cc6c0ca63e883a76c987baded0674da34d03ebf354b1aaf9e0ba0cfc"
+        }
+      ],
+      "archive_sha256": "4b593501cc6c0ca63e883a76c987baded0674da34d03ebf354b1aaf9e0ba0cfc",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/board-game-bits/source-17150670.zip",
+      "download_url": "https://kaylousberg.itch.io/board-game-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 324,
+        ".gltf": 162,
+        ".obj": 162
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/board-game-bits/extracted/KayKit_BoardGameBits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "cc5ae7628d678fd384a5f1a6bfb6cee66a779426ae4c91517dcbfa52c02d0b38",
+      "license_evidence_url": "https://kaylousberg.itch.io/board-game-bits",
+      "content_revision": "sha256:4b593501cc6c0ca63e883a76c987baded0674da34d03ebf354b1aaf9e0ba0cfc"
+    },
+    {
+      "provider": "kaykit",
+      "id": "city-builder-bits",
+      "name": "KayKit : City Builder Bits",
+      "source_url": "https://kaylousberg.itch.io/city-builder-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/city-builder-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "8567487",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/city-builder-bits/source-8567487.zip",
+          "archive_sha256": "aff444e1d083ddac331be94ea4a7590e5604ef49715ae23df71cd2e9659bd33f"
+        }
+      ],
+      "archive_sha256": "aff444e1d083ddac331be94ea4a7590e5604ef49715ae23df71cd2e9659bd33f",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/city-builder-bits/source-8567487.zip",
+      "download_url": "https://kaylousberg.itch.io/city-builder-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 82,
+        ".gltf": 41,
+        ".obj": 61
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/city-builder-bits/extracted/KayKit_City_Builder_Bits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "c6ddfdaf8696571cc977442141895de11b6e362655b40f08696c7aff25d940a2",
+      "license_evidence_url": "https://kaylousberg.itch.io/city-builder-bits",
+      "content_revision": "sha256:aff444e1d083ddac331be94ea4a7590e5604ef49715ae23df71cd2e9659bd33f"
+    },
+    {
+      "provider": "kaykit",
+      "id": "fantasy-weapons-bits",
+      "name": "KayKit : Fantasy Weapons Bits",
+      "source_url": "https://kaylousberg.itch.io/fantasy-weapons-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/fantasy-weapons-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "16499093",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/fantasy-weapons-bits/source-16499093.zip",
+          "archive_sha256": "1017144f85a994f405b731befa71ced360f5b60ed0b9c00c72e711c1633ce2d2"
+        }
+      ],
+      "archive_sha256": "1017144f85a994f405b731befa71ced360f5b60ed0b9c00c72e711c1633ce2d2",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/fantasy-weapons-bits/source-16499093.zip",
+      "download_url": "https://kaylousberg.itch.io/fantasy-weapons-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 62,
+        ".gltf": 31,
+        ".obj": 31
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/fantasy-weapons-bits/extracted/KayKit_FantasyWeaponsBits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "d71afa3f868c460a659b0ba93c52cd94f230bb27edf5da4398fa91286afb471b",
+      "license_evidence_url": "https://kaylousberg.itch.io/fantasy-weapons-bits",
+      "content_revision": "sha256:1017144f85a994f405b731befa71ced360f5b60ed0b9c00c72e711c1633ce2d2"
+    },
+    {
+      "provider": "kaykit",
+      "id": "furniture-bits",
+      "name": "KayKit : Furniture Bits",
+      "source_url": "https://kaylousberg.itch.io/furniture-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/furniture-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "8655517",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/furniture-bits/source-8655517.zip",
+          "archive_sha256": "e6d75f34c5545486b5a8f45f86209dbd49092f3e77ae23011bdb87edab89e7e4"
+        }
+      ],
+      "archive_sha256": "e6d75f34c5545486b5a8f45f86209dbd49092f3e77ae23011bdb87edab89e7e4",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/furniture-bits/source-8655517.zip",
+      "download_url": "https://kaylousberg.itch.io/furniture-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 106,
+        ".gltf": 53,
+        ".obj": 53
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/furniture-bits/extracted/KayKit_Furniture_Bits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "0d184da058fbb125e3aedd919697eab87e345ad868b57bbbdf5b72faa382c96e",
+      "license_evidence_url": "https://kaylousberg.itch.io/furniture-bits",
+      "content_revision": "sha256:e6d75f34c5545486b5a8f45f86209dbd49092f3e77ae23011bdb87edab89e7e4"
+    },
+    {
+      "provider": "kaykit",
+      "id": "halloween-bits",
+      "name": "KayKit : Halloween Bits",
+      "source_url": "https://kaylousberg.itch.io/halloween-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/halloween-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "8834883",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/halloween-bits/source-8834883.zip",
+          "archive_sha256": "a55598dab64af822c5819aa71b326fcba7448e52a6c2bcc13667168b69be1aa4"
+        }
+      ],
+      "archive_sha256": "a55598dab64af822c5819aa71b326fcba7448e52a6c2bcc13667168b69be1aa4",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/halloween-bits/source-8834883.zip",
+      "download_url": "https://kaylousberg.itch.io/halloween-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 126,
+        ".gltf": 63,
+        ".obj": 70
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/halloween-bits/extracted/KayKit_HalloweenBits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "12fc7e272d65f42f9a4eae732b475cc9a3dea754de822ff91925120a96b873d7",
+      "license_evidence_url": "https://kaylousberg.itch.io/halloween-bits",
+      "content_revision": "sha256:a55598dab64af822c5819aa71b326fcba7448e52a6c2bcc13667168b69be1aa4"
+    },
+    {
+      "provider": "kaykit",
+      "id": "holiday-bits",
+      "name": "KayKit : Holiday Bits",
+      "source_url": "https://kaylousberg.itch.io/holiday-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/holiday-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "15777030",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/holiday-bits/source-15777030.zip",
+          "archive_sha256": "2b72b9209455f7fde90ff0696d1ed1ac80dc49fcb85d246662c6f544741ac49a"
+        }
+      ],
+      "archive_sha256": "2b72b9209455f7fde90ff0696d1ed1ac80dc49fcb85d246662c6f544741ac49a",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/holiday-bits/source-15777030.zip",
+      "download_url": "https://kaylousberg.itch.io/holiday-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 196,
+        ".gltf": 98,
+        ".obj": 106
+      },
+      "license_files": [],
+      "source_page_sha256": "9204e385ac02789b8ab6dd695a10a0ea032b30ed9886b63ea84e914149baad57",
+      "license_evidence_url": "https://kaylousberg.itch.io/holiday-bits",
+      "content_revision": "sha256:2b72b9209455f7fde90ff0696d1ed1ac80dc49fcb85d246662c6f544741ac49a"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kay-kit-mini-game-variety-pack",
+      "name": "(Legacy) KayKit - Mini Game Variety Pack",
+      "source_url": "https://kaylousberg.itch.io/kay-kit-mini-game-variety-pack",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kay-kit-mini-game-variety-pack/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "3307997",
+          "name": "KayKit Mini-Game Variety Pack 1.2.zip",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kay-kit-mini-game-variety-pack/source-3307997.zip",
+          "archive_sha256": "078d13c02dddec6eebe917c49ec40164dc74b6964756cb4a0ace1aaf84574c9d"
+        }
+      ],
+      "archive_sha256": "078d13c02dddec6eebe917c49ec40164dc74b6964756cb4a0ace1aaf84574c9d",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kay-kit-mini-game-variety-pack/source-3307997.zip",
+      "download_url": "https://kaylousberg.itch.io/kay-kit-mini-game-variety-pack/download_url",
+      "version": "KayKit Mini-Game Variety Pack 1.2.zip",
+      "model_formats": {
+        ".dae": 131,
+        ".fbx": 131,
+        ".glb": 131,
+        ".gltf": 3,
+        ".obj": 146
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kay-kit-mini-game-variety-pack/extracted/License.txt"
+      ],
+      "source_page_sha256": "567317bb8088464bfddc49db43abde5ec4ade72c34ef98060fd32a612fdcf178",
+      "license_evidence_url": "https://kaylousberg.itch.io/kay-kit-mini-game-variety-pack",
+      "content_revision": "sha256:078d13c02dddec6eebe917c49ec40164dc74b6964756cb4a0ace1aaf84574c9d"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-adventurers",
+      "name": "KayKit - Character Pack : Adventurers",
+      "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "15363167",
+          "name": "Free 2.0",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/source-15363167.zip",
+          "archive_sha256": "abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479"
+        }
+      ],
+      "archive_sha256": "abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/source-15363167.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-adventurers/download_url",
+      "version": "Free 2.0",
+      "model_formats": {
+        ".fbx": 70,
+        ".glb": 8,
+        ".gltf": 31,
+        ".obj": 31
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/extracted/KayKit_Adventurers_2.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "487882f70dcb93bc6d8350fc698e80a2960708c24207618e5b36e3a0237bd480",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+      "content_revision": "sha256:abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-animations",
+      "name": "(Legacy) KayKit - Character Animations",
+      "source_url": "https://kaylousberg.itch.io/kaykit-animations",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-animations/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "5221104",
+          "name": "KayKit Character Animations 1.2.zip",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-animations/source-5221104.zip",
+          "archive_sha256": "c9d3fbea492dc6edd0903939369a564c2240b892430bcd99e0aee4876110bb8f"
+        }
+      ],
+      "archive_sha256": "c9d3fbea492dc6edd0903939369a564c2240b892430bcd99e0aee4876110bb8f",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-animations/source-5221104.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-animations/download_url",
+      "version": "KayKit Character Animations 1.2.zip",
+      "model_formats": {
+        ".dae": 3,
+        ".fbx": 34,
+        ".glb": 3,
+        ".gltf": 1,
+        ".obj": 6
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-animations/extracted/License.txt"
+      ],
+      "source_page_sha256": "802fce2e15ac06f7c062e022f799fa598d9dd377beec022106829c27d2481f48",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-animations",
+      "content_revision": "sha256:c9d3fbea492dc6edd0903939369a564c2240b892430bcd99e0aee4876110bb8f"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-character-animations",
+      "name": "KayKit - Character Animations",
+      "source_url": "https://kaylousberg.itch.io/kaykit-character-animations",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-character-animations/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "15799903",
+          "name": "Free 1.1",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-character-animations/source-15799903.zip",
+          "archive_sha256": "65882f31f905ad2e953819648a59287cdeab8f623908d5ef701971d3758be20f"
+        }
+      ],
+      "archive_sha256": "65882f31f905ad2e953819648a59287cdeab8f623908d5ef701971d3758be20f",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-character-animations/source-15799903.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-character-animations/download_url",
+      "version": "Free 1.1",
+      "model_formats": {
+        ".fbx": 16,
+        ".glb": 16
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-character-animations/extracted/KayKit_Character_Animations_1.1/License.txt"
+      ],
+      "source_page_sha256": "a31a705c3023eef9214bdda5a3e453ab34a750c3bbcebc7bae52e17be2c66429",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-character-animations",
+      "content_revision": "sha256:65882f31f905ad2e953819648a59287cdeab8f623908d5ef701971d3758be20f"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-complete",
+      "name": "The Complete KayKit",
+      "source_url": "https://kaylousberg.itch.io/kaykit-complete",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-complete/extracted",
+      "status": "excluded-paid",
+      "error": "官方包没有零价格下载入口",
+      "source_page_sha256": "eb4216db90a566eec1ce451261085ed8ecba72a3183731a30b9802aa7dfef411",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-complete"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-dungeon",
+      "name": "(Legacy) KayKit - Dungeon Pack",
+      "source_url": "https://kaylousberg.itch.io/kaykit-dungeon",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-dungeon/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "2988576",
+          "name": "KayKit Dungeon Pack 1.0.zip",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-dungeon/source-2988576.zip",
+          "archive_sha256": "36a9b8ba5c14397fd08ddbb49d616e1c6545e05167650cb9ace4314b23164f75"
+        }
+      ],
+      "archive_sha256": "36a9b8ba5c14397fd08ddbb49d616e1c6545e05167650cb9ace4314b23164f75",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-dungeon/source-2988576.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-dungeon/download_url",
+      "version": "KayKit Dungeon Pack 1.0.zip",
+      "model_formats": {
+        ".dae": 202,
+        ".fbx": 208,
+        ".glb": 192,
+        ".gltf": 10,
+        ".obj": 226
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-dungeon/extracted/License.txt"
+      ],
+      "source_page_sha256": "c2740d66719f32f85fbd785b2352a41a7a6bef402ac74f7789e5e292e2bc3af8",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-dungeon",
+      "content_revision": "sha256:36a9b8ba5c14397fd08ddbb49d616e1c6545e05167650cb9ace4314b23164f75"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-dungeon-pack",
+      "name": "KayKit - Dungeon Pack",
+      "source_url": "https://kaylousberg.itch.io/kaykit-dungeon-pack",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-dungeon-pack/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "18356749",
+          "name": "Free 1.1",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-dungeon-pack/source-18356749.zip",
+          "archive_sha256": "6acb859d1aefae074f937d1e6f13656a7312b2bdb6d9f1232ebdade8d93d6a1c"
+        }
+      ],
+      "archive_sha256": "6acb859d1aefae074f937d1e6f13656a7312b2bdb6d9f1232ebdade8d93d6a1c",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-dungeon-pack/source-18356749.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-dungeon-pack/download_url",
+      "version": "Free 1.1",
+      "model_formats": {
+        ".fbx": 422,
+        ".gltf": 211,
+        ".obj": 216
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-dungeon-pack/extracted/KayKit_Dungeon_Pack_1.1_FREE/License.txt"
+      ],
+      "source_page_sha256": "d3647a7e7b54437e1bf80cdfbace5b22d2b3871b743a2337eaf37a5099b762d0",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-dungeon-pack",
+      "content_revision": "sha256:6acb859d1aefae074f937d1e6f13656a7312b2bdb6d9f1232ebdade8d93d6a1c"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-forest",
+      "name": "KayKit - Forest Nature Pack",
+      "source_url": "https://kaylousberg.itch.io/kaykit-forest",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-forest/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "13520330",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-forest/source-13520330.zip",
+          "archive_sha256": "2ee83e63bb7695f2d884ec27ddf6fce020789a452e7d5c5b0bbdfc4f6ea1fc8c"
+        }
+      ],
+      "archive_sha256": "2ee83e63bb7695f2d884ec27ddf6fce020789a452e7d5c5b0bbdfc4f6ea1fc8c",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-forest/source-13520330.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-forest/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 210,
+        ".gltf": 105,
+        ".obj": 105
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-forest/extracted/KayKit_Forest_Nature_Pack_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "0f0d5507006fa12074c791aa1c3bef220e6f4953e329b8da1b2d004028f41ae6",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-forest",
+      "content_revision": "sha256:2ee83e63bb7695f2d884ec27ddf6fce020789a452e7d5c5b0bbdfc4f6ea1fc8c"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-medieval-builder-pack",
+      "name": "(Legacy) KayKit - Medieval Builder Pack",
+      "source_url": "https://kaylousberg.itch.io/kaykit-medieval-builder-pack",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-medieval-builder-pack/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "4289072",
+          "name": "KayKit Medieval Builder Pack 1.0.zip",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-medieval-builder-pack/source-4289072.zip",
+          "archive_sha256": "588d931b62a33d71bb114078f0a7c02309a97a25c51a47083cf077bd97edaa3e"
+        }
+      ],
+      "archive_sha256": "588d931b62a33d71bb114078f0a7c02309a97a25c51a47083cf077bd97edaa3e",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-medieval-builder-pack/source-4289072.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-medieval-builder-pack/download_url",
+      "version": "KayKit Medieval Builder Pack 1.0.zip",
+      "model_formats": {
+        ".dae": 226,
+        ".fbx": 226,
+        ".glb": 226,
+        ".obj": 229
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-medieval-builder-pack/extracted/License.txt"
+      ],
+      "source_page_sha256": "ea1b5e5e0baa533a284187910ffbd8f7cddd677fe6225edf22237c3e28d07646",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-medieval-builder-pack",
+      "content_revision": "sha256:588d931b62a33d71bb114078f0a7c02309a97a25c51a47083cf077bd97edaa3e"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-medieval-hexagon",
+      "name": "KayKit - Medieval Hexagon Pack",
+      "source_url": "https://kaylousberg.itch.io/kaykit-medieval-hexagon",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-medieval-hexagon/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "10278234",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-medieval-hexagon/source-10278234.zip",
+          "archive_sha256": "4fbb374c45732c88522bd3439e9415bf568c683236ede336b4e61d161155ba12"
+        }
+      ],
+      "archive_sha256": "4fbb374c45732c88522bd3439e9415bf568c683236ede336b4e61d161155ba12",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-medieval-hexagon/source-10278234.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-medieval-hexagon/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 442,
+        ".gltf": 221,
+        ".obj": 263
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-medieval-hexagon/extracted/KayKit_Medieval_Hexagon_Pack_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "eac3cd2a1ec6e09b02fd87e2571eb603937b4fa771e63a69d62a5095832d8dcf",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-medieval-hexagon",
+      "content_revision": "sha256:4fbb374c45732c88522bd3439e9415bf568c683236ede336b4e61d161155ba12"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-platformer",
+      "name": "KayKit - Platformer Pack",
+      "source_url": "https://kaylousberg.itch.io/kaykit-platformer",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-platformer/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "13040375",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-platformer/source-13040375.zip",
+          "archive_sha256": "7e140ee01abf99a5896cf93a02ff3dc6a23a7222109fd04854821f44a3a3adeb"
+        }
+      ],
+      "archive_sha256": "7e140ee01abf99a5896cf93a02ff3dc6a23a7222109fd04854821f44a3a3adeb",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-platformer/source-13040375.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-platformer/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 740,
+        ".gltf": 370,
+        ".obj": 388
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-platformer/extracted/KayKit_Platformer_Pack_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "1abbb8839079f99b59e552271cfcb31883aa6828e00edebddde20defd3460293",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-platformer",
+      "content_revision": "sha256:7e140ee01abf99a5896cf93a02ff3dc6a23a7222109fd04854821f44a3a3adeb"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-series-4",
+      "name": "KayKit - Character Pack : Mystery Monthly Series 4",
+      "source_url": "https://kaylousberg.itch.io/kaykit-series-4",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-series-4/extracted",
+      "status": "excluded-paid",
+      "error": "官方包没有零价格下载入口",
+      "source_page_sha256": "079df9ed69a5ebb28ea513f386ceca57c5391a8fff62fa0dc20986a99bd49745",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-series-4"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-series-5",
+      "name": "KayKit - Character Pack : Mystery Monthly Series 5",
+      "source_url": "https://kaylousberg.itch.io/kaykit-series-5",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-series-5/extracted",
+      "status": "excluded-paid",
+      "error": "官方包没有零价格下载入口",
+      "source_page_sha256": "9cf2ccc47822a9e65c7ff27cf6237a0e33bd94dcc7376906e0f2c596f6bac26a",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-series-5"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-series-6",
+      "name": "KayKit - Character Pack : Mystery Monthly Series 6",
+      "source_url": "https://kaylousberg.itch.io/kaykit-series-6",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-series-6/extracted",
+      "status": "excluded-paid",
+      "error": "官方包没有零价格下载入口",
+      "source_page_sha256": "c6c29354a6d01ebc5f8c5fb158406d3dfeee820f87169c5e5b178f20b15327b0",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-series-6"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-skeleton-pack",
+      "name": "(Legacy) KayKit - Character Pack : Skeletons",
+      "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-skeleton-pack/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "4504700",
+          "name": "KayKit Character Pack - Skeletons 1.0.zip",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-skeleton-pack/source-4504700.zip",
+          "archive_sha256": "a26d454abbe6366164135491fecba54f07ffb65ff222433ffad7769ffb5a89b1"
+        }
+      ],
+      "archive_sha256": "a26d454abbe6366164135491fecba54f07ffb65ff222433ffad7769ffb5a89b1",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-skeleton-pack/source-4504700.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack/download_url",
+      "version": "KayKit Character Pack - Skeletons 1.0.zip",
+      "model_formats": {
+        ".dae": 37,
+        ".fbx": 37,
+        ".glb": 29,
+        ".gltf": 8,
+        ".obj": 91
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-skeleton-pack/extracted/License.txt"
+      ],
+      "source_page_sha256": "bf345b19571ebbf9fe9c16d5fde151105f57e3d64a0be9b1284b8855fcd40e18",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+      "content_revision": "sha256:a26d454abbe6366164135491fecba54f07ffb65ff222433ffad7769ffb5a89b1"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-skeletons",
+      "name": "KayKit - Character Pack : Skeletons",
+      "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-skeletons/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "15363145",
+          "name": "Free 1.1",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-skeletons/source-15363145.zip",
+          "archive_sha256": "21fbad59ee6cc1d7bed12d0e425acab8ebe564b8620bbc1d017aedb29dd8a3d2"
+        }
+      ],
+      "archive_sha256": "21fbad59ee6cc1d7bed12d0e425acab8ebe564b8620bbc1d017aedb29dd8a3d2",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-skeletons/source-15363145.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-skeletons/download_url",
+      "version": "Free 1.1",
+      "model_formats": {
+        ".fbx": 32,
+        ".glb": 6,
+        ".gltf": 13,
+        ".obj": 13
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-skeletons/extracted/KayKit_Skeletons_1.1_FREE/License.txt"
+      ],
+      "source_page_sha256": "725cbd352e70c0a9420ff1d1228fbd7ee5e019108f95407944c48614f413e605",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+      "content_revision": "sha256:21fbad59ee6cc1d7bed12d0e425acab8ebe564b8620bbc1d017aedb29dd8a3d2"
+    },
+    {
+      "provider": "kaykit",
+      "id": "kaykit-spooktober",
+      "name": "(Legacy) KayKit - Spooktober Seasonal Pack",
+      "source_url": "https://kaylousberg.itch.io/kaykit-spooktober",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/kaykit-spooktober/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "3308000",
+          "name": "KayKit Spooktober Seasonal Pack 1.1.zip",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-spooktober/source-3308000.zip",
+          "archive_sha256": "5fd3180b26d79cb3e8ed5d334aac80634fd9bd64051a695e4af4ef6da27f0004"
+        }
+      ],
+      "archive_sha256": "5fd3180b26d79cb3e8ed5d334aac80634fd9bd64051a695e4af4ef6da27f0004",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/kaykit-spooktober/source-3308000.zip",
+      "download_url": "https://kaylousberg.itch.io/kaykit-spooktober/download_url",
+      "version": "KayKit Spooktober Seasonal Pack 1.1.zip",
+      "model_formats": {
+        ".dae": 48,
+        ".fbx": 48,
+        ".glb": 46,
+        ".gltf": 2,
+        ".obj": 56
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/kaykit-spooktober/extracted/License.txt"
+      ],
+      "source_page_sha256": "a11b7d4c0e9ccc071180f2924081b8c1ed2cfc0f051e68ae03e24328e777a7fc",
+      "license_evidence_url": "https://kaylousberg.itch.io/kaykit-spooktober",
+      "content_revision": "sha256:5fd3180b26d79cb3e8ed5d334aac80634fd9bd64051a695e4af4ef6da27f0004"
+    },
+    {
+      "provider": "kaykit",
+      "id": "mixed-bag-1",
+      "name": "KayKit - Mixed Bag 1",
+      "source_url": "https://kaylousberg.itch.io/mixed-bag-1",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/mixed-bag-1/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "19236417",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/mixed-bag-1/source-19236417.zip",
+          "archive_sha256": "65d0ff7cfe128b78d26b98f2e4797b7bd7c6371885455faed52c15d9d2c3ec60"
+        }
+      ],
+      "archive_sha256": "65d0ff7cfe128b78d26b98f2e4797b7bd7c6371885455faed52c15d9d2c3ec60",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/mixed-bag-1/source-19236417.zip",
+      "download_url": "https://kaylousberg.itch.io/mixed-bag-1/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 82,
+        ".gltf": 41,
+        ".obj": 69
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/mixed-bag-1/extracted/KayKit_Mixed_Bag_1_FREE/License.txt"
+      ],
+      "source_page_sha256": "56d6b775f51c0a522e46338dd326b38f55c5e4ddffc98aa1c58fd34e12bcbbc2",
+      "license_evidence_url": "https://kaylousberg.itch.io/mixed-bag-1",
+      "content_revision": "sha256:65d0ff7cfe128b78d26b98f2e4797b7bd7c6371885455faed52c15d9d2c3ec60"
+    },
+    {
+      "provider": "kaykit",
+      "id": "prototype-bits",
+      "name": "KayKit : Prototype Bits",
+      "source_url": "https://kaylousberg.itch.io/prototype-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/prototype-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "15362979",
+          "name": "Free 1.1",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/prototype-bits/source-15362979.zip",
+          "archive_sha256": "6dadbcd7dd13ba8582323cf3cfdec591340f83f74a959c212f8b83eb8dc42425"
+        }
+      ],
+      "archive_sha256": "6dadbcd7dd13ba8582323cf3cfdec591340f83f74a959c212f8b83eb8dc42425",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/prototype-bits/source-15362979.zip",
+      "download_url": "https://kaylousberg.itch.io/prototype-bits/download_url",
+      "version": "Free 1.1",
+      "model_formats": {
+        ".fbx": 144,
+        ".gltf": 72,
+        ".obj": 77
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/prototype-bits/extracted/KayKit_Prototype_Bits_1.1_FREE/License.txt"
+      ],
+      "source_page_sha256": "eff3c2f1356e83c0b9ddf8da7109cad93fee5e5473712115941f4c415af58f49",
+      "license_evidence_url": "https://kaylousberg.itch.io/prototype-bits",
+      "content_revision": "sha256:6dadbcd7dd13ba8582323cf3cfdec591340f83f74a959c212f8b83eb8dc42425"
+    },
+    {
+      "provider": "kaykit",
+      "id": "resource-bits",
+      "name": "KayKit : Resource Bits",
+      "source_url": "https://kaylousberg.itch.io/resource-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/resource-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "13266824",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/resource-bits/source-13266824.zip",
+          "archive_sha256": "7056f1310896a4612a67703fd6d5af389fcccdeb46df0a89e2322aa8e3bcfcf7"
+        }
+      ],
+      "archive_sha256": "7056f1310896a4612a67703fd6d5af389fcccdeb46df0a89e2322aa8e3bcfcf7",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/resource-bits/source-13266824.zip",
+      "download_url": "https://kaylousberg.itch.io/resource-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 152,
+        ".gltf": 76,
+        ".obj": 76
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/resource-bits/extracted/KayKit_ResourceBits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "dfcdbb489718749713b8ba8e31ab93c2a9b8154ac55fb1e991558462d5a4550f",
+      "license_evidence_url": "https://kaylousberg.itch.io/resource-bits",
+      "content_revision": "sha256:7056f1310896a4612a67703fd6d5af389fcccdeb46df0a89e2322aa8e3bcfcf7"
+    },
+    {
+      "provider": "kaykit",
+      "id": "restaurant-bits",
+      "name": "KayKit : Restaurant Bits",
+      "source_url": "https://kaylousberg.itch.io/restaurant-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/restaurant-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "8784350",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/restaurant-bits/source-8784350.zip",
+          "archive_sha256": "75f75f0a1ae569f3f2348fa7a04ccd45d2f010d419045755c70ae43289b68e4b"
+        }
+      ],
+      "archive_sha256": "75f75f0a1ae569f3f2348fa7a04ccd45d2f010d419045755c70ae43289b68e4b",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/restaurant-bits/source-8784350.zip",
+      "download_url": "https://kaylousberg.itch.io/restaurant-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 288,
+        ".gltf": 144,
+        ".obj": 150
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/restaurant-bits/extracted/KayKit_Restaurant_Bits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "7b5710f612200115476d88c4d98efd79dee8355a71994df292166f6b87508e30",
+      "license_evidence_url": "https://kaylousberg.itch.io/restaurant-bits",
+      "content_revision": "sha256:75f75f0a1ae569f3f2348fa7a04ccd45d2f010d419045755c70ae43289b68e4b"
+    },
+    {
+      "provider": "kaykit",
+      "id": "rpg-tools-bits",
+      "name": "KayKit : RPG Tools Bits",
+      "source_url": "https://kaylousberg.itch.io/rpg-tools-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/rpg-tools-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "15653196",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/rpg-tools-bits/source-15653196.zip",
+          "archive_sha256": "a17c2a54df93d525e90d960baf3c68638defb4f424e204ceead6ea1f89e9c7dd"
+        }
+      ],
+      "archive_sha256": "a17c2a54df93d525e90d960baf3c68638defb4f424e204ceead6ea1f89e9c7dd",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/rpg-tools-bits/source-15653196.zip",
+      "download_url": "https://kaylousberg.itch.io/rpg-tools-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 98,
+        ".gltf": 49,
+        ".obj": 59
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/rpg-tools-bits/extracted/KayKit_RPGToolsBits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "ddd93f43d3a35ea242f22908f281c5739f356631bac4ecacfa5379807e467eba",
+      "license_evidence_url": "https://kaylousberg.itch.io/rpg-tools-bits",
+      "content_revision": "sha256:a17c2a54df93d525e90d960baf3c68638defb4f424e204ceead6ea1f89e9c7dd"
+    },
+    {
+      "provider": "kaykit",
+      "id": "space-base-bits",
+      "name": "KayKit : Space Base Bits",
+      "source_url": "https://kaylousberg.itch.io/space-base-bits",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kaykit/space-base-bits/extracted",
+      "status": "downloaded",
+      "uploads": [
+        {
+          "id": "8609688",
+          "name": "Free",
+          "archive_path": ".local/3d-sources/provider-packs/kaykit/space-base-bits/source-8609688.zip",
+          "archive_sha256": "4f8d3e2e90a74d9a0d5262e9e09daccac320f1bcfbe4fa2837559a8ad7b98c17"
+        }
+      ],
+      "archive_sha256": "4f8d3e2e90a74d9a0d5262e9e09daccac320f1bcfbe4fa2837559a8ad7b98c17",
+      "archive_path": ".local/3d-sources/provider-packs/kaykit/space-base-bits/source-8609688.zip",
+      "download_url": "https://kaylousberg.itch.io/space-base-bits/download_url",
+      "version": "Free",
+      "model_formats": {
+        ".fbx": 114,
+        ".gltf": 57,
+        ".obj": 73
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kaykit/space-base-bits/extracted/KayKit_Space_Base_Bits_1.0_FREE/License.txt"
+      ],
+      "source_page_sha256": "9849a735fed9334deea2fec984fbca20ed90700d87a72798ece21f1b6c526377",
+      "license_evidence_url": "https://kaylousberg.itch.io/space-base-bits",
+      "content_revision": "sha256:4f8d3e2e90a74d9a0d5262e9e09daccac320f1bcfbe4fa2837559a8ad7b98c17"
+    },
+    {
+      "provider": "kenney",
+      "id": "3d-road-tiles",
+      "name": "3D Road Tiles",
+      "source_url": "https://kenney.nl/assets/3d-road-tiles",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/3d-road-tiles/extracted",
+      "status": "downloaded",
+      "archive_sha256": "93af3af6d2cef287a0eca7efb936a515574151d3cb32c202f14d8f6a99518c40",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/3d-road-tiles/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f33642d726f61642d74696c6573",
+      "version": null,
+      "model_formats": {
+        ".gltf": 302,
+        ".obj": 302
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/3d-road-tiles/extracted/License.txt"
+      ],
+      "source_page_sha256": "0968e055a9f6f6c2d0f0160a302296a8863bdaf23ee24fc52ad50fc9bdfc6d59",
+      "license_evidence_url": "https://kenney.nl/assets/3d-road-tiles",
+      "content_revision": "sha256:93af3af6d2cef287a0eca7efb936a515574151d3cb32c202f14d8f6a99518c40"
+    },
+    {
+      "provider": "kenney",
+      "id": "animated-characters-protagonists",
+      "name": "Animated Characters Protagonists",
+      "source_url": "https://kenney.nl/assets/animated-characters-protagonists",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/animated-characters-protagonists/extracted",
+      "status": "downloaded",
+      "archive_sha256": "ec3787de70fa2200256848d74201b10f6b6c3126594e9857bf989753312c2b84",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/animated-characters-protagonists/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f616e696d617465642d636861726163746572732d70726f7461676f6e69737473",
+      "version": null,
+      "model_formats": {
+        ".fbx": 4
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/animated-characters-protagonists/extracted/License.txt"
+      ],
+      "source_page_sha256": "af124c73941d7f41e390c2ba65448c34418903a887a0e90896bfc04be8237b50",
+      "license_evidence_url": "https://kenney.nl/assets/animated-characters-protagonists",
+      "content_revision": "sha256:ec3787de70fa2200256848d74201b10f6b6c3126594e9857bf989753312c2b84"
+    },
+    {
+      "provider": "kenney",
+      "id": "animated-characters-retro",
+      "name": "Animated Characters Retro",
+      "source_url": "https://kenney.nl/assets/animated-characters-retro",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/animated-characters-retro/extracted",
+      "status": "downloaded",
+      "archive_sha256": "1d03f1fb001f3cf629425b69c898df58261a316616220ea25b58bd35298e6882",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/animated-characters-retro/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f616e696d617465642d636861726163746572732d726574726f",
+      "version": null,
+      "model_formats": {
+        ".fbx": 4
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/animated-characters-retro/extracted/License.txt"
+      ],
+      "source_page_sha256": "ce9eab88178e13248dcf9f467b363f128e891308384195eb88f34c0e836cbc5d",
+      "license_evidence_url": "https://kenney.nl/assets/animated-characters-retro",
+      "content_revision": "sha256:1d03f1fb001f3cf629425b69c898df58261a316616220ea25b58bd35298e6882"
+    },
+    {
+      "provider": "kenney",
+      "id": "animated-characters-survivors",
+      "name": "Animated Characters Survivors",
+      "source_url": "https://kenney.nl/assets/animated-characters-survivors",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/animated-characters-survivors/extracted",
+      "status": "downloaded",
+      "archive_sha256": "fdadced07a0454c9b7f0b46507be6144a072b4d03b4ffa37f225893c76c62845",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/animated-characters-survivors/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f616e696d617465642d636861726163746572732d7375727669766f7273",
+      "version": null,
+      "model_formats": {
+        ".fbx": 4
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/animated-characters-survivors/extracted/License.txt"
+      ],
+      "source_page_sha256": "064dbd4a90eab711fcb0437467482be97ed5d2a305c87328443483150f1ae67f",
+      "license_evidence_url": "https://kenney.nl/assets/animated-characters-survivors",
+      "content_revision": "sha256:fdadced07a0454c9b7f0b46507be6144a072b4d03b4ffa37f225893c76c62845"
+    },
+    {
+      "provider": "kenney",
+      "id": "blaster-kit",
+      "name": "Blaster Kit",
+      "source_url": "https://kenney.nl/assets/blaster-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/blaster-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "91e3093e95427d59625e7e2ce2d0399b861600160fd0b4ada7714796b67cea8c",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/blaster-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f626c61737465722d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 40,
+        ".glb": 40,
+        ".obj": 40
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/blaster-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "3baf3de6da10f2e150c053fd04ef1808b6d4d2d8fc1e9268c59454d5ae9629fe",
+      "license_evidence_url": "https://kenney.nl/assets/blaster-kit",
+      "content_revision": "sha256:91e3093e95427d59625e7e2ce2d0399b861600160fd0b4ada7714796b67cea8c"
+    },
+    {
+      "provider": "kenney",
+      "id": "blocky-characters",
+      "name": "Blocky Characters",
+      "source_url": "https://kenney.nl/assets/blocky-characters",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/blocky-characters/extracted",
+      "status": "downloaded",
+      "archive_sha256": "5e123859aa0c1598342b600c6db197024a1d63eb9ec531398b310725f589887e",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/blocky-characters/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f626c6f636b792d63686172616374657273",
+      "version": null,
+      "model_formats": {
+        ".fbx": 18,
+        ".glb": 18,
+        ".obj": 18
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/blocky-characters/extracted/License.txt"
+      ],
+      "source_page_sha256": "f39d7cb4d3242baf9396cfa3284b6788239911a3270dde857f6727b69445c602",
+      "license_evidence_url": "https://kenney.nl/assets/blocky-characters",
+      "content_revision": "sha256:5e123859aa0c1598342b600c6db197024a1d63eb9ec531398b310725f589887e"
+    },
+    {
+      "provider": "kenney",
+      "id": "brick-kit",
+      "name": "Brick Kit",
+      "source_url": "https://kenney.nl/assets/brick-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/brick-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "b303d293c278fab713eed28395829b18513b171d2562f7f518c3355c2896861a",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/brick-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f627269636b2d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 296,
+        ".glb": 296,
+        ".obj": 296
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/brick-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "0a08c6aba3b59c7e737050aa723ed5c392dd8c318737259d115eec4c8db05d3d",
+      "license_evidence_url": "https://kenney.nl/assets/brick-kit",
+      "content_revision": "sha256:b303d293c278fab713eed28395829b18513b171d2562f7f518c3355c2896861a"
+    },
+    {
+      "provider": "kenney",
+      "id": "building-kit",
+      "name": "Building Kit",
+      "source_url": "https://kenney.nl/assets/building-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/building-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "2740ef5772fb5fb3d7aab881db22d129f6b68afe711b1a79e6d5e9e19cf3eec6",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/building-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6275696c64696e672d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 79,
+        ".glb": 79,
+        ".obj": 79
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/building-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "96c3f019f88fdc8551238d4ad7d30d69733ff42a1b80aaa0cebc7a475c2fd3e3",
+      "license_evidence_url": "https://kenney.nl/assets/building-kit",
+      "content_revision": "sha256:2740ef5772fb5fb3d7aab881db22d129f6b68afe711b1a79e6d5e9e19cf3eec6"
+    },
+    {
+      "provider": "kenney",
+      "id": "car-kit",
+      "name": "Car Kit",
+      "source_url": "https://kenney.nl/assets/car-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/car-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "fac7dacac5c7874348cf19729af3ef205f3d366493edaf0a827d93f4fdf3d0c4",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/car-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6361722d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 50,
+        ".glb": 50,
+        ".obj": 50
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/car-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "ebeb428a3b9400613b6568b6e8bf62020cc9e4415735dd77cecea8bf65c85954",
+      "license_evidence_url": "https://kenney.nl/assets/car-kit",
+      "content_revision": "sha256:fac7dacac5c7874348cf19729af3ef205f3d366493edaf0a827d93f4fdf3d0c4"
+    },
+    {
+      "provider": "kenney",
+      "id": "castle-kit",
+      "name": "Castle Kit",
+      "source_url": "https://kenney.nl/assets/castle-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/castle-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "921f3f73927bb23106cae34bc21d5ab4b033a9fc120475e96f714a406e3169df",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/castle-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f636173746c652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 76,
+        ".glb": 76,
+        ".obj": 76
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/castle-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "38815cd3d62008936e106d0e0f0d2d33d4ab277457e8dabc8dc31707e05f241c",
+      "license_evidence_url": "https://kenney.nl/assets/castle-kit",
+      "content_revision": "sha256:921f3f73927bb23106cae34bc21d5ab4b033a9fc120475e96f714a406e3169df"
+    },
+    {
+      "provider": "kenney",
+      "id": "city-kit-commercial",
+      "name": "City Kit (Commercial)",
+      "source_url": "https://kenney.nl/assets/city-kit-commercial",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/city-kit-commercial/extracted",
+      "status": "downloaded",
+      "archive_sha256": "f8b09b081c2bb88bcc126e2dec1cb40fd0dad7e7e591b6c26aaefe96fb35276b",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/city-kit-commercial/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f636974792d6b69742d636f6d6d65726369616c",
+      "version": null,
+      "model_formats": {
+        ".fbx": 41,
+        ".glb": 41,
+        ".obj": 41
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/city-kit-commercial/extracted/License.txt"
+      ],
+      "source_page_sha256": "bd3e518617b1cb277942d44ef192458ea7ef8e7781202934e2123dfb2d7bd273",
+      "license_evidence_url": "https://kenney.nl/assets/city-kit-commercial",
+      "content_revision": "sha256:f8b09b081c2bb88bcc126e2dec1cb40fd0dad7e7e591b6c26aaefe96fb35276b"
+    },
+    {
+      "provider": "kenney",
+      "id": "city-kit-industrial",
+      "name": "City Kit (Industrial)",
+      "source_url": "https://kenney.nl/assets/city-kit-industrial",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/city-kit-industrial/extracted",
+      "status": "downloaded",
+      "archive_sha256": "5b381164e5760f3830a2dbee43b972deee38b2a695d091b56e238ab2910c96d2",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/city-kit-industrial/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f636974792d6b69742d696e647573747269616c",
+      "version": null,
+      "model_formats": {
+        ".fbx": 37,
+        ".glb": 37,
+        ".obj": 37
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/city-kit-industrial/extracted/License.txt"
+      ],
+      "source_page_sha256": "6432eacaa6b9bb41a6bb748f449602a1eee496d67c70cc0e47a50d78ce70d092",
+      "license_evidence_url": "https://kenney.nl/assets/city-kit-industrial",
+      "content_revision": "sha256:5b381164e5760f3830a2dbee43b972deee38b2a695d091b56e238ab2910c96d2"
+    },
+    {
+      "provider": "kenney",
+      "id": "city-kit-roads",
+      "name": "City Kit (Roads)",
+      "source_url": "https://kenney.nl/assets/city-kit-roads",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/city-kit-roads/extracted",
+      "status": "downloaded",
+      "archive_sha256": "374a4552115cbd11b4ec5c930ee31a533562dc78a09af249a655d03f7ea3b959",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/city-kit-roads/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f636974792d6b69742d726f616473",
+      "version": null,
+      "model_formats": {
+        ".fbx": 95,
+        ".glb": 95,
+        ".obj": 95
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/city-kit-roads/extracted/License.txt"
+      ],
+      "source_page_sha256": "fe457401fc74093ca08e12196d550d225b4a07bb9ab66a76d0b5ce939f5b089f",
+      "license_evidence_url": "https://kenney.nl/assets/city-kit-roads",
+      "content_revision": "sha256:374a4552115cbd11b4ec5c930ee31a533562dc78a09af249a655d03f7ea3b959"
+    },
+    {
+      "provider": "kenney",
+      "id": "city-kit-suburban",
+      "name": "City Kit (Suburban)",
+      "source_url": "https://kenney.nl/assets/city-kit-suburban",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/city-kit-suburban/extracted",
+      "status": "downloaded",
+      "archive_sha256": "5869c35cf30b1c87bdb2d197b6d325eebadd2ef08ea27f04797e8e08d77a9a39",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/city-kit-suburban/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f636974792d6b69742d737562757262616e",
+      "version": null,
+      "model_formats": {
+        ".fbx": 40,
+        ".glb": 40,
+        ".obj": 40
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/city-kit-suburban/extracted/License.txt"
+      ],
+      "source_page_sha256": "5a2f005377502f8cae938086451c9223af2031b66682a1db4c94c7a6d02138c0",
+      "license_evidence_url": "https://kenney.nl/assets/city-kit-suburban",
+      "content_revision": "sha256:5869c35cf30b1c87bdb2d197b6d325eebadd2ef08ea27f04797e8e08d77a9a39"
+    },
+    {
+      "provider": "kenney",
+      "id": "coaster-kit",
+      "name": "Coaster Kit",
+      "source_url": "https://kenney.nl/assets/coaster-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/coaster-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "7723d02e3ea822371e12e14722e72d572fdb0384c1379c1469e0598a371f5c7a",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/coaster-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f636f61737465722d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 183,
+        ".glb": 183,
+        ".obj": 183
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/coaster-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "75233d13e319468238abaaeb23c439db8be75dbf3d24620dcd96b963e5cff89b",
+      "license_evidence_url": "https://kenney.nl/assets/coaster-kit",
+      "content_revision": "sha256:7723d02e3ea822371e12e14722e72d572fdb0384c1379c1469e0598a371f5c7a"
+    },
+    {
+      "provider": "kenney",
+      "id": "cube-pets",
+      "name": "Cube Pets",
+      "source_url": "https://kenney.nl/assets/cube-pets",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/cube-pets/extracted",
+      "status": "downloaded",
+      "archive_sha256": "b3bdc99a2ec92c687b875718c5d01e9231d2711ed0e2845f295b474bb42a1283",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/cube-pets/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f637562652d70657473",
+      "version": null,
+      "model_formats": {
+        ".fbx": 24,
+        ".glb": 24,
+        ".obj": 24
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/cube-pets/extracted/License.txt"
+      ],
+      "source_page_sha256": "2e080c8e5ef2c254236568ee07b9deed0ba4400e5a70c54b3ce43f6aea813980",
+      "license_evidence_url": "https://kenney.nl/assets/cube-pets",
+      "content_revision": "sha256:b3bdc99a2ec92c687b875718c5d01e9231d2711ed0e2845f295b474bb42a1283"
+    },
+    {
+      "provider": "kenney",
+      "id": "factory-kit",
+      "name": "Factory Kit",
+      "source_url": "https://kenney.nl/assets/factory-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/factory-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "7e31fb2308e90304672bd15cd18fa9d9f02c03731a8cbc57a8e3e1c181dfb0a7",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/factory-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f666163746f72792d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 143,
+        ".glb": 143,
+        ".obj": 143
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/factory-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "522b025cc5053aa54ba4611b11039164c7991a74101695ef1549db2850a1e61d",
+      "license_evidence_url": "https://kenney.nl/assets/factory-kit",
+      "content_revision": "sha256:7e31fb2308e90304672bd15cd18fa9d9f02c03731a8cbc57a8e3e1c181dfb0a7"
+    },
+    {
+      "provider": "kenney",
+      "id": "fantasy-town-kit",
+      "name": "Fantasy Town Kit",
+      "source_url": "https://kenney.nl/assets/fantasy-town-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/fantasy-town-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "1a7530c09f4d2fa2cdee259876f089334f8b1f27fa86a0c4f54ef86cdd8676ef",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/fantasy-town-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f66616e746173792d746f776e2d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 167,
+        ".glb": 167,
+        ".obj": 167
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/fantasy-town-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "44d7fc5f767385783e961c6a251e1bf4f48457b155d4248bbb6397715d6ee4ab",
+      "license_evidence_url": "https://kenney.nl/assets/fantasy-town-kit",
+      "content_revision": "sha256:1a7530c09f4d2fa2cdee259876f089334f8b1f27fa86a0c4f54ef86cdd8676ef"
+    },
+    {
+      "provider": "kenney",
+      "id": "food-kit",
+      "name": "Food Kit",
+      "source_url": "https://kenney.nl/assets/food-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/food-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "cdad90853682499b94c9fda2f87678b24bfd8f3264e0ed323f6b6a27fd7c6f6f",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/food-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f666f6f642d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 200,
+        ".glb": 200,
+        ".obj": 200
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/food-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "b086f7a6fd4085c93ebb8820d7ef265efc0015095282b993faf4403fd21602c9",
+      "license_evidence_url": "https://kenney.nl/assets/food-kit",
+      "content_revision": "sha256:cdad90853682499b94c9fda2f87678b24bfd8f3264e0ed323f6b6a27fd7c6f6f"
+    },
+    {
+      "provider": "kenney",
+      "id": "furniture-kit",
+      "name": "Furniture Kit",
+      "source_url": "https://kenney.nl/assets/furniture-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/furniture-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/furniture-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6675726e69747572652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".dae": 140,
+        ".fbx": 140,
+        ".glb": 140,
+        ".obj": 140,
+        ".stl": 140
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/furniture-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "0e230a70c3c652764a8a8b5bf4f1e64341484def926c99062d7636336ba8f140",
+      "license_evidence_url": "https://kenney.nl/assets/furniture-kit",
+      "content_revision": "sha256:e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0"
+    },
+    {
+      "provider": "kenney",
+      "id": "graveyard-kit",
+      "name": "Graveyard Kit",
+      "source_url": "https://kenney.nl/assets/graveyard-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/graveyard-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "1a93613f2e5675f3310acf49ec9ef13ae7adeb756ac3b205bfb6cc9311a81062",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/graveyard-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6772617665796172642d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 91,
+        ".glb": 91,
+        ".obj": 91
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/graveyard-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "66824adcd524989b28ce9df95c25fd61522baba2725c707559d2aa5dc36de3d8",
+      "license_evidence_url": "https://kenney.nl/assets/graveyard-kit",
+      "content_revision": "sha256:1a93613f2e5675f3310acf49ec9ef13ae7adeb756ac3b205bfb6cc9311a81062"
+    },
+    {
+      "provider": "kenney",
+      "id": "hexagon-kit",
+      "name": "Hexagon Kit",
+      "source_url": "https://kenney.nl/assets/hexagon-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/hexagon-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "d14f7643852c4dd854c7530de8514c9eb77314fe9963636077f0de1da8901236",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/hexagon-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f68657861676f6e2d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 72,
+        ".glb": 72,
+        ".obj": 72
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/hexagon-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "9fc5474f1d813c40a1f0d03d603a2d6bf342198d94fcda8876e1c2f968bc77f4",
+      "license_evidence_url": "https://kenney.nl/assets/hexagon-kit",
+      "content_revision": "sha256:d14f7643852c4dd854c7530de8514c9eb77314fe9963636077f0de1da8901236"
+    },
+    {
+      "provider": "kenney",
+      "id": "holiday-kit",
+      "name": "Holiday Kit",
+      "source_url": "https://kenney.nl/assets/holiday-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/holiday-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "fde4d514d7297388d98058e8933ff614e071886f7ce57f9aea4b00d7698dd769",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/holiday-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f686f6c696461792d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 99,
+        ".glb": 99,
+        ".obj": 99
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/holiday-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "9fbedc15545344beffba5c6e941c9f510a4977cefb01faa326318ae4c154a549",
+      "license_evidence_url": "https://kenney.nl/assets/holiday-kit",
+      "content_revision": "sha256:fde4d514d7297388d98058e8933ff614e071886f7ce57f9aea4b00d7698dd769"
+    },
+    {
+      "provider": "kenney",
+      "id": "marble-kit",
+      "name": "Marble Kit",
+      "source_url": "https://kenney.nl/assets/marble-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/marble-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "4a289fe77fa4e71b943fb9a0df828a7987e62f665083ea9237d0bd9acd0b6dcb",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/marble-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d6172626c652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 162,
+        ".glb": 162,
+        ".obj": 162
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/marble-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "179b059d56fd3f08f5cb49347606085fc3464a8d351b0f2bad1a5e5bbf5e205d",
+      "license_evidence_url": "https://kenney.nl/assets/marble-kit",
+      "content_revision": "sha256:4a289fe77fa4e71b943fb9a0df828a7987e62f665083ea9237d0bd9acd0b6dcb"
+    },
+    {
+      "provider": "kenney",
+      "id": "mini-arcade",
+      "name": "Mini Arcade",
+      "source_url": "https://kenney.nl/assets/mini-arcade",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/mini-arcade/extracted",
+      "status": "downloaded",
+      "archive_sha256": "2acfe5cb44d392e834f77cf5488528c7cd45427cdf5fb941ce99856276158c19",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/mini-arcade/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d696e692d617263616465",
+      "version": null,
+      "model_formats": {
+        ".fbx": 20,
+        ".glb": 20,
+        ".obj": 20
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/mini-arcade/extracted/License.txt"
+      ],
+      "source_page_sha256": "a213d3168f02fea48995e46978c61ff2b9ff0b70b44babaac09257717a0e0a2f",
+      "license_evidence_url": "https://kenney.nl/assets/mini-arcade",
+      "content_revision": "sha256:2acfe5cb44d392e834f77cf5488528c7cd45427cdf5fb941ce99856276158c19"
+    },
+    {
+      "provider": "kenney",
+      "id": "mini-arena",
+      "name": "Mini Arena",
+      "source_url": "https://kenney.nl/assets/mini-arena",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/mini-arena/extracted",
+      "status": "downloaded",
+      "archive_sha256": "514760c2bc2457027451534a0b06a23f98beece166fb11ed2321226276b83c2c",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/mini-arena/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d696e692d6172656e61",
+      "version": null,
+      "model_formats": {
+        ".fbx": 22,
+        ".glb": 22,
+        ".obj": 22
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/mini-arena/extracted/License.txt"
+      ],
+      "source_page_sha256": "160a3881475e35548a9b02e8a3ee79c63e6aafed25a1ed3d6cc893ce8c9cbf4f",
+      "license_evidence_url": "https://kenney.nl/assets/mini-arena",
+      "content_revision": "sha256:514760c2bc2457027451534a0b06a23f98beece166fb11ed2321226276b83c2c"
+    },
+    {
+      "provider": "kenney",
+      "id": "mini-characters",
+      "name": "Mini Characters",
+      "source_url": "https://kenney.nl/assets/mini-characters",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/mini-characters/extracted",
+      "status": "downloaded",
+      "archive_sha256": "9e1d48e6d7b8479ebbe84df71eb5bd8e1b3f0da546dea641890dccc8a02d0999",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/mini-characters/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d696e692d63686172616374657273",
+      "version": null,
+      "model_formats": {
+        ".fbx": 26,
+        ".glb": 26,
+        ".obj": 26
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/mini-characters/extracted/License.txt"
+      ],
+      "source_page_sha256": "ac9b98e2bc572c8a2400aff4a8ea97b8494501650b58f2b0821062b9e6765df1",
+      "license_evidence_url": "https://kenney.nl/assets/mini-characters",
+      "content_revision": "sha256:9e1d48e6d7b8479ebbe84df71eb5bd8e1b3f0da546dea641890dccc8a02d0999"
+    },
+    {
+      "provider": "kenney",
+      "id": "mini-dungeon",
+      "name": "Mini Dungeon",
+      "source_url": "https://kenney.nl/assets/mini-dungeon",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/mini-dungeon/extracted",
+      "status": "downloaded",
+      "archive_sha256": "19c4648680cb1d2e8836cade96cbf9781c0c1f45fbc6d2ce41cee8239a3ec4d8",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/mini-dungeon/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d696e692d64756e67656f6e",
+      "version": null,
+      "model_formats": {
+        ".fbx": 30,
+        ".glb": 30,
+        ".obj": 30
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/mini-dungeon/extracted/License.txt"
+      ],
+      "source_page_sha256": "59ca8f79c272ce71d99ee80d139f5cc5719d5d0cf5b13008b9f1ce3f20a5bd13",
+      "license_evidence_url": "https://kenney.nl/assets/mini-dungeon",
+      "content_revision": "sha256:19c4648680cb1d2e8836cade96cbf9781c0c1f45fbc6d2ce41cee8239a3ec4d8"
+    },
+    {
+      "provider": "kenney",
+      "id": "mini-forest",
+      "name": "Mini Forest",
+      "source_url": "https://kenney.nl/assets/mini-forest",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/mini-forest/extracted",
+      "status": "downloaded",
+      "archive_sha256": "8691614018075a66458e35915b8c358c2e6178648aedadafcdf313b924aa6581",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/mini-forest/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d696e692d666f72657374",
+      "version": null,
+      "model_formats": {
+        ".fbx": 22,
+        ".glb": 22,
+        ".obj": 22
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/mini-forest/extracted/License.txt"
+      ],
+      "source_page_sha256": "b64548f239ee9bd0864008d0e5d5914f13651c5b05f83309ffde2bc6f681ee45",
+      "license_evidence_url": "https://kenney.nl/assets/mini-forest",
+      "content_revision": "sha256:8691614018075a66458e35915b8c358c2e6178648aedadafcdf313b924aa6581"
+    },
+    {
+      "provider": "kenney",
+      "id": "mini-market",
+      "name": "Mini Market",
+      "source_url": "https://kenney.nl/assets/mini-market",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/mini-market/extracted",
+      "status": "downloaded",
+      "archive_sha256": "6f2e69090e359204ace43e4c98dc3fb8639b75e423109672b5c890d194c45203",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/mini-market/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d696e692d6d61726b6574",
+      "version": null,
+      "model_formats": {
+        ".fbx": 20,
+        ".glb": 20,
+        ".obj": 20
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/mini-market/extracted/License.txt"
+      ],
+      "source_page_sha256": "af708eb3ec14f2af7a0c358682baf7aed124516af0e7b796a62e26d474774954",
+      "license_evidence_url": "https://kenney.nl/assets/mini-market",
+      "content_revision": "sha256:6f2e69090e359204ace43e4c98dc3fb8639b75e423109672b5c890d194c45203"
+    },
+    {
+      "provider": "kenney",
+      "id": "mini-skate",
+      "name": "Mini Skate",
+      "source_url": "https://kenney.nl/assets/mini-skate",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/mini-skate/extracted",
+      "status": "downloaded",
+      "archive_sha256": "0ded0e7f95cdc2c0513a41986fde49977e7d1f4fa8653b375a5c7e909ef9d74a",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/mini-skate/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d696e692d736b617465",
+      "version": null,
+      "model_formats": {
+        ".fbx": 42,
+        ".glb": 42,
+        ".obj": 42
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/mini-skate/extracted/License.txt"
+      ],
+      "source_page_sha256": "ab5c643d2e8840fd540dc47611f9dd15a06ed454acd74e053d1eb0b50c9f2b8f",
+      "license_evidence_url": "https://kenney.nl/assets/mini-skate",
+      "content_revision": "sha256:0ded0e7f95cdc2c0513a41986fde49977e7d1f4fa8653b375a5c7e909ef9d74a"
+    },
+    {
+      "provider": "kenney",
+      "id": "minigolf-kit",
+      "name": "Minigolf Kit",
+      "source_url": "https://kenney.nl/assets/minigolf-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/minigolf-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "74b7bf5cf82bf8a5225319ade1284600c64f9482ae66f0ccf1f22d2212d5a952",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/minigolf-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d696e69676f6c662d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 126,
+        ".glb": 126,
+        ".obj": 126
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/minigolf-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "4d8751879a3494fd11ac5b829bcfbc46e5e43111d050764a07393140c4a59d52",
+      "license_evidence_url": "https://kenney.nl/assets/minigolf-kit",
+      "content_revision": "sha256:74b7bf5cf82bf8a5225319ade1284600c64f9482ae66f0ccf1f22d2212d5a952"
+    },
+    {
+      "provider": "kenney",
+      "id": "modular-buildings",
+      "name": "Modular Buildings",
+      "source_url": "https://kenney.nl/assets/modular-buildings",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/modular-buildings/extracted",
+      "status": "downloaded",
+      "archive_sha256": "47e1614686b4c0fe55190e88b22ff2b8b10935edf61f37f478a9b6a99477edc6",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/modular-buildings/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d6f64756c61722d6275696c64696e6773",
+      "version": null,
+      "model_formats": {
+        ".fbx": 108,
+        ".glb": 108,
+        ".obj": 108
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/modular-buildings/extracted/License.txt"
+      ],
+      "source_page_sha256": "f107e4030b9428ea8f03ec3d1a17f7442defc25a0cbf648d720b52bd6404ee1e",
+      "license_evidence_url": "https://kenney.nl/assets/modular-buildings",
+      "content_revision": "sha256:47e1614686b4c0fe55190e88b22ff2b8b10935edf61f37f478a9b6a99477edc6"
+    },
+    {
+      "provider": "kenney",
+      "id": "modular-cave-kit",
+      "name": "Modular Cave Kit",
+      "source_url": "https://kenney.nl/assets/modular-cave-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/modular-cave-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "48f37a6d4f241124cd7da17da1c6d4ed1bf1820bb149dcb233fbd5ebdd8ba996",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/modular-cave-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d6f64756c61722d636176652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 40,
+        ".glb": 40,
+        ".obj": 40
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/modular-cave-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "66818ee039c4dad96d4ff704e391149a68f0f14f71c3cb7dfc54b766903c78b1",
+      "license_evidence_url": "https://kenney.nl/assets/modular-cave-kit",
+      "content_revision": "sha256:48f37a6d4f241124cd7da17da1c6d4ed1bf1820bb149dcb233fbd5ebdd8ba996"
+    },
+    {
+      "provider": "kenney",
+      "id": "modular-dungeon-kit",
+      "name": "Modular Dungeon Kit",
+      "source_url": "https://kenney.nl/assets/modular-dungeon-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/modular-dungeon-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "dd0aa6776db8912283cdca60161dee6a8839bbda3558eba2ea501419eb5b4623",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/modular-dungeon-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d6f64756c61722d64756e67656f6e2d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 39,
+        ".glb": 39,
+        ".obj": 39
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/modular-dungeon-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "ec8a39a6da489ef8c4a3640a5a359135f2269ea3b58012ad4acc27ed53be89fd",
+      "license_evidence_url": "https://kenney.nl/assets/modular-dungeon-kit",
+      "content_revision": "sha256:dd0aa6776db8912283cdca60161dee6a8839bbda3558eba2ea501419eb5b4623"
+    },
+    {
+      "provider": "kenney",
+      "id": "modular-space-kit",
+      "name": "Modular Space Kit",
+      "source_url": "https://kenney.nl/assets/modular-space-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/modular-space-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "f394f7fd9eaf29c9de7e090e55b69926f699841af33b0b116f5cc0088de8a4dc",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/modular-space-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6d6f64756c61722d73706163652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 40,
+        ".glb": 40,
+        ".obj": 40
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/modular-space-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "5881eafaf354d03a6436e6985fc574da975cb4e9f65694c74f47feab0624444f",
+      "license_evidence_url": "https://kenney.nl/assets/modular-space-kit",
+      "content_revision": "sha256:f394f7fd9eaf29c9de7e090e55b69926f699841af33b0b116f5cc0088de8a4dc"
+    },
+    {
+      "provider": "kenney",
+      "id": "nature-kit",
+      "name": "Nature Kit",
+      "source_url": "https://kenney.nl/assets/nature-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/nature-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/nature-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f6e61747572652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".dae": 329,
+        ".fbx": 329,
+        ".glb": 329,
+        ".obj": 329,
+        ".stl": 329
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/nature-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "8129347f4bc7b9c7853f6fa87a0df3dd3fd80202d61e4ad7efce42376cb62e17",
+      "license_evidence_url": "https://kenney.nl/assets/nature-kit",
+      "content_revision": "sha256:fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d"
+    },
+    {
+      "provider": "kenney",
+      "id": "pirate-kit",
+      "name": "Pirate Kit",
+      "source_url": "https://kenney.nl/assets/pirate-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/pirate-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "667ed2caf92954ddb98f7b7cede831fe99ab75063c26b25e23d32715bee9c943",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/pirate-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f7069726174652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 72,
+        ".glb": 72,
+        ".obj": 72
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/pirate-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "ac1a82c0d72885f0fb0d8251cacfba8e0644772ed8c8ee84828a6b3e56e8a556",
+      "license_evidence_url": "https://kenney.nl/assets/pirate-kit",
+      "content_revision": "sha256:667ed2caf92954ddb98f7b7cede831fe99ab75063c26b25e23d32715bee9c943"
+    },
+    {
+      "provider": "kenney",
+      "id": "platformer-kit",
+      "name": "Platformer Kit",
+      "source_url": "https://kenney.nl/assets/platformer-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/platformer-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "899605d237367688c6b42e41fff2206c0fb8d626163158294556353f7baa7c1b",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/platformer-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f706c6174666f726d65722d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 153,
+        ".glb": 153,
+        ".obj": 153
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/platformer-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "93e3238f0c5c66756d420ac3df1e48b32e87c4d7e05a38304ac6180dd0893b8b",
+      "license_evidence_url": "https://kenney.nl/assets/platformer-kit",
+      "content_revision": "sha256:899605d237367688c6b42e41fff2206c0fb8d626163158294556353f7baa7c1b"
+    },
+    {
+      "provider": "kenney",
+      "id": "prototype-kit",
+      "name": "Prototype Kit",
+      "source_url": "https://kenney.nl/assets/prototype-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/prototype-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "213b522fb12bcc9b9ac66c4f7581f7c74623293272212e40a70c39936ad3da95",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/prototype-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f70726f746f747970652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 145,
+        ".glb": 145,
+        ".obj": 145
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/prototype-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "c8f19cc12ecdae0e6ed6620bc249445e777d4fda96e9893cc244a79ef65ffc04",
+      "license_evidence_url": "https://kenney.nl/assets/prototype-kit",
+      "content_revision": "sha256:213b522fb12bcc9b9ac66c4f7581f7c74623293272212e40a70c39936ad3da95"
+    },
+    {
+      "provider": "kenney",
+      "id": "racing-kit",
+      "name": "Racing Kit",
+      "source_url": "https://kenney.nl/assets/racing-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/racing-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "8a71ea16219315a01d00d5a90c4f6b5c090faddbc56d80ecf727e2b3b853c6c0",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/racing-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f726163696e672d6b6974",
+      "version": null,
+      "model_formats": {
+        ".dae": 112,
+        ".fbx": 112,
+        ".glb": 112,
+        ".obj": 112,
+        ".stl": 112
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/racing-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "004d92a7f31720e991b19350389dbb94bfb8ca06c97a1bd8376f02fffb820e67",
+      "license_evidence_url": "https://kenney.nl/assets/racing-kit",
+      "content_revision": "sha256:8a71ea16219315a01d00d5a90c4f6b5c090faddbc56d80ecf727e2b3b853c6c0"
+    },
+    {
+      "provider": "kenney",
+      "id": "retro-fantasy-kit",
+      "name": "Retro Fantasy Kit",
+      "source_url": "https://kenney.nl/assets/retro-fantasy-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/retro-fantasy-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "d3462b453018d0d150406d85af3c4ae1322ceef8f1754c4eb4e6355adfeaab0f",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/retro-fantasy-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f726574726f2d66616e746173792d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 105,
+        ".glb": 105,
+        ".obj": 105
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/retro-fantasy-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "66c46823ca75fff03c6eab11da9810e0f2bdf2d94f56d610ccc81d174231725e",
+      "license_evidence_url": "https://kenney.nl/assets/retro-fantasy-kit",
+      "content_revision": "sha256:d3462b453018d0d150406d85af3c4ae1322ceef8f1754c4eb4e6355adfeaab0f"
+    },
+    {
+      "provider": "kenney",
+      "id": "retro-urban-kit",
+      "name": "Retro Urban Kit",
+      "source_url": "https://kenney.nl/assets/retro-urban-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/retro-urban-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "19201cbcb0d90080dfc33b54f5b4be2089de927c2a23274180798e7166d6b6ca",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/retro-urban-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f726574726f2d757262616e2d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 124,
+        ".glb": 124,
+        ".obj": 124
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/retro-urban-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "48fb3e8491b63de75e4569bd2861d84d3c29a803928c7fc0d8ad4c6cd8b713e0",
+      "license_evidence_url": "https://kenney.nl/assets/retro-urban-kit",
+      "content_revision": "sha256:19201cbcb0d90080dfc33b54f5b4be2089de927c2a23274180798e7166d6b6ca"
+    },
+    {
+      "provider": "kenney",
+      "id": "space-kit",
+      "name": "Space Kit",
+      "source_url": "https://kenney.nl/assets/space-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/space-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "d5d7cdf2635ed5a43a9187deaf409b6f47484e402321128341d3c3698e9ef4d9",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/space-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f73706163652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".dae": 153,
+        ".fbx": 153,
+        ".glb": 153,
+        ".obj": 153,
+        ".stl": 153
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/space-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "695a6d48945215f98bd12ff10678f6903c7559e3cbd98fa90f907b7949408780",
+      "license_evidence_url": "https://kenney.nl/assets/space-kit",
+      "content_revision": "sha256:d5d7cdf2635ed5a43a9187deaf409b6f47484e402321128341d3c3698e9ef4d9"
+    },
+    {
+      "provider": "kenney",
+      "id": "space-station-kit",
+      "name": "Space Station Kit",
+      "source_url": "https://kenney.nl/assets/space-station-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/space-station-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "215e79bd5415cff93665183390f0343ed9acf87780306331013b78520170c6d8",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/space-station-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f73706163652d73746174696f6e2d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 97,
+        ".glb": 97,
+        ".obj": 97
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/space-station-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "8567f9702ea7f25bb1c737d411e3af601b4030818429adfd062b7b33841f1fab",
+      "license_evidence_url": "https://kenney.nl/assets/space-station-kit",
+      "content_revision": "sha256:215e79bd5415cff93665183390f0343ed9acf87780306331013b78520170c6d8"
+    },
+    {
+      "provider": "kenney",
+      "id": "survival-kit",
+      "name": "Survival Kit",
+      "source_url": "https://kenney.nl/assets/survival-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/survival-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "c3586341b5932c87eb43d75d915434f47daed168b17ed36a03e8ca9977c7443e",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/survival-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f737572766976616c2d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 80,
+        ".glb": 80,
+        ".obj": 80
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/survival-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "efebf8de518a9fee42e2ea72541d5fa12f300a27dd372925d539a89a0d586c82",
+      "license_evidence_url": "https://kenney.nl/assets/survival-kit",
+      "content_revision": "sha256:c3586341b5932c87eb43d75d915434f47daed168b17ed36a03e8ca9977c7443e"
+    },
+    {
+      "provider": "kenney",
+      "id": "tower-defense-kit",
+      "name": "Tower Defense Kit",
+      "source_url": "https://kenney.nl/assets/tower-defense-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/tower-defense-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "d4c887680b709218315e4e1c17ae18c160635dcdfc4199763eeba97c02c77f00",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/tower-defense-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f746f7765722d646566656e73652d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 160,
+        ".glb": 160,
+        ".obj": 160
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/tower-defense-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "ef26c89e5fa2f257825aeb07059f695db6fa6d40f6605e9f7bc2ac03490ae1f9",
+      "license_evidence_url": "https://kenney.nl/assets/tower-defense-kit",
+      "content_revision": "sha256:d4c887680b709218315e4e1c17ae18c160635dcdfc4199763eeba97c02c77f00"
+    },
+    {
+      "provider": "kenney",
+      "id": "toy-car-kit",
+      "name": "Toy Car Kit",
+      "source_url": "https://kenney.nl/assets/toy-car-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/toy-car-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "26c11bbb77102b8dd00cdaf7b2c7ab692416d750dd064de886d809acec346782",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/toy-car-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f746f792d6361722d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 157,
+        ".glb": 157,
+        ".obj": 157
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/toy-car-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "e0b82bde614ed419d682d0dd56ebcff73281389ab06a3ddb7ccd2329b9f5473c",
+      "license_evidence_url": "https://kenney.nl/assets/toy-car-kit",
+      "content_revision": "sha256:26c11bbb77102b8dd00cdaf7b2c7ab692416d750dd064de886d809acec346782"
+    },
+    {
+      "provider": "kenney",
+      "id": "train-kit",
+      "name": "Train Kit",
+      "source_url": "https://kenney.nl/assets/train-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/train-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "cf50d77e8cbacbf38dd50826d4bce5392db8e4f67373d3c4e583b0ed0e474475",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/train-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f747261696e2d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 103,
+        ".glb": 103,
+        ".obj": 103
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/train-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "3e520aaa68109474312dd15dcff4f3d25d5185108a3f3f0265a4c19b01cdb9c7",
+      "license_evidence_url": "https://kenney.nl/assets/train-kit",
+      "content_revision": "sha256:cf50d77e8cbacbf38dd50826d4bce5392db8e4f67373d3c4e583b0ed0e474475"
+    },
+    {
+      "provider": "kenney",
+      "id": "watercraft-kit",
+      "name": "Watercraft Kit",
+      "source_url": "https://kenney.nl/assets/watercraft-kit",
+      "license": "CC0-1.0",
+      "directory": ".local/3d-sources/provider-packs/kenney/watercraft-kit/extracted",
+      "status": "downloaded",
+      "archive_sha256": "cd1470c1cf441c7f46d0944ae6d0d897242365dc97677c5079b3238965d659f3",
+      "archive_path": ".local/3d-sources/provider-packs/kenney/watercraft-kit/source.zip",
+      "download_url": "https://kenney.nl/download-link/6173736574732f776174657263726166742d6b6974",
+      "version": null,
+      "model_formats": {
+        ".fbx": 46,
+        ".glb": 46,
+        ".obj": 46
+      },
+      "license_files": [
+        ".local/3d-sources/provider-packs/kenney/watercraft-kit/extracted/License.txt"
+      ],
+      "source_page_sha256": "053fe97d9ce15b8f8d570b60d0a05386a48f966b8dad35efa72302fb83d49695",
+      "license_evidence_url": "https://kenney.nl/assets/watercraft-kit",
+      "content_revision": "sha256:cd1470c1cf441c7f46d0944ae6d0d897242365dc97677c5079b3238965d659f3"
+    }
+  ],
+  "summary": {
+    "candidates": 82,
+    "downloaded": 76,
+    "excluded_paid": 6,
+    "failed": 0
+  }
+}

@@ -22,6 +22,7 @@ function draftFor(product: Product | null, assets: Asset[]): ProductInput {
         name: product.name,
         asset_key: product.asset_key,
         ...(product.wearable_key ? { wearable_key: product.wearable_key } : {}),
+        ...(product.character_key ? { character_key: product.character_key } : {}),
         description: product.description,
         coin_price: product.coin_price,
         diamond_price: product.diamond_price,
@@ -71,19 +72,27 @@ export function ProductEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [discarding, setDiscarding] = useState(false);
+  const [assetSearch, setAssetSearch] = useState('');
+  const [assetLimit, setAssetLimit] = useState(100);
   const selectedAsset = assets.find((item) => item.key === draft.asset_key);
   const identityLocked = (product?.owned_count ?? 0) > 0; // 服务端仍会复核其他账户的历史购买。
-  const choices = assets.filter((item) => matchesAssetCategory(item, category, wearables, characters));
+  const searchTerm = assetSearch.trim().toLocaleLowerCase();
+  const names = new Map([...wearables.map((item) => [item.thumbnail_asset_key, item.name] as const), ...characters.map((item) => [item.thumbnail_asset_key, item.name] as const)]);
+  const choices = assets.filter((item) => matchesAssetCategory(item, category, wearables, characters) && (!searchTerm || `${names.get(item.key) ?? item.name} ${item.provider ?? ''} ${item.pack_name ?? item.pack_key ?? ''}`.toLocaleLowerCase().includes(searchTerm)));
+  const visibleChoices = choices.slice(0, assetLimit);
+  if (selectedAsset && matchesAssetCategory(selectedAsset, category, wearables, characters) && !visibleChoices.some((item) => item.key === selectedAsset.key)) visibleChoices.unshift(selectedAsset);
   // 同时修改素材与稳定身份，防止类型切换后带入上一次服装的 key。
   function selectAsset(assetKey: string, nextCategory: ShopCategory) {
     const definition = isWearableSlot(nextCategory)
       ? wearables.find((item) => item.thumbnail_asset_key === assetKey && item.slot === nextCategory)
       : undefined;
-    setDraft(({ wearable_key: _previousKey, ...value }) => ({
+    const selectedCharacter = nextCategory === 'character' ? characters.find((item) => item.thumbnail_asset_key === assetKey) : undefined;
+    setDraft(({ wearable_key: _previousKey, character_key: _previousCharacter, ...value }) => ({
       ...value,
       type: categoryPurchaseType(nextCategory) as ProductInput['type'],
       asset_key: assetKey,
       ...(definition ? { wearable_key: definition.wearable_key } : {}),
+      ...(selectedCharacter ? { character_key: selectedCharacter.character_key } : {}),
     }));
   }
 
@@ -194,6 +203,7 @@ export function ProductEditor({
             onChange={(event) => {
               const next = event.target.value as ShopCategory;
               setCategory(next);
+              setAssetSearch(''); setAssetLimit(100);
               selectAsset(assets.find((item) => matchesAssetCategory(item, next, wearables, characters))?.key ?? '', next);
             }}
           >
@@ -203,6 +213,8 @@ export function ProductEditor({
               </option>
             ))}
           </select>
+          <label htmlFor="product-asset-search">{content.assetSearchLabel}</label>
+          <input id="product-asset-search" type="search" value={assetSearch} disabled={identityLocked} onChange={(event) => { setAssetSearch(event.target.value); setAssetLimit(100); }} />
           <label htmlFor="product-asset">{content.asset}</label>
           <select
             id="product-asset"
@@ -212,14 +224,16 @@ export function ProductEditor({
             onChange={(event) => selectAsset(event.target.value, category)}
           >
             <option value="">{content.chooseAsset}</option>
-            {choices.map((item) => (
+            {visibleChoices.map((item) => (
                 <option key={item.key} value={item.key}>
                   {wearables.find((definition) => definition.thumbnail_asset_key === item.key)?.name ?? item.name}
                 </option>
               ))}
           </select>
+          {choices.length > assetLimit && <button type="button" className="secondary" onClick={() => setAssetLimit((value) => value + 100)}>{content.moreAssets}</button>}
           <FieldError error={error} field="asset_key" />
           <FieldError error={error} field="wearable_key" />
+          <FieldError error={error} field="character_key" />
           {selectedAsset && <ShopItemArtwork item={selectedAsset} />}
           <label htmlFor="product-description">{content.description}</label>
           <textarea
