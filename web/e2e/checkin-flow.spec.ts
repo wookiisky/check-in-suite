@@ -14,10 +14,10 @@ async function sessionAPI(page: Page, path: string, method = 'GET', data?: unkno
   return page.request.fetch(`/api/v1${path}`, { method, data, headers: { Origin: 'http://127.0.0.1:15173', 'X-CSRF-Token': session.csrf_token, 'Idempotency-Key': crypto.randomUUID() } });
 }
 
-// 每个浏览器项目使用不同实体名，生产初始化保持没有示例数据。
+// 浏览器项目与重复轮次使用不同实体名，生产初始化保持没有示例数据。
 test('真实打卡、编辑删除、响应丢失恢复和历史补录闭环', async ({ page }, testInfo) => {
-  const taskName = `阅读-${testInfo.project.name}`;
-  const categoryName = `成长-${testInfo.project.name}`;
+  const taskName = `阅读-${testInfo.project.name}-${testInfo.repeatEachIndex}`;
+  const categoryName = `成长-${testInfo.project.name}-${testInfo.repeatEachIndex}`;
   await page.goto('/');
   await page.getByLabel(content.account.username).fill('island-e2e');
   await page.getByLabel(content.account.loginPassword).fill('Island-Test-2026');
@@ -38,12 +38,16 @@ test('真实打卡、编辑删除、响应丢失恢复和历史补录闭环', as
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: checkin.newTask, exact: true }).click();
   const taskDialog = page.getByRole('dialog');
-  await taskDialog.getByLabel(checkin.name, { exact: true }).fill(taskName);
-  await taskDialog.getByRole('combobox', { name: checkin.category, exact: true }).selectOption({ label: categoryName });
+  // 图标异步加载完成后再输入草稿，选择本流程实际需要的书本图标。
   await taskDialog.getByRole('combobox', { name: checkin.icon, exact: true }).selectOption('book-v1');
+  const taskNameInput = taskDialog.getByLabel(checkin.name, { exact: true });
+  await taskNameInput.fill(taskName);
+  await expect(taskNameInput).toHaveValue(taskName);
+  await taskDialog.getByRole('combobox', { name: checkin.category, exact: true }).selectOption({ label: categoryName });
   await taskDialog.getByLabel(checkin.coins, { exact: true }).fill('7');
   await taskDialog.getByLabel(checkin.diamonds, { exact: true }).fill('3');
   await taskDialog.getByLabel(checkin.dailyLimit, { exact: true }).fill('2');
+  await expect(taskNameInput).toHaveValue(taskName);
   await taskDialog.getByRole('button', { name: checkin.save, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
