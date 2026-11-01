@@ -31,15 +31,32 @@ export async function ownedAlternativeUpper(page: Page, name: string) {
   let owned = current.inventory.find((value) => value.wearable_key === wearable.wearable_key);
   if (!owned) {
     expect((await appearanceAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' })).ok()).toBe(true);
-    const created = await appearanceAPI(page, '/management/products', 'POST', { type: 'wearable', name, asset_key: wearable.thumbnail_asset_key, wearable_key: wearable.wearable_key, description: '', coin_price: 0, diamond_price: 0, stock: null, enabled: true });
-    expect(created.status()).toBe(201);
-    const product = await created.json() as components['schemas']['Product'];
-    const camp = await (await appearanceAPI(page, '/camp')).json() as components['schemas']['CampResponse'];
-    const purchased = await appearanceAPI(page, '/purchases', 'POST', { product_id: product.id, expected_product_version: product.version, expected_wallet_version: camp.wallet.version });
-    expect(purchased.status()).toBe(201);
-    const result = await purchased.json() as components['schemas']['PurchaseResult'];
-    owned = { purchase_id: result.purchase.id, wearable_key: wearable.wearable_key };
-    expect((await appearanceAPI(page, '/management/lock', 'POST')).status()).toBe(204);
+    let fundingTask: components['schemas']['Task'] | null = null;
+    let fundingRecord: components['schemas']['Checkin'] | null = null;
+    try {
+      const created = await appearanceAPI(page, '/management/products', 'POST', { type: 'wearable', name, asset_key: wearable.thumbnail_asset_key, wearable_key: wearable.wearable_key, description: '', coin_price: 0, diamond_price: 0, stock: null, enabled: true });
+      expect(created.status()).toBe(201);
+      const product = await created.json() as components['schemas']['Product'];
+      let camp = await (await appearanceAPI(page, '/camp')).json() as components['schemas']['CampResponse'];
+      // 撤销已消费的打卡奖励可能留下负余额，零价购买也必须满足正式余额规则。
+      if (camp.wallet.coins < product.coin_price || camp.wallet.diamonds < product.diamond_price) {
+        const task = await appearanceAPI(page, '/management/tasks', 'POST', { category_id: null, name: `${name}-余额准备`, icon_key: 'book-v1', coin_reward: Math.max(0, product.coin_price - camp.wallet.coins), diamond_reward: Math.max(0, product.diamond_price - camp.wallet.diamonds), daily_limit: 1, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true });
+        expect(task.status()).toBe(201);
+        fundingTask = await task.json() as components['schemas']['Task'];
+        const checkin = await appearanceAPI(page, '/checkins', 'POST', { expected_today: camp.today, task_id: fundingTask.id, expected_task_version: fundingTask.version, text: '', photo_media_id: null, audio_media_id: null });
+        expect(checkin.status()).toBe(201);
+        fundingRecord = (await checkin.json() as components['schemas']['CheckinResult']).checkin;
+        camp = await (await appearanceAPI(page, '/camp')).json() as components['schemas']['CampResponse'];
+      }
+      const purchased = await appearanceAPI(page, '/purchases', 'POST', { product_id: product.id, expected_product_version: product.version, expected_wallet_version: camp.wallet.version });
+      expect(purchased.status(), await purchased.text()).toBe(201);
+      const result = await purchased.json() as components['schemas']['PurchaseResult'];
+      owned = { purchase_id: result.purchase.id, wearable_key: wearable.wearable_key };
+    } finally {
+      if (fundingRecord) expect((await appearanceAPI(page, `/checkins/${fundingRecord.id}`, 'DELETE', { expected_version: fundingRecord.version })).ok()).toBe(true);
+      if (fundingTask) expect((await appearanceAPI(page, `/management/tasks/${fundingTask.id}`, 'DELETE', { expected_version: fundingTask.version })).status()).toBe(204);
+      expect((await appearanceAPI(page, '/management/lock', 'POST')).status()).toBe(204);
+    }
   }
   return { ...owned, wearable };
 }

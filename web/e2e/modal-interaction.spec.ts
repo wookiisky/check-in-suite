@@ -10,15 +10,20 @@ async function clickOutside(page: Page, dialog: Locator, touch: boolean) {
   const y = box!.y + box!.height / 2;
   if (touch) await page.touchscreen.tap(2, y);
   else await page.mouse.click(2, y);
-  // 再点一次遮罩下方的真实页面入口，确认背景按钮不会收到这次操作。
+  // 页头换行时按钮中心可能被弹窗覆盖，仍可点击露在弹窗外的真实按钮部分。
   const background = await page.locator('.site-header nav button:not([aria-current="page"]), .management-sections button:not([aria-pressed="true"])').evaluateAll((elements, bounds) => {
     for (const element of elements) {
       if (element.closest('dialog') || element.matches(':disabled, [aria-current="page"]')) continue;
       const rect = element.getBoundingClientRect();
-      const x = rect.x + rect.width / 2;
-      const y = rect.y + rect.height / 2;
-      if (rect.width > 0 && rect.height > 0 && x > 0 && x < innerWidth && y > 0 && y < innerHeight
-        && (x < bounds.x || x > bounds.x + bounds.width || y < bounds.y || y > bounds.y + bounds.height)) return { x, y };
+      const left = Math.max(0, rect.left), right = Math.min(innerWidth, rect.right);
+      const top = Math.max(0, rect.top), bottom = Math.min(innerHeight, rect.bottom);
+      const outside = [
+        { left, right: Math.min(right, bounds.x), top, bottom },
+        { left: Math.max(left, bounds.x + bounds.width), right, top, bottom },
+        { left, right, top, bottom: Math.min(bottom, bounds.y) },
+        { left, right, top: Math.max(top, bounds.y + bounds.height), bottom },
+      ].find((part) => part.right - part.left > 2 && part.bottom - part.top > 2);
+      if (outside) return { x: (outside.left + outside.right) / 2, y: (outside.top + outside.bottom) / 2 };
     }
     return null;
   }, box!);
