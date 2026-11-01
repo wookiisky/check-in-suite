@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import net from 'node:net';
 import { tmpdir } from 'node:os';
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const releaseDirectory = process.argv[2];
 const servers = new Set(); // 只保存本脚本创建的进程，不按名称或端口终止其他服务。
-const account = { username: 'p1-release-check', login: 'P1-Release-Login-2026', management: 'P1-Release-Manage-2026' }; // 仅写入临时测试库。
+const account = { username: 'release-check', login: 'Release-Login-2026', management: 'Release-Manage-2026' }; // 仅写入临时测试库。
 let temporary;
 let interrupted = false;
 
@@ -96,11 +96,11 @@ async function stopServer(item) {
 // 会话只保存在内存；每次重启后重新登录，不复用原 Cookie 或 CSRF。
 async function client(origin) {
   let cookie = '', csrf = '';
-  const request = async (route, method = 'GET', body, expected = 200) => {
+  const request = async (route, method = 'GET', body, expected = 200, requestKey) => {
     let response;
     try {
       response = await fetch(origin + route, {
-        method, headers: { Origin: origin, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(cookie ? { Cookie: cookie } : {}), ...(csrf ? { 'X-CSRF-Token': csrf } : {}) },
+        method, headers: { Origin: origin, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(cookie ? { Cookie: cookie } : {}), ...(csrf ? { 'X-CSRF-Token': csrf } : {}), ...(method === 'POST' ? { 'Idempotency-Key': requestKey ?? randomUUID() } : {}) },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }), redirect: 'error', signal: AbortSignal.timeout(15_000),
       });
     } catch { throw new Error(`${method} ${route} 请求失败`); }
@@ -116,14 +116,24 @@ async function client(origin) {
 
 // 用当前源码 builtin 核实正式发行进程返回的实际字节与类型。
 async function verifyAssets(api) {
-  const keys = [
-    ['character-medium-v1', 'glb'], ['character-exercise-v1', 'glb'],
-    ...['wall', 'doorway', 'floor', 'roof'].map((key) => [`camp-${key}-v1`, 'glb']),
-    ...['hair', 'upper', 'lower', 'shoes'].flatMap((slot) => ['rogue', 'barbarian'].map((variant) => [`wearable-${slot}-${variant}-v1`, 'png'])),
-  ];
+  const appearance = await api.json('/api/v1/appearance');
+  const layout = await api.json('/api/v1/island/layout');
+  const urls = new Map();
+  const include = (url, extension) => { if (url) urls.set(url, extension); };
+  for (const character of appearance.characters) {
+    include(character.model_url, 'glb');
+    for (const animation of Object.values(character.animations)) include(animation.url, 'glb');
+  }
+  for (const item of [...appearance.wearables, ...layout.catalog]) {
+    include(item.model_url, 'glb'); include(item.thumbnail_url, 'png');
+  }
+  for (const url of Object.values(layout.scene.house.models)) include(url, 'glb');
+  for (const presentation of Object.values(layout.scene.activity_presentations)) include(presentation.attachment?.model_url, 'glb');
   const result = [];
-  for (const [key, extension] of keys) {
-    const response = await api.request(`/api/v1/assets/${key}`);
+  for (const [url, extension] of [...urls].sort(([first], [second]) => first.localeCompare(second))) {
+    check(/^\/api\/v1\/assets\/[a-z0-9-]+$/.test(url), '目录中存在非受控资源地址');
+    const key = url.slice('/api/v1/assets/'.length);
+    const response = await api.request(url);
     const expectedMIME = extension === 'glb' ? 'model/gltf-binary' : 'image/png';
     check(response.headers.get('content-type')?.split(';')[0] === expectedMIME, `${key} MIME 不符`);
     const bytes = Buffer.from(await response.arrayBuffer());
@@ -141,6 +151,42 @@ function appearanceInput(state) {
   return { expected_version: state.version, character_key: state.character_key, hair_purchase_id: state.hair_purchase_id, upper_purchase_id: state.upper_purchase_id, lower_purchase_id: state.lower_purchase_id, shoes_purchase_id: state.shoes_purchase_id };
 }
 function layoutInput(state) { return { expected_version: state.version, scene_key: state.scene_key, environment_key: state.environment_key, placements: state.placements }; }
+
+// 在真实发行进程内完成打卡、双币购买与原键重放，再返回可保存的已拥有实例。
+async function buyReleaseItems(api, appearance) {
+  await api.request('/api/v1/management/unlock', 'POST', { password: account.management });
+  const products = (await api.json('/api/v1/products')).items;
+  const upperKeys = new Set(appearance.wearables.filter((item) => item.slot === 'upper').map((item) => item.wearable_key));
+  const upper = products.find((item) => item.type === 'wearable' && upperKeys.has(item.wearable_key));
+  const flowers = products.find((item) => item.island_item_key === 'camp-flowers-v1');
+  check(upper && flowers, '正式初始化缺少替代上衣或花丛报价');
+  const task = await api.json('/api/v1/management/tasks', 'POST', {
+    category_id: null, name: '发行包交易验证', icon_key: 'book-v1',
+    coin_reward: upper.coin_price + flowers.coin_price + 7,
+    diamond_reward: upper.diamond_price + flowers.diamond_price + 3,
+    daily_limit: 1, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true, unlock_activities: ['run'],
+  }, 201);
+  const locked = await api.json('/api/v1/island/activity-access');
+  check(locked.activity_access.find((item) => item.activity === 'run')?.available === false, '未打卡的关联活动没有锁定');
+  const camp = await api.json('/api/v1/camp');
+  const checkin = await api.json('/api/v1/checkins', 'POST', { task_id: task.id, expected_task_version: task.version, expected_today: camp.today }, 201);
+  const unlocked = await api.json('/api/v1/island/activity-access');
+  check(unlocked.activity_access.find((item) => item.activity === 'run')?.available === true, '真实打卡未解锁关联活动');
+  let wallet = checkin.wallet;
+  const purchases = [];
+  for (const product of [upper, flowers]) {
+    const body = { product_id: product.id, expected_product_version: product.version, expected_wallet_version: wallet.version };
+    const key = randomUUID();
+    const purchased = await api.json('/api/v1/purchases', 'POST', body, 201, key);
+    const replay = await api.json('/api/v1/purchases', 'POST', body, 201, key);
+    check(JSON.stringify(purchased) === JSON.stringify(replay), '发行包购买同键重放改变了订单或余额');
+    check(purchased.wallet.coins === wallet.coins - product.coin_price && purchased.wallet.diamonds === wallet.diamonds - product.diamond_price, '发行包双币扣款错误');
+    wallet = purchased.wallet; purchases.push(purchased.purchase);
+  }
+  check(wallet.coins === 7 && wallet.diamonds === 3, '发行包交易余额与实际任务奖励不一致');
+  report('真实打卡与购买原键重放通过', { purchases: purchases.length, wallet_version: wallet.version });
+  return { upper: purchases[0], flowers: purchases[1], wallet };
+}
 
 const oldSchemaBuilder = `
 import sqlite3,json,sys
@@ -191,7 +237,7 @@ try {
   const identity = JSON.parse(command(binary, ['version']));
   check(identity.version === release.version && identity.goos === release.goos && identity.goarch === release.goarch, '二进制身份与 release.json 不同');
   report('发行身份核对', { version: release.version, goos: identity.goos, goarch: identity.goarch });
-  temporary = await mkdtemp(path.join(tmpdir(), 'check-in-p1-release-'));
+  temporary = await mkdtemp(path.join(tmpdir(), 'check-in-3d-release-'));
   const staticDirectory = path.join(releaseDirectory, 'web');
   const config = await configuration(temporary, staticDirectory);
   command(binary, ['migrate', '-config', config.path]);
@@ -206,11 +252,19 @@ try {
   const initialLayout = await api.json('/api/v1/island/layout');
   check(initialAppearance.version === 1 && initialLayout.version === 1 && initialAppearance.characters?.length > 0 && initialLayout.placements?.length > 0, '空库未返回初始人物与布局');
   const assets = await verifyAssets(api);
-  report('静态页面与十四项资源通过', { assets });
+  report('静态页面与完整三维资源通过', { count: assets.length, total_bytes: assets.reduce((total, asset) => total + asset.bytes, 0), assets });
+  const purchased = await buyReleaseItems(api, initialAppearance);
   const appearanceBody = appearanceInput(initialAppearance), layoutBody = layoutInput(initialLayout);
+  appearanceBody.upper_purchase_id = purchased.upper.id;
+  const ownedLayout = await api.json('/api/v1/island/layout');
+  const flowers = ownedLayout.inventory.find((item) => item.item_key === purchased.flowers.island_item_key);
+  check(flowers, '真实购买的陈设未进入完整布局库存');
+  layoutBody.placements = [...layoutBody.placements, { instance_id: flowers.instance_id, item_key: flowers.item_key, space: 'outdoor', x_cm: 900, z_cm: 0, rotation: 0 }];
   const savedAppearance = await api.json('/api/v1/appearance', 'PUT', appearanceBody);
   const savedLayout = await api.json('/api/v1/island/layout', 'PUT', layoutBody);
   check(savedAppearance.version === initialAppearance.version + 1 && savedLayout.version === initialLayout.version + 1, '完整保存未递增版本');
+  check(JSON.stringify(appearanceInput(savedAppearance)) === JSON.stringify({ ...appearanceBody, expected_version: savedAppearance.version }), '保存响应没有采用实际提交的四槽选择');
+  check(JSON.stringify(layoutInput(savedLayout)) === JSON.stringify({ ...layoutBody, expected_version: savedLayout.version }), '保存响应没有采用实际提交的完整布局');
   check((await api.json('/api/v1/appearance', 'PUT', appearanceBody, 409)).code === 'VERSION_CONFLICT', '外观旧版本没有冲突');
   check((await api.json('/api/v1/island/layout', 'PUT', layoutBody, 409)).code === 'VERSION_CONFLICT', '布局旧版本没有冲突');
   report('外观与布局保存及版本冲突通过', { appearance_version: savedAppearance.version, layout_version: savedLayout.version });
@@ -220,6 +274,8 @@ try {
   const restartedAppearance = await api.json('/api/v1/appearance'), restartedLayout = await api.json('/api/v1/island/layout');
   check(JSON.stringify(appearanceInput(restartedAppearance)) === JSON.stringify(appearanceInput(savedAppearance)), '重启后外观版本或选择发生变化');
   check(JSON.stringify(layoutInput(restartedLayout)) === JSON.stringify(layoutInput(savedLayout)), '重启后布局版本或位置发生变化');
+  const restartedWallet = (await api.json('/api/v1/camp')).wallet;
+  check(JSON.stringify(restartedWallet) === JSON.stringify(purchased.wallet), '重启后购买账务发生变化');
   check(JSON.stringify(await verifyAssets(api)) === JSON.stringify(assets), '重启后素材字节或类型发生变化');
   await stopServer(server);
   report('同一持久目录重启与新会话通过', { appearance_version: restartedAppearance.version, layout_version: restartedLayout.version, resources: assets.length });
