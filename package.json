@@ -42,7 +42,7 @@
     "assets:check": "node scripts/check-gltf-assets.mjs",
     "assets:inspect": "gltf-transform inspect",
     "assets:preview": "uv run --locked python scripts/preview-gltf-assets.py",
-    "test:asset-tools": "uv run --locked python scripts/preview-gltf-assets.test.py && uv run --locked python scripts/import-provider-assets.test.py && uv run --locked python scripts/fetch-provider-assets.test.py && uv run --locked python scripts/import-provider-characters.test.py && uv run --locked python scripts/import-provider-animations.test.py && uv run --locked python scripts/inspect-kenney-characters.test.py && uv run --locked python scripts/kenney-character-heads.test.py && uv run --locked python scripts/prepare-tiny-treats.test.py && uv run --locked python scripts/update-spatial-thumbnail-aliases.test.py",
+    "test:asset-tools": "uv run --locked python scripts/preview-gltf-assets.test.py && uv run --locked python scripts/import-provider-assets.test.py && uv run --locked python scripts/fetch-provider-assets.test.py && uv run --locked python scripts/import-provider-characters.test.py && uv run --locked python scripts/import-provider-animations.test.py && uv run --locked python scripts/inspect-kenney-characters.test.py && uv run --locked python scripts/kenney-character-heads.test.py && uv run --locked python scripts/prepare-kenney-characters.test.py && uv run --locked python scripts/verify-kenney-character-appearance.test.py && uv run --locked python scripts/prepare-tiny-treats.test.py && uv run --locked python scripts/update-spatial-thumbnail-aliases.test.py",
     "test:asset-renderer": "uv run --locked python scripts/render-gltf-previews.test.py"
   },
   "devDependencies": {

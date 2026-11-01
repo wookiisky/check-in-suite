@@ -19,6 +19,7 @@ source:
 - scripts/preview-gltf-assets.py
 - scripts/render-gltf-previews.py
 - scripts/import-provider-assets.py
+- scripts/verify-kenney-character-appearance.py
 tests:
 - scripts/check-spec.test.mjs
 - scripts/inspect-glb.test.mjs
@@ -28,11 +29,21 @@ tests:
 - internal/assets/provider_assets_test.go
 - scripts/provider-character-assets.test.mjs
 - web/e2e/provider-character.spec.ts
+- web/e2e/kenney-character.spec.ts
+- web/src/features/character/character3d-runtime-assets.test.ts
 - web/e2e/island-3d.spec.ts
 - scripts/check-gltf-assets.test.mjs
 - scripts/preview-gltf-assets.test.py
 - scripts/render-gltf-previews.test.py
 - scripts/import-provider-assets.test.py
+- scripts/prepare-kenney-characters.test.py
+- scripts/verify-kenney-character-appearance.test.py
+- scripts/kenney-character-binding-blender-test.py
+- scripts/kenney-head-semantics-blender-test.py
+- scripts/kenney-head-envelope-blender-test.py
+- scripts/kenney-prototype-waist-blender-test.py
+- scripts/kenney-headwear-compatibility-blender-test.py
+- scripts/kenney-character-face-assets-blender-test.py
 ---
 # 测试与验证
 
@@ -122,6 +133,8 @@ node scripts/verify-3d-release.mjs /absolute/path/to/release
 - 营地隐藏动画的可见性事件模拟不能证明操作系统真实后台行为。
 
 3D 样片与正式场景的浏览器检查加载实际 GLB，覆盖混搭、动作、房屋、暂停、读取失败恢复和保存结果未知。真实画面需检查阅读书本与桌椅贴合、不同方向墙体剖切及窄屏工具栏；仅有 Canvas 或成功响应不足以证明渲染正确，shader 编译错误也必须检查。无头 Chromium 当前使用 SwiftShader 软件渲染；因此帧间隔不能作为真实 GPU 的帧率证据，WebKit 的设备尺寸也不能作为手机性能证据。桌面 60 fps、手机 30 fps 是正式场景的目标，需绑定实际设备、陈设规模、画质和加载环境另行测量。
+
+人物来源适配分别验证源模型语义、交付 GLB 与正式浏览器流程。实际加载器测试读取正式 GLB，验证多材质节点、全部人物的默认装和正反向混搭；测试仅替换图片解码，因此不证明图片和 GPU 显示。Blender 检查使用真实面片、材质与蒙皮，确认眼、嘴和下颚不被发型替换，并保留缺脸模型作为反例；平面头型的正面射线不能代替立体眼窝、鼻梁的视觉判断。四向换装及动作采样证明对应人物、组合和采样帧，不能据此声称全部人物与全部动作的每一帧都检查过。`kenney-character.spec.ts` 在临时账户中购买五类结构的代表人物，验证共用服装、反向复用、保存后重开以及实际模型请求；画面仍需查看截图。
 
 独立场景检查分别验证数据库与浏览器边界：真实 SQLite 的独立连接竞争证明同一实例只能占用一处，迁移检查保留旧布局顺序和版本；浏览器检查购买解锁、无房活动、收起搬运、各场景草稿及结果未知恢复。房屋通路允许派生的分数厘米矩形，用户保存坐标仍为整数；入口平台和台阶高度使用实际 GLB 射线结果，不能用通路包围范围代替高度。
 

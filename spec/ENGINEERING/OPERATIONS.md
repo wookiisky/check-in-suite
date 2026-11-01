@@ -20,6 +20,8 @@ source:
 - scripts/import-provider-assets.py
 - scripts/update-spatial-thumbnail-aliases.py
 - scripts/import-provider-characters.py
+- scripts/prepare-kenney-characters.py
+- scripts/verify-kenney-character-appearance.py
 - scripts/import-provider-animations.py
 - scripts/check-gltf-assets.mjs
 - scripts/preview-gltf-assets.py
@@ -112,6 +114,10 @@ go test ./internal/httpapi -run 'TestGraphicsAssetsHTTP'
 人物由 `scripts/import-provider-characters.py` 在 Blender 中整理，标准身体、骨架、切面和逐源选择由专用配置提供。没有原始下肢或骨架的源人物须明确记录补充身体与离线绑定，不能声称其源包已有这些部件。`internal/assets/provider-character-manifest.json` 记录已加工人物和恢复检查点；尚未适配或未通过画面检查的人物不进入正式可选目录。原始动作单独由 `scripts/import-provider-animations.py` 处理，并在 `provider-animation-manifest.json` 中记录已完成范围与剩余范围；预览按需加载，不能让正式人物页面下载全部原始动作。
 
 恢复已有批次的画面检查时，可在全局 Blender 后台运行人物脚本并传入 `--evidence`，通过 `--only` 选择人物、`--evidence-output` 指定独立输出目录。此入口只读取已整理人物并生成来源对照与共用服装画面，不改写正式人物目录、清单或模型；省略 `--only` 时检查已加工的完整批次。
+
+恢复来源后，先运行 `uv run --locked python scripts/kenney-character-heads.py` 生成逐源审核的脸部与头发贴图。Kenney 人物再用 `uv run --locked python scripts/prepare-kenney-characters.py --only 人物身份` 在独立工作区试加工；显式 `--all` 才处理全量。试加工会在该工作区放行头型检查，清单始终标为未正式完成，不能据此直接发布。正式配置的头型验证状态必须来自实际画面和结构检查。静态源节点的动作须清除；FBX 皮肤使用逐源指定的纹理。平面头型按标准头皮表面拟合，已有立体眼鼻和下颚的头型保留原几何，并将头部深度限制在共用头皮范围内，避免遮住共用胡须。原型人物的躯干含有低于裤腰的几何，部位拟合须保留源腿顶与衣摆的衔接，不能把整个躯干范围直接线性拉伸。
+
+换装证据由 `scripts/verify-kenney-character-appearance.py` 在后台 Blender 中生成。传入 `--workspace`、可重复的 `--only` 和独立的 `--output`，可比较原套装、光头、共用头发、胡须、头盔与动作；`--reverse` 将来源服装穿到标准人物上。每项证据绑定模型哈希、服装选择、动作片段和采样帧，四向图沿用统一取景。默认工作区为 `.local/kenney-characters/workspace`，复查正式资源时用 `--workspace .`。几何、脸部和来源语义的 Blender 检查脚本与普通 Python 测试分开执行，依赖原包时须先恢复清单对应的本地来源。
 
 除了 Go 素材检查，`npm run test:assets` 会逐个读取正式人物与服装的实际 GLB，核对身体分区范围、骨骼层级、逆绑定矩阵和蒙皮权重。这证明当前交付数据满足结构约束，仍需结合真实换装画面检查头饰、接缝和遮挡。资源获取、静态整理、人物整理与动作整理的 Python 检查各位于相应脚本旁，可单独执行；制作需要 Blender，正式运行不依赖制作工具。
 

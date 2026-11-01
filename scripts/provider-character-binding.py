@@ -13,6 +13,7 @@ def bind_parts(bpy, bmesh, rig, imported, spec, canonical_parts):
     def copy_role(obj, name, group_names=None):
         part=obj.copy()
         part.data=obj.data.copy()
+        part.animation_data_clear()
         part.name=name
         bpy.context.collection.objects.link(part)
         if group_names:
@@ -29,6 +30,8 @@ def bind_parts(bpy, bmesh, rig, imported, spec, canonical_parts):
         part.parent=None
         part.parent_type='OBJECT'
         part.matrix_world=Matrix.Identity(4)
+        if spec.get('source_forward_axis') == '+Y':
+            world = Matrix.Diagonal((-1, -1, 1, 1)) @ world
         part.data.transform(world)
         part.modifiers.clear()
         part.vertex_groups.clear()
@@ -53,10 +56,18 @@ def bind_parts(bpy, bmesh, rig, imported, spec, canonical_parts):
     if not prepared['head'] or not prepared['torso']:
         raise ValueError('source has no marked face or torso geometry')
     target_head=box([canonical_parts['body_head'],canonical_parts['body_scalp']] if spec.get('partition_scalp') else [canonical_parts['body_head']])
+    if spec.get('head_adapter') and spec.get('head_envelope_method') != 'canonical-scalp-envelope':
+        # 自然脸壳的深度来自头皮，鼻尖只作为最终总边界，不能把整张脸推到鼻尖深度。
+        target_head[1] = box([canonical_parts['body_scalp']])[1]
     target_arms={side:box([canonical_parts['body_arms'],canonical_parts['body_hands']],side) for side in [1,-1]}
     target_legs={side:box([canonical_parts['body_legs'],canonical_parts['body_feet']],side) for side in [1,-1]}
     target_torso=[(-.32,.32),(-.24,.24),(.60,1.32)]
     source_boxes={role:box(objects) for role,objects in prepared.items() if objects}
+    landmarks = spec.get('head_landmark_bounds_blender')
+    if landmarks:
+        source_boxes['head'] = [list(pair) for pair in landmarks]
+        if spec.get('source_forward_axis') == '+Y':
+            source_boxes['head'][:2] = [[-high, -low] for low, high in source_boxes['head'][:2]]
 
     # 坐标逐部位映射到标准长度和关节位置，源方盒或脸型拓扑仍保留。
     def fit_point(point, source_box, target_box, arm_side=0):
@@ -74,6 +85,13 @@ def bind_parts(bpy, bmesh, rig, imported, spec, canonical_parts):
             a,b=target_box[target_axis]
             result[target_axis]=a+(b-a)*amount
         return result
+
+    waist_fit = None
+    if spec.get('torso_waist_fit') == 'leg-top-landmark':
+        # 躯干包含低于腿顶的胯部，保留接触高度，不能把它当作一个长方体独立拉伸。
+        source_height = max(source_boxes[role][2][1] for role in ['left_leg', 'right_leg'])
+        target_height = max(bounds[2][1] for bounds in target_legs.values())
+        waist_fit = {'source_height': source_height, 'target_height': target_height}
 
     # 标准骨架链按关节位置插值，腕和踝切面两侧使用相同权重。
     def weights(point, role):
@@ -106,7 +124,16 @@ def bind_parts(bpy, bmesh, rig, imported, spec, canonical_parts):
     # 将拟合后的顶点和权重写入最终标准骨架，不依赖浏览器运行时重定向。
     def bind_object(obj,role,source_box,target_box,arm_side=0):
         for vertex in obj.data.vertices:
+            source_height = vertex.co.z
             vertex.co=fit_point(vertex.co,source_box,target_box,arm_side)
+            if role == 'torso' and waist_fit:
+                source_low, source_high = source_box[2]
+                target_low, target_high = target_box[2]
+                source_waist, target_waist = waist_fit['source_height'], waist_fit['target_height']
+                if source_height <= source_waist:
+                    vertex.co.z = target_low + (source_height-source_low)/(source_waist-source_low)*(target_waist-target_low)
+                else:
+                    vertex.co.z = target_waist + (source_height-source_waist)/(source_high-source_waist)*(target_high-target_waist)
         obj.parent=rig
         obj.matrix_parent_inverse=Matrix.Identity(4)
         obj.matrix_basis=Matrix.Identity(4)
@@ -136,8 +163,10 @@ def bind_parts(bpy, bmesh, rig, imported, spec, canonical_parts):
     if spec.get('scalp_source_nodes') and 'head' not in group_roles:
         head_names={name:obj.name for name,obj in zip(spec['head_nodes'],prepared['head'])}
         updated['scalp_source_nodes']=[head_names[name] for name in spec['scalp_source_nodes']]
+    if spec.get('partition_scalp') and spec.get('head_adapter'):
+        updated['scalp_source_nodes'] = updated['head_nodes'][:]
     updated['hair_nodes']=[obj.name for obj in hair]
     updated['upper_nodes']=[obj.name for obj in upper]
     parts={obj.name:obj for objects in prepared.values() for obj in objects}
     parts.update({obj.name:obj for obj in hair+upper})
-    return parts,updated,{'method':'anatomical-part fitting to canonical segment bounds and interpolated canonical-chain skin weights','source_bounds':source_boxes,'target_head_bounds':target_head,'target_torso_bounds':target_torso,'has_source_legs':bool(prepared['left_leg'] and prepared['right_leg'])}
+    return parts,updated,{'method':'anatomical-part fitting to canonical segment bounds and interpolated canonical-chain skin weights','source_bounds':source_boxes,'target_head_bounds':target_head,'target_torso_bounds':target_torso,'has_source_legs':bool(prepared['left_leg'] and prepared['right_leg']),**({'torso_waist_fit':waist_fit} if waist_fit else {})}

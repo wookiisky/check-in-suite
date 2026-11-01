@@ -51,9 +51,25 @@
     }
   ],
   "review_notes": [
-    "这些记录证明来源与结构，不代表已适配或可上架。review_status仍需人工语义分离的条目必须处理后再计成功。",
+    "62个人形来源已在隔离workspace完成统一身体与骨架适配，7个缺失脸发来源已按实际面片语义拆分；当前交付62人物、248穿戴、372资产。",
+    "review_status保留为每次加工必须满足的头部适配要求；本次通过状态以final_validation及其绑定模型SHA的证据为准。",
     "retro-fantasy-kit与retro-urban-kit已核对全部105/124模型名称，无人物；platformer-kit角色为非人形独眼球怪。"
   ],
+  "final_validation": {
+    "status": "passed",
+    "character_count": 62,
+    "wearable_count": 248,
+    "asset_count": 372,
+    "evidence": ".local/kenney-characters/final-validation.json",
+    "final_geometry_review": {
+      "groups": 34,
+      "views_per_group": 4,
+      "result": "passed",
+      "independent_headwear_review_groups": 14
+    },
+    "recipe_notes": "仅将5个profile的head_envelope_verified更新为隔离加工已经使用的true；review_status及其余加工字段保持冻结。",
+    "scope": "当前模型与代表姿态、双向共用四槽、共享发型及头盔；不声称穷举全部动画帧或真实移动设备性能。"
+  },
   "profiles": {
     "blocky-six-parts": {
       "prefix": "",
@@ -90,13 +106,19 @@
         "strategy": "six-part-landmark-fit-and-chain-weights",
         "source_up_axis": "Y",
         "split_elbows_and_knees": true,
-        "head_envelope_verified": false
+        "head_envelope_verified": true
       },
       "head_separation": {
         "method": "painted-atlas-mask",
         "note": "头发和脸绘制在同一头部贴图，需离线从固定atlas区域制作头发透明遮罩与无发底图，不能用整头或高度平面替代发型。"
       },
-      "review_status": "requires-painted-hair-split"
+      "review_status": "requires-shared-head-envelope-validation",
+      "head_adapter": "kenney-reviewed-heads-v1",
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "head"
+      ],
+      "head_envelope_method": "canonical-scalp-envelope"
     },
     "mini-seven-bone-humanoid": {
       "prefix": "",
@@ -142,13 +164,18 @@
         "strategy": "source-rigid-group-to-canonical-chain",
         "source_up_axis": "Y",
         "split_elbows_and_knees": true,
-        "head_envelope_verified": false
+        "head_envelope_verified": true
       },
       "head_separation": {
         "method": "review-palette-components",
         "note": "脸部、眼睛与头发在同一个head-mesh内；必须用具体UV区域与空间连通分量区分，不能将整个头部当hair。眼睛和头发可能共用色块。"
       },
-      "review_status": "requires-head-component-review"
+      "review_status": "requires-shared-head-envelope-validation",
+      "head_adapter": "kenney-reviewed-heads-v1",
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "head-mesh"
+      ]
     },
     "space-six-parts": {
       "prefix": "",
@@ -185,13 +212,19 @@
         "strategy": "six-part-landmark-fit-and-chain-weights",
         "source_up_axis": "Y",
         "split_elbows_and_knees": true,
-        "head_envelope_verified": false
+        "head_envelope_verified": true
       },
       "head_separation": {
-        "method": "review-helmet-surface",
-        "note": "alien与astronaut完整双足；头部或头盔合并网格，需按原材质/面组保持脸部与头饰分离。"
+        "method": "reviewed-source-triangle-groups",
+        "note": "alien触角与两款宇航员发型按逐源三角面分离；眼睛、嘴与胡须保持固定。"
       },
-      "review_status": "requires-head-component-review"
+      "review_status": "requires-shared-head-envelope-validation",
+      "head_adapter": "kenney-reviewed-heads-v1",
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "head"
+      ],
+      "source_forward_axis": "+Y"
     },
     "prototype-six-parts": {
       "prefix": "",
@@ -228,13 +261,20 @@
         "strategy": "six-part-landmark-fit-and-chain-weights",
         "source_up_axis": "Y",
         "split_elbows_and_knees": true,
-        "head_envelope_verified": false
+        "head_envelope_verified": true
       },
       "head_separation": {
         "method": "bald",
         "note": "原型人形无头发与脸部贴图，保持头部固定，生成可替换的空发型默认部件。"
       },
-      "review_status": "ready-for-normalization"
+      "review_status": "requires-shared-head-envelope-validation",
+      "head_adapter": "kenney-reviewed-heads-v1",
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "head"
+      ],
+      "head_envelope_method": "canonical-scalp-envelope",
+      "torso_waist_fit": "leg-top-landmark"
     },
     "animated-textured-humanoid": {
       "prefix": "",
@@ -337,7 +377,7 @@
           "IK controls",
           "leaf end bones"
         ],
-        "head_envelope_verified": false
+        "head_envelope_verified": true
       },
       "head_separation": {
         "method": "painted-atlas-mask",
@@ -349,7 +389,12 @@
         ],
         "note": "四张皮肤均为同一几何的独立形象；脸与头发同贴图，按逐皮肤遮罩拆出发型，不能复制整头当发型。SVG源在Skins/Source可提供精确图形边界。"
       },
-      "review_status": "requires-painted-hair-split"
+      "review_status": "requires-shared-head-envelope-validation",
+      "head_adapter": "kenney-reviewed-heads-v1",
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "characterMedium"
+      ]
     }
   },
   "sources": [
@@ -392,13 +437,13 @@
     {"provider": "kenney", "pack_key": "mini-market", "filename": "character-employee.glb", "source_relative_path": "Models/GLB format/character-employee.glb", "key": "kenney-mini-market-employee", "name": "Kenney mini market employee", "sha256": "8774b93a5ff11af146176505035cc351d37a8a69ad0b1fde612bba9c8ffa84cc", "profile": "mini-seven-bone-humanoid", "head_landmark_bounds_blender": [[-0.16, 0.16], [-0.1576, 0.1624], [0.34325, 0.661325]], "head_adapter": "kenney-reviewed-heads-v1"},
     {"provider": "kenney", "pack_key": "mini-skate", "filename": "character-skate-boy.glb", "source_relative_path": "Models/GLB format/character-skate-boy.glb", "key": "kenney-mini-skate-skate-boy", "name": "Kenney mini skate skate-boy", "sha256": "8279011b450a94850962aa99357e1e835a0f5c320377c6201938c18c7a582d55", "profile": "mini-seven-bone-humanoid", "head_landmark_bounds_blender": [[-0.16, 0.16], [-0.1576, 0.1624], [0.34325, 0.661325]], "head_adapter": "kenney-reviewed-heads-v1"},
     {"provider": "kenney", "pack_key": "mini-skate", "filename": "character-skate-girl.glb", "source_relative_path": "Models/GLB format/character-skate-girl.glb", "key": "kenney-mini-skate-skate-girl", "name": "Kenney mini skate skate-girl", "sha256": "e39ace66b57e16b77e4a65c388e3faf08be04ac1fcc8ff96e8e9ac9af453ac00", "profile": "mini-seven-bone-humanoid", "head_landmark_bounds_blender": [[-0.16, 0.16], [-0.1576, 0.1624], [0.34325, 0.661325]], "head_adapter": "kenney-reviewed-heads-v1"},
-    {"provider": "kenney", "pack_key": "graveyard-kit", "filename": "character-keeper.glb", "source_relative_path": "Models/GLB format/character-keeper.glb", "key": "kenney-graveyard-kit-keeper", "name": "Kenney graveyard kit keeper", "sha256": "d11d277c7e78002393a5534370638c4100a325f20a5daa96b61928a1a0f1856b", "profile": "blocky-six-parts"},
-    {"provider": "kenney", "pack_key": "graveyard-kit", "filename": "character-skeleton.glb", "source_relative_path": "Models/GLB format/character-skeleton.glb", "key": "kenney-graveyard-kit-skeleton", "name": "Kenney graveyard kit skeleton", "sha256": "72f20c53c63114888d91fdd8a01c4165a116d416dcee8fab03ef9b2450eac68b", "profile": "blocky-six-parts"},
-    {"provider": "kenney", "pack_key": "graveyard-kit", "filename": "character-vampire.glb", "source_relative_path": "Models/GLB format/character-vampire.glb", "key": "kenney-graveyard-kit-vampire", "name": "Kenney graveyard kit vampire", "sha256": "89e646e46d9a067009a548d9b120ec358fbe9fa3b0d671136b8bf930be2f2cd4", "profile": "blocky-six-parts"},
-    {"provider": "kenney", "pack_key": "graveyard-kit", "filename": "character-zombie.glb", "source_relative_path": "Models/GLB format/character-zombie.glb", "key": "kenney-graveyard-kit-zombie", "name": "Kenney graveyard kit zombie", "sha256": "1a49bedce8647de542bfaaa796a3b533ab2a0d2567122bd08b16b2741fa62693", "profile": "blocky-six-parts"},
-    {"provider": "kenney", "pack_key": "space-kit", "filename": "alien.glb", "source_relative_path": "Models/GLTF format/alien.glb", "key": "kenney-space-kit-alien", "name": "Kenney space kit alien", "sha256": "c041e8ed0eff82f0b25b944a8107f1268ddbec9c2c93afedc4ee0e8b047d983d", "profile": "space-six-parts"},
-    {"provider": "kenney", "pack_key": "space-kit", "filename": "astronautA.glb", "source_relative_path": "Models/GLTF format/astronautA.glb", "key": "kenney-space-kit-astronautA", "name": "Kenney space kit astronautA", "sha256": "9db62dd9790beadc1b8e45cf9623e99ade21751bb23f16dfe1b8cfb05a54f3b5", "profile": "space-six-parts"},
-    {"provider": "kenney", "pack_key": "space-kit", "filename": "astronautB.glb", "source_relative_path": "Models/GLTF format/astronautB.glb", "key": "kenney-space-kit-astronautB", "name": "Kenney space kit astronautB", "sha256": "6fa5b3e11cb3d117b28a0794b261ad9107f16ca6ce886b288493e22493d74d2d", "profile": "space-six-parts"},
+    {"provider": "kenney", "pack_key": "graveyard-kit", "filename": "character-keeper.glb", "source_relative_path": "Models/GLB format/character-keeper.glb", "key": "kenney-graveyard-kit-keeper", "name": "Kenney graveyard kit keeper", "sha256": "d11d277c7e78002393a5534370638c4100a325f20a5daa96b61928a1a0f1856b", "profile": "blocky-six-parts", "head_landmark_bounds_blender": [[-0.15399998426437378, 0.15399998426437378], [-0.17327940464019775, 0.15399998426437378], [0.4471660852432251, 0.7221660614013672]], "head_separation": {"method": "reviewed-source-triangle-groups", "configuration": "scripts/kenney-extra-heads.json"}, "head_envelope_method": "source-landmarks"},
+    {"provider": "kenney", "pack_key": "graveyard-kit", "filename": "character-skeleton.glb", "source_relative_path": "Models/GLB format/character-skeleton.glb", "key": "kenney-graveyard-kit-skeleton", "name": "Kenney graveyard kit skeleton", "sha256": "72f20c53c63114888d91fdd8a01c4165a116d416dcee8fab03ef9b2450eac68b", "profile": "blocky-six-parts", "head_landmark_bounds_blender": [[-0.1540001630783081, 0.15399980545043945], [-0.1539999544620514, 0.15400001406669617], [0.4471660852432251, 0.7221660614013672]], "head_separation": {"method": "reviewed-source-triangle-groups", "configuration": "scripts/kenney-extra-heads.json"}, "head_envelope_method": "source-landmarks", "fixed_face_depth_fraction": 0.1},
+    {"provider": "kenney", "pack_key": "graveyard-kit", "filename": "character-vampire.glb", "source_relative_path": "Models/GLB format/character-vampire.glb", "key": "kenney-graveyard-kit-vampire", "name": "Kenney graveyard kit vampire", "sha256": "89e646e46d9a067009a548d9b120ec358fbe9fa3b0d671136b8bf930be2f2cd4", "profile": "blocky-six-parts", "head_landmark_bounds_blender": [[-0.15399998426437378, 0.15399998426437378], [-0.17327940464019775, 0.15399998426437378], [0.4471660852432251, 0.7221660614013672]], "head_separation": {"method": "reviewed-source-triangle-groups", "configuration": "scripts/kenney-extra-heads.json"}, "head_envelope_method": "source-landmarks"},
+    {"provider": "kenney", "pack_key": "graveyard-kit", "filename": "character-zombie.glb", "source_relative_path": "Models/GLB format/character-zombie.glb", "key": "kenney-graveyard-kit-zombie", "name": "Kenney graveyard kit zombie", "sha256": "1a49bedce8647de542bfaaa796a3b533ab2a0d2567122bd08b16b2741fa62693", "profile": "blocky-six-parts", "head_landmark_bounds_blender": [[-0.15399998426437378, 0.15399998426437378], [-0.17327940464019775, 0.15399998426437378], [0.4471660852432251, 0.7221660614013672]], "head_separation": {"method": "reviewed-source-triangle-groups", "configuration": "scripts/kenney-extra-heads.json"}, "head_envelope_method": "source-landmarks"},
+    {"provider": "kenney", "pack_key": "space-kit", "filename": "alien.glb", "source_relative_path": "Models/GLTF format/alien.glb", "key": "kenney-space-kit-alien", "name": "Kenney space kit alien", "sha256": "c041e8ed0eff82f0b25b944a8107f1268ddbec9c2c93afedc4ee0e8b047d983d", "profile": "space-six-parts", "head_landmark_bounds_blender": [[1.8700000047683716, 2.130000114440918], [-1.6299999952316284, -1.3700000047683716], [0.48318397998809814, 0.743183970451355]], "head_separation": {"method": "reviewed-source-triangle-groups", "configuration": "scripts/kenney-extra-heads.json", "note": "20个触角面可替换，14个头壳顶面保持固定/头皮；触角不覆盖完整头皮。"}, "hair_covers": [], "headwear_root_attachment": {"surface": "canonical-scalp", "root_tolerance": 0.005, "inset": 0.002}},
+    {"provider": "kenney", "pack_key": "space-kit", "filename": "astronautA.glb", "source_relative_path": "Models/GLTF format/astronautA.glb", "key": "kenney-space-kit-astronautA", "name": "Kenney space kit astronautA", "sha256": "9db62dd9790beadc1b8e45cf9623e99ade21751bb23f16dfe1b8cfb05a54f3b5", "profile": "space-six-parts", "head_landmark_bounds_blender": [[1.8700000047683716, 2.130000114440918], [-1.6299999952316284, -1.3700000047683716], [0.48318397998809814, 0.6781839728355408]], "head_separation": {"method": "reviewed-source-triangle-groups", "configuration": "scripts/kenney-extra-heads.json"}},
+    {"provider": "kenney", "pack_key": "space-kit", "filename": "astronautB.glb", "source_relative_path": "Models/GLTF format/astronautB.glb", "key": "kenney-space-kit-astronautB", "name": "Kenney space kit astronautB", "sha256": "6fa5b3e11cb3d117b28a0794b261ad9107f16ca6ce886b288493e22493d74d2d", "profile": "space-six-parts", "head_landmark_bounds_blender": [[1.8700000047683716, 2.130000114440918], [-1.6299999952316284, -1.3700000047683716], [0.48318397998809814, 0.6781839728355408]], "head_separation": {"method": "reviewed-source-triangle-groups", "configuration": "scripts/kenney-extra-heads.json"}},
     {"provider": "kenney", "pack_key": "prototype-kit", "filename": "figurine-cube-detailed.glb", "source_relative_path": "Models/GLB format/figurine-cube-detailed.glb", "key": "kenney-prototype-kit-figurine-cube-detailed", "name": "Kenney prototype kit figurine-cube-detailed", "sha256": "ba95c55fbcd9a8c8628c3ac16a9eb60b6eef71cfcee562057c4ba80c2d69e18e", "profile": "prototype-six-parts"},
     {"provider": "kenney", "pack_key": "prototype-kit", "filename": "figurine-cube.glb", "source_relative_path": "Models/GLB format/figurine-cube.glb", "key": "kenney-prototype-kit-figurine-cube", "name": "Kenney prototype kit figurine-cube", "sha256": "c5a9585e098eded9ee939e0176038e85401a5f25ebf134b93013c7a54e097cf1", "profile": "prototype-six-parts"},
     {"provider": "kenney", "pack_key": "prototype-kit", "filename": "figurine-large.glb", "source_relative_path": "Models/GLB format/figurine-large.glb", "key": "kenney-prototype-kit-figurine-large", "name": "Kenney prototype kit figurine-large", "sha256": "05ea243f7c54b1ea4423d8d91365f4a17357cae2d83706e40e6a9715be668c00", "profile": "prototype-six-parts"},

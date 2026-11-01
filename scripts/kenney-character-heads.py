@@ -91,17 +91,23 @@ def copy_head(bpy, obj, suffix):
 
 
 # 显式范围对应实际源三角面；需要保留的头皮只改UV，不删除脸部或眼睛。
-def select_head_faces(bmesh, obj, selected, fill, skin_u, hair):
+def select_head_faces(bmesh, obj, selected, fill, skin_u, hair, skin_material=None, skin_v=None):
     mesh = bmesh.new()
     mesh.from_mesh(obj.data)
     mesh.faces.ensure_lookup_table()
     if not hair and fill:
-        layer = mesh.loops.layers.uv.active
-        if layer is None:
-            raise ValueError('已标注的混合头皮缺少UV')
-        for index in fill:
-            for loop in mesh.faces[index].loops:
-                loop[layer].uv.x = skin_u
+        if skin_material is not None:
+            for index in fill:
+                mesh.faces[index].material_index = skin_material
+        else:
+            layer = mesh.loops.layers.uv.active
+            if layer is None or skin_u is None:
+                raise ValueError('已标注的混合头皮缺少UV或肤色色板位置')
+            for index in fill:
+                for loop in mesh.faces[index].loops:
+                    loop[layer].uv.x = skin_u
+                    if skin_v is not None:
+                        loop[layer].uv.y = skin_v
     remove = [face for face in mesh.faces if (face.index not in selected if hair else face.index in selected and face.index not in fill)]
     bmesh.ops.delete(mesh, geom=remove, context='FACES')
     bmesh.ops.delete(mesh, geom=[vertex for vertex in mesh.verts if not vertex.link_faces], context='VERTS')
@@ -138,15 +144,19 @@ def head_texture_material(bpy, name, path, transparent):
 def prepare_head_parts(bpy, bmesh, parts, spec):
     key = spec['key']
     sources = [parts[name] for name in spec['head_nodes']]
-    mini = json.loads((ROOT / 'scripts/kenney-mini-heads.json').read_text())['heads']
-    selection = next((item for item in mini if item['key'] == key), None)
+    reviewed = []
+    for filename in ['kenney-mini-heads.json', 'kenney-extra-heads.json']:
+        path = ROOT / 'scripts' / filename
+        if path.exists():
+            reviewed.extend(json.loads(path.read_text())['heads'])
+    selection = next((item for item in reviewed if item['key'] == key), None)
     if selection:
         if len(sources) != 1 or len(sources[0].data.polygons) != selection['source_polygon_count']:
             raise ValueError('源头部三角面数量与已审核记录不一致: ' + key)
         selected = {index for start, end in selection['hair_polygon_ranges'] for index in range(start, end)}
         fill = {index for start, end in selection['fixed_fill_polygon_ranges'] for index in range(start, end)}
         fixed = copy_head(bpy, sources[0], '_face')
-        select_head_faces(bmesh, fixed, selected, fill, selection['fixed_fill_uv_u'], False)
+        select_head_faces(bmesh, fixed, selected, fill, selection['fixed_fill_uv_u'], False, selection.get('fixed_fill_material_index'), (selection.get('fixed_fill_uv') or [None, None])[1])
         hair = []
         if selected:
             overlay = copy_head(bpy, sources[0], '_hair')
@@ -182,6 +192,68 @@ def prepare_head_parts(bpy, bmesh, parts, spec):
     if spec.get('head_separation', {}).get('method') == 'bald':
         return [copy_head(bpy, obj, '_face') for obj in sources], [], {'method': 'reviewed-bald-source', 'scalp_envelope_verified': False}
     raise ValueError('人物头部尚未完成语义标注: ' + key)
+
+
+# 方头先细分再沿标准头壳径向收形，发型沿同一映射保留相对厚度。
+def fit_head_envelope(bmesh, fixed, hair, bounds, reference_points):
+    from mathutils import Vector
+    from mathutils.bvhtree import BVHTree
+    envelope = bmesh.new()
+    for point in reference_points:
+        envelope.verts.new(point)
+    bmesh.ops.convex_hull(envelope, input=list(envelope.verts), use_existing_faces=False)
+    surface = BVHTree.FromBMesh(envelope)
+    envelope.free()
+    center = Vector(tuple((low + high) / 2 for low, high in bounds))
+    fixed_set = set(fixed)
+    for obj in fixed + hair:
+        mesh = bmesh.new()
+        mesh.from_mesh(obj.data)
+        bmesh.ops.remove_doubles(mesh, verts=list(mesh.verts), dist=1e-6)
+        bmesh.ops.subdivide_edges(mesh, edges=list(mesh.edges), cuts=3, use_grid_fill=True)
+        for vertex in mesh.verts:
+            radial = vertex.co - center
+            if radial.length < 1e-6:
+                continue
+            direction = radial.normalized()
+            box_distance = min(((high if direction[axis] > 0 else low) - center[axis]) / direction[axis] for axis, (low, high) in enumerate(bounds) if abs(direction[axis]) > 1e-6)
+            distance = surface.ray_cast(center, direction)[3]
+            if distance is not None:
+                vertex.co = center + direction * distance * max(1, radial.length / box_distance)
+            if obj in fixed_set:
+                for axis, (low, high) in enumerate(bounds):
+                    vertex.co[axis] = min(high, max(low, vertex.co[axis]))
+        mesh.normal_update()
+        mesh.to_mesh(obj.data)
+        mesh.free()
+        for polygon in obj.data.polygons:
+            polygon.use_smooth = True
+        obj.data.normals_split_custom_set([(0, 0, 0)] * len(obj.data.loops))
+    return {'method': 'subdivided radial projection onto the canonical scalp surface extended to the complete canonical head height; source headwear thickness retained', 'subdivision_cuts': 3, 'reference_bounds_blender': bounds, 'fixed_vertices': sum(len(obj.data.vertices) for obj in fixed), 'hair_vertices': sum(len(obj.data.vertices) for obj in hair)}
+
+
+# 仅延伸头饰原来的最低端环到标准真实头皮，尖端与蒙皮权重保持原样。
+def attach_headwear_roots(objects, surface, settings):
+    records = []
+    for obj in objects:
+        if not obj.data.vertices:
+            continue
+        lower = min(vertex.co.z for vertex in obj.data.vertices)
+        root_limit = lower + settings['root_tolerance']
+        tips = {vertex.index: vertex.co.copy() for vertex in obj.data.vertices if vertex.co.z > root_limit}
+        moved = []
+        for vertex in obj.data.vertices:
+            if vertex.co.z > root_limit:
+                continue
+            previous = vertex.co.copy()
+            point, normal, _, _ = surface.find_nearest(previous)
+            vertex.co = point - normal.normalized() * settings['inset']
+            moved.append({'vertex': vertex.index, 'before': list(previous), 'after': list(vertex.co)})
+        assert all(obj.data.vertices[index].co == point for index, point in tips.items())
+        obj.data.update()
+        obj.data.normals_split_custom_set([(0, 0, 0)] * len(obj.data.loops))
+        records.append({'node': obj.name, 'root_vertices': moved, 'unchanged_tip_vertices': sorted(tips)})
+    return {'method': 'extend only the original lowest headwear ring to the actual canonical scalp surface; retain all other vertices and skin weights', 'inset': settings['inset'], 'objects': records}
 
 
 # 素材制作依赖Pillow，正式运行只使用生成的GLB与PNG。

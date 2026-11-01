@@ -19,6 +19,10 @@
         [
           200,
           10
+        ],
+        [
+          194,
+          105
         ]
       ],
       "color_tolerance": 35,
@@ -26,7 +30,8 @@
         200,
         300
       ],
-      "review_reference": ".local/3d-sources/character-inspection/kenney/painted-heads.png"
+      "review_reference": ".local/3d-sources/character-inspection/kenney/painted-heads.png",
+      "review_note": "额顶浅色发束与深色发区不连通，单独标注种子；同色胡须保持固定脸。"
     },
     {
       "key": "kenney-blocky-characters-b",

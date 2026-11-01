@@ -16,14 +16,22 @@ export interface PreparedCharacter {
   dispose: () => void; // 释放实例与资源引用。
 }
 
+// 一个glTF语义节点可因多材质被加载成Group，其所有primitive仍属于同一身体部位。
+function meshesInNode(root:Object3D,name:string):Mesh[] {
+  const meshes:Mesh[]=[];
+  root.getObjectByName(name)?.traverse(node=>{if(node instanceof Mesh)meshes.push(node);});
+  return meshes;
+}
+
 // 兼容资源只重新绑定到同名实例骨骼，不改变离线确定的绑定姿势。
 function attachWearables(root: Object3D, source: GLTFSource, visibleNames: Set<string>) {
   const bones = new Map<string, Bone>();
   root.traverse((node) => { if (node instanceof Bone) bones.set(node.name, node); });
   const part = clone(source.scene);
+  const visibleMeshes=new Set([...visibleNames].flatMap(name=>meshesInNode(part,name)));
   part.traverse((node) => {
     if (!(node instanceof Mesh)) return;
-    node.visible = visibleNames.has(node.name);
+    node.visible = visibleMeshes.has(node);
     if (!(node instanceof SkinnedMesh) || !node.visible) return;
     const targetBones = node.skeleton.bones.map((bone) => {
       const target = bones.get(bone.name);
@@ -74,11 +82,15 @@ export async function prepareCharacter(resolved: ResolvedAppearance, cache: Gltf
     const baseNames = new Set([...definition.fixed_nodes, ...Object.entries(definition.body_regions).filter(([region]) => !covered.has(region)).flatMap(([, names]) => names)]);
     for (const wearable of wearables) {
       const source = sources.get(wearable.model_url)!;
-      for (const name of wearable.nodes) if (!(source.scene.getObjectByName(name) instanceof SkinnedMesh)) throw new Error(`CHARACTER_MESH_MISSING: ${name}`);
+      for (const name of wearable.nodes) {
+        const meshes=meshesInNode(source.scene,name);
+        if (!meshes.length||meshes.some(mesh=>!(mesh instanceof SkinnedMesh))) throw new Error(`CHARACTER_MESH_MISSING: ${name}`);
+      }
       if (wearable.model_url === definition.model_url) for (const name of wearable.nodes) baseNames.add(name);
     }
-    for (const name of baseNames) if (!(root.getObjectByName(name) instanceof Mesh)) throw new Error(`CHARACTER_BODY_MISSING: ${name}`);
-    root.traverse((node) => { if (node instanceof Mesh) node.visible = baseNames.has(node.name); });
+    for (const name of baseNames) if (!meshesInNode(root,name).length) throw new Error(`CHARACTER_BODY_MISSING: ${name}`);
+    const baseMeshes=new Set([...baseNames].flatMap(name=>meshesInNode(root,name)));
+    root.traverse((node) => { if (node instanceof Mesh) node.visible = baseMeshes.has(node); });
     for (const url of new Set(wearables.map((item) => item.model_url))) {
       if (url === definition.model_url) continue;
       attachWearables(root, sources.get(url)!, new Set(wearables.filter((item) => item.model_url === url).flatMap((item) => item.nodes)));

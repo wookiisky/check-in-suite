@@ -55,6 +55,17 @@ class ProviderCharacterDeliveryTest(unittest.TestCase):
         self.assertNotEqual(covered, uncovered)
         self.assertEqual(covered, module.asset_version('sample', b'model', {'covers': ['scalp']}))
 
+    # 稳定人物身份可含大写，实际文件及PNG派生身份必须满足Go素材安装边界。
+    def test_asset_keys_follow_installation_pattern(self):
+        specification = importlib.util.spec_from_file_location('provider_characters', MODULE)
+        module = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(module)
+        for character_key in ['kenney-space-kit-astronautA', 'kenney-space-kit-astronautB', 'Character-' + 'x' * 140]:
+            asset_key = module.asset_version(character_key, b'actual-model')
+            for suffix in ['', '-thumbnail', '-hair', '-upper', '-lower', '-shoes']:
+                self.assertRegex(asset_key + suffix, r'^[a-z][a-z0-9-]{0,95}$')
+        self.assertEqual(module.asset_version('ASTRONAUT', b'model'), module.asset_version('astronaut', b'model'))
+
     # 配置中的脸发拆分必须是逐角色标注，而不是运行时猜测颜色。
     def test_sources_declare_head_selection(self):
         sources = json.loads((ROOT/'scripts/provider-character-sources.json').read_text())['sources']

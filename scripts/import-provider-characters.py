@@ -16,7 +16,7 @@ CONFIGURATION = ROOT / 'scripts/provider-character-sources.json'
 # 固定以实际交付 GLB 与加工规范计算资源版本，不覆盖旧文件身份。
 def asset_version(key, data, recipe=None):
     configuration=json.dumps(recipe,sort_keys=True,separators=(',',':')).encode() if recipe is not None else b''
-    return key[:68] + '-m-' + hashlib.sha256(data+configuration).hexdigest()[:12]
+    return key[:68].lower() + '-m-' + hashlib.sha256(data+configuration).hexdigest()[:12]
 
 
 # 源包内不同文件格式只选择标注的一个模型，原始路径保留在加工记录中。
@@ -77,14 +77,14 @@ def import_characters(options):
         return obj
 
     # 统一截面切开并封口，新点插值保留原有蒙皮。
-    def clip(obj, axis, value, positive):
+    def clip(obj, axis, value, positive, cap=True):
         mesh = bmesh.new()
         mesh.from_mesh(obj.data)
         normal = Vector((0, 0, 0))
         normal[axis] = 1
         result = bmesh.ops.bisect_plane(mesh, geom=list(mesh.verts)+list(mesh.edges)+list(mesh.faces), plane_co=normal*value, plane_no=normal, dist=0.000001, clear_inner=positive, clear_outer=not positive)
         edges = [edge for edge in result['geom_cut'] if isinstance(edge, bmesh.types.BMEdge) and edge.is_boundary]
-        if edges:
+        if edges and cap:
             bmesh.ops.holes_fill(mesh, edges=edges, sides=0)
         bmesh.ops.delete(mesh, geom=[vertex for vertex in mesh.verts if not vertex.link_faces], context='VERTS')
         mesh.normal_update()
@@ -245,6 +245,22 @@ def import_characters(options):
                 source_rig.animation_data_clear()
                 source_rig.data.pose_position = 'REST'
             bpy.context.view_layer.update()
+            adapter = None
+            if spec.get('head_adapter') == 'kenney-reviewed-heads-v1':
+                import importlib.util
+                adapter_spec = importlib.util.spec_from_file_location('kenney_reviewed_heads', ROOT/'scripts/kenney-character-heads.py')
+                adapter = importlib.util.module_from_spec(adapter_spec)
+                adapter_spec.loader.exec_module(adapter)
+                if spec.get('texture_relative_path'):
+                    # FBX不携带每个外观的PNG，明确应用所选皮肤，不能沿用透明的空材质。
+                    texture_path = ROOT/pack['directory']/spec['texture_relative_path']
+                    material = adapter.head_texture_material(bpy, spec['key']+'_skin', texture_path, True)
+                    for obj in imported:
+                        if obj.type == 'MESH':
+                            obj.data.materials.clear()
+                            obj.data.materials.append(material)
+                            for polygon in obj.data.polygons:
+                                polygon.material_index = 0
             support_material=spec.get('support_material')
             if support_material:
                 source_meshes={obj.name:obj for obj in imported if obj.type=='MESH'}
@@ -272,6 +288,19 @@ def import_characters(options):
                 for obj in parts.values():
                     rigid_bone = 'head' if obj.name in spec.get('hair_nodes',[]) else 'chest' if obj.name in spec.get('upper_nodes',[]) else None
                     normalize_mesh(obj, source_rig, rig, spec.get('bone_map',{}),rigid_bone)
+            if adapter is not None:
+                fixed, source_hair, separation = adapter.prepare_head_parts(bpy, bmesh, parts, spec)
+                if spec.get('head_envelope_method') == 'canonical-scalp-envelope':
+                    # 平面方头只使用标准头皮的连续外壳，耳鼻凸点不能扩散成整个脸的尖角。
+                    envelope_points = [vertex.co.copy() for vertex in canonical_parts['body_scalp'].data.vertices]
+                    scalp_low = min(point.z for point in envelope_points)
+                    scalp_high = max(point.z for point in envelope_points)
+                    for point in envelope_points:
+                        point.z = canonical_head_bounds[2][0] + (point.z-scalp_low)/(scalp_high-scalp_low)*(canonical_head_bounds[2][1]-canonical_head_bounds[2][0])
+                    normalization_evidence['head_envelope'] = adapter.fit_head_envelope(bmesh, fixed, source_hair, canonical_head_bounds, envelope_points)
+                parts.update({obj.name: obj for obj in fixed + source_hair})
+                spec = {**spec, 'head_nodes': [obj.name for obj in fixed], 'scalp_source_nodes': [obj.name for obj in fixed], 'hair_nodes': spec.get('hair_nodes', []) + [obj.name for obj in source_hair]}
+                normalization_evidence['head_separation'] = separation
             source_head_bounds=None
             if spec.get('partition_scalp'):
                 source_head=[parts[name] for name in spec['head_nodes']]
@@ -279,7 +308,8 @@ def import_characters(options):
                 # 只收回超出标准头部的范围，不放大较小脸型，也不改变骨架与身体。
                 for axis,((low,high),(standard_low,standard_high)) in enumerate(zip(source_head_bounds,canonical_head_bounds)):
                     target_low,target_high=max(low,standard_low),min(high,standard_high)
-                    for obj in source_head:
+                    adjusted_head = source_head + ([parts[name] for name in spec.get('hair_nodes', [])] if spec.get('head_adapter') else [])
+                    for obj in adjusted_head:
                         for vertex in obj.data.vertices:
                             vertex.co[axis]=target_low+(vertex.co[axis]-low)*(target_high-target_low)/(high-low)
             for name in ['body_head','body_hands']:
@@ -304,16 +334,26 @@ def import_characters(options):
                     face = select_faces(original,'face_'+name,lambda face,uv:True)
                     hair = select_faces(original,'hair_'+name,lambda face,uv:False)
                 if name in spec.get('scalp_source_nodes',[]):
-                    upper_scalp=clip(select_faces(face,'upper_scalp_'+name,lambda polygon,layer:True),2,canonical_face_top,True)
+                    upper_scalp=clip(select_faces(face,'upper_scalp_'+name,lambda polygon,layer:True),2,canonical_face_top,True,cap=adapter is None)
                     if upper_scalp.data.polygons:
                         scalp_parts.append(upper_scalp)
-                    clip(face,2,canonical_face_top,False)
+                    clip(face,2,canonical_face_top,False,cap=adapter is None)
                     # 根据标准脸和头皮的真实表面转移分区，耳朵与脸不会被整球代替。
                     def fixed_face(polygon, layer):
                         center=polygon.calc_center_median()
+                        if spec.get('head_envelope_method') == 'canonical-scalp-envelope':
+                            # 贴图脸没有独立眼耳几何，投影后的前半壳必须保留，不按球面距离隐藏整张脸。
+                            return center.z<=canonical_face_top and center.y<=(canonical_head_bounds[1][0]+canonical_head_bounds[1][1])/2
                         return center.z<=canonical_face_top and head_surfaces[0].find_nearest(center)[3]<=head_surfaces[1].find_nearest(center)[3]
-                    head_parts.append(select_faces(face,'fixed_'+name,fixed_face))
-                    scalp_parts.append(select_faces(face,'scalp_'+name,lambda polygon,layer:not fixed_face(polygon,layer)))
+                    if spec.get('fixed_face_depth_fraction') is not None:
+                        # 无耳方头的粗大侧面须在前脸边界切开，不能按整面中心把后脑留作固定脸。
+                        low, high = source_head_bounds[1]
+                        front_limit = low + (high-low)*spec['fixed_face_depth_fraction']
+                        head_parts.append(clip(select_faces(face,'fixed_'+name,lambda polygon,layer:True),1,front_limit,False,cap=False))
+                        scalp_parts.append(clip(face,1,front_limit,True,cap=False))
+                    else:
+                        head_parts.append(select_faces(face,'fixed_'+name,fixed_face))
+                        scalp_parts.append(select_faces(face,'scalp_'+name,lambda polygon,layer:not fixed_face(polygon,layer)))
                 else:
                     head_parts.append(face)
                 hair_parts.append(hair)
@@ -324,6 +364,8 @@ def import_characters(options):
                 keep.remove(support)
                 bpy.data.objects.remove(support,do_unlink=True)
                 keep.append(join(scalp_parts,'body_scalp'))
+            if spec.get('headwear_root_attachment'):
+                normalization_evidence['headwear_root_attachment'] = adapter.attach_headwear_roots(hair_parts, head_surfaces[1], spec['headwear_root_attachment'])
             hair = join(hair_parts,'hair_provider') if any(len(obj.data.polygons) for obj in hair_parts) else None
             upper_parts, lower_parts, shoes_parts, hands = [],[],[],[]
             body_names = spec.get('body_nodes',[prefix+'_Body'])
@@ -407,6 +449,11 @@ def import_characters(options):
             entry={'status':'imported','provider':spec['provider'],'pack_key':spec['pack_key'],'source':str(source.relative_to(ROOT)),'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'source_archive_sha256':pack['archive_sha256'],'definition':definition,'wearables':wearables,'binding_error':binding_error,'face_hair_disjoint':face_hair_disjoint,'bones':sorted(canonical_names),'mesh_counts':{obj.name:len(obj.data.polygons) for obj in deliver},'seams':seams,'coordinate_system':'+Y up in GLB, meters before shared scale','normalization':normalization_evidence or {'method':'Per-vertex weighted source bind to canonical rest matrices, shared seam geometry and target inverse bind matrices.'},'augmentation':spec.get('normalization',{}).get('augmentation',[]),'support_material':spec.get('support_material')}
             if scalp_parts:
                 entry['scalp_partition']={'source_bounds':source_head_bounds,'standard_head_bounds':canonical_head_bounds,'scalp_node':'body_scalp','source_nodes':spec['scalp_source_nodes'],'method':'Source cranial faces partitioned by nearest canonical face/scalp surfaces; eyes and jaw remain fixed; complete source head fitted within standard envelope.'}
+                if spec.get('fixed_face_depth_fraction') is not None:
+                    entry['scalp_partition'].update(method='Front slab and complete eyes remain fixed; the original side and rear cranial shell becomes coverable scalp, with exact plane cuts and no geometric projection.', fixed_face_depth_fraction=spec['fixed_face_depth_fraction'], fixed_face_plane_y=front_limit)
+                if spec.get('head_envelope_method') == 'canonical-scalp-envelope':
+                    entry['scalp_partition']['method'] = 'Planar source head projected onto canonical scalp extended to complete head height; front half below the canonical face top remains fixed, rear and upper shell become coverable scalp.'
+                    entry['scalp_partition']['fixed_face_plane_y'] = (canonical_head_bounds[1][0]+canonical_head_bounds[1][1])/2
             entries[spec['key']]=entry
             print('CHARACTER_IMPORTED',spec['key'],model_key,flush=True)
         except Exception as error:
