@@ -1,0 +1,39 @@
+.island-dialog:has(.appearance-dialog) { width: min(1040px, calc(100% - 32px)); }
+.appearance-dialog { display: grid; gap: 16px; max-width: 100%; }
+.appearance-layout { display: grid; grid-template-columns: minmax(240px, 330px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.appearance-preview { min-width: 0; min-height: 280px; position: sticky; top: 0; }
+.appearance-slots { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.appearance-slots fieldset { min-width: 0; margin: 0; border: 1px solid var(--line, #d1dbd4); border-radius: 12px; padding: 12px; }
+.appearance-slots legend { font-weight: 700; padding: 0 6px; }
+/* 卡片至少容纳缩略图与内边距；空间不足时换行，不向相邻卡片溢出。 */
+.appearance-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(104px, 100%), 1fr)); gap: 8px; }
+.appearance-option { position: relative; min-width: 0; display: flex; align-items: center; flex-direction: column; gap: 6px; padding: 12px 8px; min-height: 116px; border: 1px solid var(--line, #d1dbd4); border-radius: 10px; cursor: pointer; text-align: center; line-height: 1.4; overflow-wrap: anywhere; background: var(--paper, #fff); }
+/* 原生 radio 不继承普通输入框的 56px 最小尺寸，点击整张 label 仍可选择。 */
+.appearance-option input { position: absolute; z-index: 1; top: 8px; left: 8px; margin: 0; padding: 0; width: 18px; height: 18px; min-width: 18px; min-height: 18px; accent-color: var(--accent, #35654e); }
+.appearance-option img { width: 72px; max-width: 100%; height: 72px; object-fit: contain; pointer-events: none; }
+.appearance-selected { border-color: var(--accent, #35654e); background: var(--mint, #edf6ee); }
+.appearance-option:focus-within { outline: 3px solid var(--accent, #35654e); outline-offset: 2px; }
+.appearance-slots fieldset:disabled .appearance-option { cursor: default; opacity: .65; }
+.appearance-hint { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted, #52645b); }
+.appearance-error { margin: 0; color: var(--danger, #9a3029); line-height: 1.6; }
+.appearance-recovery { border: 1px solid var(--line, #d1dbd4); border-radius: 10px; background: var(--cream, #fff8e8); padding: 14px; }
+.appearance-recovery p, .appearance-recovery h3 { margin: 0 0 10px; }
+.appearance-recovery dl { margin: 0 0 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
+.appearance-recovery dt { color: var(--muted, #52645b); font-size: 13px; }
+.appearance-recovery dd { margin: 3px 0 0; }
+.appearance-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 12px 0 0; border-top: 1px solid var(--line, #d1dbd4); }
+.appearance-actions button, .appearance-recovery button { min-height: 44px; }
+@media (max-width: 960px) {
+  .appearance-layout { grid-template-columns: 1fr; gap: 12px; }
+  .appearance-preview { position: static; min-height: 250px; }
+  .appearance-slots { gap: 10px; }
+  .appearance-slots fieldset { padding: 10px; }
+  .appearance-option { min-height: 100px; }
+}
+@media (max-width: 760px) {
+  .appearance-actions { position: sticky; bottom: 0; background: var(--paper, #fff); padding: 12px 0; }
+  .appearance-actions button { flex: 1; }
+}
+@media (max-width: 520px) {
+  .appearance-slots { grid-template-columns: 1fr; }
+}
