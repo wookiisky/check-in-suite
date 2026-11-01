@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal } from '../../components/Modal';
 import type { Asset, Product, ShopProps } from './types';
 import { ProductEditor } from './ProductEditor';
+import { useAppearance } from '../character/AppearanceProvider';
 import { Price } from './Price';
 import { pendingProducts } from './pending';
 import { shopError } from './helpers';
@@ -12,6 +13,8 @@ import { ShopItemArtwork } from './ShopItemArtwork';
 
 // 管理商品读取包括下架配置，删除只移除销售入口，历史所有权保留。
 export function ProductManagement({ client, session }: ShopProps) {
+  const appearance = useAppearance();
+  const catalog = appearance.snapshot;
   const [products, setProducts] = useState<Product[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,14 +88,15 @@ export function ProductManagement({ client, session }: ShopProps) {
           </button>
         </div>
       )}
-      {error !== null && (
+      {(error !== null || appearance.error !== null) && (
         <div role="alert">
-          <p className="shop-error">{shopError(error)}</p>
+          <p className="shop-error">{shopError(error ?? appearance.error)}</p>
           <button
             className="secondary"
             onClick={() => {
               setDeleting(null);
               refresh((value) => value + 1);
+              void appearance.refresh();
             }}
           >
             {content.reload}
@@ -101,7 +105,7 @@ export function ProductManagement({ client, session }: ShopProps) {
       )}
       <button
         type="button"
-        disabled={loading || Boolean(pending)}
+        disabled={loading || !catalog || Boolean(pending)}
         onClick={(event) => {
           event.currentTarget.focus();
           setEditing('new');
@@ -109,18 +113,19 @@ export function ProductManagement({ client, session }: ShopProps) {
       >
         {content.addProduct}
       </button>
-      {loading ? (
+      {loading || appearance.loading && !catalog ? (
         <p role="status">{content.loading}</p>
       ) : (
         <div className="shop-product-list">
           {products.length === 0 && <p>{content.emptyProducts}</p>}
-          {products.map((item) => (
-            <article key={item.id} className="shop-product-row">
+          {products.map((item) => {
+            const category = itemCategory(item, catalog?.wearables);
+            return <article key={item.id} className="shop-product-row">
               <ShopItemArtwork item={item} />
               <div>
                 <h3>{item.name}</h3>
                 <p>
-                  {categoryLabel(itemCategory(item)!)}
+                  {category ? categoryLabel(category) : content.types[item.type]}
                   {!item.enabled && <strong> · {content.unavailable}</strong>}
                 </p>
                 <Price coins={item.coin_price} diamonds={item.diamond_price} />
@@ -131,6 +136,7 @@ export function ProductManagement({ client, session }: ShopProps) {
               <div className="shop-actions">
                 <button
                   className="secondary"
+                  disabled={!catalog}
                   onClick={(event) => {
                     event.currentTarget.focus();
                     setEditing(item);
@@ -151,8 +157,8 @@ export function ProductManagement({ client, session }: ShopProps) {
                   {content.delete}
                 </button>
               </div>
-            </article>
-          ))}
+            </article>;
+          })}
         </div>
       )}
       {editing !== null && (
@@ -161,6 +167,8 @@ export function ProductManagement({ client, session }: ShopProps) {
           session={session}
           product={editing === 'new' ? null : editing}
           assets={assets}
+          characters={catalog?.characters ?? []}
+          wearables={catalog?.wearables ?? []}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { CategoryTabs } from './CategoryTabs';
 import { matchesCategory, type CategoryFilter } from './shop-categories';
 import { product, purchase } from './test-fixtures';
+import { appearanceFixture } from './appearance-test-fixtures';
 import content from './content.json';
 
 // 真实受控组件证明键盘切换同时更新选中项与内容。
@@ -13,15 +14,16 @@ function Categories() {
 }
 
 describe('两级商品分类', () => {
-  it('按用途与穿戴槽位筛选，历史双用途订单保留两种入口', () => {
-    const dual = { ...purchase, type_snapshot: 'island' as const, island_item_key: 'star', portrait_type: 'accessory' as const };
-    expect(matchesCategory(dual, { group: 'island', category: '' })).toBe(true);
-    expect(matchesCategory(dual, { group: 'appearance', category: 'accessory' })).toBe(true);
-    expect(matchesCategory(dual, { group: 'appearance', category: 'hair' })).toBe(false);
-    expect(matchesCategory({ ...product, wearable_slot: 'hair' }, { group: 'appearance', category: 'hair' })).toBe(true);
-    expect(matchesCategory({ ...product, wearable_slot: 'hair' }, { group: 'appearance', category: 'accessory' })).toBe(false);
-    expect(matchesCategory({ ...purchase, type_snapshot: 'reward' }, { group: 'appearance', category: '' })).toBe(false);
-    expect(matchesCategory({ ...purchase, type_snapshot: 'reward' }, { group: 'all', category: '' })).toBe(true);
+  it('按服装定义的槽位分类，名称和稳定key不参与判断', () => {
+    const definitions = appearanceFixture().wearables.map((item) => ({ ...item, name: '与部位无关的名称', wearable_key: `arbitrary-${item.wearable_key.length}-${item.slot}` }));
+    const definition = definitions.find((item) => item.slot === 'upper')!;
+    const garment = { ...product, type: 'wearable' as const, wearable_key: definition.wearable_key };
+    expect(matchesCategory(garment, { group: 'appearance', category: 'upper' }, definitions)).toBe(true);
+    expect(matchesCategory(garment, { group: 'appearance', category: 'hair' }, definitions)).toBe(false);
+    expect(matchesCategory({ ...garment, wearable_key: 'unknown-upper' }, { group: 'appearance', category: 'upper' }, definitions)).toBe(false);
+    expect(matchesCategory({ ...purchase, type_snapshot: 'island', island_item_key: 'tree' }, { group: 'appearance', category: '' }, definitions)).toBe(false);
+    expect(matchesCategory({ ...purchase, type_snapshot: 'island', island_item_key: 'tree' }, { group: 'island', category: '' }, definitions)).toBe(true);
+    expect(matchesCategory({ ...purchase, type_snapshot: 'reward' }, { group: 'all', category: '' }, definitions)).toBe(true);
   });
 
   it('方向键、Home与End在当前层级切换，一级切换重置二级', () => {

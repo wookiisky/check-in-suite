@@ -1,53 +1,51 @@
-import type { Asset, Product, Purchase } from './types';
-import { portraitType } from './helpers';
+import type { Asset, CharacterDefinition, CharacterSlot, CharacterWearable, Product, Purchase } from './types';
 import content from './content.json';
 
-export type WearableSlot = NonNullable<Purchase['wearable_slot']>;
-export type ShopCategory = Product['type'] | WearableSlot;
+export type ShopCategory = CharacterSlot | 'title' | 'reward' | 'island';
 
-// 穿戴部位只影响显示分类，成交和订单查询仍使用饰品类型。
-export const wardrobeCategories: ShopCategory[] = ['hair', 'top', 'bottom', 'shoes', 'accessory', 'avatar', 'title', 'background', 'effect'];
+// 商品用途由正式类型及服装定义决定，不从名称或素材key推测。
+export const wardrobeCategories: ShopCategory[] = ['hair', 'upper', 'lower', 'shoes', 'title'];
 export const shopCategories: ShopCategory[] = [...wardrobeCategories, 'reward', 'island'];
 
-// 明确的部位定义避免从名称或素材命名猜测商品用途。
-export function isWearableSlot(value: string): value is WearableSlot {
+// 四个槽位共用人物目录的稳定类型。
+export function isWearableSlot(value: string): value is CharacterSlot {
   return Object.hasOwn(content.wearableSlots, value);
 }
 
-// 单独的显示分类使普通饰品与固定穿戴可独立筛选。
+// 用户可见分类名集中维护，交易类型仍保留在商品中。
 export function categoryLabel(category: ShopCategory): string {
   return isWearableSlot(category) ? content.wearableSlots[category] : content.types[category];
 }
 
-// 保留交易类型，穿戴商品只在展示时归入对应部位。
-export function itemCategory(item: Product | Purchase, portrait = false): ShopCategory | null {
-  if (item.wearable_slot) return item.wearable_slot;
-  return portrait ? portraitType(item) : 'type_snapshot' in item ? item.type_snapshot : item.type;
+// 定义缺失的服装不猜测部位，等待目录读取或报告读取失败。
+export function itemCategory(item: Product | Purchase, wearables: readonly CharacterWearable[] = []): ShopCategory | null {
+  const type = 'type_snapshot' in item ? item.type_snapshot : item.type;
+  return type === 'wearable' ? wearables.find((definition) => definition.wearable_key === item.wearable_key)?.slot ?? null : type;
 }
 
-// 免费人物和内部图层不进入售卖素材，穿戴素材按部位筛选。
-export function matchesAssetCategory(asset: Asset, category: ShopCategory): boolean {
-  if (asset.free) return false;
-  return isWearableSlot(category) ? asset.wearable_slot === category : asset.kind === category && !asset.wearable_slot;
+// 默认服装来自身体定义，不依靠缩略图的免费标志。
+export function matchesAssetCategory(asset: Asset, category: ShopCategory, wearables: readonly CharacterWearable[] = [], characters: readonly CharacterDefinition[] = []): boolean {
+  if (!isWearableSlot(category)) return asset.kind === category && !asset.free;
+  const defaults = new Set(characters.flatMap((character) => Object.values(character.defaults)));
+  return wearables.some((definition) => definition.slot === category && definition.thumbnail_asset_key === asset.key && !defaults.has(definition.wearable_key));
 }
 
-// 筛选部位时仍查询饰品订单，后续页由页面保留并继续加载。
-export function categoryPurchaseType(category: string): string {
-  return isWearableSlot(category) ? 'accessory' : category;
+// 槽位过滤读取服装订单，分页后仍按定义筛选。
+export function categoryPurchaseType(category: ShopCategory): string {
+  return isWearableSlot(category) ? 'wearable' : category;
 }
 
-// 展示分组按当前用途归类，订单类型继续保留成交事实。
+// 分类属于页面本地状态，保存外观不会重置筛选或分页。
 export interface CategoryFilter {
   group: 'all' | 'appearance' | 'island' | 'reward'; // 一级用途。
-  category: ShopCategory | ''; // 装扮下的具体部位或类型。
+  category: ShopCategory | ''; // 角色装扮的具体部位或称号。
 }
 
-// 双用途商品可同时出现在营地与装扮分类中。
-export function matchesCategory(item: Product | Purchase, filter: CategoryFilter): boolean {
+// 三维服装、营地物品和奖励各自使用明确的交易类型。
+export function matchesCategory(item: Product | Purchase, filter: CategoryFilter, wearables: readonly CharacterWearable[] = []): boolean {
   if (filter.group === 'all') return true;
-  if (filter.group === 'island') return Boolean(item.island_item_key);
-  const originalType = 'type_snapshot' in item ? item.type_snapshot : item.type;
-  if (filter.group === 'reward') return originalType === 'reward';
-  const category = itemCategory(item, true);
-  return category !== null && (!filter.category || category === filter.category);
+  const type = 'type_snapshot' in item ? item.type_snapshot : item.type;
+  if (filter.group === 'island' || filter.group === 'reward') return type === filter.group;
+  if (type !== 'title' && type !== 'wearable') return false;
+  return !filter.category || itemCategory(item, wearables) === filter.category;
 }

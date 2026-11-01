@@ -1,30 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
 import { CategoryTabs } from './CategoryTabs';
-import { categoryPurchaseType, matchesCategory } from './shop-categories';
+import { categoryPurchaseType, isWearableSlot, matchesCategory } from './shop-categories';
 import type { CategoryFilter } from './shop-categories';
 import type { Purchase, PurchaseList, ShopProps } from './types';
 import { RedeemDialog } from './RedeemDialog';
 import { ShopItemArtwork } from './ShopItemArtwork';
-import { assetURL, shopError } from './helpers';
+import { shopError } from './helpers';
 import content from './content.json';
+import { useAppearance } from '../character/AppearanceProvider';
 import './shop.css';
 
-// 类型查询保留后追加的画像能力；营地用途只能在已拥有订单中按能力过滤。
+// 交易类型由服务端筛选，服装槽位继续按完整目录过滤。
 function purchaseQuery(filter: CategoryFilter, status: 'pending' | 'redeemed'): string {
   if (filter.group === 'all') return '';
   if (filter.group === 'reward') return new URLSearchParams({ type: 'reward', status }).toString();
   return new URLSearchParams({
     status: 'owned',
-    ...(filter.group === 'appearance' && filter.category ? { type: categoryPurchaseType(filter.category) } : {}),
+    ...(filter.group === 'island' ? { type: 'island' } : filter.category ? { type: categoryPurchaseType(filter.category) } : {}),
   }).toString();
 }
 
 // 背包只管理已购物品的查看和奖励兑现，装扮及营地操作由各自入口负责。
-export function BackpackPage({ client, onBack, onIsland, onWardrobe }: ShopProps & {
+export function BackpackPage({ client, onBack, onIsland, onAppearance, onTitle }: ShopProps & {
   onBack: () => void;
   onIsland: () => void;
-  onWardrobe: () => void;
+  onAppearance: () => void;
+  onTitle?: () => void;
 }) {
+  const appearance = useAppearance();
   const [filter, setFilter] = useState<CategoryFilter>({ group: 'all', category: '' });
   const [status, setStatus] = useState<'pending' | 'redeemed'>('pending');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -96,14 +99,17 @@ export function BackpackPage({ client, onBack, onIsland, onWardrobe }: ShopProps
     refresh((value) => value + 1);
   }
 
-  const visibleItems = purchases.filter((item) => matchesCategory(item, filter));
+  const catalogReady = !isWearableSlot(filter.category) || appearance.snapshot !== null;
+  const readError = error ?? (!catalogReady ? appearance.error : null);
+  const visibleItems = purchases.filter((item) => matchesCategory(item, filter, appearance.snapshot?.wearables));
   return <div className="shop-workspace backpack-workspace">
     <div className="shop-page-heading">
       <h1>{content.backpack}</h1>
       <button type="button" className="secondary" onClick={onBack}>{content.backHome}</button>
     </div>
     <div className="shop-actions">
-      <button type="button" onClick={(event) => { event.currentTarget.focus(); onWardrobe(); }}>{content.wardrobeTitle}</button>
+      <button type="button" onClick={(event) => { event.currentTarget.focus(); onAppearance(); }}>{content.wardrobeTitle}</button>
+      {onTitle && <button type="button" className="secondary" onClick={(event) => { event.currentTarget.focus(); onTitle(); }}>{content.manageTitles}</button>}
       <button type="button" className="secondary" onClick={onIsland}>{content.goToIsland}</button>
     </div>
     {message && <p className="shop-warning feedback-success" role="status">{message}</p>}
@@ -114,19 +120,17 @@ export function BackpackPage({ client, onBack, onIsland, onWardrobe }: ShopProps
           onClick={() => { if (item !== status) { generation.current += 1; setStatus(item); setMessage(''); } }}
         >{content[item]}</button>)}
       </div>}
-      {error !== null && <div role="alert">
-        <p className="shop-error">{shopError(error)}</p>
-        <button type="button" className="secondary" onClick={() => refresh((value) => value + 1)}>{content.reload}</button>
+      {readError !== null && <div role="alert">
+        <p className="shop-error">{shopError(readError)}</p>
+        <button type="button" className="secondary" onClick={() => { if (!catalogReady) void appearance.refresh(); if (catalogReady || error !== null) refresh((value) => value + 1); }}>{content.reload}</button>
       </div>}
-      {loading && <p role="status">{content.loading}</p>}
-      {!loading && <>
+      {(loading || !catalogReady && readError === null) && <p role="status">{content.loading}</p>}
+      {!loading && catalogReady && <>
         {visibleItems.length === 0 && !cursor && error === null && <p>{content.emptyCategoryPurchases}</p>}
         <div className="shop-grid">
           {visibleItems.map((item) => <article className="shop-card shop-product-card" key={item.id}>
             <h3>{item.name_snapshot}</h3>
-            {filter.group === 'island'
-              ? <img className="shop-item-art shop-product-art" src={assetURL(item.asset_key_snapshot, item.type_snapshot === 'effect')} alt="" />
-              : <ShopItemArtwork className="shop-item-art shop-product-art" item={item} />}
+            <ShopItemArtwork className="shop-item-art shop-product-art" item={item} />
             {item.type_snapshot === 'reward' && (item.status === 'pending'
               ? <button type="button" aria-label={`${content.redeem} ${item.name_snapshot}`} onClick={(event) => { event.currentTarget.focus(); setReward(item); }}>{content.redeem}</button>
               : <strong>{content.redeemed}</strong>)}

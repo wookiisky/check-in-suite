@@ -4,44 +4,79 @@ import { ApiClient, ApiFailure } from '../../api/client';
 import type { Session } from '../../api/types';
 import { testSession } from '../../test/account-fixtures';
 import { ProductEditor } from './ProductEditor';
-import { product } from './test-fixtures';
-import type { Asset } from './types';
+import { ProductManagement } from './ProductManagement';
+import { AppearanceProvider } from '../character/AppearanceProvider';
+import { deferred } from './appearance-test-fixtures';
+import { managedTitle as product, productAssets as assets, productCatalog, managedWearable } from './product-management-fixtures';
 import content from './content.json';
 
 const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
-const assets: Asset[] = [
-  {
-    key: 'accessory-star-v1',
-    name: '星星',
-    kind: 'accessory',
-    url: '/api/v1/assets/accessory-star-v1',
-  },
-  { key: 'fox-v1', name: '狐狸', kind: 'avatar', url: '/api/v1/assets/fox-v1' },
-  { key: 'title-crown-v1', name: '皇冠', kind: 'title', url: '/api/v1/assets/title-crown-v1' },
-];
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe('商品配置', () => {
-  it('发型按独立类别选素材但仍提交饰品交易类型，免费人物不售卖', async () => {
-    const request = vi.fn().mockResolvedValue(product);
-    const wearableAssets: Asset[] = [...assets,
-      { key: 'avatar-boy-v2', name: '免费男孩', kind: 'avatar', free: true, url: '/api/v1/assets/avatar-boy-v2' },
-      { key: 'hair-curly-v1', name: '卷发', kind: 'accessory', wearable_slot: 'hair', url: '/api/v1/assets/hair-curly-v1' },
-      { key: 'wearable-top-explorer-v1', name: '探险上装', kind: 'accessory', wearable_slot: 'top', url: '/api/v1/assets/wearable-top-explorer-v1' },
-    ];
-    render(<ProductEditor client={{ request }} session={session} product={null} assets={wearableAssets} onClose={vi.fn()} onSaved={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'avatar' } });
-    expect(screen.queryByRole('option', { name: '免费男孩' })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'hair' } });
-    expect(screen.getByLabelText(content.asset)).toHaveValue('hair-curly-v1');
-    expect(screen.queryByRole('option', { name: '探险上装' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: '星星' })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新发型' } });
+  it('按定义部位选择服装并提交准确身份，默认款不售卖', async () => {
+    const request = vi.fn().mockResolvedValue(managedWearable);
+    render(<ProductEditor client={{ request }} session={session} product={null} assets={assets} characters={productCatalog.characters} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);
+    expect(screen.queryByRole('option', { name: '动物形象' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'upper' } });
+    expect(screen.queryByRole('option', { name: '上衣默认款' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: '发型新款' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(content.asset), { target: { value: 'catalog-preview-q' } });
+    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新的服装' } });
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await waitFor(() => expect(request).toHaveBeenCalled());
-    expect(request.mock.calls[0]?.[1].body).toMatchObject({ type: 'accessory', asset_key: 'hair-curly-v1' });
+    expect(request.mock.calls[0]?.[1].body).toMatchObject({ type: 'wearable', asset_key: 'catalog-preview-q', wearable_key: 'catalog-choice-z' });
   });
+
+  it('编辑已有服装保留定义身份，已有购买记录时只允许修改报价', async () => {
+    const request = vi.fn().mockResolvedValue(managedWearable);
+    render(<ProductEditor client={{ request }} session={session} product={{ ...managedWearable, owned_count: 2 }} assets={assets} characters={productCatalog.characters} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);
+    expect(screen.getByLabelText(content.typeFilter)).toHaveValue('upper');
+    expect(screen.getByLabelText(content.typeFilter)).toBeDisabled();
+    expect(screen.getByLabelText(content.asset)).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(content.coinPrice), { target: { value: '25' } });
+    fireEvent.click(screen.getByRole('button', { name: content.save }));
+    await waitFor(() => expect(request).toHaveBeenCalled());
+    expect(request.mock.calls[0]?.[1].body).toMatchObject({ wearable_key: 'catalog-choice-z', asset_key: 'catalog-preview-q', coin_price: 25, expected_version: 1 });
+  });
+  it('从共享目录取得定义后才能新增服装，失败重读恢复', async () => {
+    let appearanceReads = 0;
+    const waiting = deferred<typeof productCatalog>();
+    const request = vi.fn(async (path: string) => {
+      if (path === '/appearance') {
+        appearanceReads += 1;
+        if (appearanceReads === 1) throw new Error('catalog unavailable');
+        return waiting.promise;
+      }
+      if (path === '/assets') return { items: assets };
+      return { items: [managedWearable] };
+    });
+    const client = { request: request as ApiClient['request'] };
+    render(<AppearanceProvider active client={client}><ProductManagement client={client} session={session} /></AppearanceProvider>);
+    await screen.findByRole('alert');
+    expect(screen.getByRole('button', { name: content.addProduct })).toBeDisabled();
+    expect(screen.getByRole('button', { name: `${content.edit} ${managedWearable.name}` })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: content.reload }));
+    await waitFor(() => expect(appearanceReads).toBe(2));
+    waiting.resolve(productCatalog);
+    await waitFor(() => expect(screen.getByRole('button', { name: content.addProduct })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: content.addProduct }));
+    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'upper' } });
+    expect(screen.getByRole('option', { name: '森林款' })).toHaveValue('catalog-preview-q');
+    expect(screen.queryByRole('option', { name: '上衣默认款' })).not.toBeInTheDocument();
+  });
+
+  it('改为非服装商品时清除服装身份，不沿用旧的 key', async () => {
+    const request = vi.fn().mockResolvedValue(product);
+    render(<ProductEditor client={{ request }} session={session} product={managedWearable} assets={assets} characters={productCatalog.characters} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'reward' } });
+    fireEvent.click(screen.getByRole('button', { name: content.save }));
+    await waitFor(() => expect(request).toHaveBeenCalled());
+    expect(request.mock.calls[0]?.[1].body).toMatchObject({ type: 'reward', asset_key: 'reward-book-v1' });
+    expect(request.mock.calls[0]?.[1].body.wearable_key).toBeUndefined();
+  });
+
   it('真实201新增响应截断后跨弹窗恢复同一商品命令', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
@@ -108,10 +143,10 @@ describe('商品配置', () => {
         onSaved={onSaved}
       />,
     );
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'avatar' } });
-    expect(screen.getByLabelText(content.asset)).toHaveValue('fox-v1');
-    expect(screen.queryByRole('option', { name: '星星' })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新形象' } });
+    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'reward' } });
+    expect(screen.getByLabelText(content.asset)).toHaveValue('reward-book-v1');
+    expect(screen.queryByRole('option', { name: '皇冠' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新奖励' } });
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await screen.findByText(content.createPending);
     expect(screen.getByLabelText(content.name)).toBeDisabled();

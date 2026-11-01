@@ -19,3 +19,7 @@ export interface ShopProps {
   client: ShopClient; // 已绑定会话的HTTP请求入口。
   session: Session; // 账户信息及生效限制。
 }
+
+export type CharacterSlot = components['schemas']['CharacterSlot'];
+export type CharacterWearable = components['schemas']['CharacterWearable'];
+export type CharacterDefinition = components['schemas']['CharacterDefinition'];

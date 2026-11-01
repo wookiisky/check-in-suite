@@ -3,14 +3,14 @@ import type { FormEvent } from 'react';
 import { ApiFailure } from '../../api/client';
 import { Modal } from '../../components/Modal';
 import { FieldError } from '../../components/FormFeedback';
-import type { Asset, Product, ProductInput, ShopProps } from './types';
+import type { Asset, CharacterDefinition, CharacterWearable, Product, ProductInput, ShopProps } from './types';
 import { pendingProducts } from './pending';
 import { shopError, uncertainResult } from './helpers';
 import { Price } from './Price';
 import { createIdempotencyKey } from '../../api/idempotency-key';
 import content from './content.json';
 import { CurrencyIcon } from '../../components/CurrencyAmount';
-import { categoryLabel, categoryPurchaseType, matchesAssetCategory, shopCategories } from './shop-categories';
+import { categoryLabel, categoryPurchaseType, isWearableSlot, matchesAssetCategory, shopCategories } from './shop-categories';
 import type { ShopCategory } from './shop-categories';
 import { ShopItemArtwork } from './ShopItemArtwork';
 
@@ -21,6 +21,7 @@ function draftFor(product: Product | null, assets: Asset[]): ProductInput {
         type: product.type,
         name: product.name,
         asset_key: product.asset_key,
+        ...(product.wearable_key ? { wearable_key: product.wearable_key } : {}),
         description: product.description,
         coin_price: product.coin_price,
         diamond_price: product.diamond_price,
@@ -45,18 +46,24 @@ export function ProductEditor({
   session,
   product,
   assets,
+  characters = [],
+  wearables = [],
   onClose,
   onSaved,
 }: ShopProps & {
   product: Product | null;
   assets: Asset[];
+  characters?: readonly CharacterDefinition[]; // 默认服装来自身体定义，不进入商品选择。
+  wearables?: readonly CharacterWearable[]; // 部位和稳定身份均由目录定义。
   onClose: () => void;
   onSaved: (product: Product) => void;
 }) {
   const original = product ? undefined : pendingProducts.get(client);
   const [initial] = useState(() => original?.body ?? draftFor(product, assets));
   const [draft, setDraft] = useState<ProductInput>(initial);
-  const [category, setCategory] = useState<ShopCategory>(() => assets.find((item) => item.key === initial.asset_key)?.wearable_slot ?? initial.type);
+  const [category, setCategory] = useState<ShopCategory>(() => initial.type === 'wearable'
+    ? wearables.find((item) => item.wearable_key === initial.wearable_key)?.slot ?? 'hair'
+    : initial.type as ShopCategory);
   const [pending, setPending] = useState(original ?? null);
   const [version, setVersion] = useState(product?.version ?? 0);
   const [latest, setLatest] = useState<Product | null>(null);
@@ -65,6 +72,21 @@ export function ProductEditor({
   const [error, setError] = useState<unknown>(null);
   const [discarding, setDiscarding] = useState(false);
   const selectedAsset = assets.find((item) => item.key === draft.asset_key);
+  const identityLocked = (product?.owned_count ?? 0) > 0; // 服务端仍会复核其他账户的历史购买。
+  const choices = assets.filter((item) => matchesAssetCategory(item, category, wearables, characters));
+  // 同时修改素材与稳定身份，防止类型切换后带入上一次服装的 key。
+  function selectAsset(assetKey: string, nextCategory: ShopCategory) {
+    const definition = isWearableSlot(nextCategory)
+      ? wearables.find((item) => item.thumbnail_asset_key === assetKey && item.slot === nextCategory)
+      : undefined;
+    setDraft(({ wearable_key: _previousKey, ...value }) => ({
+      ...value,
+      type: categoryPurchaseType(nextCategory) as ProductInput['type'],
+      asset_key: assetKey,
+      ...(definition ? { wearable_key: definition.wearable_key } : {}),
+    }));
+  }
+
   function update(change: Partial<ProductInput>) {
     setDraft((value) => ({ ...value, ...change }));
   }
@@ -168,13 +190,11 @@ export function ProductEditor({
           <select
             id="product-type"
             value={category}
+            disabled={identityLocked}
             onChange={(event) => {
               const next = event.target.value as ShopCategory;
               setCategory(next);
-              update({
-                type: categoryPurchaseType(next) as ProductInput['type'],
-                asset_key: assets.find((item) => matchesAssetCategory(item, next))?.key ?? '',
-              });
+              selectAsset(assets.find((item) => matchesAssetCategory(item, next, wearables, characters))?.key ?? '', next);
             }}
           >
             {shopCategories.map((value) => (
@@ -188,18 +208,18 @@ export function ProductEditor({
             id="product-asset"
             value={draft.asset_key}
             required
-            onChange={(event) => update({ asset_key: event.target.value })}
+            disabled={identityLocked}
+            onChange={(event) => selectAsset(event.target.value, category)}
           >
             <option value="">{content.chooseAsset}</option>
-            {assets
-              .filter((item) => matchesAssetCategory(item, category))
-              .map((item) => (
+            {choices.map((item) => (
                 <option key={item.key} value={item.key}>
-                  {item.name}
+                  {wearables.find((definition) => definition.thumbnail_asset_key === item.key)?.name ?? item.name}
                 </option>
               ))}
           </select>
           <FieldError error={error} field="asset_key" />
+          <FieldError error={error} field="wearable_key" />
           {selectedAsset && <ShopItemArtwork item={selectedAsset} />}
           <label htmlFor="product-description">{content.description}</label>
           <textarea

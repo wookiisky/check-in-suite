@@ -3,10 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
 import { ApiClient, ApiFailure } from '../../api/client';
 import { PurchaseDialog } from './PurchaseDialog';
-import { CharacterPanel } from './CharacterPanel';
-import { Wardrobe } from './Wardrobe';
 import { RedeemDialog } from './RedeemDialog';
-import { camp, fullEquipment, product, purchase, wallet } from './test-fixtures';
+import { camp, product, purchase, wallet } from './test-fixtures';
 import type { ShopClient } from './types';
 import content from './content.json';
 
@@ -210,34 +208,7 @@ describe('购买确认与恢复', () => {
   });
 });
 
-describe('所有权、装扮与兑现', () => {
-  it('十个饰品都使用实际SVG展示，默认角色仍可见', () => {
-    const full = fullEquipment;
-    render(<CharacterPanel equipment={full} displayName="小朋友" />);
-    expect(screen.getByRole('img', { name: content.baseAvatarNames['avatar-boy-v2'] })).toHaveAttribute('data-base-avatar', 'avatar-boy-v2');
-    for (const item of full.accessories)
-      expect(screen.getByAltText(item.name_snapshot)).toHaveAttribute(
-        'src',
-        '/api/v1/assets/accessory-star-v1',
-      );
-  });
-
-  it('十个饰品时不能装备第十一个，但可以逐件卸下现有饰品', () => {
-    const full = fullEquipment;
-    const onToggle = vi.fn();
-    render(
-      <Wardrobe
-        items={[...full.accessories, { ...purchase, id: 'extra', name_snapshot: '额外饰品' }]}
-        equipment={full}
-        busy={false}
-        onToggle={onToggle}
-      />,
-    );
-    expect(screen.getByRole('button', { name: `${content.equip} 额外饰品` })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: `${content.unequip} 饰品0` }));
-    expect(onToggle).toHaveBeenCalledWith(full.accessories[0], false);
-  });
-
+describe('奖励兑现', () => {
   it('每次兑现都提交本次密码，错误密码保留表单重试', async () => {
     const reward = { ...purchase, type_snapshot: 'reward' as const, status: 'pending' as const };
     const request = vi
