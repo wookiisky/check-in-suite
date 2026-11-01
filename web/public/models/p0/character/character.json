@@ -1,0 +1,135 @@
+{
+  "id": "p0-kaykit-medium-v1",
+  "rig_id": "kaykit-adventurers-medium-v1",
+  "model_url": "/models/p0/character/modular.glb",
+  "scale": 0.8230534189366623,
+  "up": "+Y",
+  "forward": "+Z",
+  "fixed_nodes": [
+    "body_head",
+    "body_hands"
+  ],
+  "body_regions": {
+    "scalp": [
+      "body_scalp"
+    ],
+    "torso": [
+      "body_torso"
+    ],
+    "arms": [
+      "body_arms"
+    ],
+    "legs": [
+      "body_legs"
+    ],
+    "feet": [
+      "body_feet"
+    ]
+  },
+  "defaults": {
+    "hair": "hair-rogue",
+    "upper": "upper-rogue",
+    "lower": "lower-rogue",
+    "shoes": "shoes-rogue"
+  },
+  "slots": {
+    "hair": [
+      {
+        "id": "hair-rogue",
+        "nodes": [
+          "hair_rogue"
+        ],
+        "covers": []
+      },
+      {
+        "id": "hair-barbarian",
+        "nodes": [
+          "hair_barbarian"
+        ],
+        "covers": []
+      }
+    ],
+    "upper": [
+      {
+        "id": "upper-rogue",
+        "nodes": [
+          "upper_rogue"
+        ],
+        "covers": [
+          "torso",
+          "arms"
+        ]
+      },
+      {
+        "id": "upper-barbarian",
+        "nodes": [
+          "upper_barbarian"
+        ],
+        "covers": [
+          "torso",
+          "arms"
+        ]
+      }
+    ],
+    "lower": [
+      {
+        "id": "lower-rogue",
+        "nodes": [
+          "lower_rogue"
+        ],
+        "covers": [
+          "legs"
+        ]
+      },
+      {
+        "id": "lower-barbarian",
+        "nodes": [
+          "lower_barbarian"
+        ],
+        "covers": [
+          "legs"
+        ]
+      }
+    ],
+    "shoes": [
+      {
+        "id": "shoes-rogue",
+        "nodes": [
+          "shoes_rogue"
+        ],
+        "covers": [
+          "feet"
+        ]
+      },
+      {
+        "id": "shoes-barbarian",
+        "nodes": [
+          "shoes_barbarian"
+        ],
+        "covers": [
+          "feet"
+        ]
+      }
+    ]
+  },
+  "animations": [
+    "Idle",
+    "Walking_A",
+    "Running_A",
+    "Sit_Chair_Idle",
+    "Cheer"
+  ],
+  "source": "KayKit Adventurers 1.0; CC0-1.0; Rogue and Barbarian; revision 672074b73ba276876a19e8816ecdc5241817ab47",
+  "changes": [
+    "从原始纹理单元分离头发与眉毛",
+    "按统一腰线、腕线及鞋口切分并封口，保留蒙皮",
+    "Barbarian 部件统一到 Rogue 骨架",
+    "补做头皮及衣服内部支撑身体，服装覆盖区由显式节点控制",
+    "原始尺寸保持不变，由实例根节点统一缩放"
+  ],
+  "seams_m": {
+    "waist_y": 0.72,
+    "ankle_y": 0.23,
+    "wrist_abs_x": 0.76
+  }
+}

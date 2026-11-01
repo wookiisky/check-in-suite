@@ -1,0 +1,81 @@
+{
+  "parts": [
+    {
+      "node": "body_head",
+      "vertices": 442,
+      "faces": 533
+    },
+    {
+      "node": "body_hands",
+      "vertices": 272,
+      "faces": 330
+    },
+    {
+      "node": "hair_rogue",
+      "vertices": 465,
+      "faces": 582
+    },
+    {
+      "node": "hair_barbarian",
+      "vertices": 312,
+      "faces": 344
+    },
+    {
+      "node": "upper_rogue",
+      "vertices": 1058,
+      "faces": 1283
+    },
+    {
+      "node": "lower_rogue",
+      "vertices": 1166,
+      "faces": 1211
+    },
+    {
+      "node": "shoes_rogue",
+      "vertices": 420,
+      "faces": 490
+    },
+    {
+      "node": "upper_barbarian",
+      "vertices": 1191,
+      "faces": 1294
+    },
+    {
+      "node": "lower_barbarian",
+      "vertices": 1049,
+      "faces": 998
+    },
+    {
+      "node": "shoes_barbarian",
+      "vertices": 450,
+      "faces": 510
+    },
+    {
+      "node": "body_scalp",
+      "vertices": 114,
+      "faces": 128
+    },
+    {
+      "node": "body_torso",
+      "vertices": 338,
+      "faces": 393
+    },
+    {
+      "node": "body_arms",
+      "vertices": 720,
+      "faces": 890
+    },
+    {
+      "node": "body_legs",
+      "vertices": 1166,
+      "faces": 1211
+    },
+    {
+      "node": "body_feet",
+      "vertices": 420,
+      "faces": 490
+    }
+  ],
+  "blender": "4.5.9 LTS",
+  "body_limit": "衣服内部为首件低面数支撑身体；不提供裸露身体或多体型商品。视觉混搭与动作验收需单独完成。"
+}
