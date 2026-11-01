@@ -7,11 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
-	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/idempotency"
 	"github.com/wookiisky/check-in-suite/internal/island"
@@ -27,17 +25,6 @@ func scanPurchase(row rowScanner) (Purchase, error) {
 	var created int64
 	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created, &p.ItemKeySnapshot, &p.WearableKey)
 	p.CreatedAt = core.Timestamp(created)
-	if artwork, ok := assets.Get(p.AssetKeySnapshot); ok {
-		p.WearableSlot, p.BackAssetKey = artwork.WearableSlot, artwork.BackAssetKey
-	}
-	item, ok := island.Find(p.ItemKeySnapshot)
-	if p.ItemKeySnapshot == "" {
-		item, ok = island.ForAsset(p.AssetKeySnapshot)
-	}
-	if ok {
-		p.IslandItemKey = item.Key
-		p.PortraitType, p.PortraitAssetKey = portraitCapability(item)
-	}
 	if spatial, found := island.SpatialFind(p.ItemKeySnapshot); found {
 		p.IslandItemKey = spatial.Key
 	}
@@ -176,16 +163,8 @@ func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input 
 	query := "SELECT " + purchaseColumns + " FROM purchases p WHERE 1=1"
 	args := []any{}
 	if input.Type != "" {
-		keys, itemKeys := portraitSourceKeys(input.Type)
-		if len(keys) == 0 {
-			query += " AND p.type_snapshot=?"
-		} else {
-			query += " AND (p.type_snapshot=? OR p.asset_key_snapshot IN (" + strings.TrimSuffix(strings.Repeat("?,", len(keys)), ",") + ") OR p.item_key_snapshot IN (" + strings.TrimSuffix(strings.Repeat("?,", len(itemKeys)), ",") + "))"
-		}
+		query += " AND p.type_snapshot=?"
 		args = append(args, input.Type)
-		for _, key := range append(keys, itemKeys...) {
-			args = append(args, key)
-		}
 	}
 	if input.Status != "" {
 		query += " AND p.status=?"

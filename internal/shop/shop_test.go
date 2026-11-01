@@ -14,7 +14,7 @@ func TestPurchaseReplayAndOwnership(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
 	balance := creditFixture(t, f, 20, 5)
-	input := productInput("avatar")
+	input := productInput("title")
 	input.CoinPrice = 8
 	input.DiamondPrice = 3
 	stock := int64(1)
@@ -28,7 +28,7 @@ func TestPurchaseReplayAndOwnership(t *testing.T) {
 	if first.Wallet.Coins != 12 || first.Wallet.Diamonds != 2 || first.Purchase.Status != "owned" {
 		t.Fatalf("%+v", first)
 	}
-	if _, err = f.Service.SetSlot(ctx, f.Principal, "avatar", &first.Purchase.ID); err != nil {
+	if _, err = f.Service.SetTitle(ctx, f.Principal, &first.Purchase.ID); err != nil {
 		t.Fatal(err)
 	}
 	if err = f.Service.DeleteProduct(ctx, f.Principal, p.ID, 2); err != nil {
@@ -42,7 +42,7 @@ func TestPurchaseReplayAndOwnership(t *testing.T) {
 		t.Fatalf("replay=%+v", replay)
 	}
 	equipment, err := f.Service.Equipment(ctx, f.Principal)
-	if err != nil || equipment.Avatar == nil || equipment.Avatar.ID != first.Purchase.ID {
+	if err != nil || equipment.Title == nil || equipment.Title.ID != first.Purchase.ID {
 		t.Fatalf("%+v %v", equipment, err)
 	}
 	command.ExpectedWalletVersion++
@@ -125,8 +125,8 @@ func TestProductsAndRewards(t *testing.T) {
 	if err != nil || len(prior.Items) != 2 || prior.Items[0].NameSnapshot != first.Purchase.NameSnapshot || prior.Items[0].CoinPrice != 0 {
 		t.Fatalf("purchase snapshot was rewritten: %+v %v", prior, err)
 	}
-	input.Type = "avatar"
-	input.AssetKey = "fox-v1"
+	input.Type = "title"
+	input.AssetKey = "title-crown-v1"
 	_, err = f.Service.UpdateProduct(ctx, f.Principal, p.ID, shop.ProductUpdate{ProductInput: input, ExpectedVersion: p.Version})
 	requireShopCode(t, err, "PRODUCT_TYPE_LOCKED")
 	_, err = f.Service.Redeem(ctx, f.Principal, first.Purchase.ID, "wrong-password")
@@ -184,54 +184,36 @@ func TestManagementCreationReplayRequiresFreshUnlock(t *testing.T) {
 	}
 }
 
-// TestEquipmentLimitAndIndependentSlots preserves all other slots and profile versions.
-func TestEquipmentLimitAndIndependentSlots(t *testing.T) {
+// TestTitleEquipmentOwnershipAndIndependentAppearance keeps titles separate from saved clothing.
+func TestTitleEquipmentOwnershipAndIndependentAppearance(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	avatar := buyProduct(t, f, createProduct(t, f, productInput("avatar")))
-	title := buyProduct(t, f, createProduct(t, f, productInput("title")))
-	equipment, err := f.Service.Equipment(ctx, f.Principal)
-	if err != nil || equipment.Avatar != nil || equipment.Title != nil || len(equipment.Accessories) != 0 {
-		t.Fatalf("purchase auto-equipped: %+v %v", equipment, err)
+	title := buyProduct(t, f, createProduct(t, f, productInput("title"))).Purchase
+	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase
+	equipment, err := f.Service.SetTitle(ctx, f.Principal, &title.ID)
+	if err != nil || equipment.Title == nil || equipment.Title.ID != title.ID {
+		t.Fatalf("title=%+v %v", equipment, err)
 	}
-	if _, err = f.Service.SetSlot(ctx, f.Principal, "avatar", &avatar.Purchase.ID); err != nil {
+	if _, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HairPurchaseID: &hair.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = f.Service.SetSlot(ctx, f.Principal, "title", &title.Purchase.ID); err != nil {
-		t.Fatal(err)
+	equipment, err = f.Service.Equipment(ctx, f.Principal)
+	if err != nil || equipment.Title == nil || equipment.Title.ID != title.ID {
+		t.Fatalf("appearance changed title: %+v %v", equipment, err)
 	}
-	var accessories []shop.Purchase
-	for i := 0; i < 11; i++ {
-		p := buyProduct(t, f, createProduct(t, f, productInput("accessory"))).Purchase
-		accessories = append(accessories, p)
-		if i < 10 {
-			if _, err = f.Service.SetAccessory(ctx, f.Principal, p.ID, true); err != nil {
-				t.Fatal(err)
-			}
-		}
-	}
-	_, err = f.Service.SetAccessory(ctx, f.Principal, accessories[10].ID, true)
-	requireShopCode(t, err, "ACCESSORY_LIMIT")
-	if _, err = f.Service.SetAccessory(ctx, f.Principal, accessories[0].ID, true); err != nil {
-		t.Fatal(err)
-	}
-	for i := 0; i < 2; i++ {
-		if _, err = f.Service.SetAccessory(ctx, f.Principal, accessories[0].ID, false); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if _, err = f.Service.SetAccessory(ctx, f.Principal, accessories[10].ID, true); err != nil {
-		t.Fatal(err)
-	}
-	_, err = f.Service.SetSlot(ctx, f.Principal, "avatar", &title.Purchase.ID)
+	_, err = f.Service.SetTitle(ctx, f.Principal, &hair.ID)
 	requireShopCode(t, err, "INVALID_EQUIPMENT")
-	equipment, err = f.Service.SetSlot(ctx, f.Principal, "title", nil)
-	if err != nil || equipment.Title != nil || equipment.Avatar == nil || len(equipment.Accessories) != 10 {
-		t.Fatalf("%+v %v", equipment, err)
+	equipment, err = f.Service.SetTitle(ctx, f.Principal, nil)
+	if err != nil || equipment.Title != nil {
+		t.Fatalf("clear=%+v %v", equipment, err)
+	}
+	appearance, err := f.Service.Appearance(ctx, f.Principal)
+	if err != nil || appearance.HairPurchaseID == nil || *appearance.HairPurchaseID != hair.ID {
+		t.Fatalf("title changed appearance: %+v %v", appearance, err)
 	}
 	state, err := f.Accounts.Session(ctx, f.Principal)
 	if err != nil || state.Account.Version != 1 {
-		t.Fatalf("profile version changed: %+v %v", state, err)
+		t.Fatalf("profile changed: %+v %v", state, err)
 	}
 }
 

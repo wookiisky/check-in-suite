@@ -31,6 +31,12 @@ func SpatialSceneDefinition() SpatialScene { return spatialConfigurationData().S
 // SpatialCatalog 只登记已有受控资源的物件，不提前提供尚无模型的商品。
 func SpatialCatalog() []SpatialDefinition { return spatialConfigurationData().Catalog }
 
+// SpatialDefaultLayout 提供与首次读取一致的布局，供空库演示种子复用。
+func SpatialDefaultLayout() SpatialSaveInput {
+	configuration := spatialConfigurationData()
+	return SpatialSaveInput{ExpectedVersion: 1, SceneKey: configuration.Scene.Key, EnvironmentKey: configuration.DefaultEnvironment, Placements: configuration.DefaultPlacements}
+}
+
 // SpatialFind 按稳定物件身份解析已购快照。
 func SpatialFind(key string) (SpatialDefinition, bool) {
 	return spatialFindDefinition(SpatialCatalog(), key)

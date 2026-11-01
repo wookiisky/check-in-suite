@@ -82,7 +82,7 @@ func TestIndependentIslandActivityAccessBoundary(t *testing.T) {
 	islandUnlockTask(t, app.DB, "running", true)
 	islandUnlockSQL(t, app.DB, `INSERT INTO task_island_activities VALUES('running','run')`)
 	islandUnlockRecord(t, app.DB, "today", "running", core.Today(now))
-	islandUnlockSQL(t, app.DB, `DROP TABLE island_state`)
+	islandUnlockSQL(t, app.DB, `DROP TABLE island_spatial_state`)
 	islandUnlockSQL(t, app.DB, `DROP TABLE purchases`)
 	for _, available := range []bool{true, false} {
 		response := request("GET", "/api/v1/island/activity-access", "", "")

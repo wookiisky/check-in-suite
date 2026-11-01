@@ -1,0 +1,6 @@
+[
+  { "wearable_key": "hair-barbarian-v1", "name": "光头短须", "coin_price": 20, "diamond_price": 0 },
+  { "wearable_key": "upper-barbarian-v1", "name": "蓝色皮甲", "coin_price": 35, "diamond_price": 0 },
+  { "wearable_key": "lower-barbarian-v1", "name": "皮质短装", "coin_price": 25, "diamond_price": 0 },
+  { "wearable_key": "shoes-barbarian-v1", "name": "护边靴", "coin_price": 15, "diamond_price": 0 }
+]

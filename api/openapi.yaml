@@ -6,22 +6,6 @@ info:
 servers: [{"url": "/"}]
 security: [{"sessionCookie": []}]
 paths:
-  "/api/v1/island":
-    get:
-      operationId: "getIsland"
-      summary: "读取营地布局、已拥有物品与当前物品能力"
-      responses:
-        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandState"}}}}
-        default: {"$ref": "#/components/responses/Error"}
-    put:
-      operationId: "saveIsland"
-      summary: "按已读取版本原子保存完整营地布局"
-      parameters: [{"$ref": "#/components/parameters/CSRF"}]
-      description: "仅需登录，无需管理授权。验证真实所有权、每件实例唯一、室内外范围与房屋环境单选；冲突返回 VERSION_CONFLICT。"
-      requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandSave"}}}}
-      responses:
-        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/IslandState"}}}}
-        default: {"$ref": "#/components/responses/Error"}
   "/api/v1/island/activity-access":
     get:
       operationId: "getIslandActivityAccess"
@@ -381,68 +365,14 @@ paths:
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AppearanceState"}}}}
         default: {"$ref": "#/components/responses/Error"}
-  "/api/v1/equipment/base-avatar":
+  "/api/v1/equipment/title":
     put:
-      operationId: "setBaseAvatar"
-      summary: "选择免费的基础人物，保留发型和服装"
+      operationId: "setTitle"
+      summary: "设置或卸下当前称号"
       parameters: [{"$ref": "#/components/parameters/CSRF"}]
-      requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/BaseAvatarUpdate"}}}}
+      requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/TitleUpdate"}}}}
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Equipment"}}}}
-        default: {"$ref": "#/components/responses/Error"}
-  "/api/v1/equipment/{slot}":
-    put:
-      operationId: "setEquipmentSlot"
-      summary: "设置称号、形象、背景或固定穿戴部位"
-      parameters:
-        - {"name": "slot", "in": "path", "required": true, "schema": {"type": "string", "enum": ["title", "avatar", "background", "hair", "top", "bottom", "shoes"]}}
-        - {"$ref": "#/components/parameters/CSRF"}
-      requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SlotUpdate"}}}}
-      responses:
-        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Equipment"}}}}
-        default: {"$ref": "#/components/responses/Error"}
-  "/api/v1/equipment/accessories/{purchase_id}":
-    put:
-      operationId: "putAccessory"
-      summary: "装备或卸下单个已拥有饰品"
-      parameters: [{"name": "purchase_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}, {"$ref": "#/components/parameters/CSRF"}]
-      description: "最多装备10个不同饰品；重复装备/卸下成功，其他饰品不变。"
-      responses:
-        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AccessoryResult"}}}}
-        default: {"$ref": "#/components/responses/Error"}
-    delete:
-      operationId: "deleteAccessory"
-      summary: "装备或卸下单个已拥有饰品"
-      parameters: [{"name": "purchase_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}, {"$ref": "#/components/parameters/CSRF"}]
-      description: "最多装备10个不同饰品；重复装备/卸下成功，其他饰品不变。"
-      responses:
-        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AccessoryResult"}}}}
-        default: {"$ref": "#/components/responses/Error"}
-  "/api/v1/equipment/accessories/{purchase_id}/layout":
-    patch:
-      operationId: "setAccessoryLayout"
-      summary: "保存单件饰品的位置、大小和层级"
-      parameters: [{"name": "purchase_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}, {"$ref": "#/components/parameters/CSRF"}]
-      requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AccessoryLayoutInput"}}}}
-      responses:
-        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Equipment"}}}}
-        default: {"$ref": "#/components/responses/Error"}
-  "/api/v1/equipment/effects/{purchase_id}":
-    put:
-      operationId: "putEffect"
-      summary: "佩戴动态特效"
-      description: "单件幂等更新；可同时佩戴多件，不占饰品数量；固定最高层，没有可编辑布局。"
-      parameters: [{"name": "purchase_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}, {"$ref": "#/components/parameters/CSRF"}]
-      responses:
-        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AccessoryResult"}}}}
-        default: {"$ref": "#/components/responses/Error"}
-    delete:
-      operationId: "deleteEffect"
-      summary: "移除动态特效"
-      description: "单件幂等更新；可同时佩戴多件，不占饰品数量；固定最高层，没有可编辑布局。"
-      parameters: [{"name": "purchase_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}, {"$ref": "#/components/parameters/CSRF"}]
-      responses:
-        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AccessoryResult"}}}}
         default: {"$ref": "#/components/responses/Error"}
   "/api/v1/purchases/{id}/redeem":
     post:
@@ -956,46 +886,6 @@ components:
       additionalProperties: false
       required: ["items", "next_cursor"]
       properties: {"items": {"type": "array", "items": {"$ref": "#/components/schemas/Checkin"}}, "next_cursor": {"anyOf": [{"type": "string"}, {"type": "null"}]}}
-    IslandPlacement:
-      type: "object"
-      additionalProperties: false
-      required: ["id", "item_key", "x", "y", "rotation", "zone"]
-      properties:
-        id: {"type": "string", "minLength": 1, "description": "基础物品身份或一笔购买对应的实例身份。"}
-        item_key: {"type": "string", "minLength": 1}
-        x: {"type": "number", "minimum": -8, "maximum": 8}
-        y: {"type": "number", "minimum": -8, "maximum": 8}
-        rotation: {"type": "integer", "enum": [0, 90, 180, 270]}
-        zone: {"type": "string", "enum": ["outdoor", "indoor"], "description": "室内完整占地须位于房屋范围内（当前 x 为 -6 至 6，y 为 -4 至 4），且避开隔墙和门口；室外为 -8 至 8。"}
-    IslandOwnedItem:
-      type: "object"
-      additionalProperties: false
-      required: ["id", "item_key"]
-      properties:
-        id: {"type": "string", "minLength": 1}
-        item_key: {"type": "string", "minLength": 1}
-    IslandDefinition:
-      type: "object"
-      additionalProperties: false
-      required: ["key", "name", "category", "model", "width", "depth", "movable", "repeatable"]
-      properties:
-        key: {"type": "string", "minLength": 1}
-        name: {"type": "string", "minLength": 1}
-        category: {"type": "string", "enum": ["decoration", "house", "creature", "environment", "equipment"]}
-        model: {"type": "string", "minLength": 1}
-        width: {"type": "number", "exclusiveMinimum": 0}
-        depth: {"type": "number", "exclusiveMinimum": 0}
-        movable: {"type": "boolean"}
-        repeatable: {"type": "boolean"}
-        catalog_only: {"type": "boolean", "description": "仅提供素材与摆放能力，不在初始化时自动创建商品；商品由管理页配置。"}
-        indoor_only: {"type": "boolean", "description": "仅能摆放于房屋室内。"}
-        seed_existing: {"type": "boolean", "description": "升级时也为已有账户补入此商品；不覆盖已存在、下架或软删除的商品。"}
-        activity: {"type": "string", "enum": ["read", "run", "ball"]}
-        animation: {"type": "string", "enum": ["sway", "flutter", "spin", "flow", "swing", "glow"], "description": "独立于互动的常驻视觉动作。"}
-        portrait_asset_key: {"type": "string", "minLength": 1}
-        asset_key: {"type": "string", "minLength": 1, "description": "商品缩略图和当前受控素材身份。"}
-        coin_price: {"type": "integer", "minimum": 0, "description": "资源默认价格；实际购买以商品价格为准。"}
-        diamond_price: {"type": "integer", "minimum": 0, "description": "资源默认钻石价格；实际购买以商品价格为准。"}
     IslandActivity:
       type: "string"
       enum: ["read", "run", "ball"]
@@ -1023,33 +913,6 @@ components:
         today: {"type": "string", "format": "date", "description": "本次资格计算采用的台北业务日期。"}
         expires_at: {"type": "string", "format": "date-time", "description": "下一个台北午夜；当刻起需要打卡的资格失效。"}
         activity_access: {"type": "array", "items": {"$ref": "#/components/schemas/IslandActivityAccess"}}
-    IslandState:
-      type: "object"
-      additionalProperties: false
-      required: ["version", "placements", "inventory", "catalog", "today", "expires_at", "activity_access"]
-      properties:
-        today: {"type": "string", "format": "date", "description": "本次资格计算采用的台北业务日期。"}
-        expires_at: {"type": "string", "format": "date-time", "description": "下一个台北午夜，旧资格到期后不能继续使用。"}
-        activity_access: {"type": "array", "items": {"$ref": "#/components/schemas/IslandActivityAccess"}}
-        version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
-        placements: {"type": "array", "items": {"$ref": "#/components/schemas/IslandPlacement"}}
-        inventory: {"type": "array", "items": {"$ref": "#/components/schemas/IslandOwnedItem"}}
-        catalog: {"type": "array", "items": {"$ref": "#/components/schemas/IslandDefinition"}}
-        housing_adjustment: {"$ref": "#/components/schemas/HousingAdjustment"}
-    HousingAdjustment:
-      type: "object"
-      additionalProperties: false
-      required: ["moved", "stored"]
-      properties:
-        moved: {"type": "integer", "minimum": 0, "description": "本次扩建为避让边界、房屋或门口而调整位置的物件数。"}
-        stored: {"type": "integer", "minimum": 0, "description": "扩建后无法放置而收回库存的物件数，所有权保留。保存布局后清除此提示。"}
-    IslandSave:
-      type: "object"
-      additionalProperties: false
-      required: ["expected_version", "placements"]
-      properties:
-        expected_version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
-        placements: {"type": "array", "items": {"$ref": "#/components/schemas/IslandPlacement"}}
     SpatialSpace:
       type: "string"
       enum: ["outdoor", "indoor"]
@@ -1218,17 +1081,13 @@ components:
         placements: {"type": "array", "items": {"$ref": "#/components/schemas/SpatialPlacement"}}
     ProductType:
       type: "string"
-      enum: ["title", "avatar", "background", "accessory", "effect", "reward", "island", "wearable"]
+      enum: ["title", "reward", "wearable", "island"]
     Product:
       type: "object"
       additionalProperties: false
       required: ["id", "type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled", "version", "owned"]
       properties:
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
-        wearable_slot: {"$ref": "#/components/schemas/WearableSlot"}
-        back_asset_key: {"type": "string", "description": "同一穿戴物的后层素材，穿戴时随前层整体切换。"}
-        portrait_type: {"type": "string", "enum": ["title", "avatar", "accessory", "background", "effect"], "description": "当前物品定义授予的画像用途，独立于成交商品类型。"}
-        portrait_asset_key: {"type": "string", "minLength": 1, "description": "当前画像展示素材；物品能力后续追加时已购者也可使用。"}
         id: {"type": "string", "minLength": 1}
         type: {"$ref": "#/components/schemas/ProductType"}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
@@ -1295,10 +1154,6 @@ components:
         - "created_at"
       properties:
         wearable_key: {"type": "string", "minLength": 1, "description": "三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。"}
-        wearable_slot: {"$ref": "#/components/schemas/WearableSlot"}
-        back_asset_key: {"type": "string", "description": "同一穿戴物的后层素材，穿戴时随前层整体切换。"}
-        portrait_type: {"type": "string", "enum": ["title", "avatar", "accessory", "background", "effect"], "description": "当前物品定义授予的画像用途，独立于成交商品类型。"}
-        portrait_asset_key: {"type": "string", "minLength": 1, "description": "当前画像展示素材；物品能力后续追加时已购者也可使用。"}
         id: {"type": "string", "minLength": 1}
         island_item_key: {"type": "string", "description": "根据稳定物品身份读取的当前营地能力，可随资源更新增加。"}
         product_id: {"type": "string", "minLength": 1}
@@ -1419,67 +1274,14 @@ components:
     Equipment:
       type: "object"
       additionalProperties: false
-      required: ["base_avatar_key", "wearables", "title", "avatar", "background", "accessories", "effects", "accessory_layouts"]
+      required: ["title"]
       properties:
-        base_avatar_key: {"type": "string", "description": "当前免费基础形象；装备动物时仍保存此选择。"}
-        wearables: {"$ref": "#/components/schemas/Wearables"}
         title: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
-        avatar: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
-        background: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
-        accessories: {"type": "array", "maxItems": 10, "items": {"$ref": "#/components/schemas/Purchase"}}
-        effects: {"type": "array", "items": {"$ref": "#/components/schemas/Purchase"}}
-        accessory_layouts: {"type": "object", "additionalProperties": {"$ref": "#/components/schemas/AccessoryLayout"}}
-    WearableSlot:
-      type: "string"
-      enum: ["hair", "top", "bottom", "shoes"]
-      description: "固定穿戴部位，不接受位置、大小和层级编辑。"
-    Wearables:
-      type: "object"
-      additionalProperties: false
-      required: ["hair", "top", "bottom", "shoes"]
-      properties:
-        hair: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
-        top: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
-        bottom: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
-        shoes: {"anyOf": [{"$ref": "#/components/schemas/Purchase"}, {"type": "null"}]}
-    BaseAvatarUpdate:
-      type: "object"
-      additionalProperties: false
-      required: ["asset_key"]
-      properties:
-        asset_key: {"type": "string", "minLength": 1, "description": "免费基础人物的受控素材 key。"}
-    AccessoryLayout:
-      type: "object"
-      additionalProperties: false
-      description: "以固定正方形画布为基准，x/y 为中心，size 为等比图片 contain 包围盒边长；rotation 为顺时针角度，旋转后的整个包围盒必须位于画布内。layer 小于零在角色后，大于零在角色前。"
-      required: ["x", "y", "size", "rotation", "layer"]
-      properties:
-        x: {"type": "number", "minimum": 0, "maximum": 1}
-        y: {"type": "number", "minimum": 0, "maximum": 1}
-        size: {"type": "number", "minimum": 0.05, "maximum": 1}
-        rotation: {"type": "number", "minimum": 0, "exclusiveMaximum": 360}
-        layer: {"type": "integer", "not": {"const": 0}}
-    AccessoryLayoutInput:
-      type: "object"
-      additionalProperties: false
-      description: "原子保存单件位置、大小、旋转角度和排序。before_id 为另一件已装备饰品的购买ID、角色锚点 avatar，或 null（最前层）。失效排序目标返回 EQUIPMENT_CHANGED，不自动改为置顶。"
-      required: ["x", "y", "size", "rotation", "before_id"]
-      properties:
-        x: {"type": "number", "minimum": 0, "maximum": 1}
-        y: {"type": "number", "minimum": 0, "maximum": 1}
-        size: {"type": "number", "minimum": 0.05, "maximum": 1}
-        rotation: {"type": "number", "minimum": 0, "exclusiveMaximum": 360}
-        before_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
-    SlotUpdate:
+    TitleUpdate:
       type: "object"
       additionalProperties: false
       required: ["purchase_id"]
       properties: {"purchase_id": {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}}
-    AccessoryResult:
-      type: "object"
-      additionalProperties: false
-      required: ["purchase_id", "equipped"]
-      properties: {"purchase_id": {"type": "string", "minLength": 1}, "equipped": {"type": "boolean"}}
     CampResponse:
       type: "object"
       additionalProperties: false
@@ -1500,12 +1302,10 @@ components:
       additionalProperties: false
       required: ["key", "name", "kind", "url"]
       properties:
-        free: {"type": "boolean", "description": "无需购买即可选择的基础人物。"}
-        wearable_slot: {"$ref": "#/components/schemas/WearableSlot"}
-        back_asset_key: {"type": "string", "description": "同一发型的后层素材。"}
+        free: {"type": "boolean", "description": "无需购买的免费营地物品资源；仅用于 island 类型。"}
         key: {"type": "string", "minLength": 1}
         name: {"type": "string", "minLength": 1, "maxLength": 40}
-        kind: {"type": "string", "enum": ["icon", "avatar", "background", "accessory", "effect", "title", "reward", "badge", "island", "model", "animation", "wearable"]}
+        kind: {"type": "string", "enum": ["icon", "title", "reward", "badge", "island", "model", "animation", "wearable"]}
         url: {"type": "string"}
         format: {"type": "string", "enum": ["svg", "png", "webp", "glb"], "description": "省略时为 svg。"}
         source_url: {"type": "string", "description": "素材来源页面。"}

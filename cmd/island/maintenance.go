@@ -94,7 +94,7 @@ func maintain(ctx context.Context, command, kind string, service *account.Servic
 		return err
 	}
 	// Seed first so a failed catalog write leaves account initialization retryable.
-	if err := shop.SeedIslandProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {
+	if err := shop.SeedWearableProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {
 		return maintenanceError(err)
 	}
 	if err := shop.SeedSpatialProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {

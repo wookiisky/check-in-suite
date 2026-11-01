@@ -15,19 +15,9 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/island"
 )
 
-// ownershipMatch retains existing portrait ownership while island items share identity across offers.
+// ownershipMatch associates offers with stable island instances without changing sale snapshots.
 func ownershipMatch() string {
 	matches := []string{"x.product_id=p.id"}
-	for _, item := range island.Catalog() {
-		if item.AssetKey == "" {
-			continue
-		}
-		keys := "'" + strings.ReplaceAll(item.AssetKey, "'", "''") + "'"
-		if item.PortraitAssetKey != "" {
-			keys += ",'" + strings.ReplaceAll(item.PortraitAssetKey, "'", "''") + "'"
-		}
-		matches = append(matches, "(p.asset_key IN ("+keys+") AND (x.item_key_snapshot='"+strings.ReplaceAll(item.Key, "'", "''")+"' OR (x.item_key_snapshot='' AND x.asset_key_snapshot IN ("+keys+"))))")
-	}
 	for _, item := range island.SpatialCatalog() {
 		asset := strings.ReplaceAll(item.ThumbnailAssetKey, "'", "''")
 		key := strings.ReplaceAll(item.Key, "'", "''")
@@ -36,12 +26,9 @@ func ownershipMatch() string {
 	return "(" + strings.Join(matches, " OR ") + ")"
 }
 
-// productIslandItemKey 合并新旧目录的稳定身份，出售后不能换成别的物件。
+// productIslandItemKey resolves the controlled three-dimensional placement identity.
 func productIslandItemKey(assetKey string) string {
 	if item, ok := island.SpatialForThumbnail(assetKey); ok {
-		return item.Key
-	}
-	if item, ok := island.ForAsset(assetKey); ok {
 		return item.Key
 	}
 	return ""
@@ -60,15 +47,7 @@ func scanProduct(row rowScanner) (Product, error) {
 	if stock.Valid {
 		p.Stock = &stock.Int64
 	}
-	if artwork, ok := assets.Get(p.AssetKey); ok {
-		p.WearableSlot, p.BackAssetKey = artwork.WearableSlot, artwork.BackAssetKey
-	}
 	p.Deleted = deleted.Valid
-	if item, ok := island.ForAsset(p.AssetKey); ok {
-		p.IslandItemKey = item.Key
-		p.PortraitType, p.PortraitAssetKey = portraitCapability(item)
-		p.Repeatable = item.Repeatable
-	}
 	if item, ok := island.SpatialForThumbnail(p.AssetKey); ok {
 		p.IslandItemKey, p.Repeatable = item.Key, item.Repeatable
 	}
@@ -86,7 +65,7 @@ func readProduct(ctx context.Context, tx *sql.Tx, id string, includeDeleted bool
 
 // validType uses the declared product behaviors, never inferred display text.
 func validType(kind string) bool {
-	return kind == TypeWearable || kind == TypeIsland || kind == TypeTitle || kind == TypeAvatar || kind == TypeBackground || kind == TypeAccessory || kind == TypeEffect || kind == TypeReward
+	return kind == TypeWearable || kind == TypeIsland || kind == TypeTitle || kind == TypeReward
 }
 
 // validateProduct applies configured numeric and Unicode bounds before any product write.
@@ -108,7 +87,7 @@ func (s *Service) validateProduct(input ProductInput) error {
 	}
 	if input.Type == TypeWearable {
 		wearable, ok := character.GetWearable(input.WearableKey)
-		if !ok || wearable.ThumbnailAssetKey != input.AssetKey {
+		if !ok || wearable.ThumbnailAssetKey != input.AssetKey || isDefaultWearable(wearable) {
 			return core.Invalid("wearable_key", "INVALID_VALUE")
 		}
 	} else if input.WearableKey != "" {

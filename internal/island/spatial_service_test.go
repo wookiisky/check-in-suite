@@ -10,7 +10,7 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/core"
 )
 
-// TestSpatialDefaultAndSave 保证读默认值不写库，新旧布局相互独立。
+// TestSpatialDefaultAndSave 保证读取默认值不写库，保存后可读回完整新版布局。
 func TestSpatialDefaultAndSave(t *testing.T) {
 	f := newSpatialFixture(t)
 	ctx := context.Background()
@@ -25,9 +25,6 @@ func TestSpatialDefaultAndSave(t *testing.T) {
 	if err = f.db.QueryRow("SELECT COUNT(*) FROM island_spatial_state").Scan(&count); err != nil || count != 0 {
 		t.Fatalf("read wrote state count=%d err=%v", count, err)
 	}
-	if _, err = f.db.Exec("INSERT INTO island_state(id,version,placements) VALUES(1,99,'[]')"); err != nil {
-		t.Fatal(err)
-	}
 	input := spatialInput(state)
 	input.Placements[0].XCM = 25
 	input.EnvironmentKey = "dusk"
@@ -41,9 +38,6 @@ func TestSpatialDefaultAndSave(t *testing.T) {
 	read, err := f.service.ReadSpatial(ctx, f.principal)
 	if err != nil || !reflect.DeepEqual(saved, read) {
 		t.Fatalf("saved snapshot mismatch err=%v", err)
-	}
-	if err = f.db.QueryRow("SELECT version FROM island_state WHERE id=1").Scan(&count); err != nil || count != 99 {
-		t.Fatalf("old layout changed count=%d err=%v", count, err)
 	}
 }
 

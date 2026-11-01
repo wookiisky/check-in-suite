@@ -17,7 +17,7 @@ CREATE INDEX media_cleanup ON media_files(state,unreferenced_at);
 
 CREATE TABLE products (
     id TEXT PRIMARY KEY,
-    type TEXT NOT NULL CHECK(type IN ('title','avatar','accessory','background','effect','reward','island','wearable')),
+    type TEXT NOT NULL CHECK(type IN ('title','reward','island','wearable')),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     asset_key TEXT NOT NULL,
     wearable_key TEXT NOT NULL DEFAULT '',
@@ -39,7 +39,7 @@ CREATE TABLE purchases (
     repeatable INTEGER NOT NULL DEFAULT 0 CHECK(repeatable IN (0,1)),
     item_key_snapshot TEXT NOT NULL DEFAULT '',
     wearable_key_snapshot TEXT NOT NULL DEFAULT '',
-    type_snapshot TEXT NOT NULL CHECK(type_snapshot IN ('title','avatar','accessory','background','effect','reward','island','wearable')),
+    type_snapshot TEXT NOT NULL CHECK(type_snapshot IN ('title','reward','island','wearable')),
     name_snapshot TEXT NOT NULL,
     description_snapshot TEXT NOT NULL,
     asset_key_snapshot TEXT NOT NULL,
@@ -54,29 +54,6 @@ CREATE TABLE purchases (
 ) STRICT;
 CREATE UNIQUE INDEX purchases_permanent ON purchases(product_id) WHERE type_snapshot!='reward' AND repeatable=0;
 CREATE INDEX purchases_date ON purchases(created_at,id);
-
-CREATE TABLE equipped_accessories (
-    purchase_id TEXT PRIMARY KEY REFERENCES purchases(id),
-    equipped_at INTEGER NOT NULL
-) STRICT;
-
--- Placement belongs to the owned accessory and survives unequipping.
-CREATE TABLE accessory_layouts (
-    purchase_id TEXT PRIMARY KEY REFERENCES purchases(id),
-    x REAL NOT NULL,
-    y REAL NOT NULL,
-    size REAL NOT NULL CHECK(size BETWEEN 0.05 AND 1.0),
-    rotation REAL NOT NULL DEFAULT 0 CHECK(rotation >= 0 AND rotation < 360),
-    layer INTEGER NOT NULL CHECK(layer != 0),
-    CHECK(x BETWEEN size/2.0 AND 1.0-size/2.0),
-    CHECK(y BETWEEN size/2.0 AND 1.0-size/2.0)
-) STRICT;
-
--- Fixed effects are independently equipped and do not consume accessory slots.
-CREATE TABLE equipped_effects (
-    purchase_id TEXT PRIMARY KEY REFERENCES purchases(id),
-    equipped_at INTEGER NOT NULL
-) STRICT;
 
 CREATE TABLE messages (
     id TEXT PRIMARY KEY,
@@ -198,13 +175,6 @@ CREATE TABLE idempotency_requests (
     response_json TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     PRIMARY KEY(account_id,operation,key)
-) STRICT;
-
--- Layout is independent from portrait equipment; version protects concurrent edits.
-CREATE TABLE island_state (
-    id INTEGER PRIMARY KEY CHECK(id=1),
-    version INTEGER NOT NULL CHECK(version>0),
-    placements TEXT NOT NULL CHECK(json_valid(placements))
 ) STRICT;
 
 -- A complete three-dimensional appearance has its own optimistic version.

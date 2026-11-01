@@ -167,9 +167,6 @@ func TestAppearanceHTTPOwnedWearable(t *testing.T) {
 	if response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, invalid), ""); response.Code != http.StatusBadRequest && response.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("wrong slot accepted: %d %s", response.Code, response.Body)
 	}
-	if response := request(http.MethodPut, "/api/v1/equipment/top", fmt.Sprintf(`{"purchase_id":%q}`, purchase.Purchase.ID), ""); response.Code != http.StatusUnprocessableEntity {
-		t.Fatalf("3d garment accepted by legacy 2d slot: %d %s", response.Code, response.Body)
-	}
 	if response := request(http.MethodDelete, "/api/v1/management/products/"+product.ID, `{"expected_version":1}`, ""); response.Code != http.StatusNoContent {
 		t.Fatalf("delete product: %d %s", response.Code, response.Body)
 	}
@@ -179,25 +176,25 @@ func TestAppearanceHTTPOwnedWearable(t *testing.T) {
 	if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &afterDelete) != nil || afterDelete.Version != state.Version+1 || afterDelete.UpperPurchaseID == nil || *afterDelete.UpperPurchaseID != purchase.Purchase.ID {
 		t.Fatalf("deleted product lost owned garment or invalid save changed revision: %d %s", response.Code, response.Body)
 	}
-	oldCreated := request(http.MethodPost, "/api/v1/management/products", `{"type":"accessory","name":"旧饰品","asset_key":"accessory-star-v1","description":"","coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`, "appearance-create-2d")
-	var oldProduct struct {
-		ID string `json:"id"` // 旧二维商品。
+	titleCreated := request(http.MethodPost, "/api/v1/management/products", `{"type":"title","name":"称号","asset_key":"title-crown-v1","description":"","coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`, "appearance-create-title")
+	var titleProduct struct {
+		ID string `json:"id"` // 称号商品。
 	}
-	if oldCreated.Code != http.StatusCreated || json.Unmarshal(oldCreated.Body.Bytes(), &oldProduct) != nil {
-		t.Fatalf("create old accessory: %d %s", oldCreated.Code, oldCreated.Body)
+	if titleCreated.Code != http.StatusCreated || json.Unmarshal(titleCreated.Body.Bytes(), &titleProduct) != nil {
+		t.Fatalf("create non-wearable title: %d %s", titleCreated.Code, titleCreated.Body)
 	}
-	oldBought := request(http.MethodPost, "/api/v1/purchases", fmt.Sprintf(`{"product_id":%q,"expected_product_version":1,"expected_wallet_version":2}`, oldProduct.ID), "appearance-buy-2d")
-	var oldPurchase struct {
+	titleBought := request(http.MethodPost, "/api/v1/purchases", fmt.Sprintf(`{"product_id":%q,"expected_product_version":1,"expected_wallet_version":2}`, titleProduct.ID), "appearance-buy-title")
+	var titlePurchase struct {
 		Purchase struct {
-			ID string `json:"id"` // 旧二维购买实例。
-		} `json:"purchase"` // 旧饰品购买结果。
+			ID string `json:"id"` // 称号购买实例。
+		} `json:"purchase"` // 称号购买结果。
 	}
-	if oldBought.Code != http.StatusCreated || json.Unmarshal(oldBought.Body.Bytes(), &oldPurchase) != nil {
-		t.Fatalf("buy old accessory: %d %s", oldBought.Code, oldBought.Body)
+	if titleBought.Code != http.StatusCreated || json.Unmarshal(titleBought.Body.Bytes(), &titlePurchase) != nil {
+		t.Fatalf("buy title: %d %s", titleBought.Code, titleBought.Body)
 	}
 	invalid = appearanceHTTPRequest(afterDelete.Version, initial.CharacterKey)
-	invalid["hair_purchase_id"] = oldPurchase.Purchase.ID
+	invalid["hair_purchase_id"] = titlePurchase.Purchase.ID
 	if response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, invalid), ""); response.Code != http.StatusBadRequest && response.Code != http.StatusUnprocessableEntity {
-		t.Fatalf("2d purchase accepted by 3d appearance: %d %s", response.Code, response.Body)
+		t.Fatalf("title purchase accepted by character appearance: %d %s", response.Code, response.Body)
 	}
 }

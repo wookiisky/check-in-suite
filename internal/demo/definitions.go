@@ -8,6 +8,7 @@ import (
 
 	"github.com/wookiisky/check-in-suite/internal/achievement"
 	"github.com/wookiisky/check-in-suite/internal/assets"
+	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/island"
 	"github.com/wookiisky/check-in-suite/internal/wallet"
@@ -22,7 +23,7 @@ func seedDefinitions(ctx context.Context, tx *sql.Tx, items []assets.Asset, cont
 		}
 	}
 	for _, item := range items {
-		if item.Free || item.Kind == assets.KindCharacterPart {
+		if item.Free {
 			continue
 		}
 		switch item.Kind {
@@ -42,12 +43,25 @@ func seedDefinitions(ctx context.Context, tx *sql.Tx, items []assets.Asset, cont
 				return err
 			}
 			result.Achievements++
-		default:
+		case assets.KindTitle, assets.KindReward, assets.KindIsland, assets.KindWearable:
 			coins, diamonds := content.CoinPrice, content.DiamondPrice
-			if definition, ok := island.ForAsset(item.Key); ok && !definition.CatalogOnly {
+			id, wearableKey := "demo-product-"+item.Key, ""
+			if item.Kind == assets.KindIsland {
+				definition, ok := island.SpatialForThumbnail(item.Key)
+				if !ok || definition.Free {
+					continue
+				}
 				coins, diamonds = definition.CoinPrice, definition.DiamondPrice
+				id = "spatial-offer-" + definition.Key
 			}
-			_, err := tx.ExecContext(ctx, `INSERT INTO products(id,type,name,asset_key,description,coin_price,diamond_price,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,1,?,?)`, "demo-product-"+item.Key, string(item.Kind), item.Name, item.Key, content.ProductDescription, coins, diamonds, createdAt, now.UnixMilli())
+			if item.Kind == assets.KindWearable {
+				wearable, ok := demoWearableForAsset(item.Key)
+				if !ok {
+					continue
+				}
+				wearableKey, id = wearable.Key, "wearable-offer-"+wearable.Key
+			}
+			_, err := tx.ExecContext(ctx, `INSERT INTO products(id,type,name,asset_key,wearable_key,description,coin_price,diamond_price,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,1,?,?)`, id, string(item.Kind), item.Name, item.Key, wearableKey, content.ProductDescription, coins, diamonds, createdAt, now.UnixMilli())
 			if err != nil {
 				return err
 			}
@@ -55,6 +69,21 @@ func seedDefinitions(ctx context.Context, tx *sql.Tx, items []assets.Asset, cont
 		}
 	}
 	return nil
+}
+
+// demoWearableForAsset 只出售明确服装定义中的替代款，免费默认款不生成商品。
+func demoWearableForAsset(assetKey string) (character.Wearable, bool) {
+	for _, wearable := range character.Wearables() {
+		if wearable.ThumbnailAssetKey != assetKey {
+			continue
+		}
+		body, found := character.Get(wearable.CharacterKey)
+		if !found || wearable.Key == body.Defaults.Hair || wearable.Key == body.Defaults.Upper || wearable.Key == body.Defaults.Lower || wearable.Key == body.Defaults.Shoes {
+			return character.Wearable{}, false
+		}
+		return wearable, true
+	}
+	return character.Wearable{}, false
 }
 
 // seedHistory creates dated reward snapshots and uses the real ledger for every grant.

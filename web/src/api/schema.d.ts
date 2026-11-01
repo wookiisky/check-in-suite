@@ -4,27 +4,6 @@
  */
 
 export interface paths {
-    "/api/v1/island": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 读取营地布局、已拥有物品与当前物品能力 */
-        get: operations["getIsland"];
-        /**
-         * 按已读取版本原子保存完整营地布局
-         * @description 仅需登录，无需管理授权。验证真实所有权、每件实例唯一、室内外范围与房屋环境单选；冲突返回 VERSION_CONFLICT。
-         */
-        put: operations["saveIsland"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/island/activity-access": {
         parameters: {
             query?: never;
@@ -585,7 +564,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/equipment/base-avatar": {
+    "/api/v1/equipment/title": {
         parameters: {
             query?: never;
             header?: never;
@@ -593,92 +572,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** 选择免费的基础人物，保留发型和服装 */
-        put: operations["setBaseAvatar"];
+        /** 设置或卸下当前称号 */
+        put: operations["setTitle"];
         post?: never;
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/equipment/{slot}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** 设置称号、形象、背景或固定穿戴部位 */
-        put: operations["setEquipmentSlot"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/equipment/accessories/{purchase_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 装备或卸下单个已拥有饰品
-         * @description 最多装备10个不同饰品；重复装备/卸下成功，其他饰品不变。
-         */
-        put: operations["putAccessory"];
-        post?: never;
-        /**
-         * 装备或卸下单个已拥有饰品
-         * @description 最多装备10个不同饰品；重复装备/卸下成功，其他饰品不变。
-         */
-        delete: operations["deleteAccessory"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/equipment/accessories/{purchase_id}/layout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** 保存单件饰品的位置、大小和层级 */
-        patch: operations["setAccessoryLayout"];
-        trace?: never;
-    };
-    "/api/v1/equipment/effects/{purchase_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 佩戴动态特效
-         * @description 单件幂等更新；可同时佩戴多件，不占饰品数量；固定最高层，没有可编辑布局。
-         */
-        put: operations["putEffect"];
-        post?: never;
-        /**
-         * 移除动态特效
-         * @description 单件幂等更新；可同时佩戴多件，不占饰品数量；固定最高层，没有可编辑布局。
-         */
-        delete: operations["deleteEffect"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1129,55 +1026,6 @@ export interface components {
             items: components["schemas"]["Checkin"][];
             next_cursor: string | null;
         };
-        IslandPlacement: {
-            /** @description 基础物品身份或一笔购买对应的实例身份。 */
-            id: string;
-            item_key: string;
-            x: number;
-            y: number;
-            /** @enum {integer} */
-            rotation: 0 | 90 | 180 | 270;
-            /**
-             * @description 室内完整占地须位于房屋范围内（当前 x 为 -6 至 6，y 为 -4 至 4），且避开隔墙和门口；室外为 -8 至 8。
-             * @enum {string}
-             */
-            zone: "outdoor" | "indoor";
-        };
-        IslandOwnedItem: {
-            id: string;
-            item_key: string;
-        };
-        IslandDefinition: {
-            key: string;
-            name: string;
-            /** @enum {string} */
-            category: "decoration" | "house" | "creature" | "environment" | "equipment";
-            model: string;
-            width: number;
-            depth: number;
-            movable: boolean;
-            repeatable: boolean;
-            /** @description 仅提供素材与摆放能力，不在初始化时自动创建商品；商品由管理页配置。 */
-            catalog_only?: boolean;
-            /** @description 仅能摆放于房屋室内。 */
-            indoor_only?: boolean;
-            /** @description 升级时也为已有账户补入此商品；不覆盖已存在、下架或软删除的商品。 */
-            seed_existing?: boolean;
-            /** @enum {string} */
-            activity?: "read" | "run" | "ball";
-            /**
-             * @description 独立于互动的常驻视觉动作。
-             * @enum {string}
-             */
-            animation?: "sway" | "flutter" | "spin" | "flow" | "swing" | "glow";
-            portrait_asset_key?: string;
-            /** @description 商品缩略图和当前受控素材身份。 */
-            asset_key?: string;
-            /** @description 资源默认价格；实际购买以商品价格为准。 */
-            coin_price?: number;
-            /** @description 资源默认钻石价格；实际购买以商品价格为准。 */
-            diamond_price?: number;
-        };
         /** @enum {string} */
         IslandActivity: "read" | "run" | "ball";
         IslandActivityTask: {
@@ -1203,34 +1051,6 @@ export interface components {
              */
             expires_at: string;
             activity_access: components["schemas"]["IslandActivityAccess"][];
-        };
-        IslandState: {
-            /**
-             * Format: date
-             * @description 本次资格计算采用的台北业务日期。
-             */
-            today: string;
-            /**
-             * Format: date-time
-             * @description 下一个台北午夜，旧资格到期后不能继续使用。
-             */
-            expires_at: string;
-            activity_access: components["schemas"]["IslandActivityAccess"][];
-            version: number;
-            placements: components["schemas"]["IslandPlacement"][];
-            inventory: components["schemas"]["IslandOwnedItem"][];
-            catalog: components["schemas"]["IslandDefinition"][];
-            housing_adjustment?: components["schemas"]["HousingAdjustment"];
-        };
-        HousingAdjustment: {
-            /** @description 本次扩建为避让边界、房屋或门口而调整位置的物件数。 */
-            moved: number;
-            /** @description 扩建后无法放置而收回库存的物件数，所有权保留。保存布局后清除此提示。 */
-            stored: number;
-        };
-        IslandSave: {
-            expected_version: number;
-            placements: components["schemas"]["IslandPlacement"][];
         };
         /** @enum {string} */
         SpatialSpace: "outdoor" | "indoor";
@@ -1352,20 +1172,10 @@ export interface components {
             placements: components["schemas"]["SpatialPlacement"][];
         };
         /** @enum {string} */
-        ProductType: "title" | "avatar" | "background" | "accessory" | "effect" | "reward" | "island" | "wearable";
+        ProductType: "title" | "reward" | "wearable" | "island";
         Product: {
             /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
             wearable_key?: string;
-            wearable_slot?: components["schemas"]["WearableSlot"];
-            /** @description 同一穿戴物的后层素材，穿戴时随前层整体切换。 */
-            back_asset_key?: string;
-            /**
-             * @description 当前物品定义授予的画像用途，独立于成交商品类型。
-             * @enum {string}
-             */
-            portrait_type?: "title" | "avatar" | "accessory" | "background" | "effect";
-            /** @description 当前画像展示素材；物品能力后续追加时已购者也可使用。 */
-            portrait_asset_key?: string;
             id: string;
             type: components["schemas"]["ProductType"];
             name: string;
@@ -1416,16 +1226,6 @@ export interface components {
         Purchase: {
             /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
             wearable_key?: string;
-            wearable_slot?: components["schemas"]["WearableSlot"];
-            /** @description 同一穿戴物的后层素材，穿戴时随前层整体切换。 */
-            back_asset_key?: string;
-            /**
-             * @description 当前物品定义授予的画像用途，独立于成交商品类型。
-             * @enum {string}
-             */
-            portrait_type?: "title" | "avatar" | "accessory" | "background" | "effect";
-            /** @description 当前画像展示素材；物品能力后续追加时已购者也可使用。 */
-            portrait_asset_key?: string;
             id: string;
             /** @description 根据稳定物品身份读取的当前营地能力，可随资源更新增加。 */
             island_item_key?: string;
@@ -1533,55 +1333,10 @@ export interface components {
             shoes_purchase_id: string | null;
         };
         Equipment: {
-            /** @description 当前免费基础形象；装备动物时仍保存此选择。 */
-            base_avatar_key: string;
-            wearables: components["schemas"]["Wearables"];
             title: components["schemas"]["Purchase"] | null;
-            avatar: components["schemas"]["Purchase"] | null;
-            background: components["schemas"]["Purchase"] | null;
-            accessories: components["schemas"]["Purchase"][];
-            effects: components["schemas"]["Purchase"][];
-            accessory_layouts: {
-                [key: string]: components["schemas"]["AccessoryLayout"];
-            };
         };
-        /**
-         * @description 固定穿戴部位，不接受位置、大小和层级编辑。
-         * @enum {string}
-         */
-        WearableSlot: "hair" | "top" | "bottom" | "shoes";
-        Wearables: {
-            hair: components["schemas"]["Purchase"] | null;
-            top: components["schemas"]["Purchase"] | null;
-            bottom: components["schemas"]["Purchase"] | null;
-            shoes: components["schemas"]["Purchase"] | null;
-        };
-        BaseAvatarUpdate: {
-            /** @description 免费基础人物的受控素材 key。 */
-            asset_key: string;
-        };
-        /** @description 以固定正方形画布为基准，x/y 为中心，size 为等比图片 contain 包围盒边长；rotation 为顺时针角度，旋转后的整个包围盒必须位于画布内。layer 小于零在角色后，大于零在角色前。 */
-        AccessoryLayout: {
-            x: number;
-            y: number;
-            size: number;
-            rotation: number;
-            layer: number;
-        };
-        /** @description 原子保存单件位置、大小、旋转角度和排序。before_id 为另一件已装备饰品的购买ID、角色锚点 avatar，或 null（最前层）。失效排序目标返回 EQUIPMENT_CHANGED，不自动改为置顶。 */
-        AccessoryLayoutInput: {
-            x: number;
-            y: number;
-            size: number;
-            rotation: number;
-            before_id: string | null;
-        };
-        SlotUpdate: {
+        TitleUpdate: {
             purchase_id: string | null;
-        };
-        AccessoryResult: {
-            purchase_id: string;
-            equipped: boolean;
         };
         CampResponse: {
             /** Format: date */
@@ -1599,15 +1354,12 @@ export interface components {
             achievements: components["schemas"]["Achievement"][];
         };
         Asset: {
-            /** @description 无需购买即可选择的基础人物。 */
+            /** @description 无需购买的免费营地物品资源；仅用于 island 类型。 */
             free?: boolean;
-            wearable_slot?: components["schemas"]["WearableSlot"];
-            /** @description 同一发型的后层素材。 */
-            back_asset_key?: string;
             key: string;
             name: string;
             /** @enum {string} */
-            kind: "icon" | "avatar" | "background" | "accessory" | "effect" | "title" | "reward" | "badge" | "island" | "model" | "animation" | "wearable";
+            kind: "icon" | "title" | "reward" | "badge" | "island" | "model" | "animation" | "wearable";
             url: string;
             /**
              * @description 省略时为 svg。
@@ -1768,54 +1520,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getIsland: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IslandState"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    saveIsland: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": components["parameters"]["CSRF"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IslandSave"];
-            };
-        };
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IslandState"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
     getIslandActivityAccess: {
         parameters: {
             query?: never;
@@ -2898,7 +2602,7 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
-    setBaseAvatar: {
+    setTitle: {
         parameters: {
             query?: never;
             header: {
@@ -2909,7 +2613,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BaseAvatarUpdate"];
+                "application/json": components["schemas"]["TitleUpdate"];
             };
         };
         responses: {
@@ -2920,164 +2624,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Equipment"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    setEquipmentSlot: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": components["parameters"]["CSRF"];
-            };
-            path: {
-                slot: "title" | "avatar" | "background" | "hair" | "top" | "bottom" | "shoes";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SlotUpdate"];
-            };
-        };
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Equipment"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    putAccessory: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": components["parameters"]["CSRF"];
-            };
-            path: {
-                purchase_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessoryResult"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    deleteAccessory: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": components["parameters"]["CSRF"];
-            };
-            path: {
-                purchase_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessoryResult"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    setAccessoryLayout: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": components["parameters"]["CSRF"];
-            };
-            path: {
-                purchase_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AccessoryLayoutInput"];
-            };
-        };
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Equipment"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    putEffect: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": components["parameters"]["CSRF"];
-            };
-            path: {
-                purchase_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessoryResult"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    deleteEffect: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": components["parameters"]["CSRF"];
-            };
-            path: {
-                purchase_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessoryResult"];
                 };
             };
             default: components["responses"]["Error"];

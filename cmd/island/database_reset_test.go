@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
 	"github.com/wookiisky/check-in-suite/internal/config"
@@ -46,11 +48,21 @@ func TestResetDemoCLI(t *testing.T) {
 					t.Fatal(err)
 				}
 				if initial == "incompatible" {
-					if _, err := db.Exec(`UPDATE schema_migrations SET checksum='old checksum' WHERE version=2; ALTER TABLE accounts DROP COLUMN base_avatar_key`); err != nil {
+					if _, err := db.Exec(`UPDATE schema_migrations SET checksum='old checksum' WHERE version=2; ALTER TABLE accounts ADD COLUMN base_avatar_key TEXT NOT NULL DEFAULT 'avatar-boy-v2'`); err != nil {
 						t.Fatal(err)
 					}
 					if err := storage.CheckSchema(ctx, db, migrations.Files); err == nil {
 						t.Fatal("incompatible fixture passed schema validation")
+					}
+					startup, stop := context.WithTimeout(ctx, time.Second)
+					err := runWithIO(startup, []string{"serve", "-config", configuration}, strings.NewReader(""), io.Discard)
+					stop()
+					if err == nil {
+						t.Fatal("serving accepted the old two-dimensional database")
+					}
+					var marker string
+					if err := db.QueryRow(`SELECT value FROM reset_marker`).Scan(&marker); err != nil || marker != "old data" {
+						t.Fatalf("refused startup changed old data: marker=%s err=%v", marker, err)
 					}
 				}
 				if err := db.Close(); err != nil {

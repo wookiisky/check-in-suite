@@ -127,27 +127,7 @@ func (app *App) RegisterShop(service *shop.Service) {
 		}
 		WriteJSON(w, 200, result)
 	})
-	app.Mux.HandleFunc("PUT /api/v1/equipment/base-avatar", func(w http.ResponseWriter, r *http.Request) {
-		p, err := app.authenticatedWrite(r)
-		if err != nil {
-			WriteError(w, r, err)
-			return
-		}
-		var input struct {
-			AssetKey string `json:"asset_key"`
-		} // One free base character, no purchase required.
-		if err = decodeRequiredJSON(w, r, &input, []string{"asset_key"}); err != nil {
-			WriteError(w, r, err)
-			return
-		}
-		result, err := service.SetBaseAvatar(r.Context(), p, input.AssetKey)
-		if err != nil {
-			WriteError(w, r, err)
-			return
-		}
-		WriteJSON(w, 200, result)
-	})
-	app.Mux.HandleFunc("PUT /api/v1/equipment/{slot}", func(w http.ResponseWriter, r *http.Request) {
+	app.Mux.HandleFunc("PUT /api/v1/equipment/title", func(w http.ResponseWriter, r *http.Request) {
 		p, err := app.authenticatedWrite(r)
 		if err != nil {
 			WriteError(w, r, err)
@@ -155,58 +135,12 @@ func (app *App) RegisterShop(service *shop.Service) {
 		}
 		var input struct {
 			PurchaseID *string `json:"purchase_id"`
-		} // Explicit null resets only this slot.
+		} // Explicit null clears only the title.
 		if err = decodeRequiredJSON(w, r, &input, []string{"purchase_id"}, "purchase_id"); err != nil {
 			WriteError(w, r, err)
 			return
 		}
-		result, err := service.SetSlot(r.Context(), p, r.PathValue("slot"), input.PurchaseID)
-		if err != nil {
-			WriteError(w, r, err)
-			return
-		}
-		WriteJSON(w, 200, result)
-	})
-	for _, method := range []string{http.MethodPut, http.MethodDelete} {
-		app.Mux.HandleFunc(method+" /api/v1/equipment/accessories/{purchase_id}", func(w http.ResponseWriter, r *http.Request) {
-			p, err := app.authenticatedWrite(r)
-			if err != nil {
-				WriteError(w, r, err)
-				return
-			}
-			result, err := service.SetAccessory(r.Context(), p, r.PathValue("purchase_id"), r.Method == http.MethodPut)
-			if err != nil {
-				WriteError(w, r, err)
-				return
-			}
-			WriteJSON(w, 200, result)
-		})
-		app.Mux.HandleFunc(method+" /api/v1/equipment/effects/{purchase_id}", func(w http.ResponseWriter, r *http.Request) {
-			p, err := app.authenticatedWrite(r)
-			if err != nil {
-				WriteError(w, r, err)
-				return
-			}
-			result, err := service.SetEffect(r.Context(), p, r.PathValue("purchase_id"), r.Method == http.MethodPut)
-			if err != nil {
-				WriteError(w, r, err)
-				return
-			}
-			WriteJSON(w, 200, result)
-		})
-	}
-	app.Mux.HandleFunc("PATCH /api/v1/equipment/accessories/{purchase_id}/layout", func(w http.ResponseWriter, r *http.Request) {
-		p, err := app.authenticatedWrite(r)
-		if err != nil {
-			WriteError(w, r, err)
-			return
-		}
-		var input shop.AccessoryLayoutInput
-		if err = decodeRequiredJSON(w, r, &input, []string{"x", "y", "size", "rotation", "before_id"}, "before_id"); err != nil {
-			WriteError(w, r, err)
-			return
-		}
-		result, err := service.SetAccessoryLayout(r.Context(), p, r.PathValue("purchase_id"), input)
+		result, err := service.SetTitle(r.Context(), p, input.PurchaseID)
 		if err != nil {
 			WriteError(w, r, err)
 			return

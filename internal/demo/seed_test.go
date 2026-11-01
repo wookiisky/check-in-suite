@@ -10,6 +10,7 @@ import (
 
 	"github.com/wookiisky/check-in-suite/internal/account"
 	"github.com/wookiisky/check-in-suite/internal/assets"
+	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/checkin"
 	"github.com/wookiisky/check-in-suite/internal/config"
 	"github.com/wookiisky/check-in-suite/internal/core"
@@ -79,7 +80,7 @@ func TestSeedPopulatesUsableHistory(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, item := range items {
-		if item.Free {
+		if item.Kind != assets.KindIcon && item.Kind != assets.KindBadge && item.Kind != assets.KindTitle && item.Kind != assets.KindReward {
 			continue
 		}
 		var count int
@@ -87,8 +88,14 @@ func TestSeedPopulatesUsableHistory(t *testing.T) {
 			t.Fatal(err)
 		}
 		if count == 0 {
-			t.Errorf("unreferenced artwork %s", item.Key)
+			t.Errorf("unreferenced business artwork %s", item.Key)
 		}
+	}
+	if countRows(t, db, `SELECT count(*) FROM products WHERE type NOT IN ('wearable','island','title','reward')`) != 0 {
+		t.Fatal("retired product type seeded")
+	}
+	if countRows(t, db, `SELECT count(*) FROM sqlite_master WHERE name IN ('island_state','equipped_accessories','accessory_layouts','equipped_effects')`) != 0 {
+		t.Fatal("retired state tables remain in the clean schema")
 	}
 	if countRows(t, db, `SELECT count(*) FROM pragma_foreign_key_check`) != 0 {
 		t.Fatal("foreign key violation")
@@ -103,21 +110,56 @@ func TestSeedPopulatesUsableHistory(t *testing.T) {
 		t.Fatal("reward lifecycle absent")
 	}
 	equipment, err := shop.New(db, cfg, service).Equipment(ctx, principal)
-	if err != nil || equipment.BaseAvatarKey != assets.DefaultAvatar || equipment.Avatar != nil || equipment.Wearables.Hair == nil || equipment.Wearables.Top == nil || equipment.Wearables.Bottom == nil || equipment.Wearables.Shoes == nil {
-		t.Fatalf("demo missing composed human outfit: %+v %v", equipment, err)
+	if err != nil || equipment.Title == nil {
+		t.Fatalf("demo missing title: %+v %v", equipment, err)
 	}
-	if countRows(t, db, `SELECT count(*) FROM products WHERE asset_key IN ('avatar-boy-v2','avatar-girl-v2','default-top-v1','default-bottom-v1','default-shoes-v1')`) != 0 {
-		t.Fatal("free or internal assets became products")
+	appearance, err := shop.New(db, cfg, service).Appearance(ctx, principal)
+	if err != nil || appearance.CharacterKey != character.DefaultCharacterKey || appearance.HairPurchaseID == nil || appearance.UpperPurchaseID == nil || appearance.LowerPurchaseID == nil || appearance.ShoesPurchaseID == nil || len(appearance.Inventory) != 4 {
+		t.Fatalf("demo missing 3D outfit: %+v %v", appearance, err)
 	}
-	state, err := island.New(db, time.Now).Read(ctx, principal)
+	if _, err := shop.New(db, cfg, service).SaveAppearance(ctx, principal, shop.SaveAppearanceInput{ExpectedVersion: appearance.Version, CharacterKey: appearance.CharacterKey, HairPurchaseID: appearance.HairPurchaseID, UpperPurchaseID: appearance.UpperPurchaseID, LowerPurchaseID: appearance.LowerPurchaseID, ShoesPurchaseID: appearance.ShoesPurchaseID}); err != nil {
+		t.Fatalf("demo 3D outfit invalid: %v", err)
+	}
+	state, err := island.New(db, time.Now).ReadSpatial(ctx, principal)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(state.Inventory) == 0 || len(state.Placements) == 0 {
 		t.Fatalf("island=%+v", state)
 	}
-	if _, err := island.New(db, time.Now).Save(ctx, principal, island.SaveInput{ExpectedVersion: state.Version, Placements: state.Placements}); err != nil {
+	if _, err := island.New(db, time.Now).SaveSpatial(ctx, principal, island.SpatialSaveInput{ExpectedVersion: state.Version, SceneKey: state.SceneKey, EnvironmentKey: state.EnvironmentKey, Placements: state.Placements}); err != nil {
 		t.Fatalf("seeded layout invalid: %v", err)
+	}
+}
+
+// TestDemoOffersMatchStartup 启动再次补商品时不重复出售同一素材，也不恢复免费默认款。
+func TestDemoOffersMatchStartup(t *testing.T) {
+	db, cfg := demoDatabase(t)
+	ctx := context.Background()
+	if _, err := Seed(ctx, db, cfg); err != nil {
+		t.Fatal(err)
+	}
+	before := countRows(t, db, "SELECT count(*) FROM products")
+	if err := shop.SeedSpatialProducts(ctx, db, time.Now().UnixMilli()); err != nil {
+		t.Fatal(err)
+	}
+	if err := shop.SeedWearableProducts(ctx, db, time.Now().UnixMilli()); err != nil {
+		t.Fatal(err)
+	}
+	if countRows(t, db, "SELECT count(*) FROM products") != before {
+		t.Fatal("normal startup duplicated demo offers")
+	}
+	for _, body := range character.Definitions() {
+		for _, key := range []string{body.Defaults.Hair, body.Defaults.Upper, body.Defaults.Lower, body.Defaults.Shoes} {
+			wearable, found := character.GetWearable(key)
+			if !found {
+				t.Fatal("missing default wearable")
+			}
+			var count int
+			if err := db.QueryRow("SELECT count(*) FROM products WHERE asset_key=?", wearable.ThumbnailAssetKey).Scan(&count); err != nil || count != 0 {
+				t.Fatalf("default wearable became an offer: %s count=%d err=%v", key, count, err)
+			}
+		}
 	}
 }
 
@@ -165,7 +207,7 @@ func TestSeedFinalFailureRollsBackEverything(t *testing.T) {
 	if _, err := Seed(context.Background(), db, cfg); err == nil {
 		t.Fatal("expected final-write failure")
 	}
-	for _, table := range []string{"accounts", "wallets", "tasks", "products", "checkins", "wallet_entries", "demo_seeds"} {
+	for _, table := range []string{"accounts", "wallets", "tasks", "products", "checkins", "wallet_entries", "demo_seeds", "appearance_state", "island_spatial_state"} {
 		if countRows(t, db, "SELECT count(*) FROM "+table) != 0 {
 			t.Errorf("%s survived rollback", table)
 		}

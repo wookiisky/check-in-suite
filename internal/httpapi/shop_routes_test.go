@@ -98,7 +98,7 @@ func TestShopHTTP(t *testing.T) {
 			t.Fatalf("successful redemption consumed failure budget: %d", window.Count)
 		}
 	}
-	response = request("PUT", "/api/v1/equipment/avatar", `{}`, "")
+	response = request("PUT", "/api/v1/equipment/title", `{}`, "")
 	if response.Code != 400 {
 		t.Fatalf("missing slot value cleared equipment: %d %s", response.Code, response.Body)
 	}

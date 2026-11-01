@@ -27,8 +27,8 @@ func TestAppearanceDefaultsAndAtomicRestore(t *testing.T) {
 		t.Fatalf("restored=%+v err=%v", restored, err)
 	}
 	equipment, err := f.Service.Equipment(ctx, f.Principal)
-	if err != nil || equipment.Wearables.Hair != nil || equipment.Wearables.Top != nil {
-		t.Fatalf("3D changed 2D equipment: %+v %v", equipment, err)
+	if err != nil || equipment.Title != nil {
+		t.Fatalf("appearance changed title: %+v %v", equipment, err)
 	}
 }
 
@@ -37,7 +37,7 @@ func TestAppearanceRejectsInvalidSelectionsWithoutPartialSave(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
 	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase
-	old := buyProduct(t, f, createProduct(t, f, productInput("accessory"))).Purchase
+	old := buyProduct(t, f, createProduct(t, f, productInput("title"))).Purchase
 	valid := shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HairPurchaseID: &hair.ID}
 	if _, err := f.Service.SaveAppearance(ctx, f.Principal, valid); err != nil {
 		t.Fatal(err)
@@ -58,9 +58,7 @@ func TestAppearanceRejectsInvalidSelectionsWithoutPartialSave(t *testing.T) {
 	missing := "missing"
 	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: valid.CharacterKey, HairPurchaseID: &missing})
 	requireShopCode(t, err, "NOT_FOUND")
-	_, err = f.Service.SetSlot(ctx, f.Principal, "hair", &hair.ID)
-	requireShopCode(t, err, "INVALID_EQUIPMENT")
-	_, err = f.Service.SetAccessory(ctx, f.Principal, hair.ID, true)
+	_, err = f.Service.SetTitle(ctx, f.Principal, &hair.ID)
 	requireShopCode(t, err, "INVALID_EQUIPMENT")
 	result, err := f.Service.Appearance(ctx, f.Principal)
 	if err != nil || result.Version != 2 || result.HairPurchaseID == nil || *result.HairPurchaseID != hair.ID || result.UpperPurchaseID != nil {
@@ -77,7 +75,7 @@ func TestAppearanceUsesPurchasedDefinitionAfterOfferDeletion(t *testing.T) {
 	if purchase.WearableKey != "shoes-barbarian-v1" {
 		t.Fatalf("snapshot=%+v", purchase)
 	}
-	changed := appearanceProduct("shoes", "rogue")
+	changed := appearanceProduct("upper", "barbarian")
 	_, err := f.Service.UpdateProduct(ctx, f.Principal, product.ID, shop.ProductUpdate{ProductInput: changed, ExpectedVersion: product.Version})
 	requireShopCode(t, err, "PRODUCT_ITEM_LOCKED")
 	if err = f.Service.DeleteProduct(ctx, f.Principal, product.ID, product.Version); err != nil {
@@ -156,7 +154,7 @@ func TestWearableProductRequiresMatchingDefinition(t *testing.T) {
 	invalid := []shop.ProductInput{appearanceProduct("hair", "barbarian"), appearanceProduct("hair", "barbarian"), appearanceProduct("hair", "barbarian")}
 	invalid[0].WearableKey = "missing"
 	invalid[1].AssetKey = "wearable-upper-barbarian-v1"
-	invalid[2].Type = shop.TypeAccessory
+	invalid[2].Type = "accessory"
 	for _, input := range invalid {
 		if _, err := f.Service.CreateProduct(ctx, f.Principal, input.AssetKey+input.WearableKey, input); err == nil {
 			t.Fatalf("accepted %+v", input)

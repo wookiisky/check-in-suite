@@ -42,7 +42,7 @@ func requireOneSuccess(t *testing.T, results [2]error) {
 
 // TestConcurrentLastStockAndPermanentOrder uses independent connections to compete for one economic fact.
 func TestConcurrentLastStockAndPermanentOrder(t *testing.T) {
-	for _, kind := range []string{"reward", "avatar"} {
+	for _, kind := range []string{"reward", "title"} {
 		t.Run(kind, func(t *testing.T) {
 			f := newShopFixture(t)
 			ctx := context.Background()
@@ -103,47 +103,16 @@ func TestConcurrentSamePurchaseKey(t *testing.T) {
 	}
 }
 
-// TestConcurrentTenthAccessory serializes checking the bound and inserting a new decoration.
-func TestConcurrentTenthAccessory(t *testing.T) {
-	f := newShopFixture(t)
-	ctx := context.Background()
-	var items []shop.Purchase
-	for i := 0; i < 11; i++ {
-		purchase := buyProduct(t, f, createProduct(t, f, productInput("accessory"))).Purchase
-		items = append(items, purchase)
-		if i < 9 {
-			if _, err := f.Service.SetAccessory(ctx, f.Principal, purchase.ID, true); err != nil {
-				t.Fatal(err)
-			}
-		}
-	}
-	results := compete(func() error { _, err := f.Service.SetAccessory(ctx, f.Principal, items[9].ID, true); return err }, func() error { _, err := f.Contender.SetAccessory(ctx, f.Principal, items[10].ID, true); return err })
-	requireOneSuccess(t, results)
-	equipment, err := f.Service.Equipment(ctx, f.Principal)
-	if err != nil || len(equipment.Accessories) != 10 {
-		t.Fatalf("%+v %v", equipment, err)
-	}
-	for _, item := range items[:9] {
-		found := false
-		for _, equipped := range equipment.Accessories {
-			found = found || equipped.ID == item.ID
-		}
-		if !found {
-			t.Fatalf("preexisting accessory lost: %s", item.ID)
-		}
-	}
-}
-
 // TestDeletionAfterSpendingRetainsOutfit rejects a free purchase when either spendable currency is negative.
 func TestDeletionAfterSpendingRetainsOutfit(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
 	creditFixture(t, f, 10, 2)
-	input := productInput("avatar")
+	input := productInput("title")
 	input.CoinPrice = 8
 	input.DiamondPrice = 1
 	purchase := buyProduct(t, f, createProduct(t, f, input)).Purchase
-	if _, err := f.Service.SetSlot(ctx, f.Principal, "avatar", &purchase.ID); err != nil {
+	if _, err := f.Service.SetTitle(ctx, f.Principal, &purchase.ID); err != nil {
 		t.Fatal(err)
 	}
 	var recordID string
@@ -161,7 +130,7 @@ func TestDeletionAfterSpendingRetainsOutfit(t *testing.T) {
 	_, err = f.Service.Buy(ctx, f.Principal, "free-with-negative", shop.BuyInput{ProductID: free.ID, ExpectedProductVersion: free.Version, ExpectedWalletVersion: balance.Version})
 	requireShopCode(t, err, "INSUFFICIENT_BALANCE")
 	equipment, err := f.Service.Equipment(ctx, f.Principal)
-	if err != nil || equipment.Avatar == nil || equipment.Avatar.ID != purchase.ID {
+	if err != nil || equipment.Title == nil || equipment.Title.ID != purchase.ID {
 		t.Fatalf("outfit revoked: %+v %v", equipment, err)
 	}
 }
@@ -219,5 +188,28 @@ func TestConcurrentRedemption(t *testing.T) {
 	}
 	if b := readBalance(t, f); b.Version != 2 {
 		t.Fatal(b)
+	}
+}
+
+// TestConcurrentTitleAndAppearance preserves both independent selections across real connections.
+func TestConcurrentTitleAndAppearance(t *testing.T) {
+	f := newShopFixture(t)
+	ctx := context.Background()
+	title := buyProduct(t, f, createProduct(t, f, productInput("title"))).Purchase
+	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase
+	results := compete(func() error {
+		_, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HairPurchaseID: &hair.ID})
+		return err
+	}, func() error { _, err := f.Contender.SetTitle(ctx, f.Principal, &title.ID); return err })
+	if results[0] != nil || results[1] != nil {
+		t.Fatal(results)
+	}
+	equipment, err := f.Service.Equipment(ctx, f.Principal)
+	if err != nil || equipment.Title == nil || equipment.Title.ID != title.ID {
+		t.Fatalf("title=%+v %v", equipment, err)
+	}
+	appearance, err := f.Service.Appearance(ctx, f.Principal)
+	if err != nil || appearance.Version != 2 || appearance.HairPurchaseID == nil || *appearance.HairPurchaseID != hair.ID {
+		t.Fatalf("appearance=%+v %v", appearance, err)
 	}
 }

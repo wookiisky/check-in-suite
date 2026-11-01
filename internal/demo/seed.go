@@ -24,26 +24,26 @@ var settingsJSON []byte
 
 // settings holds demo content separately from the data-generation rules.
 type settings struct {
-	Username           string             `json:"username"`            // Demo login name.
-	Password           string             `json:"password"`            // Deliberately short test credential.
-	ManagementPassword string             `json:"management_password"` // Demo maintenance credential.
-	DisplayName        string             `json:"display_name"`        // Initial public profile name.
-	Categories         []string           `json:"categories"`          // Task category display names.
-	TaskName           string             `json:"task_name"`           // Task name format using the controlled asset name.
-	AchievementName    string             `json:"achievement_name"`    // Achievement name format.
-	ProductDescription string             `json:"product_description"` // Managed offer description.
-	CheckinText        []string           `json:"checkin_text"`        // Alternating record examples.
-	Messages           []string           `json:"messages"`            // Family message examples.
-	HistoryDays        int                `json:"history_days"`        // Inclusive number of Taipei business dates.
-	CoinReward         int64              `json:"coin_reward"`         // Reward per seeded completion.
-	DiamondReward      int64              `json:"diamond_reward"`      // Diamond reward per completion.
-	CoinPrice          int64              `json:"coin_price"`          // Default demonstration coin price.
-	DiamondPrice       int64              `json:"diamond_price"`       // Default demonstration diamond price.
-	DailyLimit         int                `json:"daily_limit"`         // Leaves room to complete seeded tasks again today.
-	Metrics            []string           `json:"metrics"`             // Achievement metric examples.
-	Targets            []int64            `json:"targets"`             // Mixed achieved and future thresholds.
-	OwnedAssets        []string           `json:"owned_assets"`        // Offers with example purchase facts.
-	Placements         []island.Placement `json:"placements"`          // Valid initial island layout with asset-backed slots.
+	Username           string                    `json:"username"`            // Demo login name.
+	Password           string                    `json:"password"`            // Deliberately short test credential.
+	ManagementPassword string                    `json:"management_password"` // Demo maintenance credential.
+	DisplayName        string                    `json:"display_name"`        // Initial public profile name.
+	Categories         []string                  `json:"categories"`          // Task category display names.
+	TaskName           string                    `json:"task_name"`           // Task name format using the controlled asset name.
+	AchievementName    string                    `json:"achievement_name"`    // Achievement name format.
+	ProductDescription string                    `json:"product_description"` // Managed offer description.
+	CheckinText        []string                  `json:"checkin_text"`        // Alternating record examples.
+	Messages           []string                  `json:"messages"`            // Family message examples.
+	HistoryDays        int                       `json:"history_days"`        // Inclusive number of Taipei business dates.
+	CoinReward         int64                     `json:"coin_reward"`         // Reward per seeded completion.
+	DiamondReward      int64                     `json:"diamond_reward"`      // Diamond reward per completion.
+	CoinPrice          int64                     `json:"coin_price"`          // Default demonstration coin price.
+	DiamondPrice       int64                     `json:"diamond_price"`       // Default demonstration diamond price.
+	DailyLimit         int                       `json:"daily_limit"`         // Leaves room to complete seeded tasks again today.
+	Metrics            []string                  `json:"metrics"`             // Achievement metric examples.
+	Targets            []int64                   `json:"targets"`             // Mixed achieved and future thresholds.
+	OwnedAssets        []string                  `json:"owned_assets"`        // Offers with example purchase facts.
+	Placements         []island.SpatialPlacement `json:"placements"`          // 追加到三维默认布局的已购物件位置。
 }
 
 // Result describes committed changes; skipped runs deliberately do not regenerate counts.
@@ -141,7 +141,7 @@ func inspect(ctx context.Context, db *sql.DB) (bool, bool, error) {
 // requireEmptyBusiness refuses orphaned or partially managed data rather than merging it into a demo.
 func requireEmptyBusiness(ctx context.Context, tx *sql.Tx) error {
 	var occupied bool
-	err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM categories UNION ALL SELECT 1 FROM tasks UNION ALL SELECT 1 FROM products UNION ALL SELECT 1 FROM achievements UNION ALL SELECT 1 FROM media_files UNION ALL SELECT 1 FROM messages UNION ALL SELECT 1 FROM island_state UNION ALL SELECT 1 FROM demo_seeds)`).Scan(&occupied)
+	err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM categories UNION ALL SELECT 1 FROM tasks UNION ALL SELECT 1 FROM products UNION ALL SELECT 1 FROM achievements UNION ALL SELECT 1 FROM media_files UNION ALL SELECT 1 FROM messages UNION ALL SELECT 1 FROM appearance_state UNION ALL SELECT 1 FROM island_spatial_state UNION ALL SELECT 1 FROM demo_seeds)`).Scan(&occupied)
 	if err != nil {
 		return err
 	}

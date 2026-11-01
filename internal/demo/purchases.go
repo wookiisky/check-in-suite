@@ -6,35 +6,36 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/wookiisky/check-in-suite/internal/assets"
+	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/island"
+	"github.com/wookiisky/check-in-suite/internal/shop"
 	"github.com/wookiisky/check-in-suite/internal/wallet"
 )
 
-// seedPurchases preserves price snapshots, optional island capabilities and matching debits.
+// seedPurchases 在同一事务建立真实订单、账务、称号、四槽外观和厘米布局。
 func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.Time, result *Result) error {
-	placements := append([]island.Placement(nil), content.Placements...)
+	layout := island.SpatialDefaultLayout()
+	placements := append(layout.Placements, content.Placements...)
+	appearance := shop.AppearanceState{Version: 1, CharacterKey: character.DefaultCharacterKey}
 	for index, key := range content.OwnedAssets {
-		var kind, name, description string
+		var productID, kind, name, description, wearableKey string
 		var coins, diamonds int64
-		if err := tx.QueryRowContext(ctx, `SELECT type,name,description,coin_price,diamond_price FROM products WHERE asset_key=?`, key).Scan(&kind, &name, &description, &coins, &diamonds); err != nil {
+		if err := tx.QueryRowContext(ctx, `SELECT id,type,name,description,coin_price,diamond_price,wearable_key FROM products WHERE asset_key=?`, key).Scan(&productID, &kind, &name, &description, &coins, &diamonds, &wearableKey); err != nil {
 			return err
 		}
-		definition, hasIsland := island.ForAsset(key)
-		itemKey := ""
-		repeatable := false
+		definition, hasIsland := island.SpatialForThumbnail(key)
+		itemKey, repeatable := "", false
 		if hasIsland {
-			itemKey = definition.Key
-			repeatable = definition.Repeatable
+			itemKey, repeatable = definition.Key, definition.Repeatable
 		}
-		status := "owned"
-		if kind == string(assets.KindReward) {
-			status = "pending"
+		status := shop.StatusOwned
+		if kind == shop.TypeReward {
+			status = shop.StatusPending
 		}
 		id := core.ID()
 		at := now.Add(-time.Duration(index+1) * time.Minute)
-		_, err := tx.ExecContext(ctx, `INSERT INTO purchases(id,product_id,repeatable,item_key_snapshot,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, id, "demo-product-"+key, repeatable, itemKey, kind, name, description, key, coins, diamonds, status, at.UnixMilli())
+		_, err := tx.ExecContext(ctx, `INSERT INTO purchases(id,product_id,repeatable,item_key_snapshot,wearable_key_snapshot,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, id, productID, repeatable, itemKey, wearableKey, kind, name, description, key, coins, diamonds, status, at.UnixMilli())
 		if err != nil {
 			return err
 		}
@@ -42,10 +43,10 @@ func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.T
 			return err
 		}
 		result.Purchases++
-		if kind == string(assets.KindReward) {
-			// A separate order provides the redeemed state without inventing wallet adjustments.
+		if kind == shop.TypeReward {
+			// 兑换订单单独扣款，保留待兑换与已兑换两种事实。
 			redeemedID := core.ID()
-			_, err := tx.ExecContext(ctx, `INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,redeemed_at,created_at) VALUES(?,?,?,?,?,?,?,?,'redeemed',?,?)`, redeemedID, "demo-product-"+key, kind, name, description, key, coins, diamonds, at.UnixMilli(), at.Add(-time.Hour).UnixMilli())
+			_, err := tx.ExecContext(ctx, `INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,redeemed_at,created_at) VALUES(?,?,?,?,?,?,?,?,'redeemed',?,?)`, redeemedID, productID, kind, name, description, key, coins, diamonds, at.UnixMilli(), at.Add(-time.Hour).UnixMilli())
 			if err != nil {
 				return err
 			}
@@ -54,43 +55,43 @@ func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.T
 			}
 			result.Purchases++
 		}
-		// SQL identifiers are chosen only from controlled asset kinds, never from external input.
-		switch assets.Kind(kind) {
-		case assets.KindAvatar, assets.KindBackground, assets.KindTitle:
-			if _, err := tx.ExecContext(ctx, "UPDATE accounts SET "+kind+"_purchase_id=? WHERE id=1", id); err != nil {
-				return err
-			}
-		case assets.KindAccessory:
-			if artwork, ok := assets.Get(key); ok && artwork.WearableSlot.Valid() {
-				if _, err := tx.ExecContext(ctx, "UPDATE accounts SET "+string(artwork.WearableSlot)+"_purchase_id=? WHERE id=1", id); err != nil {
-					return err
-				}
-				break
-			}
-			if _, err := tx.ExecContext(ctx, `INSERT INTO equipped_accessories(purchase_id,equipped_at) VALUES(?,?)`, id, now.UnixMilli()); err != nil {
-				return err
-			}
-			if _, err := tx.ExecContext(ctx, `INSERT INTO accessory_layouts(purchase_id,x,y,size,layer) VALUES(?,?,?,?,?)`, id, 0.3+float64(index%3)*0.2, 0.6, 0.15, index+1); err != nil {
-				return err
-			}
-		case assets.KindEffect:
-			if _, err := tx.ExecContext(ctx, `INSERT INTO equipped_effects(purchase_id,equipped_at) VALUES(?,?)`, id, now.UnixMilli()); err != nil {
+		if kind == shop.TypeTitle {
+			if _, err := tx.ExecContext(ctx, `UPDATE accounts SET title_purchase_id=? WHERE id=1`, id); err != nil {
 				return err
 			}
 		}
+		if kind == shop.TypeWearable {
+			wearable, found := character.GetWearable(wearableKey)
+			if !found {
+				return core.Invalid("wearable_key", "INVALID_VALUE")
+			}
+			switch wearable.Slot {
+			case character.SlotHair:
+				appearance.HairPurchaseID = &id
+			case character.SlotUpper:
+				appearance.UpperPurchaseID = &id
+			case character.SlotLower:
+				appearance.LowerPurchaseID = &id
+			case character.SlotShoes:
+				appearance.ShoesPurchaseID = &id
+			}
+		}
 		if hasIsland {
-			for index := range placements {
-				if placements[index].ID == "" && placements[index].ItemKey == definition.Key {
-					placements[index].ID = id
+			for position := range placements {
+				if placements[position].InstanceID == "" && placements[position].ItemKey == definition.Key {
+					placements[position].InstanceID = id
 					break
 				}
 			}
 		}
 	}
-	layout, err := json.Marshal(placements)
+	if _, err := tx.ExecContext(ctx, `INSERT INTO appearance_state(id,version,character_key,hair_purchase_id,upper_purchase_id,lower_purchase_id,shoes_purchase_id) VALUES(1,?,?,?,?,?,?)`, appearance.Version, appearance.CharacterKey, appearance.HairPurchaseID, appearance.UpperPurchaseID, appearance.LowerPurchaseID, appearance.ShoesPurchaseID); err != nil {
+		return err
+	}
+	raw, err := json.Marshal(placements)
 	if err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, `INSERT INTO island_state(id,version,placements) VALUES(1,1,?)`, string(layout))
+	_, err = tx.ExecContext(ctx, `INSERT INTO island_spatial_state(id,version,scene_key,environment_key,placements) VALUES(1,1,?,?,?)`, layout.SceneKey, layout.EnvironmentKey, string(raw))
 	return err
 }
