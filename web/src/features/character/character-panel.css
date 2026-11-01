@@ -1,0 +1,7 @@
+.character-panel { min-width: 0; text-align: center; }
+.character-panel h3 { margin: 0 0 12px; overflow-wrap: anywhere; }
+.character-panel-title { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 0 0 12px; overflow-wrap: anywhere; }
+.character-panel-title img { flex: 0 0 56px; width: 56px; height: 56px; object-fit: contain; }
+.character-panel-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.character-panel-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; }
+.character-panel-actions button img { width: 36px; height: 36px; object-fit: contain; }

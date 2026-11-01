@@ -1,0 +1,18 @@
+{
+  "title": "选择称号",
+  "loading": "正在读取称号…",
+  "empty": "还没有已购买的称号",
+  "equip": "佩戴",
+  "unequip": "卸下",
+  "more": "加载更多称号",
+  "retry": "重新读取称号",
+  "retryMore": "重试加载更多",
+  "retrySave": "重试保存称号",
+  "saving": "正在保存称号…",
+  "saved": "称号已保存",
+  "unknown": "称号保存结果尚未确认，请先读取结果。",
+  "readResult": "读取结果",
+  "checking": "正在核对称号…",
+  "awaitingResult": "待核对",
+  "retryKnown": "当前称号已核对，与原选择不同。可以重试原选择。"
+}
