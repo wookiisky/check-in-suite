@@ -36,6 +36,22 @@ describe('小岛活动资格刷新', () => {
     expect(result.current.access).not.toHaveProperty('placements');
   });
 
+  it('超出32位定时器范围时分段等待，到期才刷新', async () => {
+    const maximum = 2_147_483_647;
+    const initial = snapshot(new Date(Date.now() + maximum + 1000).toISOString());
+    const response = deferred<IslandAccess>();
+    const request = vi.fn().mockReturnValue(response.promise);
+    const timer = vi.spyOn(window, 'setTimeout');
+    const client = { request };
+    const test = renderHook(() => useIslandActivityAccess(client, initial));
+    expect(timer.mock.calls[0]?.[1]).toBe(maximum);
+    await act(async () => { vi.advanceTimersByTime(maximum); });
+    expect(request).not.toHaveBeenCalled();
+    await act(async () => { vi.advanceTimersByTime(1000); });
+    expect(request).toHaveBeenCalledOnce();
+    test.unmount(); timer.mockRestore();
+  });
+
   it('设备快一天时仍按校准时间采用资格并在真实台北午夜刷新', async () => {
     vi.setSystemTime(new Date('2026-10-30T23:59:59+08:00'));
     const response = deferred<IslandAccess>();

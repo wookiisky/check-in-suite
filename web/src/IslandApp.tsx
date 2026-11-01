@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { ApiClient, ApiFailure } from './api/client';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { ApiClient, ApiFailure, errorMessage } from './api/client';
 import type { Account, Preferences, Session } from './api/types';
 import { FormFeedback } from './components/FormFeedback';
 import { Modal } from './components/Modal';
@@ -13,23 +13,26 @@ import { CampPage } from './features/checkin/CampPage';
 import { CheckinManagement } from './features/checkin/CheckinManagement';
 import { ShopPage } from './features/shop/ShopPage';
 import { BackpackPage } from './features/shop/BackpackPage';
-import { WardrobeDialog } from './features/shop/WardrobeDialog';
-import type { Camp as ShopCamp } from './features/shop/types';
+import { AppearanceDialog } from './features/shop/AppearanceDialog';
+import { AppearanceProvider, useAppearance } from './features/character/AppearanceProvider';
+import { TitlePicker } from './features/character/TitlePicker';
+import type { Camp, Equipment } from './features/shop/types';
 import { ProductManagement } from './features/shop/ProductManagement';
 import { CalendarPage } from './features/reports/CalendarPage';
 import { StatsPage } from './features/reports/StatsPage';
-import { CharacterPanel } from './features/shop/CharacterPanel';
+import { CharacterPanel } from './features/character/CharacterPanel';
 import { FamilyPanel } from './features/family/FamilyPanel';
 import { AchievementPage } from './features/achievements/AchievementPage';
 import { AchievementManagement } from './features/achievements/AchievementManagement';
 import { AchievementStrip } from './features/achievements/AchievementStrip';
 import { SoundPreferences } from './features/family/SoundPreferences';
 import content from './content/zh-CN.json';
-import islandContent from './features/island/content.json';
+import islandContent from './features/island/three/spatial-content.json';
+import titleContent from './features/character/title-picker-content.json';
 import shopContent from './features/shop/content.json';
 
 // 小岛素材与活动代码只在进入页面时加载。
-const IslandPage = lazy(() => import('./features/island/IslandPage').then((module) => ({ default: module.IslandPage })));
+const IslandPage = lazy(() => import('./features/island/IslandPage3D').then((module) => ({ default: module.IslandPage3D })));
 
 type Page = 'island' | 'camp' | 'calendar' | 'stats' | 'shop' | 'achievements' | 'backpack';
 type ManagementSection = 'account' | 'tasks' | 'records' | 'products' | 'achievements';
@@ -43,6 +46,19 @@ const navIcons: Record<Exclude<Page, 'backpack'>, string> = {
   achievements: 'crown-v1',
 };
 
+
+// 外观弹窗与业务页面互为兄弟节点，共享发布不会重挂任务或留言。
+function AppearanceOverlay({client,session,onClose}:{client:ApiClient;session:Session;onClose:()=>void}){
+  const {publishSaved}=useAppearance();
+  return <AppearanceDialog client={client} reduceMotion={session.account.preferences.reduce_motion} onClose={onClose} onSaved={publishSaved}/>;
+}
+
+// 观察已存在的营地快照，不为全局称号入口重复读取聚合数据。
+function CampEquipmentObserver({equipment,updateEquipment,onCurrent}:{equipment:Equipment;updateEquipment:(equipment:Equipment)=>void;onCurrent:(equipment:Equipment,recipient:((equipment:Equipment)=>void)|null)=>void}){
+  useLayoutEffect(()=>{onCurrent(equipment,updateEquipment);return()=>onCurrent(equipment,null);},[equipment,updateEquipment,onCurrent]);
+  return null;
+}
+
 // 应用仅保存当前会话与页面状态，业务草稿归各功能组件所有。
 export function IslandApp() {
   const [session, setSession] = useState<Session | null>(null);
@@ -53,7 +69,7 @@ export function IslandApp() {
   const [page, setPage] = useState<Page>('camp');
   const [islandReturnPage, setIslandReturnPage] = useState<Exclude<Page, 'island'>>('camp');
   const [soundOpen, setSoundOpen] = useState(false);
-  const [wardrobeOpen, setWardrobeOpen] = useState(false);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [management, setManagement] = useState(false);
   const [managementSection, setManagementSection] = useState<ManagementSection>('account');
@@ -63,14 +79,30 @@ export function IslandApp() {
   const [busy, setBusy] = useState(false);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const serverOffset = useRef(0);
-  const equipmentSync = useRef(0); // 新打开或新保存的装备优先于关闭弹窗后的补读。
+  const equipmentCache=useRef<Equipment|null>(null); // 最近已确认的称号快照。
+  const equipmentRecipient=useRef<((equipment:Equipment)=>void)|null>(null); // 只回写当前挂载的首页。
+  const [titleEditor,setTitleEditor]=useState<Equipment|null>(null);
+  const [titleLoading,setTitleLoading]=useState(false);
+  const [titleReadError,setTitleReadError]=useState<unknown>(null);
+  const titleRequest=useRef<AbortController|null>(null); // 只取消尚未打开称号选择器前的聚合读取。
+  const titleGeneration=useRef(0); // 导航或新会话使迟到读取失效。
+  const rememberEquipment=useCallback((equipment:Equipment,recipient:((equipment:Equipment)=>void)|null)=>{equipmentCache.current=equipment;equipmentRecipient.current=recipient;},[]);
   const client = useMemo(() => new ApiClient((status) => {
     setManagement(false); setUnlocking(false); setExpiresAt(null);
     if (status === 401) { setSession(null); setNotice(content.account.sessionExpired); }
     else setNotice(content.account.managementExpired);
   }), []);
 
+
+  // 登录会话切换清除旧入口和读取，外观版本更新不会触发此清理。
+  useEffect(()=>{
+    titleGeneration.current+=1;titleRequest.current?.abort();equipmentCache.current=null;equipmentRecipient.current=null;
+    setAppearanceOpen(false);setTitleEditor(null);setTitleLoading(false);setTitleReadError(null);
+    return()=>{titleGeneration.current+=1;titleRequest.current?.abort();};
+  },[session?.csrf_token]);
+
   const immersive = session !== null && page === 'island' && !management;
+  const MainContainer=immersive?'div':'main'; // 全屏营地自带main地标，普通页面保留外层main。
   const accountSaving = management && managementSection === 'account' && accountForm.pending;
 
   // 强制撤销权限或密码修改成功不受草稿拦截，也不遗留旧的离开操作。
@@ -113,9 +145,9 @@ export function IslandApp() {
   }, [management, expiresAt]);
 
   function acceptSession(value: Session) {
-    equipmentSync.current += 1;
+    titleGeneration.current += 1;
     client.setCsrfToken(value.csrf_token); client.recordServerTime(value.server_now); serverOffset.current = Date.parse(value.server_now) - Date.now();
-    setSession(value); setNotice(''); setManagement(false); setLockPending(false); setPage('camp');
+    setSession(value); setAppearanceOpen(false);setTitleEditor(null);equipmentCache.current=null;titleRequest.current?.abort(); setNotice(''); setManagement(false); setLockPending(false); setPage('camp');
   }
   function acceptAccount(account: Account) { setSession((value) => value ? { ...value, account } : null); }
   function acceptPreferences(preferences: Preferences) { setSession((value) => value ? { ...value, account: { ...value.account, preferences } } : null); }
@@ -136,23 +168,36 @@ export function IslandApp() {
     try { await client.request<void>('/management/lock', { method: 'POST' }); setLockPending(false); }
     catch (reason) { if (reason instanceof ApiFailure && reason.status === 401) setLockPending(false); }
   }
-  // 打开新编辑会话后，旧的装备补读不能覆盖本次读取或保存。
-  function openWardrobe() {
-    equipmentSync.current += 1;
-    setNotice('');
-    setWardrobeOpen(true);
+  // 每次打开四槽编辑器读取独立外观，成功由Provider直接发布。
+  function openAppearance() {titleGeneration.current+=1;titleRequest.current?.abort();setTitleLoading(false);setTitleReadError(null);setNotice('');setTitleEditor(null);setAppearanceOpen(true);}
+
+  // 背包冷启动缺少快照时才显式读取；失败不伪造一个空称号。
+  async function openTitle(equipment?:Equipment,recipient?:((equipment:Equipment)=>void)){
+    titleRequest.current?.abort();const generation=++titleGeneration.current;
+    setAppearanceOpen(false);setTitleReadError(null);
+    if(equipment){equipmentCache.current=equipment;equipmentRecipient.current=recipient??null;}
+    const known=equipment??equipmentCache.current;
+    if(known){setTitleEditor(known);setTitleLoading(false);return;}
+    const request=new AbortController();titleRequest.current=request;setTitleLoading(true);
+    try{
+      const snapshot=await client.request<Camp>('/camp',{signal:request.signal});
+      if(request.signal.aborted||generation!==titleGeneration.current)return;
+      equipmentCache.current=snapshot.equipment;setTitleEditor(snapshot.equipment);
+    }catch(reason){if(!request.signal.aborted&&generation===titleGeneration.current)setTitleReadError(reason);}
+    finally{if(!request.signal.aborted&&generation===titleGeneration.current)setTitleLoading(false);}
   }
+  function titleSaved(equipment:Equipment){equipmentCache.current=equipment;equipmentRecipient.current?.(equipment);setTitleEditor(equipment);}
   function navigate(next: Page) {
-    equipmentSync.current += 1;
+    titleGeneration.current += 1;titleRequest.current?.abort();setTitleEditor(null);setTitleLoading(false);setTitleReadError(null);
     if (next === 'island' && page !== 'island') setIslandReturnPage(management ? 'camp' : page);
-    setSoundOpen(false); setWardrobeOpen(false); setPage(next);
+    setSoundOpen(false); setAppearanceOpen(false); setPage(next);
     if (management) void lock();
   }
   async function logout() {
     setBusy(true); setError(null); setManagement(false); setUnlocking(false);
     try {
       await client.request<void>('/auth/logout', { method: 'POST' });
-      setSession(null); client.setCsrfToken(''); setNotice(''); setLockPending(false);
+      setSession(null);setAppearanceOpen(false);setTitleEditor(null);equipmentCache.current=null; client.setCsrfToken(''); setNotice(''); setLockPending(false);
     } catch (reason) { setError(reason); setNotice(content.account.logoutUnconfirmed); }
     finally { setBusy(false); }
   }
@@ -160,7 +205,7 @@ export function IslandApp() {
     setSession(null); setManagement(false); setExpiresAt(null); client.setCsrfToken(''); setNotice(content.account.passwordChanged);
   }
 
-  return <WalletProvider key={session?.csrf_token ?? 'signed-out'} client={client} active={session !== null}><div className={`application ${immersive ? 'application-island' : ''}`}>
+  return <AppearanceProvider key={session?.csrf_token ?? 'signed-out'} client={client} active={session!==null}><WalletProvider key={session?.csrf_token ?? 'signed-out'} client={client} active={session !== null}><div className={`application ${immersive ? 'application-island' : ''}`}>
     {!immersive && <div className="global-wallet-bar"><div className="global-wallet-bar-inner">
       <a className="brand" href="#" aria-disabled={accountSaving || undefined} onClick={(event) => { event.preventDefault(); leaveAccount(() => navigate('camp')); }}><svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#628643" d="M24 3 7 28h11L9 39h30l-9-11h11z"/><path fill="#865b19" d="M21 37h6v9h-6z"/></svg><strong>{content.appName}</strong></a>
       {session && <GlobalWallet reduceMotion={session.account.preferences.reduce_motion} />}
@@ -168,7 +213,7 @@ export function IslandApp() {
     {!immersive && session && <header className="site-header"><div className="header-inner">
       {session && <><nav aria-label={content.navigation.label}>{(['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const).map((item) => <button key={item} className={`nav-button ${!management && page === item ? 'active' : ''}`} aria-current={!management && page === item ? 'page' : undefined} disabled={accountSaving} onClick={() => leaveAccount(() => navigate(item))}><img src={`/api/v1/assets/${navIcons[item]}`} alt="" aria-hidden="true" /><span>{content.navigation[item]}</span></button>)}</nav><div className="account-tools"><span className="name-chip"><img src="/api/v1/assets/user-v1" alt="" aria-hidden="true" /><span>{session.account.display_name}</span></span><button className="secondary" disabled={busy || accountSaving} onClick={() => leaveAccount(() => void logout())}>{content.account.logout}</button>{!management && <button className="secondary header-management-entry" disabled={lockPending} onClick={(event) => { event.currentTarget.focus(); setNotice(''); setUnlocking(true); }}><img src="/api/v1/assets/settings-v1" alt="" aria-hidden="true" /><span>{content.navigation.management}</span></button>}</div></>}
     </div></header>}
-    <main className={immersive ? 'island-app-shell' : 'app-shell'}>
+    <MainContainer className={immersive ? 'island-app-shell' : 'app-shell'}>
       {notice && <p className="notice" role="status">{notice}</p>}
       {loading ? <p role="status">{content.common.loading}</p> : error && !session ? <section className="panel"><FormFeedback error={error} /><button onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{content.common.retry}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <>
         <FormFeedback error={error} />
@@ -189,40 +234,32 @@ export function IslandApp() {
           {page === 'camp' && <>
             <h1 className="page-heading">{content.navigation.camp}</h1>
             <CampPage client={client} session={session} renderSidebar={(camp, updateEquipment) => <>
+              <CampEquipmentObserver equipment={camp.equipment} updateEquipment={updateEquipment} onCurrent={rememberEquipment}/>
               <section className="camp-character-panel">
-                <CharacterPanel equipment={camp.equipment} displayName={camp.account.display_name} reduceMotion={session.account.preferences.reduce_motion} />
-                <div className="camp-character-actions">
-                  <button type="button" className="secondary" onClick={() => navigate('backpack')}><img src="/api/v1/assets/accessory-backpack-v1" alt="" /><span>{shopContent.backpack}</span></button>
-                  <button type="button" className="secondary" onClick={(event) => { event.currentTarget.focus(); openWardrobe(); }}><img src="/api/v1/assets/accessory-brush-v1" alt="" /><span>{shopContent.wardrobeTitle}</span></button>
-                </div>
+                <CharacterPanel equipment={camp.equipment} displayName={camp.account.display_name} reduceMotion={session.account.preferences.reduce_motion} onAppearance={openAppearance} onTitle={()=>void openTitle(camp.equipment,updateEquipment)}/>
+                <div className="camp-character-actions"><button type="button" className="secondary" onClick={()=>navigate('backpack')}><img src="/api/v1/assets/icon-backpack-v1" alt="" aria-hidden="true"/><span>{shopContent.backpack}</span></button></div>
               </section>
-              {wardrobeOpen && <WardrobeDialog client={client} session={session} onEquipmentSaved={(equipment) => { equipmentSync.current += 1; updateEquipment(equipment); }} onClose={(refreshEquipment) => {
-                setWardrobeOpen(false);
-                if (refreshEquipment) {
-                  const current = ++equipmentSync.current;
-                  void client.request<ShopCamp>('/camp').then((next) => {
-                    if (equipmentSync.current === current) updateEquipment(next.equipment);
-                  }).catch(() => { if (equipmentSync.current === current) setNotice(shopContent.equipmentRefreshFailed); });
-                }
-              }} />}
               <AchievementStrip items={camp.achievements} onViewAll={() => navigate('achievements')} />
               <FamilyPanel client={client} session={session} />
             </>} />
           </>}
           {page === 'island' && <Suspense fallback={<section className="island-loading"><button className="secondary" onClick={() => navigate(islandReturnPage)}>{islandContent.back}</button><p role="status">{content.common.loading}</p></section>}><IslandPage client={client} session={session} onCamp={() => navigate('camp')} onShop={() => navigate('shop')} onBack={() => navigate(islandReturnPage)} onSettings={() => setSoundOpen(true)} /></Suspense>}
           {page === 'shop' && <ShopPage client={client} session={session} onBackpack={() => navigate('backpack')} />}
-          {page === 'backpack' && <BackpackPage client={client} session={session} onBack={() => navigate('camp')} onIsland={() => navigate('island')} onWardrobe={openWardrobe} />}
-          {page === 'backpack' && wardrobeOpen && <WardrobeDialog client={client} session={session} onClose={() => setWardrobeOpen(false)} />}
+          {page === 'backpack' && <BackpackPage client={client} session={session} onBack={() => navigate('camp')} onIsland={() => navigate('island')} onAppearance={openAppearance} onTitle={()=>void openTitle()} />}
           {page === 'achievements' && <AchievementPage client={client} session={session} />}
           {page === 'calendar' && <CalendarPage client={client} session={session} />}
           {page === 'stats' && <StatsPage client={client} session={session} />}
         </>}
         </div>
+        {appearanceOpen&&<AppearanceOverlay client={client} session={session} onClose={()=>setAppearanceOpen(false)}/>}
+        {titleEditor&&<TitlePicker client={client} equipment={titleEditor} onClose={()=>setTitleEditor(null)} onSaved={titleSaved}/>}
+        {titleLoading&&<p role="status">{titleContent.loading}</p>}
+        {titleReadError!==null&&<div role="alert"><p>{errorMessage(titleReadError)}</p><button onClick={()=>void openTitle()}>{titleContent.retry}</button></div>}
         {/* 设置隐藏时保留声音实例，普通页面只在进入配置后显示控件。 */}
         <SoundPreferences client={client} session={session} onPreferencesChange={acceptPreferences} presentation={management ? 'panel' : 'dialog'} open={immersive && soundOpen} onClose={() => setSoundOpen(false)} />
         {unlocking && <UnlockDialog client={client} onClose={() => setUnlocking(false)} onUnlock={(expiry) => { setUnlocking(false); setManagement(true); setManagementSection('account'); setExpiresAt(expiry); setNotice(''); }} />}
         {management && pendingLeave && <Modal title={content.account.discardTitle} onClose={() => setPendingLeave(null)}><div className="form-stack"><p>{content.account.discardHint}</p><div className="button-row"><button type="button" onClick={discardAccountDraft}>{content.account.discard}</button><button type="button" className="secondary" onClick={() => setPendingLeave(null)}>{content.account.keepEditing}</button></div></div></Modal>}
       </>}
-    </main>
-  </div></WalletProvider>;
+    </MainContainer>
+  </div></WalletProvider></AppearanceProvider>;
 }

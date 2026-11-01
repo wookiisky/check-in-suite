@@ -55,7 +55,14 @@ export function useIslandActivityAccess(client: Pick<ApiClient, 'request'> & Par
     if (!access) return;
     const delay = Date.parse(access.expires_at) - now();
     if (delay <= 0) return;
-    const timeout = window.setTimeout(refresh, delay);
+    let timeout: number;
+    // 长期限分段等待，避免浏览器把超出32位的延迟截成1毫秒。
+    const schedule = () => {
+      const remaining = Date.parse(access.expires_at) - now();
+      if (remaining <= 0) { refresh(); return; }
+      timeout = window.setTimeout(schedule, Math.min(remaining, 2_147_483_647));
+    };
+    schedule();
     return () => window.clearTimeout(timeout);
   }, [access, refresh, now]);
 

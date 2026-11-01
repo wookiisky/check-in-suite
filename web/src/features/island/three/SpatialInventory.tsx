@@ -29,8 +29,8 @@ export function SpatialInventory(props:SpatialInventoryProps){
   const counts=new Map<string,number>();
   const names=new Map(props.state.inventory.map(item=>{const count=(counts.get(item.item_key)??0)+1;counts.set(item.item_key,count);const name=props.state.catalog.find(d=>d.item_key===item.item_key)?.name??item.item_key;return [item.instance_id,count===1?name:content.additionalInstance.replace('{name}',name).replace('{number}',String(count))];}));
   return <aside ref={props.panelRef} className={`spatial-inventory ${props.expanded?'is-expanded':'is-collapsed'}`} aria-label={content.inventory}>
-    <header><h2>{content.inventory}</h2><button className="secondary" aria-label={props.expanded?content.hideInventory:content.showInventory} aria-expanded={props.expanded} onClick={props.onToggle}>{props.expanded?'−':'+'}</button></header>
-    {props.expanded&&<>
+    <header><h2>{!props.expanded&&definition?definition.name:content.inventory}</h2><button className="secondary" aria-label={props.expanded?content.hideInventory:content.showInventory} aria-expanded={props.expanded} onClick={props.onToggle}>{props.expanded?'−':'+'}</button></header>
+    {props.expanded&&<div className="spatial-inventory-browser">
       <div className="spatial-tabs"><button className={props.space==='outdoor'?'is-active':'secondary'} aria-pressed={props.space==='outdoor'} onClick={()=>props.onSpace('outdoor')}>{content.outdoorItems}</button><button className={props.space==='indoor'?'is-active':'secondary'} aria-pressed={props.space==='indoor'} onClick={()=>props.onSpace('indoor')}>{content.indoorItems}</button></div>
       <div className="spatial-inventory-list">{props.state.inventory.filter(item=>props.state.catalog.find(d=>d.item_key===item.item_key)?.spaces.includes(props.space)).map(item=>{
         const current=props.state.catalog.find(d=>d.item_key===item.item_key)!;
@@ -40,7 +40,7 @@ export function SpatialInventory(props:SpatialInventoryProps){
         </button>;
       })}{!props.state.inventory.some(item=>props.state.catalog.find(d=>d.item_key===item.item_key)?.spaces.includes(props.space))&&<p>{content.emptyInventory}</p>}</div>
       <label className="spatial-environment">{content.environment}<select value={props.state.environment_key} disabled={props.busy} onChange={event=>props.onEnvironment(event.target.value)}>{props.state.scene.environments.map(key=><option key={key} value={key}>{content.environments[key as keyof typeof content.environments]??key}</option>)}</select></label>
-    </>}
+    </div>}
     {props.selected&&<section className="spatial-selected" aria-label={definition?.name}>
       <strong>{definition?.name}</strong><span>{content.position} {props.selected.x_cm}, {props.selected.z_cm}</span>
       {isHouse&&<small>{content.houseRequired}</small>}

@@ -14,9 +14,9 @@
 @keyframes feedback-appear { from { opacity:.4; translate:0 8px; } to { opacity:1; translate:0 0; } }
 @keyframes feedback-pop { 0%,100% { transform:scale(1); } 40% { transform:scale(1.06); } }
 @media (prefers-reduced-motion:no-preference) {
-  button:not(.shop-accessory-handle) { transition:translate var(--motion-press) var(--ease-out),scale var(--motion-press) var(--ease-out),background-color 160ms ease-out,box-shadow 160ms ease-out; }
-  @media (hover:hover) and (pointer:fine) { button:not(:disabled):not(.shop-accessory-handle):hover { translate:0 -2px; } }
-  button:not(:disabled):not(.shop-accessory-handle):active { translate:0 1px; scale:.98; }
+  button { transition:translate var(--motion-press) var(--ease-out),scale var(--motion-press) var(--ease-out),background-color 160ms ease-out,box-shadow 160ms ease-out; }
+  @media (hover:hover) and (pointer:fine) { button:not(:disabled):hover { translate:0 -2px; } }
+  button:not(:disabled):active { translate:0 1px; scale:.98; }
 }
 body[data-reduce-motion=true] button { translate:none!important; scale:none!important; }
 body { margin:0; background-image:radial-gradient(#80926614 1px,transparent 1px); background-size:20px 20px; }

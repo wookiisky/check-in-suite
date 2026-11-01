@@ -131,5 +131,7 @@
   "continueLeave": "继续离开",
   "additionalInstance": "{name} · 第{number}件",
   "hidePanControls": "收起平移控制",
-  "showPanControls": "展开平移控制"
+  "showPanControls": "展开平移控制",
+  "showCamera": "展开视角控制",
+  "hideCamera": "收起视角控制"
 }

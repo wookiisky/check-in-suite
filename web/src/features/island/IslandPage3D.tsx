@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { ApiClient } from '../../api/client';
 import { errorMessage } from '../../api/client';
 import type { Session } from '../../api/types';
@@ -40,6 +40,8 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
   const [camp,setCamp]=useState<Camp|null>(null),[campError,setCampError]=useState<unknown>(null);
   const [selected,setSelected]=useState<string|null>(null),[space,setSpace]=useState<SpatialSpace>('outdoor');
   const [panelOpen,setPanelOpen]=useState(true),[checkinsOpen,setCheckinsOpen]=useState(true);
+  const [cameraOpen,setCameraOpen]=useState(()=>window.innerWidth>760);
+  const [hudTop,setHudTop]=useState(100),[panelTop,setPanelTop]=useState(window.innerHeight);
   const [cameraPanOpen,setCameraPanOpen]=useState(()=>window.innerWidth>760);
   const [manualIndoor,setManualIndoor]=useState(false),[paused,setPaused]=useState(false),[direction,setDirection]=useState(0);
   const [intent,setIntent]=useState<SpatialActorIntent>(),[actor,setActor]=useState<SpatialActorStatus>({phase:'idle',activity:'rest',space:'outdoor'});
@@ -88,9 +90,9 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
   // 列表在浮层内部滚动；只用实际边界为镜头保留看得见的空间。
   useLayoutEffect(()=>{
     const measure=()=>{
-      const headerBottom=(header.current?.getBoundingClientRect().bottom??84)+12;
+      const headerBottom=(header.current?.getBoundingClientRect().bottom??84)+12;setHudTop(headerBottom);
       const bottom=dock.current?Math.max(0,window.innerHeight-dock.current.getBoundingClientRect().top)+12:100;
-      const bounds=editing?panel.current?.getBoundingClientRect():null;
+      const bounds=editing?panel.current?.getBoundingClientRect():null;setPanelTop(bounds?.top??window.innerHeight);
       const desktop=window.innerWidth>760;
       const controls=cameraControls.current?.getBoundingClientRect();
       const top=desktop?headerBottom:Math.max(headerBottom,(controls?.bottom??0)+12,(tasks.current?.getBoundingClientRect().bottom??0)+12,editing?(dock.current?.getBoundingClientRect().bottom??0)+12:0);
@@ -100,7 +102,7 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
     const observer=typeof ResizeObserver==='undefined'?null:new ResizeObserver(measure);
     [header.current,dock.current,panel.current,tasks.current,cameraControls.current].forEach(node=>{if(node)observer?.observe(node);});
     window.addEventListener('resize',measure);measure();return()=>{observer?.disconnect();window.removeEventListener('resize',measure);};
-  },[editing,panelOpen,checkinsOpen,cameraPanOpen,camp,view!==null]);
+  },[editing,panelOpen,checkinsOpen,cameraOpen,cameraPanOpen,camp,view!==null]);
   useEffect(()=>{
     const unload=(event:BeforeUnloadEvent)=>{if(layout.dirty||layout.unknownSave){event.preventDefault();event.returnValue='';}};
     window.addEventListener('beforeunload',unload);return()=>window.removeEventListener('beforeunload',unload);
@@ -111,7 +113,7 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
   function leave(destination:Destination){if(layout.saving)return;if(layout.dirty||layout.unknownSave||layout.conflict||layout.review){setLeaving(destination);return;}if(layout.editing)layout.cancel();navigate(destination);}
   async function save(destination?:Destination){if(await layout.save()){setMessage(content.saved);setSelected(null);if(destination){setLeaving(null);navigate(destination);}}}
   function discardLeave(){if(layout.unknownSave)return;layout.cancel();const destination=leaving;setLeaving(null);if(destination)navigate(destination);}
-  function begin(){layout.begin();setMessage('');setSelected(null);setCheckinsOpen(false);setPanelOpen(true);}
+  function begin(){layout.begin();setMessage('');setSelected(null);setCheckinsOpen(false);setCameraOpen(false);setPanelOpen(true);}
   function cancel(){layout.cancel();setSelected(null);setMessage('');}
 
   // 切换室内只改变镜头与剖切，不改变已保存布局。
@@ -158,26 +160,27 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
     const action=keys[event.key];if(action){event.preventDefault();action();}
   }
 
-  return <main className="spatial-island" aria-label={content.title}>
+  return <main className="spatial-island" aria-label={content.title} style={{'--spatial-hud-top':`${hudTop}px`,'--spatial-panel-top':`${panelTop}px`} as CSSProperties}>
     <section className="spatial-stage" aria-label={content.scene} aria-describedby="spatial-scene-help" data-camera-direction={direction} data-actor-space={actor.space} data-actor-phase={actor.phase} data-character-status={characterStatus.phase} tabIndex={0} onKeyDown={cameraKeys}>
       {view&&<SpatialSceneBoundary key={sceneAttempt} onError={sceneError}><SpatialScene3D layout={view} appearance={appearance.snapshot} access={access.access} now={now} camera={camera} insets={insets} direction={direction} editing={editing} indoor={indoor} paused={stopped||modelError} selected={selected} invalid={!!issue} {...(actor.phase==='performing'&&actor.activity==='ball'&&actor.targetInstanceId?{hiddenInstanceId:actor.targetInstanceId}:{})} {...(intent?{intent}:{})} onStatus={setActor} onUnavailable={unavailable} onSelect={id=>{if(!busy)setSelected(id);}} onObject={objectClick} onPlacement={updatePlacement} onRejected={()=>setMessage(content.invalid[issue??'boundary'])} onError={sceneError} onCharacterStatus={reportCharacter}/></SpatialSceneBoundary>}
     </section>
     <p className="spatial-sr-only" role="status">{content.characterStatus[characterStatus.phase]}</p>
     <p id="spatial-scene-help" className="spatial-sr-only">{content.sceneHelp}</p>
     <header ref={header} className="spatial-header">
-      <button className="secondary spatial-back" disabled={layout.saving} onClick={()=>leave('back')}>{content.back}</button>
+      <button className="secondary spatial-back" aria-label={content.back} title={content.back} disabled={layout.saving} onClick={()=>leave('back')}><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
       <div className="spatial-heading"><h1>{content.title}</h1><p>{content.subtitle}</p></div>
+      <button className="secondary spatial-camera-toggle" aria-label={cameraOpen?content.hideCamera:content.showCamera} aria-expanded={cameraOpen} aria-controls="spatial-camera-controls" onClick={()=>{setCameraOpen(value=>!value);if(!cameraOpen&&editing&&window.innerWidth<=760)setPanelOpen(false);}}><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M12 1v6m0 10v6M1 12h6m10 0h6" fill="none" stroke="currentColor" strokeWidth="1.8"/></svg></button>
       <div className="spatial-header-end">{camp&&<section className="spatial-wallet" aria-label={content.balance}><CurrencyAmount currency="coins" amount={camp.wallet.coins}/><CurrencyAmount currency="diamonds" amount={camp.wallet.diamonds}/></section>}{onSettings&&<button className="secondary" onClick={onSettings} aria-label={content.settings}><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1 1-3Z" fill="none" stroke="currentColor" strokeWidth="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.7"/></svg></button>}</div>
     </header>
     {camp&&onCamp&&<aside ref={tasks} className={`spatial-checkins ${checkinsOpen?'is-expanded':''}`} aria-label={content.checkins}>
       <button className="secondary" aria-label={checkinsOpen?content.hideCheckins:content.showCheckins} aria-expanded={checkinsOpen} onClick={()=>setCheckinsOpen(value=>!value)}><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path d="m3 6 2 2 3-4m3 2h10M3 13l2 2 3-4m3 2h10M3 20l2 2 3-4m3 2h10" fill="none" stroke="currentColor" strokeWidth="1.8"/></svg><span>{content.checkins}</span></button>
       {checkinsOpen&&<div className="spatial-task-list">{camp.tasks.map(task=><button className="secondary" key={task.id} aria-label={task.name} title={task.name} onClick={()=>leave('camp')}><TaskIcon name={task.icon_key}/></button>)}{!camp.tasks.length&&<p>{content.noTasks}</p>}</div>}
     </aside>}
-    <nav ref={cameraControls} className={`spatial-camera ${editing?'is-editing':''}`} aria-label={content.camera}>
+    {cameraOpen&&<nav id="spatial-camera-controls" ref={cameraControls} className={`spatial-camera ${editing?'is-editing':''}`} aria-label={content.camera}>
       <div><button className="secondary" aria-label={content.cameraLeft} title={content.cameraLeft} onClick={()=>rotateCamera(-1)}>↶</button><button className="secondary spatial-direction" aria-label={cameraPanOpen?content.hidePanControls:content.showPanControls} aria-expanded={cameraPanOpen} title={content.showPanControls} onClick={()=>setCameraPanOpen(value=>!value)}>{content.directions[direction]}</button><button className="secondary" aria-label={content.cameraRight} title={content.cameraRight} onClick={()=>rotateCamera(1)}>↷</button></div>
       <div><button className="secondary" aria-label={content.zoomOut} title={content.zoomOut} onClick={()=>{camera.current=zoomCamera(camera.current,1/1.2);}}>−</button><button className="secondary" aria-label={content.resetCamera} title={content.resetCamera} onClick={()=>focusSpace(indoor?'indoor':'outdoor')}>⌖</button><button className="secondary" aria-label={content.zoomIn} title={content.zoomIn} onClick={()=>{camera.current=zoomCamera(camera.current,1.2);}}>+</button></div>
       {cameraPanOpen&&<div className="spatial-pan"><button className="secondary" aria-label={content.panLeft} onClick={()=>pan(80,0)}>←</button><button className="secondary" aria-label={content.panUp} onClick={()=>pan(0,80)}>↑</button><button className="secondary" aria-label={content.panDown} onClick={()=>pan(0,-80)}>↓</button><button className="secondary" aria-label={content.panRight} onClick={()=>pan(-80,0)}>→</button></div>}
-    </nav>
+    </nav>}
     <section className="spatial-feedback" aria-live="polite">
       {!view&&<div className="spatial-notice"><p role={layout.error?'alert':'status'}>{layout.error?errorMessage(layout.error):content.loading}</p>{layout.error!==null&&<button onClick={()=>void layout.readLatest()}>{content.retry}</button>}</div>}
       {campError!==null&&<p role="alert">{errorMessage(campError)}</p>}
@@ -195,7 +198,7 @@ export function IslandPage3D({client,session,onBack,onShop,onCamp,onSettings}:Is
     <footer ref={dock} className={`spatial-dock ${editing?'is-editing':''}`}>
       {!editing&&<div className="spatial-activities" aria-label={content.activitiesTitle}>{(Object.keys(content.activities) as SpatialActorActivity[]).map(key=><button className={`secondary ${key!=='walk'&&key!=='rest'&&!allowed.includes(key)?'is-locked':''}`} key={key} onClick={()=>activity(key)}>{content.activities[key]}</button>)}</div>}
       <div className="spatial-toolbar">{!editing&&<button onClick={begin} disabled={!view||layout.loading}>{content.edit}</button>}<button className="secondary" aria-pressed={indoor} onClick={()=>focusSpace(indoor?'outdoor':'indoor',true)}>{indoor?content.outdoor:content.indoor}</button>{!editing&&<button className="secondary" onClick={()=>{setIntent(current=>({sequence:(current?.sequence??0)+1,activity:'walk',space:actor.space==='indoor'?'outdoor':'indoor'}));}}>{actor.space==='indoor'?content.exit:content.enter}</button>}{onShop&&<button className="secondary" disabled={layout.saving} onClick={()=>leave('shop')}>{content.shop}</button>}{!editing&&<button className="secondary" aria-pressed={paused} onClick={()=>setPaused(value=>!value)}>{paused?content.resume:content.pause}</button>}</div>
-      {!editing&&<p className="spatial-actor-status" role="status">{stopped?(paused?content.paused:content.static):`${content.activities[actor.activity]} · ${content.phases[actor.phase]}`}</p>}
+      {!editing&&<p className={`spatial-actor-status ${stopped?'is-static':''}`} role="status">{stopped?(paused?content.paused:content.static):`${content.activities[actor.activity]} · ${content.phases[actor.phase]}`}</p>}
       {!editing&&access.pending&&<p>{content.accessPending}</p>}{!editing&&access.error!==null&&<div className="spatial-access-error"><span>{content.accessError}</span><button className="secondary" onClick={access.refresh}>{content.retry}</button></div>}
     </footer>
     {locked&&<Modal title={content.lockedTitle} onClose={()=>setLocked(null)}><p>{content.lockedHint}</p><ul>{access.access?.activity_access.find(item=>item.activity===locked)?.tasks.map(task=><li key={task.id}>{task.name}{!task.enabled?` · ${content.inactiveTask}`:''}</li>)}</ul><div className="button-row">{onCamp&&<button onClick={()=>{setLocked(null);leave('camp');}}>{content.goCamp}</button>}<button className="secondary" onClick={()=>setLocked(null)}>{content.close}</button></div></Modal>}

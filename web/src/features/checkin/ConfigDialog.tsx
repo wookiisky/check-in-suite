@@ -45,7 +45,7 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
   const [weekdays, setWeekdays] = useState(task?.weekdays ?? [1, 2, 3, 4, 5, 6, 7]);
   const [enabled, setEnabled] = useState(task?.enabled ?? true);
   const [unlockActivities, setUnlockActivities] = useState<Task['unlock_activities']>(task?.unlock_activities ?? []);
-  const activityOptions: NonNullable<components['schemas']['IslandDefinition']['activity']>[] = ['read', 'run', 'ball'];
+  const activityOptions: components['schemas']['IslandActivity'][] = ['read', 'run', 'ball'];
   const [version, setVersion] = useState(item?.version ?? 1);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [latest, setLatest] = useState<Task | Category | null>(null);

@@ -1,17 +1,154 @@
-.spatial-island{--spatial-ink:#25483f;--spatial-soft:#f7fbf5;--spatial-line:#dce7d9;position:fixed;inset:0;overflow:hidden;background:#b8e2ee;color:var(--spatial-ink);font-family:inherit;isolation:isolate}
-.spatial-island button{min-width:44px;min-height:44px;border-radius:14px;padding:9px 16px;font-size:14px;line-height:1.25;cursor:pointer;touch-action:manipulation;background:#356e56;color:white;border:1px solid #356e56;box-shadow:0 2px 0 #28553f16}
-.spatial-island button.secondary{background:#ffffffed;border:1px solid #cfddce;color:var(--spatial-ink)}
-.spatial-island button:hover:not(:disabled){filter:brightness(.96)}.spatial-island button:active:not(:disabled){transform:translateY(1px)}.spatial-island button:disabled{opacity:.5;cursor:default}.spatial-island button:focus-visible,.spatial-stage:focus-visible{outline:3px solid #e39a32;outline-offset:3px}
-.spatial-stage{position:absolute;inset:0;touch-action:none;outline:none}.spatial-stage canvas{display:block;touch-action:none}
-.spatial-header{position:absolute;top:max(16px,env(safe-area-inset-top));left:22px;right:22px;display:flex;align-items:center;gap:18px;pointer-events:none;z-index:3}.spatial-header>*{pointer-events:auto}.spatial-heading h1{margin:0;font-size:23px;letter-spacing:.04em;line-height:1.4}.spatial-heading p{margin:1px 0 0;font-size:12px;color:#4a6f64}.spatial-header-end{margin-left:auto;display:flex;align-items:center;gap:10px}.spatial-wallet{display:flex;gap:20px;align-items:center;background:#fffffff0;border:1px solid #e2e6d8;box-shadow:0 5px 22px #41624412;border-radius:18px;padding:11px 18px;font-weight:700;font-variant-numeric:tabular-nums}.spatial-wallet .currency-icon{width:25px;height:25px}
-.spatial-checkins{position:absolute;left:22px;top:100px;z-index:2;width:126px;background:#ffffffed;border:1px solid #dce7d9;border-radius:20px;padding:7px;box-shadow:0 5px 25px #35594412}.spatial-checkins>button{display:flex;gap:7px;width:100%;align-items:center;justify-content:center;padding:8px!important;border:0!important;background:transparent!important;font-size:12px!important}.spatial-task-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:280px;overflow:auto;padding:5px 1px}.spatial-task-list button{padding:6px!important;border-radius:12px!important;min-width:44px}.spatial-task-list img{width:30px;height:30px;display:block;margin:auto}.spatial-task-list p{font-size:12px;grid-column:1/-1;margin:4px 6px;line-height:1.5}
-.spatial-camera{position:absolute;top:100px;right:22px;display:flex;flex-direction:column;gap:6px;background:#ffffffdd;border:1px solid #dce7d9;border-radius:18px;padding:6px;z-index:2}.spatial-camera.is-editing{right:350px}.spatial-camera>div{display:flex;align-items:center;gap:5px}.spatial-camera button{padding:4px!important;font-size:22px!important;background:#ffffffb0!important;border-color:transparent!important;border-radius:11px!important}.spatial-camera span{width:44px;text-align:center;font-size:12px}.spatial-camera .spatial-pan{display:grid;grid-template-columns:repeat(4,1fr);gap:0}.spatial-camera .spatial-pan button{min-width:32px;font-size:18px!important}
-.spatial-dock{position:absolute;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:3}.spatial-activities,.spatial-toolbar{display:flex;gap:8px;background:#ffffffec;box-shadow:0 8px 30px #294c3d16;border:1px solid #dce7d9;border-radius:20px;padding:8px;max-width:100%;overflow-x:auto;scrollbar-width:thin}.spatial-toolbar button,.spatial-activities button{white-space:nowrap;flex-shrink:0}.spatial-activities button{border:0!important;background:transparent!important;min-width:60px}.spatial-activities button.is-locked{color:#6d7b72;background:#eef1e9!important}.spatial-dock p{margin:0;font-size:12px;color:#3f6158;background:#ffffffbb;border-radius:12px;padding:3px 12px}.spatial-actor-status{font-variant-numeric:tabular-nums}.spatial-access-error{display:flex;gap:8px;align-items:center;max-width:550px;background:#ffffffef;padding:6px 10px;border-radius:14px;font-size:12px}.spatial-dock.is-editing{left:calc((100% - 328px)/2)}
-.spatial-inventory{position:absolute;right:16px;top:96px;bottom:18px;width:310px;display:flex;flex-direction:column;gap:10px;z-index:4;background:#fbfcf7f7;backdrop-filter:blur(12px);border:1px solid #dbe4d2;box-shadow:0 15px 50px #28553d21;border-radius:24px;padding:14px}.spatial-inventory header{display:flex;align-items:center;justify-content:space-between}.spatial-inventory h2{font-size:17px;margin:0}.spatial-inventory header button{border:0!important;background:transparent!important;font-size:22px!important;padding:0!important}.spatial-tabs{display:flex;gap:6px;flex-shrink:0}.spatial-tabs button{flex:1}.spatial-inventory-list{min-height:40px;overflow:auto;overscroll-behavior:contain;display:grid;gap:8px;align-content:start;flex:1;padding:2px 3px 2px 0}.spatial-item{display:flex!important;align-items:center;text-align:left;padding:8px!important;gap:12px;min-height:76px!important}.spatial-item.is-selected{border-color:#528869!important;background:#e9f3e2!important;box-shadow:0 0 0 2px #52886925}.spatial-item img{width:58px;height:58px;object-fit:contain;background:#f0f3e8;border-radius:11px}.spatial-item span{display:grid;gap:5px}.spatial-item strong{font-size:14px}.spatial-item small{color:#6c7a67;font-size:12px}.spatial-environment{display:flex;align-items:center;justify-content:space-between;font-size:13px;flex-shrink:0}.spatial-environment select{border:1px solid #cfddce;background:white;border-radius:10px;padding:8px;color:var(--spatial-ink);font-size:13px}.spatial-selected{border-top:1px solid #e0e8d9;padding-top:9px;display:flex;flex-direction:column;gap:6px;flex-shrink:0}.spatial-selected>span,.spatial-selected small{font-size:12px;color:#6b7a68}.spatial-selected strong{font-size:14px}.spatial-adjust{display:flex;gap:6px}.spatial-adjust button{flex:1;padding:5px!important;font-size:20px!important}.spatial-item-actions{display:flex;gap:6px}.spatial-item-actions button{flex:1;padding:5px!important;font-size:12px!important}.spatial-inventory footer{display:flex;gap:8px;border-top:1px solid #dce6d7;padding-top:12px;flex-shrink:0}.spatial-inventory footer button{flex:1;font-weight:600}.spatial-inventory.is-collapsed{top:auto;bottom:18px}.spatial-feedback{position:absolute;z-index:5;top:100px;left:50%;transform:translateX(-50%);max-width:min(510px,calc(100% - 390px));display:flex;flex-direction:column;gap:6px;pointer-events:none}.spatial-feedback:empty{display:none}.spatial-feedback>p,.spatial-feedback>div{margin:0;border:1px solid #e5dfc8;border-radius:16px;padding:10px 14px;background:#fffdf4f5;font-size:13px;box-shadow:0 8px 30px #4b5c3214;pointer-events:auto}.spatial-feedback p{margin:0;line-height:1.6}.spatial-feedback button{margin:5px 6px 0 0;min-height:38px;padding:7px 11px;font-size:12px}.spatial-notice{text-align:center}.spatial-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-@media(max-width:1050px){.spatial-camera.is-editing{right:344px}.spatial-header{gap:12px;left:16px;right:16px}.spatial-heading p{display:none}.spatial-wallet{gap:12px;padding:10px 12px}.spatial-checkins{left:16px;width:104px}.spatial-dock.is-editing .spatial-toolbar{gap:5px}.spatial-dock.is-editing .spatial-toolbar button{padding:8px!important;font-size:12px}.spatial-feedback{left:calc((100% - 328px)/2);max-width:calc(100% - 500px)}}
-@media(max-width:760px){.spatial-header{top:max(10px,env(safe-area-inset-top));gap:10px}.spatial-heading h1{font-size:18px}.spatial-header button{padding:8px 11px}.spatial-header-end{gap:6px}.spatial-wallet{padding:10px;gap:10px;font-size:13px;border-radius:15px}.spatial-wallet .currency-icon{width:20px;height:20px}.spatial-checkins{top:76px;left:12px;width:auto;max-width:calc(100% - 180px);padding:4px;border-radius:16px}.spatial-checkins>button{width:auto}.spatial-task-list{display:flex;max-height:68px;overflow:auto;max-width:190px;gap:6px;padding:3px}.spatial-task-list button{flex-shrink:0}.spatial-task-list p{width:130px}.spatial-camera,.spatial-camera.is-editing{top:76px;right:12px;gap:2px;padding:4px;border-radius:16px}.spatial-camera button{min-height:38px;min-width:40px}.spatial-camera .spatial-pan button{min-height:32px;min-width:30px}.spatial-dock{bottom:max(12px,env(safe-area-inset-bottom));max-width:calc(100% - 20px);width:max-content;gap:5px}.spatial-activities,.spatial-toolbar{gap:4px;padding:5px;border-radius:16px}.spatial-toolbar button{font-size:12px;padding:8px 10px;min-height:42px}.spatial-activities button{font-size:13px;min-width:52px;padding:8px 10px;min-height:40px}.spatial-inventory{top:auto;right:10px;left:10px;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-height:48dvh;border-radius:22px;padding:10px 12px;gap:7px}.spatial-inventory h2{font-size:16px}.spatial-inventory header button{min-height:30px}.spatial-tabs button{min-height:36px;padding:6px}.spatial-inventory-list{grid-template-columns:repeat(2,minmax(0,1fr));min-height:70px}.spatial-item{gap:7px;min-height:68px!important}.spatial-item img{width:42px;height:42px}.spatial-item strong{font-size:12px}.spatial-item small{font-size:11px}.spatial-environment{font-size:12px}.spatial-environment select{padding:5px}.spatial-selected{gap:4px;padding-top:6px}.spatial-selected>strong{display:none}.spatial-selected>span,.spatial-selected small{font-size:11px}.spatial-adjust button{min-height:36px}.spatial-item-actions button{min-height:34px}.spatial-inventory footer{padding-top:7px}.spatial-inventory footer button{min-height:42px}.spatial-inventory.is-collapsed{bottom:max(10px,env(safe-area-inset-bottom));top:auto}.spatial-dock.is-editing{left:50%;top:188px;bottom:auto;z-index:2}.spatial-dock.is-editing .spatial-toolbar{max-width:calc(100vw - 24px);flex-wrap:nowrap}.spatial-dock.is-editing .spatial-toolbar button{font-size:11px;padding:6px 10px!important;min-height:36px}.spatial-feedback{top:216px;left:50%;max-width:calc(100% - 32px);width:max-content}.spatial-feedback>p,.spatial-feedback>div{font-size:12px;padding:8px 11px;max-width:calc(100vw - 32px)}.spatial-feedback button{min-height:36px}.spatial-access-error{font-size:11px;max-width:calc(100vw - 26px)}.spatial-island .island-dialog{max-width:calc(100vw - 28px)}}
-@media(prefers-reduced-motion:reduce){.spatial-island button:active:not(:disabled){transform:none}}
-.spatial-camera .spatial-direction{font-size:12px!important}.spatial-camera .spatial-pan button{min-width:44px;min-height:44px}.spatial-camera span{width:44px}.spatial-webgl-error{position:absolute;top:45%;left:50%;transform:translateX(-50%);padding:16px;background:#fffdf4;border-radius:16px}
-@media(max-width:760px){.spatial-camera button{min-width:44px;min-height:44px}.spatial-camera .spatial-pan button{min-width:44px;min-height:44px}.spatial-dock.is-editing{top:132px;left:12px;transform:none;max-width:185px}.spatial-dock.is-editing .spatial-toolbar{max-width:185px}.spatial-dock.is-editing .spatial-toolbar button{min-height:44px;font-size:12px}.spatial-tabs button,.spatial-adjust button,.spatial-item-actions button,.spatial-inventory header button,.spatial-inventory footer button,.spatial-toolbar button,.spatial-activities button{min-height:44px}.spatial-feedback button{min-height:44px}}
-@media(max-width:760px){.spatial-inventory.is-expanded .spatial-selected{display:none}.spatial-environment select{min-height:44px}}
-.spatial-environment{gap:12px;white-space:nowrap}.spatial-environment select{min-width:0;max-width:75%;flex:1}
+/* HUD沿用普通界面契约：正文22px、标题32px、独立目标56px。 */
+.spatial-island {
+  --spatial-ink: #25483f;
+  --spatial-line: #dce7d9;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #b8e2ee;
+  color: var(--spatial-ink);
+  font: inherit;
+  font-size: 22px;
+}
+.spatial-island button, .spatial-island select {
+  min-width: 56px;
+  min-height: 56px;
+  font-size: 22px;
+  line-height: 1.35;
+}
+.spatial-island button {
+  padding: 10px 14px;
+  border: 1px solid #356e56;
+  border-radius: 16px;
+  background: #356e56;
+  color: white;
+  box-shadow: 0 3px 0 #28553f20;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.spatial-island button.secondary { background: #fffffff2; border-color: #cfddce; color: var(--spatial-ink); }
+.spatial-island button:hover:not(:disabled) { filter: brightness(.96); }
+.spatial-island button:disabled { opacity: .5; cursor: default; }
+.spatial-island button:focus-visible, .spatial-stage:focus-visible { outline: 3px solid #e39a32; outline-offset: 3px; }
+.spatial-island h1, .spatial-island h2 { margin: 0; font-size: 32px; line-height: 1.35; }
+.spatial-island p, .spatial-island small, .spatial-island label, .spatial-island strong { font-size: 22px; }
+.spatial-stage { position: absolute; inset: 0; touch-action: none; outline: none; }
+.spatial-stage canvas { display: block; touch-action: none; }
+
+.spatial-header {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: 22px;
+  right: 22px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  pointer-events: none;
+}
+.spatial-header > * { pointer-events: auto; }
+.spatial-heading { min-width: 0; }
+.spatial-heading p { display: none; }
+.spatial-camera-toggle { display: inline-flex; align-items: center; justify-content: center; padding: 10px !important; }
+.spatial-header-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.spatial-wallet { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; min-height: 56px; padding: 10px 16px; border: 1px solid #e2e6d8; border-radius: 18px; background: #fffffff2; font-weight: 700; font-variant-numeric: tabular-nums; }
+.spatial-wallet .currency-icon { width: 28px; height: 28px; }
+
+.spatial-checkins { position: absolute; top: var(--spatial-hud-top); left: 22px; z-index: 2; width: 190px; padding: 8px; border: 1px solid var(--spatial-line); border-radius: 20px; background: #fffffff0; }
+.spatial-checkins > button { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 8px; border: 0 !important; background: transparent !important; }
+.spatial-task-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 280px; overflow: auto; padding-top: 8px; }
+.spatial-task-list button { padding: 8px; }
+.spatial-task-list img { display: block; width: 38px; height: 38px; margin: auto; }
+.spatial-task-list p { grid-column: 1 / -1; margin: 4px; }
+
+.spatial-camera { position: absolute; top: var(--spatial-hud-top); right: 22px; z-index: 2; display: flex; flex-direction: column; gap: 6px; max-height: calc(100dvh - var(--spatial-hud-top) - 180px); overflow-y: auto; padding: 8px; border: 1px solid var(--spatial-line); border-radius: 20px; background: #fffffff0; }
+.spatial-camera.is-editing { right: 394px; }
+.spatial-camera > div { display: flex; align-items: center; gap: 6px; }
+.spatial-camera button { flex: 0 0 56px; padding: 6px; border-color: transparent !important; border-radius: 14px; }
+.spatial-camera .spatial-pan { display: grid; grid-template-columns: repeat(4, 56px); gap: 2px; }
+
+.spatial-dock { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 8px; width: max-content; max-width: calc(100% - 32px); transform: translateX(-50%); }
+.spatial-activities, .spatial-toolbar { display: flex; gap: 8px; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; padding: 8px; border: 1px solid var(--spatial-line); border-radius: 20px; background: #fffffff2; box-shadow: 0 8px 30px #294c3d16; scrollbar-width: thin; }
+.spatial-toolbar button, .spatial-activities button { flex: 0 0 auto; white-space: nowrap; }
+.spatial-activities button { border: 0 !important; background: transparent !important; }
+.spatial-activities button.is-locked { color: #5c705e; background: #edf1e7 !important; }
+.spatial-dock p { margin: 0; padding: 4px 12px; border-radius: 14px; color: #3f6158; background: #ffffffdc; }
+.spatial-dock.is-editing { left: calc((100% - 382px) / 2); max-width: calc(100% - 414px); }
+.spatial-access-error { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 550px; padding: 10px; border-radius: 16px; background: #fffffff2; }
+
+.spatial-inventory { position: absolute; top: var(--spatial-hud-top); right: 16px; bottom: 16px; z-index: 4; display: flex; flex-direction: column; gap: 12px; width: 360px; padding: 16px; border: 1px solid #dbe4d2; border-radius: 24px; background: #fbfcf7fa; box-shadow: 0 15px 50px #28553d21; }
+.spatial-inventory header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.spatial-inventory header button { flex: 0 0 56px; padding: 6px; border: 0 !important; background: transparent !important; }
+.spatial-inventory-browser { flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 56px; overflow-y: auto; overscroll-behavior: contain; }
+.spatial-tabs { display: flex; flex-shrink: 0; gap: 8px; }
+.spatial-tabs button { flex: 1; }
+.spatial-inventory-list { display: grid; flex-shrink: 0; gap: 10px; align-content: start; padding: 2px; }
+.spatial-item { display: flex; align-items: center; gap: 12px; min-height: 88px; padding: 10px !important; text-align: left; }
+.spatial-item.is-selected { border-color: #528869 !important; background: #e9f3e2 !important; box-shadow: 0 0 0 2px #52886925; }
+.spatial-item img { flex: 0 0 56px; width: 56px; height: 56px; object-fit: contain; border-radius: 12px; background: #f0f3e8; }
+.spatial-item span { display: grid; gap: 4px; min-width: 0; }
+.spatial-item small { color: #5a6d56; }
+.spatial-environment { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; white-space: nowrap; }
+.spatial-environment select { flex: 1; min-width: 0; max-width: 75%; padding: 8px; border: 1px solid #cfddce; border-radius: 12px; color: var(--spatial-ink); background: white; }
+.spatial-selected { display: flex; flex-direction: column; flex-shrink: 0; gap: 8px; padding-top: 12px; border-top: 1px solid #e0e8d9; }
+.spatial-selected > span, .spatial-selected small { color: #5a6d56; }
+.spatial-adjust, .spatial-item-actions { display: flex; gap: 8px; }
+.spatial-adjust button { flex: 1; padding: 6px; }
+.spatial-item-actions button { flex: 1; padding: 8px; }
+.spatial-inventory footer { display: flex; flex-shrink: 0; gap: 8px; padding-top: 12px; border-top: 1px solid var(--spatial-line); }
+.spatial-inventory footer button { flex: 1; }
+.spatial-inventory.is-collapsed { top: auto; }
+
+.spatial-feedback { position: absolute; top: var(--spatial-hud-top); left: 50%; z-index: 5; display: flex; flex-direction: column; gap: 8px; width: max-content; max-width: min(600px, calc(100% - 48px)); transform: translateX(-50%); pointer-events: none; }
+.spatial-feedback:empty { display: none; }
+.spatial-feedback > p, .spatial-feedback > div { margin: 0; padding: 12px 16px; border: 1px solid #e5dfc8; border-radius: 18px; background: #fffdf4fa; box-shadow: 0 8px 30px #4b5c3214; pointer-events: auto; }
+.spatial-feedback p { margin: 0; line-height: 1.5; }
+.spatial-feedback button { margin: 8px 8px 0 0; }
+.spatial-notice { text-align: center; }
+.spatial-webgl-error { position: absolute; top: 45%; left: 50%; padding: 16px; border-radius: 16px; background: #fffdf4; transform: translateX(-50%); }
+.spatial-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .spatial-header { top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px 56px; gap: 8px; }
+  .spatial-back { grid-column: 1; grid-row: 1; padding: 8px !important; }
+  .spatial-heading { grid-column: 2; grid-row: 1; }
+  .spatial-heading h1 { white-space: nowrap; }
+  .spatial-camera-toggle { grid-column: 3; grid-row: 1; }
+  .spatial-header-end { display: contents; }
+  .spatial-header-end > button { grid-column: 4; grid-row: 1; padding: 8px; }
+  .spatial-wallet { grid-column: 1 / -1; grid-row: 2; justify-self: end; max-width: 100%; padding: 8px 12px; }
+  .spatial-checkins { left: 12px; width: auto; max-width: 184px; }
+  .spatial-checkins > button { justify-content: flex-start; width: 56px; }
+  .spatial-checkins > button span { display: none; }
+  .spatial-task-list { display: flex; max-width: 166px; max-height: 80px; overflow-x: auto; }
+  .spatial-task-list button { flex: 0 0 56px; }
+  .spatial-task-list p { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .spatial-camera, .spatial-camera.is-editing { right: 12px; }
+  .spatial-camera.is-editing { top: calc(var(--spatial-hud-top) + 80px); max-height: max(74px, calc(var(--spatial-panel-top) - var(--spatial-hud-top) - 92px)); }
+  .spatial-dock { bottom: max(12px, env(safe-area-inset-bottom)); max-width: calc(100% - 24px); gap: 8px; }
+  .spatial-activities, .spatial-toolbar { max-width: calc(100vw - 24px); padding: 8px; gap: 8px; }
+  .spatial-actor-status:not(.is-static) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .spatial-dock.is-editing { top: var(--spatial-hud-top); bottom: auto; left: 96px; max-width: calc(100% - 108px); transform: none; }
+  .spatial-dock.is-editing .spatial-toolbar { max-width: calc(100vw - 108px); }
+  .spatial-inventory { top: auto; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); left: 10px; width: auto; max-height: 52dvh; padding: 12px; gap: 8px; }
+  .spatial-inventory-browser { gap: 10px; }
+  .spatial-inventory-list { grid-template-columns: minmax(0, 1fr); }
+  .spatial-inventory.is-expanded .spatial-selected { display: none; }
+  .spatial-selected { padding-top: 8px; }
+  .spatial-selected > strong, .spatial-selected > span, .spatial-selected small { display: none; }
+  .spatial-adjust button { padding: 4px; }
+  .spatial-inventory footer { padding-top: 8px; }
+  .spatial-feedback { top: calc(var(--spatial-hud-top) + 80px); max-width: calc(100% - 24px); }
+  .spatial-island .island-dialog { max-width: calc(100vw - 24px); }
+}
+@media (max-width: 374px) {
+  .spatial-header { grid-template-columns: 56px minmax(0, 1fr) 56px; }
+  .spatial-heading { grid-column: 2 / 4; }
+  .spatial-camera-toggle { grid-column: 1; grid-row: 2; }
+  .spatial-header-end > button { grid-column: 3; grid-row: 2; }
+  .spatial-wallet { grid-column: 1 / -1; grid-row: 3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spatial-island button:active:not(:disabled) { transform: none; }
+}
