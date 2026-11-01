@@ -25,7 +25,7 @@ func TestInstallPreservesImmutableAssets(t *testing.T) {
 	if err := service.Install(); err != nil {
 		t.Fatalf("repeat install: %v", err)
 	}
-	file, err := service.Open(DefaultAvatar)
+	file, err := service.Open("icon-backpack-v1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestInstallPreservesImmutableAssets(t *testing.T) {
 	if err != nil || !bytes.Contains(original, []byte("<svg")) {
 		t.Fatalf("invalid persisted SVG: %v", err)
 	}
-	path := filepath.Join(service.Directory, DefaultAvatar, "asset.svg")
+	path := filepath.Join(service.Directory, "icon-backpack-v1", "asset.svg")
 	if err := os.WriteFile(path, []byte("changed"), 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func TestHistoricalAssetsRemainReadable(t *testing.T) {
 	if err := service.Install(); err != nil {
 		t.Fatal(err)
 	}
-	legacy := Asset{Key: "retired-fox-v1", Name: "历史素材", Kind: KindAvatar, URL: "/api/v1/assets/retired-fox-v1"}
+	legacy := Asset{Key: "retired-fox-v1", Name: "历史素材", Kind: Kind("avatar"), URL: "/api/v1/assets/retired-fox-v1"}
 	path := filepath.Join(directory, legacy.Key)
 	if err := os.Mkdir(path, 0700); err != nil {
 		t.Fatal(err)
@@ -106,24 +106,24 @@ func TestCatalogKindsAndInvalidKeys(t *testing.T) {
 	if err := service.Install(); err != nil {
 		t.Fatal(err)
 	}
-	if !Valid("book-v1", KindIcon) || Valid("book-v1", KindAvatar) || Valid("unknown-v1", KindIcon) {
+	if !Valid("book-v1", KindIcon) || Valid("book-v1", KindModel) || Valid("unknown-v1", KindIcon) {
 		t.Fatal("kind validation failed")
 	}
-	accessories := 0
+	wearables := 0
 	items, err := service.List()
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, item := range items {
-		if item.Kind == KindAccessory {
-			accessories++
+		if item.Kind == KindWearable {
+			wearables++
 		}
 		if item.URL != "/api/v1/assets/"+item.Key {
 			t.Fatalf("invalid public URL: %q", item.URL)
 		}
 	}
-	if accessories < 10 {
-		t.Fatalf("need ten visible distinct accessories, have %d", accessories)
+	if wearables == 0 {
+		t.Fatalf("need wearable thumbnails, have %d", wearables)
 	}
 	for _, key := range []string{"", "..", "../fox-v1", "fox-v1/asset.svg", "unknown-v1", "/etc/passwd"} {
 		if file, err := service.Open(key); err == nil {

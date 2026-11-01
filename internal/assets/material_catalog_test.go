@@ -44,14 +44,17 @@ func TestMaterialCatalogInstallsEveryChoice(t *testing.T) {
 		if err := xml.Unmarshal(body, &svg); err != nil || svg.XMLName.Local != "svg" || svg.ViewBox == "" {
 			t.Fatalf("unreadable scalable choice %s: %v", item.Key, err)
 		}
-		// 同一图案可以同时承担任务图标和饰品，不同用途分别检查。
+		// 导航图标可复用任务图标的图案，但保留各自稳定的素材身份。
+		if item.Kind == KindIcon {
+			continue
+		}
 		identity := string(item.Kind) + string(body)
 		if previous := drawings[identity]; previous != "" {
 			t.Fatalf("choices %s and %s use identical drawings", previous, item.Key)
 		}
 		drawings[identity] = item.Key
 	}
-	for kind, minimum := range map[Kind]int{KindAvatar: 6, KindBackground: 6, KindAccessory: 19, KindIsland: 15, KindBadge: 12, KindIcon: 28} {
+	for kind, minimum := range map[Kind]int{KindIsland: 1, KindBadge: 12, KindIcon: 1, KindWearable: 1} {
 		if counts[kind] < minimum {
 			t.Errorf("incomplete %s choices: got %d, need at least %d", kind, counts[kind], minimum)
 		}

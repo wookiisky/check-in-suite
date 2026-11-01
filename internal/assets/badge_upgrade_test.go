@@ -84,9 +84,9 @@ func TestInstallRejectsChangedAssetMetadata(t *testing.T) {
 	if err := service.Install(); err != nil {
 		t.Fatal(err)
 	}
-	item, ok := Get(DefaultAvatar)
+	item, ok := Get("icon-appearance-v1")
 	if !ok {
-		t.Fatal("default avatar missing")
+		t.Fatal("navigation icon missing")
 	}
 	item.Name += " changed"
 	metadata, err := json.Marshal(item)

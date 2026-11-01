@@ -20,54 +20,26 @@ import (
 type Kind string
 
 const (
-	KindCharacterPart Kind = "character-part" // Internal layer installed for composition, never sold.
-	KindModel         Kind = "model"          // Versioned GLB geometry, not an image choice.
-	KindAnimation     Kind = "animation"      // Offline prepared GLB animation clips.
-	KindWearable      Kind = "wearable"       // Rendered thumbnail for a 3D wearable definition.
-	KindIsland        Kind = "island"         // Controlled island construction thumbnail.
-	KindIcon          Kind = "icon"           // Task icon rendered in current and historical records.
-	KindAvatar        Kind = "avatar"         // Full character illustration.
-	KindAccessory     Kind = "accessory"      // Decoration rendered around the current character.
-	KindBackground    Kind = "background"     // Fixed artwork behind the character canvas.
-	KindEffect        Kind = "effect"         // Fixed animated overlay with an immutable still alternative.
-	KindTitle         Kind = "title"          // Emblem shown with the equipped title.
-	KindReward        Kind = "reward"         // Illustration for a household reward.
-	KindBadge         Kind = "badge"          // Permanent achievement emblem displayed below the character.
-	DefaultAvatar          = "avatar-boy-v2"  // Free default human character selected for a new account.
+	KindModel     Kind = "model"     // Versioned GLB geometry, not an image choice.
+	KindAnimation Kind = "animation" // Offline prepared GLB animation clips.
+	KindWearable  Kind = "wearable"  // Rendered thumbnail for a 3D wearable definition.
+	KindIsland    Kind = "island"    // Controlled island construction thumbnail.
+	KindIcon      Kind = "icon"      // Task icon rendered in current and historical records.
+	KindTitle     Kind = "title"     // Emblem shown with the equipped title.
+	KindReward    Kind = "reward"    // Illustration for a household reward.
+	KindBadge     Kind = "badge"     // Permanent achievement emblem displayed below the character.
 )
-
-// WearableSlot identifies a fixed body attachment shared by human characters.
-type WearableSlot string
-
-const (
-	SlotHair   WearableSlot = "hair"   // One hairstyle including optional rear hair.
-	SlotTop    WearableSlot = "top"    // Upper garment.
-	SlotBottom WearableSlot = "bottom" // Lower garment.
-	SlotShoes  WearableSlot = "shoes"  // Footwear.
-)
-
-// Valid reports whether a fixed attachment exists in the character model.
-func (slot WearableSlot) Valid() bool {
-	switch slot {
-	case SlotHair, SlotTop, SlotBottom, SlotShoes:
-		return true
-	default:
-		return false
-	}
-}
 
 // Asset is public metadata for immutable controlled artwork.
 type Asset struct {
-	Free         bool         `json:"free,omitempty"`           // Explicit built-in avatars and camp items cannot be sold.
-	WearableSlot WearableSlot `json:"wearable_slot,omitempty"`  // Fixed attachment; empty means ordinary artwork.
-	BackAssetKey string       `json:"back_asset_key,omitempty"` // Internal rear layer belonging to this same wearable.
-	Key          string       `json:"key"`                      // Versioned identity also used by historical snapshots.
-	Name         string       `json:"name"`                     // Display name loaded from the catalog resource.
-	Kind         Kind         `json:"kind"`                     // Allowed business use.
-	URL          string       `json:"url"`                      // Same-origin authenticated content endpoint.
-	Format       string       `json:"format,omitempty"`         // SVG by default; explicit PNG and WebP retain transparency.
-	SourceURL    string       `json:"source_url,omitempty"`     // Official source or recorded derivative provenance.
-	License      string       `json:"license,omitempty"`        // Resource-specific license; animation rights are separate.
+	Free      bool   `json:"free,omitempty"`       // Explicit free camp thumbnails cannot be sold.
+	Key       string `json:"key"`                  // Versioned identity also used by historical snapshots.
+	Name      string `json:"name"`                 // Display name loaded from the catalog resource.
+	Kind      Kind   `json:"kind"`                 // Allowed business use.
+	URL       string `json:"url"`                  // Same-origin authenticated content endpoint.
+	Format    string `json:"format,omitempty"`     // SVG by default; explicit PNG and WebP retain transparency.
+	SourceURL string `json:"source_url,omitempty"` // Official source or recorded derivative provenance.
+	License   string `json:"license,omitempty"`    // Resource-specific license; animation rights are separate.
 }
 
 // extension keeps historical SVG metadata and filenames compatible.
@@ -137,9 +109,9 @@ func Get(key string) (Asset, bool) {
 // Valid checks the allowed business kind of a current built-in choice.
 func Valid(key string, kind Kind) bool { item, ok := Get(key); return ok && item.Kind == kind }
 
-// validateBuiltinMetadata keeps format, slot and explicit free capabilities consistent.
+// validateBuiltinMetadata keeps format and explicit free capabilities consistent.
 func (item Asset) validateBuiltinMetadata() error {
-	if !keyPattern.MatchString(item.Key) || item.ContentType() == "" || (item.WearableSlot != "" && (!item.WearableSlot.Valid() || item.Kind != KindAccessory)) || (item.Free && item.Kind != KindAvatar && item.Kind != KindIsland) {
+	if !keyPattern.MatchString(item.Key) || item.ContentType() == "" || (item.Free && item.Kind != KindIsland) {
 		return fmt.Errorf("invalid controlled asset key %q", item.Key)
 	}
 	model := item.Kind == KindModel || item.Kind == KindAnimation
@@ -166,14 +138,7 @@ func (service *Service) Install() error {
 		if err != nil {
 			return err
 		}
-		var still []byte
-		if item.Kind == KindEffect {
-			still, err = builtin.ReadFile("builtin/" + item.Key + "-static.svg")
-			if err != nil {
-				return err
-			}
-		}
-		if err := service.install(item, drawing, still); err != nil {
+		if err := service.install(item, drawing); err != nil {
 			return err
 		}
 	}
@@ -181,10 +146,10 @@ func (service *Service) Install() error {
 }
 
 // install publishes one complete resource; an interrupted temporary directory is never readable.
-func (service *Service) install(item Asset, drawing, still []byte) error {
+func (service *Service) install(item Asset, drawing []byte) error {
 	destination := filepath.Join(service.Directory, item.Key)
 	if _, err := os.Stat(destination); err == nil {
-		return service.compare(item, drawing, still)
+		return service.compare(item, drawing)
 	} else if !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
@@ -203,15 +168,10 @@ func (service *Service) install(item Asset, drawing, still []byte) error {
 	if err := os.WriteFile(filepath.Join(temporary, "asset."+item.extension()), drawing, 0600); err != nil {
 		return err
 	}
-	if item.Kind == KindEffect {
-		if err := os.WriteFile(filepath.Join(temporary, "asset-static.svg"), still, 0600); err != nil {
-			return err
-		}
-	}
 	if err := os.Rename(temporary, destination); err != nil {
 		// A concurrent installer may have published the exact same immutable resource.
 		if _, statErr := os.Stat(destination); statErr == nil {
-			return service.compare(item, drawing, still)
+			return service.compare(item, drawing)
 		}
 		return err
 	}
@@ -219,7 +179,7 @@ func (service *Service) install(item Asset, drawing, still []byte) error {
 }
 
 // compare rejects accidental reuse of a published identity for changed artwork or metadata.
-func (service *Service) compare(item Asset, drawing, still []byte) error {
+func (service *Service) compare(item Asset, drawing []byte) error {
 	stored, err := service.Lookup(item.Key)
 	if err != nil {
 		return err
@@ -230,15 +190,6 @@ func (service *Service) compare(item Asset, drawing, still []byte) error {
 	}
 	if stored != item || !bytes.Equal(data, drawing) {
 		return fmt.Errorf("asset identity %q already contains different content", item.Key)
-	}
-	if item.Kind == KindEffect {
-		data, err := os.ReadFile(filepath.Join(service.Directory, item.Key, "asset-static.svg"))
-		if err != nil {
-			return err
-		}
-		if !bytes.Equal(data, still) {
-			return fmt.Errorf("asset identity %q already contains different static content", item.Key)
-		}
 	}
 	return nil
 }
@@ -276,7 +227,7 @@ func (service *Service) List() ([]Asset, error) {
 		if !entry.IsDir() || !keyPattern.MatchString(entry.Name()) {
 			continue
 		}
-		if choice, selectable := Get(entry.Name()); !selectable || choice.Kind == KindCharacterPart || choice.Kind == KindModel || choice.Kind == KindAnimation {
+		if choice, selectable := Get(entry.Name()); !selectable || choice.Kind == KindModel || choice.Kind == KindAnimation {
 			continue
 		}
 		item, err := service.Lookup(entry.Name())
@@ -291,18 +242,10 @@ func (service *Service) List() ([]Asset, error) {
 
 // Open exposes a controlled resource only after validating its persisted identity.
 func (service *Service) Open(key string) (*os.File, error) {
-	return service.OpenVariant(key, false)
-}
-
-// OpenVariant keeps both effect variants under the same immutable asset identity.
-func (service *Service) OpenVariant(key string, still bool) (*os.File, error) {
 	item, err := service.Lookup(key)
 	if err != nil {
 		return nil, err
 	}
 	name := "asset." + item.extension()
-	if still && item.Kind == KindEffect {
-		name = "asset-static.svg"
-	}
 	return os.Open(filepath.Join(service.Directory, key, name))
 }

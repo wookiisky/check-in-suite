@@ -32,8 +32,7 @@ func (app *App) RegisterAssets(service *assets.Service) {
 			WriteError(w, r, err)
 			return
 		}
-		still := r.URL.Query().Get("motion") == "static"
-		file, err := service.OpenVariant(item.Key, still)
+		file, err := service.Open(item.Key)
 		if err != nil {
 			WriteError(w, r, err)
 			return
@@ -45,9 +44,6 @@ func (app *App) RegisterAssets(service *assets.Service) {
 			return
 		}
 		contentType := item.ContentType()
-		if still && item.Kind == assets.KindEffect {
-			contentType = "image/svg+xml"
-		}
 		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Cache-Control", "private, no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")

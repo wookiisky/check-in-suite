@@ -7,13 +7,13 @@ import (
 	"testing"
 )
 
-// 免费身份只允许明确的基础形象和内置营地图片，不能绕过其他商品类型限制。
+// 免费身份只允许明确的内置营地图片，不能绕过其他商品类型限制。
 func TestFreeCampAssetMetadata(t *testing.T) {
 	for _, sample := range []struct {
 		kind     Kind
 		format   string
 		accepted bool
-	}{{KindIsland, "png", true}, {KindAvatar, "svg", true}, {KindWearable, "png", false}, {KindAccessory, "svg", false}, {KindModel, "glb", false}, {KindAnimation, "glb", false}} {
+	}{{KindIsland, "png", true}, {KindWearable, "png", false}, {KindIcon, "svg", false}, {KindTitle, "svg", false}, {KindReward, "svg", false}, {KindBadge, "svg", false}, {KindModel, "glb", false}, {KindAnimation, "glb", false}} {
 		item := Asset{Key: "free-metadata-v1", Kind: sample.kind, Format: sample.format, Free: true}
 		if (item.validateBuiltinMetadata() == nil) != sample.accepted {
 			t.Fatalf("unexpected free metadata acceptance: %#v", item)

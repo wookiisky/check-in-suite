@@ -23,7 +23,7 @@ func TestBadgeCatalogInstallsDistinctArtwork(t *testing.T) {
 			continue
 		}
 		badges++
-		if !Valid(item.Key, KindBadge) || Valid(item.Key, KindIcon) || Valid(item.Key, KindAccessory) {
+		if !Valid(item.Key, KindBadge) || Valid(item.Key, KindIcon) || Valid(item.Key, KindWearable) {
 			t.Fatalf("badge accepted for another business use: %s", item.Key)
 		}
 		file, err := service.Open(item.Key)
