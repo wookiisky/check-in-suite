@@ -1,0 +1,67 @@
+{
+  "purpose": "P0 原始素材与浏览器样片；尚未完成四槽换装与 Mixamo 转换验收",
+  "sources": [
+    {
+      "id": "kaykit-adventurers",
+      "author": "Kay Lousberg",
+      "url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+      "revision": "672074b73ba276876a19e8816ecdc5241817ab47",
+      "license": "CC0-1.0",
+      "files": [
+        "kaykit/rogue.glb"
+      ],
+      "changes": "原始完整人物，样片只显示六个蒙皮网格，附属武器与披风不显示"
+    },
+    {
+      "id": "kenney-building",
+      "author": "Kenney",
+      "url": "https://kenney-assets.itch.io/building-kit",
+      "version": "1.0",
+      "license": "CC0-1.0",
+      "source_archive_sha256": "b46e4fc873d02dad2ab2153846ede6cc242208e751b778d37f4e75bce23cb2be",
+      "changes": "原始 GLB 与纹理，仅选取四个构件"
+    }
+  ],
+  "files": [
+    {
+      "path": "kaykit/LICENSE.txt",
+      "sha256": "ae322141814056dda0deea7540d74c41d87aee1da319977cd1bd84ee5a923629",
+      "bytes": 891
+    },
+    {
+      "path": "kaykit/rogue.glb",
+      "sha256": "e825437cd4d2ee9c1960b517a74a69101e33eb409ae7fa8cedc7134a998fbb7d",
+      "bytes": 3616284
+    },
+    {
+      "path": "kenney/LICENSE.txt",
+      "sha256": "294dadf6bd9704c27fed6af9494fedb6655cf82e5d068db958725b10bba19fbb",
+      "bytes": 715
+    },
+    {
+      "path": "kenney/Textures/colormap.png",
+      "sha256": "9f4287226ce1f405a2418c048c59fa0f3bc829d55e6816097abe00e3fdf7dd50",
+      "bytes": 9700
+    },
+    {
+      "path": "kenney/floor.glb",
+      "sha256": "fbe8e907e502381db5d9f87676ef9e34522e35fc95a401a754d3e4984819338b",
+      "bytes": 2832
+    },
+    {
+      "path": "kenney/roof-flat-center.glb",
+      "sha256": "8c4fc6fe46640b1f69818b668c8c3ecca03c9df6cacc698073774c716fac4a1f",
+      "bytes": 2864
+    },
+    {
+      "path": "kenney/wall-doorway-square.glb",
+      "sha256": "5fc3ab4d17545ffcca24d73a77589d6f4816d2bd21b29614be3e0819c97f0410",
+      "bytes": 6308
+    },
+    {
+      "path": "kenney/wall.glb",
+      "sha256": "769a02a70327132ba864c04299631c65fb08e96e01e1796ba73ddf7f44679a36",
+      "bytes": 2664
+    }
+  ]
+}
