@@ -1,0 +1,50 @@
+{
+  "id": "p0-exercise",
+  "animation": "Exercise",
+  "file": "exercise.glb",
+  "target_rig": "KayKit Adventurers 1.0 Rogue original Rig",
+  "target_source": {
+    "url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+    "revision": "672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0",
+    "sha256": "e825437cd4d2ee9c1960b517a74a69101e33eb409ae7fa8cedc7134a998fbb7d"
+  },
+  "source": {
+    "provider": "Adobe Mixamo",
+    "url": "https://www.mixamo.com/",
+    "animation": "Jumping Jacks",
+    "character": "X Bot",
+    "sha256": "b75723fb0bdcd8d98797d6d3fe94811c842b68f0b5def9c0ad4dc95964dbe418",
+    "terms": "https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html"
+  },
+  "rights": "Mixamo 项目使用条款；不是 CC0；不分发原始 FBX 或 X Bot 模型",
+  "processing": "Blender 离线 rest 对齐与逐帧烘焙，保持 Rogue 骨架 rest，不保留水平位移，仅按腿长比例缩放竖向髋部移动；为大头短臂体型将上臂和前臂的过顶举臂改为最高水平以上30度，手继承同侧修正",
+  "bone_map": {
+    "hips": "Hips",
+    "spine": "Spine1",
+    "chest": "Spine2",
+    "head": "Head",
+    "upperarm.l": "LeftArm",
+    "lowerarm.l": "LeftForeArm",
+    "wrist.l": "LeftHand",
+    "hand.l": "LeftHand",
+    "upperarm.r": "RightArm",
+    "lowerarm.r": "RightForeArm",
+    "wrist.r": "RightHand",
+    "hand.r": "RightHand",
+    "upperleg.l": "LeftUpLeg",
+    "lowerleg.l": "LeftLeg",
+    "foot.l": "LeftFoot",
+    "toes.l": "LeftToeBase",
+    "upperleg.r": "RightUpLeg",
+    "lowerleg.r": "RightLeg",
+    "foot.r": "RightFoot",
+    "toes.r": "RightToeBase"
+  },
+  "measurements": {
+    "frames": 33,
+    "fps": 30,
+    "vertical_scale": 0.4215414209185984
+  },
+  "sha256": "0cc4daeba60ca29c7a5ac415894ba65ca2ecd3cc898398ee25694a5a046147aa"
+}
