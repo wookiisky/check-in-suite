@@ -12,6 +12,12 @@ source:
 - internal/shop/appearance_types.go
 - internal/character/character_types.go
 - internal/character/character-catalog.json
+- web/src/features/character/AppearanceProvider.tsx
+- web/src/features/character/CharacterModel3D.tsx
+- web/src/features/character/CharacterPreview3D.tsx
+- web/src/features/character/character3d-model.ts
+- web/src/graphics/gltf-resources.ts
+- web/src/features/shop/AppearanceDialog.tsx
 - internal/shop/base_avatar.go
 - internal/shop/accessory_layout.go
 - internal/assets/assets.go
@@ -37,6 +43,12 @@ tests:
 - internal/shop/wearable_equipment_test.go
 - internal/shop/appearance_test.go
 - internal/httpapi/appearance_test.go
+- web/src/features/character/AppearanceProvider.test.tsx
+- web/src/features/character/character3d-model.test.ts
+- web/src/features/character/character3d-preparation.test.tsx
+- web/src/graphics/gltf-resources.test.ts
+- web/src/features/shop/AppearanceDialog.test.tsx
+- web/e2e/appearance-3d.spec.ts
 - internal/assets/assets_test.go
 - internal/assets/graphics_assets_test.go
 - internal/character/catalog_test.go
@@ -95,6 +107,12 @@ tests:
 外观保存携带独立的预期版本。服务端在同一写事务中复核会话、当前版本和全部四槽，再一次写入并递增版本；任一验证或提交失败都不能留下部分外观。版本冲突不覆盖已保存内容，客户端应保留草稿并读取当前状态。新增购买只增加库存，不递增外观版本，因此同版本读取仍可能包含新服装。
 
 三维服装使用 `wearable` 商品类型，购买在原有扣款事务中将稳定服装身份复制到订单。商品下架或删除不撤销已购资格；已售商品不能改指另一服装定义。三维衣物不能调用旧二维单槽或自由饰品接口。当前二维页面与新契约在重构期间分别保留，新人物模块接入时使用三维契约。
+
+共享人物组件与四槽编辑器可在 `/character-preview.html` 独立验证，使用正式登录、目录、库存与保存接口。编辑器打开时读取当前外观，选择只修改本地草稿；取消丢弃草稿，保存期间冻结选择与关闭，成功直接发布完整返回快照。共享层接受同版本新增库存，并防止保存前发起的迟到读取覆盖新状态。
+
+模型、身体遮盖与动作由共享人物模块处理，各视图持有独立骨架和播放器。所选资源全部准备好后才一次替换当前人物；等待或失败保留上次已显示的人物，取消和迟到结果不能留下未使用实例。加载缓存拥有源几何、材质与纹理，最后一个引用释放后再销毁，单个预览卸载不能影响另一处人物。减少动效时显示动作首帧，隐藏或暂停不推进时间，恢复时丢弃累计时间差。
+
+保存结果和人物显示状态分别反馈。已保存后出现模型错误时保持保存事实，只重试显示。版本冲突保留四槽草稿，先展示当前已保存外观，再由用户选择保留草稿继续编辑或使用当前外观。网络断开等未知结果保留原请求，读取当前状态核对；仍是原版本时可重试原请求，不能擅自换成较新版本覆盖。暂时关闭弹窗不代表撤销已发出的保存，重开继续核对。
 
 ## 角色与装备
 

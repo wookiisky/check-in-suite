@@ -1,0 +1,14 @@
+{
+  "title": "共享人物与外观",
+  "description": "在这里查看已保存的三维外观、编辑四个部位，并检查人物动作。保存后，新版人物视图会同步更新。",
+  "back": "返回成长营地",
+  "loading": "正在读取当前会话…",
+  "loadingAppearance": "正在读取已保存外观…",
+  "edit": "编辑外观",
+  "reload": "重新读取",
+  "version": "已保存版本",
+  "action": "人物动作",
+  "preview": "已保存的人物外观",
+  "status": { "loading": "正在准备人物", "ready": "人物已显示", "error": "人物暂时无法显示，可在预览中重试" },
+  "actions": { "idle": "待机", "walk": "行走", "run": "跑步", "sit": "坐下", "cheer": "抬手", "exercise": "运动" }
+}

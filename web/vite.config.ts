@@ -11,6 +11,7 @@ export default defineConfig({
       input: {
         app: fileURLToPath(new URL('./index.html', import.meta.url)),
         preview3d: fileURLToPath(new URL('./3d-preview.html', import.meta.url)),
+        characterPreview: fileURLToPath(new URL('./character-preview.html', import.meta.url)),
       },
     },
   },
