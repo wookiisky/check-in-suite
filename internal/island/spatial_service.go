@@ -162,6 +162,19 @@ func validateSpatialPlacements(input SpatialSaveInput, state SpatialState) error
 			if rect.MinXCM < floor.MinXCM || rect.MaxXCM > floor.MaxXCM || rect.MinZCM < floor.MinZCM || rect.MaxZCM > floor.MaxZCM {
 				return invalid()
 			}
+			for _, wall := range state.Scene.House.Walls {
+				if spatialRectsOverlap(rect, wall) {
+					return invalid()
+				}
+			}
+			if definition.WalkObstacle != nil {
+				obstacle := SpatialPlacementRect(placement, *definition.WalkObstacle)
+				for _, clearance := range state.Scene.House.InteriorClearances {
+					if spatialRectsOverlap(obstacle, clearance) {
+						return invalid()
+					}
+				}
+			}
 		} else {
 			return invalid()
 		}

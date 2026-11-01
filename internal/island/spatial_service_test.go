@@ -18,7 +18,7 @@ func TestSpatialDefaultAndSave(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if state.Version != 1 || state.SceneKey != state.Scene.Key || len(state.Placements) != 1 || len(state.Inventory) != 1 {
+	if state.Version != 1 || state.SceneKey != state.Scene.Key || len(state.Placements) != 3 || len(state.Inventory) != 3 {
 		t.Fatalf("unexpected default: %+v", state)
 	}
 	var count int
@@ -127,7 +127,7 @@ func TestSpatialConcurrentSave(t *testing.T) {
 		t.Fatal(err)
 	}
 	var placements []SpatialPlacement
-	if err = json.Unmarshal([]byte(raw), &placements); err != nil || version != 2 || len(placements) != 1 {
+	if err = json.Unmarshal([]byte(raw), &placements); err != nil || version != 2 || len(placements) != len(state.Placements) {
 		t.Fatalf("bad persisted result version=%d err=%v", version, err)
 	}
 }
@@ -166,7 +166,7 @@ func TestSpatialInventoryReadsOwnedSnapshots(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(state.Inventory) != 3 {
+	if len(state.Inventory) != 5 {
 		t.Fatalf("expected base and two owned snapshots: %+v", state.Inventory)
 	}
 	for _, item := range state.Inventory {
@@ -213,6 +213,10 @@ func TestSpatialVersionOverflow(t *testing.T) {
 // TestSpatialPlacementBoundaries 将可覆盖物、占地互斥和行走通路分开检查。
 func TestSpatialPlacementBoundaries(t *testing.T) {
 	configuration := spatialConfigurationData()
+	baseInventory := make([]SpatialOwnedItem, 0, len(configuration.DefaultPlacements))
+	for _, placement := range configuration.DefaultPlacements {
+		baseInventory = append(baseInventory, SpatialOwnedItem{placement.InstanceID, placement.ItemKey})
+	}
 	shape := SpatialFootprint{WidthCM: 100, DepthCM: 50}
 	solid := SpatialDefinition{Key: "test-solid", Footprint: shape, WalkObstacle: &shape, BlocksPlacement: true, Movable: true, Spaces: []SpatialSpace{SpatialOutdoor, SpatialIndoor}, Rotations: []int{0, 1, 2, 3}, AllowedTerrain: []string{"grass", "sand"}}
 	rug := solid
@@ -228,14 +232,16 @@ func TestSpatialPlacementBoundaries(t *testing.T) {
 		{"one centimetre solid overlap", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialOutdoor, XCM: 600}, SpatialPlacement{InstanceID: "two", ItemKey: "test-solid", Space: SpatialOutdoor, XCM: 699}, false},
 		{"rug may overlap solid", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialOutdoor, XCM: 600}, SpatialPlacement{InstanceID: "two", ItemKey: "test-rug", Space: SpatialOutdoor, XCM: 600}, true},
 		{"separate coordinate spaces", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialOutdoor, XCM: 600}, SpatialPlacement{InstanceID: "two", ItemKey: "test-solid", Space: SpatialIndoor}, true},
-		{"indoor edge touches", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialIndoor, XCM: 250}, SpatialPlacement{InstanceID: "two", ItemKey: "test-rug", Space: SpatialOutdoor, XCM: 600}, true},
-		{"indoor complete footprint overflow", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialIndoor, XCM: 251}, SpatialPlacement{InstanceID: "two", ItemKey: "test-rug", Space: SpatialOutdoor, XCM: 600}, false},
+		{"indoor edge touches", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialIndoor, XCM: 240}, SpatialPlacement{InstanceID: "two", ItemKey: "test-rug", Space: SpatialOutdoor, XCM: 600}, true},
+		{"indoor complete footprint overflow", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialIndoor, XCM: 241}, SpatialPlacement{InstanceID: "two", ItemKey: "test-rug", Space: SpatialOutdoor, XCM: 600}, false},
 		{"solid blocks doorway approach", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialOutdoor, ZCM: 360}, SpatialPlacement{InstanceID: "two", ItemKey: "test-rug", Space: SpatialOutdoor, XCM: 600}, false},
 		{"walkable rug can cover approach", SpatialPlacement{InstanceID: "one", ItemKey: "test-rug", Space: SpatialOutdoor, ZCM: 360}, SpatialPlacement{InstanceID: "two", ItemKey: "test-solid", Space: SpatialOutdoor, XCM: 600}, true},
+		{"indoor rug can cover entry", SpatialPlacement{InstanceID: "one", ItemKey: "test-rug", Space: SpatialIndoor, ZCM: 240}, SpatialPlacement{InstanceID: "two", ItemKey: "test-solid", Space: SpatialOutdoor, XCM: 600}, true},
+		{"walkable rug cannot cross wall", SpatialPlacement{InstanceID: "one", ItemKey: "test-rug", Space: SpatialIndoor, XCM: -250}, SpatialPlacement{InstanceID: "two", ItemKey: "test-solid", Space: SpatialOutdoor, XCM: 600}, false},
 		{"door approach edge touches", SpatialPlacement{InstanceID: "one", ItemKey: "test-solid", Space: SpatialOutdoor, ZCM: 445}, SpatialPlacement{InstanceID: "two", ItemKey: "test-rug", Space: SpatialOutdoor, XCM: 600}, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			state := SpatialState{Scene: configuration.Scene, Catalog: append(SpatialCatalog(), solid, rug), Placements: configuration.DefaultPlacements, Inventory: []SpatialOwnedItem{{"base:house3d", "camp-house-v1"}, {"one", tc.first.ItemKey}, {"two", tc.second.ItemKey}}}
+			state := SpatialState{Scene: configuration.Scene, Catalog: append(SpatialCatalog(), solid, rug), Placements: configuration.DefaultPlacements, Inventory: append(append([]SpatialOwnedItem{}, baseInventory...), SpatialOwnedItem{"one", tc.first.ItemKey}, SpatialOwnedItem{"two", tc.second.ItemKey})}
 			input := SpatialSaveInput{SceneKey: configuration.Scene.Key, EnvironmentKey: configuration.DefaultEnvironment, Placements: append(append([]SpatialPlacement{}, configuration.DefaultPlacements...), tc.first, tc.second)}
 			if err := validateSpatialPlacements(input, state); (err == nil) != tc.valid {
 				t.Fatalf("valid=%v err=%v", tc.valid, err)

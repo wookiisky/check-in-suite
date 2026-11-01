@@ -30,3 +30,18 @@ func SpatialSceneDefinition() SpatialScene { return spatialConfigurationData().S
 
 // SpatialCatalog 只登记已有受控资源的物件，不提前提供尚无模型的商品。
 func SpatialCatalog() []SpatialDefinition { return spatialConfigurationData().Catalog }
+
+// SpatialFind 按稳定物件身份解析已购快照。
+func SpatialFind(key string) (SpatialDefinition, bool) {
+	return spatialFindDefinition(SpatialCatalog(), key)
+}
+
+// SpatialForThumbnail 只认目录登记的缩略图，不从名称或前缀猜测物件。
+func SpatialForThumbnail(assetKey string) (SpatialDefinition, bool) {
+	for _, item := range SpatialCatalog() {
+		if item.ThumbnailAssetKey == assetKey {
+			return item, true
+		}
+	}
+	return SpatialDefinition{}, false
+}

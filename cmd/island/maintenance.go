@@ -97,6 +97,9 @@ func maintain(ctx context.Context, command, kind string, service *account.Servic
 	if err := shop.SeedIslandProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {
 		return maintenanceError(err)
 	}
+	if err := shop.SeedSpatialProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {
+		return maintenanceError(err)
+	}
 	if err := service.Initialize(ctx, username, displayName, loginPassword, managementPassword); err != nil {
 		return maintenanceError(err)
 	}

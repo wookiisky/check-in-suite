@@ -38,6 +38,9 @@ func scanPurchase(row rowScanner) (Purchase, error) {
 		p.IslandItemKey = item.Key
 		p.PortraitType, p.PortraitAssetKey = portraitCapability(item)
 	}
+	if spatial, found := island.SpatialFind(p.ItemKeySnapshot); found {
+		p.IslandItemKey = spatial.Key
+	}
 	if redeemed.Valid {
 		value := core.Timestamp(redeemed.Int64)
 		p.RedeemedAt = &value

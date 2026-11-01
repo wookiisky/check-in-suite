@@ -30,27 +30,41 @@ type SpatialFootprint struct {
 
 // SpatialInteraction 给角色提供活动位置，不扩大物件的摆放占地。
 type SpatialInteraction struct {
-	Activity string `json:"activity"` // 受控活动身份。
-	XCM      int    `json:"x_cm"`     // 相对物件的横向位置。
-	ZCM      int    `json:"z_cm"`     // 相对物件的纵深位置。
-	Rotation int    `json:"rotation"` // 朝向，四分之一圈。
+	Activity string                  `json:"activity"`       // read、run 或 ball 的业务资格身份。
+	XCM      int                     `json:"x_cm"`           // 相对物件的可达横向位置。
+	ZCM      int                     `json:"z_cm"`           // 相对物件的可达纵深位置。
+	Rotation int                     `json:"rotation"`       // 到达后的朝向，四分之一圈。
+	Pose     *SpatialInteractionPose `json:"pose,omitempty"` // 到达后使用的表演根位置。
+}
+
+// SpatialInteractionPose 把可达地面点与坐姿等表演根偏移分开。
+type SpatialInteractionPose struct {
+	XCM      int `json:"x_cm"`     // 相对物件横向厘米。
+	YCM      int `json:"y_cm"`     // 相对物件地面高度厘米。
+	ZCM      int `json:"z_cm"`     // 相对物件纵深厘米。
+	Rotation int `json:"rotation"` // 表演朝向，四分之一圈。
 }
 
 // SpatialDefinition 描述一个固定版本物件的空间能力。
 type SpatialDefinition struct {
-	Key             string              `json:"item_key"`                // 不可复用的物件身份。
-	Name            string              `json:"name"`                    // 外化目录中的显示名称。
-	Assembly        string              `json:"assembly,omitempty"`      // 组合建筑使用共享房屋定义。
-	ModelURL        string              `json:"model_url,omitempty"`     // 单模型物件的受控资源地址。
-	Footprint       SpatialFootprint    `json:"footprint"`               // 完整摆放占地。
-	WalkObstacle    *SpatialFootprint   `json:"walk_obstacle,omitempty"` // 行走阻挡；房屋由墙体与门洞细化。
-	Interaction     *SpatialInteraction `json:"interaction,omitempty"`   // 可选活动位置。
-	BlocksPlacement bool                `json:"blocks_placement"`        // 是否与同样声明互斥的物件冲突。
-	Movable         bool                `json:"movable"`                 // 用户能否移动。
-	Repeatable      bool                `json:"repeatable"`              // 每次购买能否产生新实例。
-	Spaces          []SpatialSpace      `json:"spaces"`                  // 可摆放的坐标空间。
-	Rotations       []int               `json:"rotations"`               // 支持的四分之一圈朝向。
-	AllowedTerrain  []string            `json:"allowed_terrain"`         // 完整占地允许覆盖的室外地形。
+	Key               string              `json:"item_key"`                // 不可复用的物件身份。
+	Name              string              `json:"name"`                    // 外化目录中的显示名称。
+	ThumbnailAssetKey string              `json:"thumbnail_asset_key"`     // 商品与库存使用的受控缩略图身份。
+	ThumbnailURL      string              `json:"thumbnail_url"`           // 缩略图受控资源地址。
+	CoinPrice         int64               `json:"coin_price"`              // 初始化商品的金币价格。
+	DiamondPrice      int64               `json:"diamond_price"`           // 初始化商品的钻石价格。
+	Free              bool                `json:"free"`                    // 明确的免费初始款，不创建售卖入口。
+	Assembly          string              `json:"assembly,omitempty"`      // 组合建筑使用共享房屋定义。
+	ModelURL          string              `json:"model_url,omitempty"`     // 单模型物件的受控资源地址。
+	Footprint         SpatialFootprint    `json:"footprint"`               // 完整摆放占地。
+	WalkObstacle      *SpatialFootprint   `json:"walk_obstacle,omitempty"` // 行走阻挡；房屋由墙体与门洞细化。
+	Interaction       *SpatialInteraction `json:"interaction,omitempty"`   // 可选活动位置。
+	BlocksPlacement   bool                `json:"blocks_placement"`        // 是否与同样声明互斥的物件冲突。
+	Movable           bool                `json:"movable"`                 // 用户能否移动。
+	Repeatable        bool                `json:"repeatable"`              // 每次购买能否产生新实例。
+	Spaces            []SpatialSpace      `json:"spaces"`                  // 可摆放的坐标空间。
+	Rotations         []int               `json:"rotations"`               // 支持的四分之一圈朝向。
+	AllowedTerrain    []string            `json:"allowed_terrain"`         // 完整占地允许覆盖的室外地形。
 }
 
 // SpatialTerrainRegion 是有限简单多边形，同类区域可以共同覆盖完整占地。
@@ -69,22 +83,38 @@ type SpatialHouseModels struct {
 
 // SpatialHouse 保持室内地面、门洞、建筑绘制和门外通路使用同一数据。
 type SpatialHouse struct {
-	Interior      SpatialRect        `json:"interior"`        // 室内完整地面边界。
-	FloorHeightCM int                `json:"floor_height_cm"` // 地面相对室外的高度。
-	WallHeightCM  int                `json:"wall_height_cm"`  // 外墙高度。
-	DoorCenter    SpatialPoint       `json:"door_center"`     // 固定朝向南墙的门中心。
-	DoorWidthCM   int                `json:"door_width_cm"`   // 门洞净宽。
-	DoorHeightCM  int                `json:"door_height_cm"`  // 门洞净高。
-	DoorClearance SpatialRect        `json:"door_clearance"`  // 门外不可封堵的局部区域。
-	Models        SpatialHouseModels `json:"models"`          // 建筑绘制素材。
+	Interior           SpatialRect        `json:"interior"`            // 室内完整地面边界。
+	FloorHeightCM      int                `json:"floor_height_cm"`     // 地面相对室外的高度。
+	WallHeightCM       int                `json:"wall_height_cm"`      // 外墙高度。
+	DoorCenter         SpatialPoint       `json:"door_center"`         // 固定朝向南墙的门中心。
+	DoorWidthCM        int                `json:"door_width_cm"`       // 门洞净宽。
+	DoorHeightCM       int                `json:"door_height_cm"`      // 门洞净高。
+	DoorClearance      SpatialRect        `json:"door_clearance"`      // 门外不可封堵的局部区域。
+	Models             SpatialHouseModels `json:"models"`              // 建筑绘制素材。
+	Walls              []SpatialRect      `json:"walls"`               // 实际落地外墙与固定隔墙，门洞留空。
+	InteriorClearances []SpatialRect      `json:"interior_clearances"` // 室内门口通路，不允许行走障碍封堵。
+}
+
+// SpatialActivityAttachment 把活动道具固定到正式人物骨骼。
+type SpatialActivityAttachment struct {
+	ModelURL string      `json:"model_url"` // 受控道具模型。
+	Bone     string      `json:"bone"`      // GLTFLoader 加载后的骨骼名称。
+	Matrix   [16]float64 `json:"matrix"`    // Three.js 列优先局部变换矩阵，单位米。
+}
+
+// SpatialActivityPresentation 显式关联业务活动与实际动作，不从物件名字推断。
+type SpatialActivityPresentation struct {
+	Action     string                     `json:"action"`               // 正式人物支持的语义动作。
+	Attachment *SpatialActivityAttachment `json:"attachment,omitempty"` // 活动期间可选道具。
 }
 
 // SpatialScene 由服务端与前端共同使用，天空等视觉背景不扩大可保存区域。
 type SpatialScene struct {
-	Key          string                 `json:"scene_key"`    // 固定版本的整体场景身份。
-	Regions      []SpatialTerrainRegion `json:"regions"`      // 有限地形范围。
-	Environments []string               `json:"environments"` // 可选环境叠加。
-	House        SpatialHouse           `json:"house"`        // 统一房屋空间。
+	Key                   string                                 `json:"scene_key"`              // 固定版本的整体场景身份。
+	Regions               []SpatialTerrainRegion                 `json:"regions"`                // 有限地形范围。
+	Environments          []string                               `json:"environments"`           // 可选环境叠加。
+	House                 SpatialHouse                           `json:"house"`                  // 统一房屋空间。
+	ActivityPresentations map[string]SpatialActivityPresentation `json:"activity_presentations"` // read/run/ball 的表演。
 }
 
 // SpatialPlacement 保存地面坐标，摄像机变换不进入持久布局。

@@ -28,7 +28,23 @@ func ownershipMatch() string {
 		}
 		matches = append(matches, "(p.asset_key IN ("+keys+") AND (x.item_key_snapshot='"+strings.ReplaceAll(item.Key, "'", "''")+"' OR (x.item_key_snapshot='' AND x.asset_key_snapshot IN ("+keys+"))))")
 	}
+	for _, item := range island.SpatialCatalog() {
+		asset := strings.ReplaceAll(item.ThumbnailAssetKey, "'", "''")
+		key := strings.ReplaceAll(item.Key, "'", "''")
+		matches = append(matches, "(p.asset_key='"+asset+"' AND x.item_key_snapshot='"+key+"')")
+	}
 	return "(" + strings.Join(matches, " OR ") + ")"
+}
+
+// productIslandItemKey 合并新旧目录的稳定身份，出售后不能换成别的物件。
+func productIslandItemKey(assetKey string) string {
+	if item, ok := island.SpatialForThumbnail(assetKey); ok {
+		return item.Key
+	}
+	if item, ok := island.ForAsset(assetKey); ok {
+		return item.Key
+	}
+	return ""
 }
 
 var productColumns = "p.id,p.type,p.name,p.asset_key,p.wearable_key,p.description,p.coin_price,p.diamond_price,p.stock,p.enabled,p.version,p.deleted_at,EXISTS(SELECT 1 FROM purchases x WHERE " + ownershipMatch() + " AND x.type_snapshot!='reward'),(SELECT COUNT(*) FROM purchases x WHERE " + ownershipMatch() + " AND x.status='owned')"
@@ -52,6 +68,9 @@ func scanProduct(row rowScanner) (Product, error) {
 		p.IslandItemKey = item.Key
 		p.PortraitType, p.PortraitAssetKey = portraitCapability(item)
 		p.Repeatable = item.Repeatable
+	}
+	if item, ok := island.SpatialForThumbnail(p.AssetKey); ok {
+		p.IslandItemKey, p.Repeatable = item.Key, item.Repeatable
 	}
 	return p, err
 }
@@ -82,6 +101,9 @@ func (s *Service) validateProduct(input ProductInput) error {
 		return err
 	}
 	if artwork, ok := assets.Get(input.AssetKey); !ok || artwork.Kind != assets.Kind(input.Type) || artwork.Free {
+		return core.Invalid("asset_key", "INVALID_ASSET")
+	}
+	if item, ok := island.SpatialForThumbnail(input.AssetKey); ok && (input.Type != TypeIsland || item.Free) {
 		return core.Invalid("asset_key", "INVALID_ASSET")
 	}
 	if input.Type == TypeWearable {
@@ -207,9 +229,9 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 	if err = s.validateProduct(input.ProductInput); err != nil {
 		return Product{}, err
 	}
-	oldItem, oldIsland := island.ForAsset(current.AssetKey)
-	newItem, newIsland := island.ForAsset(input.AssetKey)
-	if ((oldIsland || newIsland) && oldItem.Key != newItem.Key) || (current.Type == TypeWearable && input.Type == TypeWearable && current.WearableKey != input.WearableKey) {
+	oldItemKey := productIslandItemKey(current.AssetKey)
+	newItemKey := productIslandItemKey(input.AssetKey)
+	if ((oldItemKey != "" || newItemKey != "") && oldItemKey != newItemKey) || (current.Type == TypeWearable && input.Type == TypeWearable && current.WearableKey != input.WearableKey) {
 		var sold bool
 		if err = tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM purchases WHERE product_id=?)", id).Scan(&sold); err != nil {
 			return Product{}, err
