@@ -9,8 +9,10 @@ source:
 - scripts/verify-storage-faults.py
 - web/src/features/media/verify-media-auto-stop.mjs
 - scripts/check-spec.mjs
+- scripts/inspect-glb.mjs
 tests:
 - scripts/check-spec.test.mjs
+- scripts/inspect-glb.test.mjs
 ---
 # 测试与验证
 
@@ -45,6 +47,7 @@ tests:
 | `npm run check` | 文档、Go 静态检查、OpenAPI 类型一致性及 TypeScript 检查 |
 | `npm run test:go` / `npm run test:race` | Go 测试及竞态检查 |
 | `npm run test:web` | 前端组件与状态逻辑测试 |
+| `npm run test:assets` | GLB 容器、骨架和动画检查工具的测试 |
 | `npm run test:deploy` | 构建校验清单、部署编排及发布脚本测试 |
 | `npm run test:e2e` | 桌面 Chromium 和 iPhone 14 尺寸 WebKit 的浏览器流程 |
 | `npm run build` | 类型检查和前后端构建 |

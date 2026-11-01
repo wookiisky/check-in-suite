@@ -12,6 +12,10 @@ source:
 - internal/island/housing_upgrade.go
 - internal/checkin/task_island_activities.go
 - web/src/features/island/IslandPage.tsx
+- web/src/features/island/p0/PreviewPage.tsx
+- web/src/features/island/p0/PreviewScene.tsx
+- web/src/features/island/p0/preview-space.ts
+- web/public/models/p0/sources.json
 - web/src/features/island/IslandScene.tsx
 - web/src/features/island/island-geometry.ts
 - web/src/features/island/scene-definitions.ts
@@ -44,6 +48,9 @@ tests:
 - web/e2e/island-fullscreen.spec.ts
 - web/e2e/island-unlock.spec.ts
 - web/e2e/island-object-motion.spec.ts
+- web/e2e/p0-preview.spec.ts
+- web/src/features/island/p0/preview-space.test.ts
+- web/src/features/island/p0/PreviewPage.test.tsx
 ---
 # 营地建设与活动
 
@@ -52,6 +59,14 @@ tests:
 营地提供独立全屏的二维卡通场景，让用户摆放已拥有物品并观看角色活动。场景采用固定斜俯视投影，以地面、物体侧面、阴影和遮挡呈现空间，不提供自由旋转摄像机。渲染使用 React 与 SVG，布局、相机、角色活动和绘制分开管理。
 
 营地复用 [商店](SHOP.md) 的购买、钱包和订单，没有第二套扣款系统。人物形象与固定穿戴共用画像组件；其他整体形象沿用自身素材。活动是当前页面中的表现，不产生离线收益，也不新增服务端活动执行记录。
+
+## 独立 3D 开发样片
+
+开发服务与前端构建提供 `/3d-preview.html`，用于核实实际 GLB、人物动作、门洞尺度和四方向的房屋剖切。样片不读取账户或保存布局；正式营地仍按下述二维场景规则运行。只有人物和空间样片通过后，才继续改造正式资源与业务契约。
+
+样片使用 Three.js 与 React Three Fiber，HTML 操作区提供相机平移、缩放、转向、进出屋和暂停。打开室内后隐藏当前相机前方的墙面；关闭室内则恢复全部外墙。人物沿门洞路线进出，页面隐藏、用户暂停或系统减少动效时停止推进，恢复时丢弃首帧时间差。GLB 读取或图形上下文失败时保留 HTML 返回与重试入口。
+
+原始包、加工工程和下载动作放在本地 `.local/3d-sources/`；浏览器使用的 GLB、纹理、描述及许可位于 `web/public/models/p0/`。来源和文件校验值分别保留，原始完整人物仅供基础动作参照，不等于四槽可换装人物。模型结构检查、混搭与动作视觉验收、浏览器交互及真实设备性能分别提供证据，不能相互替代。
 
 ## 整体场景与地形
 

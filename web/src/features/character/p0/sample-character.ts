@@ -21,8 +21,11 @@ export function createSampleCharacter(source: Object3D, animations: AnimationCli
       if (!clip) throw new Error(`SAMPLE_ANIMATION_MISSING: ${name}`);
       const next = instance.mixer.clipAction(clip);
       if (next === current) return;
-      current?.fadeOut(0.15);
-      next.reset().fadeIn(0.15).play();
+      next.reset();
+      if (current) { current.fadeOut(0.15); next.fadeIn(0.15); }
+      next.play();
+      // 无渲染推进时也先显示动作首帧，避免减少动效退回绑定姿势。
+      instance.mixer.update(0);
       current = next;
     },
   };

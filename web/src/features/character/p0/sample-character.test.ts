@@ -20,6 +20,15 @@ function riggedModel() {
 }
 
 describe('P0 人物实例', () => {
+  it('首次播放立即求值首帧，减少动效时也显示动作姿势', () => {
+    const source = riggedModel();
+    const pose = new AnimationClip('Pose', 1, [new VectorKeyframeTrack('root.position', [0, 1], [0, 2, 0, 0, 3, 0])]);
+    const instance = createSampleCharacter(source.scene, [pose]);
+    instance.play('Pose');
+    expect(instance.root.getObjectByName('root')!.position.y).toBe(2);
+    instance.dispose();
+  });
+
   it('骨架和动画属于各自实例，几何缓存保留共享且源模型不变', () => {
     const source = riggedModel();
     const first = createSampleCharacter(source.scene, source.animations);
