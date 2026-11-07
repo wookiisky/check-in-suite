@@ -3142,6 +3142,53 @@
   "skeleton_hip_fit": {
     "upper_ring_bone": "hips"
   },
+  "garment_waist_seam": {
+    "height": 0.72,
+    "weights": {"hips": 0.29, "spine": 0.63, "chest": 0.08},
+    "standard_lower": {
+      "sections": [[0.66, 0.66, 1], [0.72, 0.733, 1.04]]
+    },
+    "items": {
+      "kaykit-skeletons-rogue-lower": null,
+      "skeleton-minion-lower-v1": {
+        "sections": [
+          [0.376, 0.376, 1],
+          [0.425, 0.445, 1.04],
+          [0.46, 0.603, 1.07],
+          [0.505, 0.648, 1.07],
+          [0.535, 0.678, 1.02],
+          [0.577, 0.72, 0.92],
+          [0.636, 0.779, 0.9]
+        ],
+        "main_component": true,
+        "skin_band": [0.56, 0.8]
+      },
+      "kaykit-legacy-skeleton-minion-lower": {
+        "sections": [[0.62, 0.62, 1], [0.70, 0.732, 1]],
+        "skin_band": [0.62, 0.82]
+      },
+      "kaykit-legacy-skeleton-archer-lower": {
+        "sections": [[0.62, 0.62, 1], [0.70, 0.732, 1]],
+        "skin_band": [0.62, 0.82]
+      },
+      "kaykit-legacy-skeleton-mage-lower": {
+        "sections": [[0.62, 0.62, 1], [0.70, 0.732, 1]],
+        "skin_band": [0.62, 0.82]
+      },
+      "kaykit-legacy-skeleton-warrior-lower": {
+        "sections": [[0.62, 0.62, 1], [0.70, 0.732, 1]],
+        "skin_band": [0.62, 0.82]
+      },
+      "kaykit-legacy-skeleton-archer-upper": {
+        "sections": [[0.71, 0.70, 1], [0.738, 0.709, 1], [0.78, 0.718, 1], [0.88, 0.88, 1]],
+        "skin_band": [0.62, 0.85]
+      },
+      "kaykit-legacy-skeleton-warrior-upper": {
+        "sections": [[0.71, 0.70, 1], [0.738, 0.709, 1], [0.78, 0.718, 1], [0.88, 0.88, 1]],
+        "skin_band": [0.62, 0.85]
+      }
+    }
+  },
   "clothing_fit": {
     "kaykit-legacy-skeleton-mage-back-cloak": [
       {

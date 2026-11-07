@@ -195,8 +195,9 @@ def prepare(options):
         dependency_paths.extend(candidate_module().source_dependencies(ROOT/path))
     dependency_paths = list(dict.fromkeys(dependency_paths))
     dependencies = candidate_module().capture_dependencies(ROOT, dependency_paths)
+    garment_waist = config.get('garment_waist_seam')
     clothing_module = None
-    if config.get('upper_clothing_fit') or config.get('clothing_fit'):
+    if config.get('upper_clothing_fit') or config.get('clothing_fit') or garment_waist:
         clothing_module_spec = importlib.util.spec_from_file_location('modular_clothing_fit', ROOT / 'scripts/modular-character-clothing-fit.py')
         clothing_module = importlib.util.module_from_spec(clothing_module_spec)
         clothing_module_spec.loader.exec_module(clothing_module)
@@ -225,6 +226,11 @@ def prepare(options):
         human_waist_spec = importlib.util.spec_from_file_location('modular_human_waist_fit', ROOT / 'scripts/modular-character-human-waist-fit.py')
         human_waist_module = importlib.util.module_from_spec(human_waist_spec)
         human_waist_spec.loader.exec_module(human_waist_module)
+    garment_waist_module = None
+    if garment_waist:
+        spec = importlib.util.spec_from_file_location('modular_waist_seam', ROOT / 'scripts/modular-character-waist-seam.py')
+        garment_waist_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(garment_waist_module)
     staging = work / 'staged-assets'
     shutil.rmtree(staging, ignore_errors=True)
     staging.mkdir()
@@ -454,6 +460,18 @@ def prepare(options):
         if adjustments:
             fitted = clothing_module.fit_upper_clothing(objects, rig, adjustments, hand_objects=hand_objects, hand_surface=hand_surface)
             clothing_fit_evidence.append({'wearable_key': key, 'adjustments': copy.deepcopy(adjustments), **fitted})
+        waist_settings = None
+        if garment_waist:
+            default_waist = garment_waist['standard_lower'] if slot == 'lower' else None
+            waist_settings = garment_waist['items'].get(key, default_waist)
+        if waist_settings:
+            # 上装的手套是随附节点，躯干衣片由制作入口排在首位。
+            waist_obj = objects[0]
+            vertices = range(len(waist_obj.data.vertices))
+            if waist_settings.get('main_component'):
+                component = max(clothing_module.mesh_components(waist_obj), key=lambda part: len(part['faces']))
+                vertices = component['vertices']
+            garment_waist_module.fit_waist_seam(waist_obj, vertices, waist_settings, garment_waist['height'], garment_waist['weights'])
         back_settings = config.get('back_clothing_fit', {}).get(key)
         if back_settings:
             for obj in objects:

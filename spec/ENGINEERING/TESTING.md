@@ -117,6 +117,8 @@ tests:
 
 最终读取模式不能再次执行修形。人形腰髋入口 `scripts/modular-character-human-waist-fit-blender-test.py` 使用独立 `--baseline-input` 核对原腰口，骷髅腰部入口 `scripts/modular-character-skeleton-waist-fit-blender-test.py` 使用独立 `--seam-reference-model` 核对分区配对，不能拿最终模型与自身比较。颈部入口 `scripts/modular-character-head-fit-blender-test.py` 分别检查支撑的上下接口；兜帽入口 `scripts/modular-character-hood-fit-blender-test.py` 可检查全部兼容脸型。腰带主带、开放边缘和附挂扣袋需要区分，身体位于饰件后方不能直接算成闭面穿透。
 
+衣物混搭使用 `scripts/modular-character-waist-seam-blender-test.py` 扫描最终 GLB 的各向腰线截面，候选使用 `--candidate`。扫描覆盖裤腰主环及相邻上衣下摆，厚度以接合方位的实际衣片为准。另用两种身体的实际动作和多视角画面复核露肤及穿插，原款开口单独判断。
+
 Playwright 用独立 API、前端端口和临时数据库，不复用日常开发服务；配置入口是 `playwright.config.ts`。首次运行前执行 `npx playwright install chromium webkit`。端口冲突时使用隔离配置，不停止未知服务或复用其数据。
 
 较慢专项按需运行：

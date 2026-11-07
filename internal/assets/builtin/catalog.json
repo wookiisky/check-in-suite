@@ -7517,10 +7517,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "adventurers",
-    "key": "modular-human-body-v1-a62de5516a6f",
+    "key": "modular-human-body-v1-f1c3cb86fde5",
     "name": "human-body-v1",
     "kind": "model",
-    "url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
+    "url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
     "format": "glb"
   },
   {
@@ -7561,10 +7561,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "adventurers",
-    "key": "modular-lower-rogue-v1-2ec67430643f",
+    "key": "modular-lower-rogue-v1-d416a2d31ec4",
     "name": "绿色短裤与棕色腰带",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-lower-rogue-v1-2ec67430643f",
+    "url": "/api/v1/assets/modular-lower-rogue-v1-d416a2d31ec4",
     "format": "png"
   },
   {
@@ -7594,10 +7594,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "adventurers",
-    "key": "modular-lower-barbarian-v1-2a1a20f3dd21",
+    "key": "modular-lower-barbarian-v1-14f31ed93a33",
     "name": "棕色铆钉腰带与毛边短裤",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-lower-barbarian-v1-2a1a20f3dd21",
+    "url": "/api/v1/assets/modular-lower-barbarian-v1-14f31ed93a33",
     "format": "png"
   },
   {
@@ -7638,10 +7638,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "adventurers",
-    "key": "modular-human-thumbnail-v1-5cddcbfea54d",
+    "key": "modular-human-thumbnail-v1-d872c016d571",
     "name": "基础人形",
     "kind": "character",
-    "url": "/api/v1/assets/modular-human-thumbnail-v1-5cddcbfea54d",
+    "url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
     "format": "png"
   },
   {
@@ -7649,10 +7649,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-knight-40b343f6b733",
+    "key": "modular-kaykit-adventurers-knight-c3eb9679eebb",
     "name": "kaykit-adventurers-knight",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-knight-40b343f6b733",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-knight-c3eb9679eebb",
     "format": "glb"
   },
   {
@@ -7693,10 +7693,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-knight-lower-672b713b3563",
+    "key": "modular-kaykit-adventurers-knight-lower-174fe4db17d2",
     "name": "灰色腰甲与棕色腰带",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-knight-lower-672b713b3563",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-knight-lower-174fe4db17d2",
     "format": "png"
   },
   {
@@ -7715,10 +7715,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+    "key": "modular-kaykit-adventurers-barbarian-683c6971a129",
     "name": "kaykit-adventurers-barbarian",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-683c6971a129",
     "format": "glb"
   },
   {
@@ -7748,10 +7748,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-barbarian-lower-4b7347008c1d",
+    "key": "modular-kaykit-adventurers-barbarian-lower-9e61c4bbdc5c",
     "name": "棕色毛边皮裙与黑色短裤",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-lower-4b7347008c1d",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-lower-9e61c4bbdc5c",
     "format": "png"
   },
   {
@@ -7770,10 +7770,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-mage-7a39543bda05",
+    "key": "modular-kaykit-adventurers-mage-446ba36492f2",
     "name": "kaykit-adventurers-mage",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-7a39543bda05",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-446ba36492f2",
     "format": "glb"
   },
   {
@@ -7814,10 +7814,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-mage-lower-15e83f4b723d",
+    "key": "modular-kaykit-adventurers-mage-lower-84ace2d52e3e",
     "name": "紫色衣摆与挂袋腰带",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-lower-15e83f4b723d",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-lower-84ace2d52e3e",
     "format": "png"
   },
   {
@@ -7836,10 +7836,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-f467961f3d95",
+    "key": "modular-kaykit-adventurers-rogue-9eba8422e7a4",
     "name": "kaykit-adventurers-rogue",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-f467961f3d95",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-9eba8422e7a4",
     "format": "glb"
   },
   {
@@ -7880,10 +7880,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-lower-3617c5636266",
+    "key": "modular-kaykit-adventurers-rogue-lower-866e541f2795",
     "name": "绿色腰带短裤",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-lower-3617c5636266",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-lower-866e541f2795",
     "format": "png"
   },
   {
@@ -7902,10 +7902,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
+    "key": "modular-kaykit-adventurers-rogue-hooded-293208a9b609",
     "name": "kaykit-adventurers-rogue-hooded",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-293208a9b609",
     "format": "glb"
   },
   {
@@ -7935,10 +7935,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-hooded-lower-eadfb87ed947",
+    "key": "modular-kaykit-adventurers-rogue-hooded-lower-50c085cfb3ff",
     "name": "深绿色腰带短裤",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-lower-eadfb87ed947",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-lower-50c085cfb3ff",
     "format": "png"
   },
   {
@@ -7957,10 +7957,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-ranger-797fddbaa43b",
+    "key": "modular-kaykit-adventurers-ranger-8bc78bbd3081",
     "name": "kaykit-adventurers-ranger",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-ranger-797fddbaa43b",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-ranger-8bc78bbd3081",
     "format": "glb"
   },
   {
@@ -8012,10 +8012,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-ranger-lower-7aa7451c33d1",
+    "key": "modular-kaykit-adventurers-ranger-lower-6fa582f29b85",
     "name": "米色短裤与挂袋腰带",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-ranger-lower-7aa7451c33d1",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-ranger-lower-6fa582f29b85",
     "format": "png"
   },
   {
@@ -8034,10 +8034,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-minion-d23f91ef5a7e",
+    "key": "modular-kaykit-skeletons-minion-ac07eb81b29e",
     "name": "kaykit-skeletons-minion",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-minion-d23f91ef5a7e",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-minion-ac07eb81b29e",
     "format": "glb"
   },
   {
@@ -8067,10 +8067,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-skeleton-minion-lower-v1-49068c7d8566",
+    "key": "modular-skeleton-minion-lower-v1-f2f79101a879",
     "name": "棕色短裤与银扣腰带",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-skeleton-minion-lower-v1-49068c7d8566",
+    "url": "/api/v1/assets/modular-skeleton-minion-lower-v1-f2f79101a879",
     "format": "png"
   },
   {
@@ -8078,10 +8078,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-skeleton-thumbnail-v1-ba9c1ddcb3fa",
+    "key": "modular-skeleton-thumbnail-v1-56d66a434093",
     "name": "基础骷髅",
     "kind": "character",
-    "url": "/api/v1/assets/modular-skeleton-thumbnail-v1-ba9c1ddcb3fa",
+    "url": "/api/v1/assets/modular-skeleton-thumbnail-v1-56d66a434093",
     "format": "png"
   },
   {
@@ -8089,10 +8089,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-mage-b120122a73d5",
+    "key": "modular-kaykit-skeletons-mage-98d701bbb501",
     "name": "kaykit-skeletons-mage",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-b120122a73d5",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-98d701bbb501",
     "format": "glb"
   },
   {
@@ -8133,10 +8133,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-mage-lower-689b97b92e9e",
+    "key": "modular-kaykit-skeletons-mage-lower-de2f888762af",
     "name": "红色衣摆与药水腰带",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-lower-689b97b92e9e",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-lower-de2f888762af",
     "format": "png"
   },
   {
@@ -8210,10 +8210,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-warrior-52ef48e422e3",
+    "key": "modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
     "name": "kaykit-skeletons-warrior",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-warrior-52ef48e422e3",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
     "format": "glb"
   },
   {
@@ -8254,10 +8254,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-warrior-lower-cd76673dbdc4",
+    "key": "modular-kaykit-skeletons-warrior-lower-738b9fd66f2a",
     "name": "银灰色腰甲与棕色腰带",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-warrior-lower-cd76673dbdc4",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-warrior-lower-738b9fd66f2a",
     "format": "png"
   },
   {
@@ -8265,10 +8265,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-minion-c62ec1a3cb17",
+    "key": "modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
     "name": "kaykit-legacy-skeleton-minion",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-c62ec1a3cb17",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
     "format": "glb"
   },
   {
@@ -8298,10 +8298,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-minion-lower-6d1f5c44d275",
+    "key": "modular-kaykit-legacy-skeleton-minion-lower-a5985a808d6d",
     "name": "棕色腰带与金属扣",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-lower-6d1f5c44d275",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-lower-a5985a808d6d",
     "format": "png"
   },
   {
@@ -8309,10 +8309,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-archer-c0aba4902cc1",
+    "key": "modular-kaykit-legacy-skeleton-archer-14f70736321a",
     "name": "kaykit-legacy-skeleton-archer",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-c0aba4902cc1",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-14f70736321a",
     "format": "glb"
   },
   {
@@ -8331,10 +8331,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-archer-upper-edf8912e424e",
+    "key": "modular-kaykit-legacy-skeleton-archer-upper-12c9ad51ed03",
     "name": "灰色胸甲、金属护臂与棕色手套",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-upper-edf8912e424e",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-upper-12c9ad51ed03",
     "format": "png"
   },
   {
@@ -8342,10 +8342,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-archer-lower-e0305b60925a",
+    "key": "modular-kaykit-legacy-skeleton-archer-lower-b1c8f03f1479",
     "name": "棕色腰带与侧腰包",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-lower-e0305b60925a",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-lower-b1c8f03f1479",
     "format": "png"
   },
   {
@@ -8353,10 +8353,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-mage-6360d367fca9",
+    "key": "modular-kaykit-legacy-skeleton-mage-a399310e49fa",
     "name": "kaykit-legacy-skeleton-mage",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-6360d367fca9",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-a399310e49fa",
     "format": "glb"
   },
   {
@@ -8397,10 +8397,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-mage-lower-c1d09a448fa4",
+    "key": "modular-kaykit-legacy-skeleton-mage-lower-b10cb9109975",
     "name": "棕色宽腰带",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-lower-c1d09a448fa4",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-lower-b10cb9109975",
     "format": "png"
   },
   {
@@ -8408,10 +8408,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-warrior-f4d141f5c25c",
+    "key": "modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
     "name": "kaykit-legacy-skeleton-warrior",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-f4d141f5c25c",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
     "format": "glb"
   },
   {
@@ -8430,10 +8430,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-warrior-upper-8cf47b513d6f",
+    "key": "modular-kaykit-legacy-skeleton-warrior-upper-69b57ed84c9e",
     "name": "灰色胸甲、棕色臂环与银灰色护臂",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-upper-8cf47b513d6f",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-upper-69b57ed84c9e",
     "format": "png"
   },
   {
@@ -8441,10 +8441,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-warrior-lower-8c8a391eb2d9",
+    "key": "modular-kaykit-legacy-skeleton-warrior-lower-e3528182e8c8",
     "name": "棕色腰带与银色方扣",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-lower-8c8a391eb2d9",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-lower-e3528182e8c8",
     "format": "png"
   },
   {

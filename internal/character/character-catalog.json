@@ -3,8 +3,8 @@
     {
       "character_key": "kaykit-medium-v1",
       "rig_key": "kaykit-adventurers-medium-v1",
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
       "scale": 0.8230534189366623,
       "fixed_nodes": [
         "body_hands"
@@ -165,14 +165,14 @@
           "url": "/api/v1/assets/pa-58011619c8ae5da95c8d1f96"
         }
       ],
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-5cddcbfea54d",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-5cddcbfea54d"
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571"
     },
     {
       "character_key": "kaykit-skeleton-v1",
       "rig_key": "kaykit-adventurers-medium-v1",
-      "model_asset_key": "modular-kaykit-skeletons-minion-d23f91ef5a7e",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-minion-d23f91ef5a7e",
+      "model_asset_key": "modular-kaykit-skeletons-minion-ac07eb81b29e",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-minion-ac07eb81b29e",
       "scale": 0.8230534189366623,
       "fixed_nodes": [
         "body_hands"
@@ -329,8 +329,8 @@
           "url": "/api/v1/assets/pa-58011619c8ae5da95c8d1f96"
         }
       ],
-      "thumbnail_asset_key": "modular-skeleton-thumbnail-v1-ba9c1ddcb3fa",
-      "thumbnail_url": "/api/v1/assets/modular-skeleton-thumbnail-v1-ba9c1ddcb3fa"
+      "thumbnail_asset_key": "modular-skeleton-thumbnail-v1-56d66a434093",
+      "thumbnail_url": "/api/v1/assets/modular-skeleton-thumbnail-v1-56d66a434093"
     }
   ],
   "wearables": [
@@ -389,8 +389,8 @@
           "face_scalp"
         ]
       },
-      "model_asset_key": "modular-kaykit-legacy-skeleton-minion-c62ec1a3cb17",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-c62ec1a3cb17",
+      "model_asset_key": "modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
       "thumbnail_asset_key": "modular-face-kaykit-legacy-skeleton-minion-998310380ddd",
       "thumbnail_url": "/api/v1/assets/modular-face-kaykit-legacy-skeleton-minion-998310380ddd"
     },
@@ -417,8 +417,8 @@
           "face_scalp"
         ]
       },
-      "model_asset_key": "modular-kaykit-skeletons-minion-d23f91ef5a7e",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-minion-d23f91ef5a7e",
+      "model_asset_key": "modular-kaykit-skeletons-minion-ac07eb81b29e",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-minion-ac07eb81b29e",
       "thumbnail_asset_key": "modular-face-kaykit-skeletons-minion-8b227f6f0076",
       "thumbnail_url": "/api/v1/assets/modular-face-kaykit-skeletons-minion-8b227f6f0076"
     },
@@ -445,8 +445,8 @@
           "face_scalp"
         ]
       },
-      "model_asset_key": "modular-kaykit-skeletons-mage-b120122a73d5",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-mage-b120122a73d5",
+      "model_asset_key": "modular-kaykit-skeletons-mage-98d701bbb501",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-mage-98d701bbb501",
       "thumbnail_asset_key": "modular-face-kaykit-skeletons-mage-d6373859ef3c",
       "thumbnail_url": "/api/v1/assets/modular-face-kaykit-skeletons-mage-d6373859ef3c"
     },
@@ -459,10 +459,10 @@
       "rig_key": "kaykit-adventurers-medium-v1",
       "provider": "kaykit",
       "pack_key": "adventurers",
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-5cddcbfea54d",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-5cddcbfea54d",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
       "nodes": [],
       "covers": [],
       "empty": true
@@ -476,10 +476,10 @@
       "rig_key": "kaykit-adventurers-medium-v1",
       "provider": "kaykit",
       "pack_key": "adventurers",
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-5cddcbfea54d",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-5cddcbfea54d",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
       "nodes": [],
       "covers": [],
       "empty": true
@@ -493,10 +493,10 @@
       "rig_key": "kaykit-adventurers-medium-v1",
       "provider": "kaykit",
       "pack_key": "adventurers",
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-5cddcbfea54d",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-5cddcbfea54d",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
       "nodes": [],
       "covers": [],
       "empty": true
@@ -510,10 +510,10 @@
       "rig_key": "kaykit-adventurers-medium-v1",
       "provider": "kaykit",
       "pack_key": "adventurers",
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-5cddcbfea54d",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-5cddcbfea54d",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
       "nodes": [],
       "covers": [],
       "empty": true
@@ -534,8 +534,8 @@
         "scalp",
         "brows"
       ],
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
       "thumbnail_asset_key": "modular-hair-rogue-v1-e60f08751fae",
       "thumbnail_url": "/api/v1/assets/modular-hair-rogue-v1-e60f08751fae"
     },
@@ -554,8 +554,8 @@
       "covers": [
         "brows"
       ],
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
       "thumbnail_asset_key": "modular-hair-barbarian-v1-032700843007",
       "thumbnail_url": "/api/v1/assets/modular-hair-barbarian-v1-032700843007"
     },
@@ -573,8 +573,8 @@
         "upper_hands"
       ],
       "covers": [],
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
       "thumbnail_asset_key": "modular-upper-rogue-v1-34979e30280f",
       "thumbnail_url": "/api/v1/assets/modular-upper-rogue-v1-34979e30280f"
     },
@@ -591,10 +591,10 @@
         "lower_rogue"
       ],
       "covers": [],
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
-      "thumbnail_asset_key": "modular-lower-rogue-v1-2ec67430643f",
-      "thumbnail_url": "/api/v1/assets/modular-lower-rogue-v1-2ec67430643f"
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
+      "thumbnail_asset_key": "modular-lower-rogue-v1-d416a2d31ec4",
+      "thumbnail_url": "/api/v1/assets/modular-lower-rogue-v1-d416a2d31ec4"
     },
     {
       "wearable_key": "shoes-rogue-v1",
@@ -611,8 +611,8 @@
       "covers": [
         "feet"
       ],
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
       "thumbnail_asset_key": "modular-shoes-rogue-v1-0bde8ca48e49",
       "thumbnail_url": "/api/v1/assets/modular-shoes-rogue-v1-0bde8ca48e49"
     },
@@ -630,8 +630,8 @@
         "upper_hands001"
       ],
       "covers": [],
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
       "thumbnail_asset_key": "modular-upper-barbarian-v1-da145c55d432",
       "thumbnail_url": "/api/v1/assets/modular-upper-barbarian-v1-da145c55d432"
     },
@@ -648,10 +648,10 @@
         "lower_barbarian"
       ],
       "covers": [],
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
-      "thumbnail_asset_key": "modular-lower-barbarian-v1-2a1a20f3dd21",
-      "thumbnail_url": "/api/v1/assets/modular-lower-barbarian-v1-2a1a20f3dd21"
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
+      "thumbnail_asset_key": "modular-lower-barbarian-v1-14f31ed93a33",
+      "thumbnail_url": "/api/v1/assets/modular-lower-barbarian-v1-14f31ed93a33"
     },
     {
       "wearable_key": "shoes-barbarian-v1",
@@ -668,8 +668,8 @@
       "covers": [
         "feet"
       ],
-      "model_asset_key": "modular-human-body-v1-a62de5516a6f",
-      "model_url": "/api/v1/assets/modular-human-body-v1-a62de5516a6f",
+      "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
+      "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
       "thumbnail_asset_key": "modular-shoes-barbarian-v1-b5cc9b005db2",
       "thumbnail_url": "/api/v1/assets/modular-shoes-barbarian-v1-b5cc9b005db2"
     },
@@ -689,8 +689,8 @@
         "scalp",
         "brows"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-knight-40b343f6b733",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-40b343f6b733",
+      "model_asset_key": "modular-kaykit-adventurers-knight-c3eb9679eebb",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-c3eb9679eebb",
       "thumbnail_asset_key": "modular-kaykit-adventurers-knight-head-51e33ccafe4d",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-knight-head-51e33ccafe4d"
     },
@@ -707,8 +707,8 @@
         "back_cape"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-knight-40b343f6b733",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-40b343f6b733",
+      "model_asset_key": "modular-kaykit-adventurers-knight-c3eb9679eebb",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-c3eb9679eebb",
       "thumbnail_asset_key": "modular-kaykit-adventurers-knight-back-cape-5ca89e39ae62",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-knight-back-cape-5ca89e39ae62"
     },
@@ -726,8 +726,8 @@
         "upper_hands"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-knight-40b343f6b733",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-40b343f6b733",
+      "model_asset_key": "modular-kaykit-adventurers-knight-c3eb9679eebb",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-c3eb9679eebb",
       "thumbnail_asset_key": "modular-kaykit-adventurers-knight-upper-9decbcde1e17",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-knight-upper-9decbcde1e17"
     },
@@ -744,10 +744,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-knight-40b343f6b733",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-40b343f6b733",
-      "thumbnail_asset_key": "modular-kaykit-adventurers-knight-lower-672b713b3563",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-knight-lower-672b713b3563"
+      "model_asset_key": "modular-kaykit-adventurers-knight-c3eb9679eebb",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-c3eb9679eebb",
+      "thumbnail_asset_key": "modular-kaykit-adventurers-knight-lower-174fe4db17d2",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-knight-lower-174fe4db17d2"
     },
     {
       "wearable_key": "kaykit-adventurers-knight-shoes",
@@ -764,8 +764,8 @@
       "covers": [
         "feet"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-knight-40b343f6b733",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-40b343f6b733",
+      "model_asset_key": "modular-kaykit-adventurers-knight-c3eb9679eebb",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-knight-c3eb9679eebb",
       "thumbnail_asset_key": "modular-kaykit-adventurers-knight-shoes-c89103ef2f34",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-knight-shoes-c89103ef2f34"
     },
@@ -785,8 +785,8 @@
         "scalp",
         "brows"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+      "model_asset_key": "modular-kaykit-adventurers-barbarian-683c6971a129",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-683c6971a129",
       "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-head-ab68dfaf3f3e",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-head-ab68dfaf3f3e"
     },
@@ -804,8 +804,8 @@
         "upper_hands"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+      "model_asset_key": "modular-kaykit-adventurers-barbarian-683c6971a129",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-683c6971a129",
       "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-upper-09a9e829a7dc",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-upper-09a9e829a7dc"
     },
@@ -822,10 +822,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
-      "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-lower-4b7347008c1d",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-lower-4b7347008c1d"
+      "model_asset_key": "modular-kaykit-adventurers-barbarian-683c6971a129",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-683c6971a129",
+      "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-lower-9e61c4bbdc5c",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-lower-9e61c4bbdc5c"
     },
     {
       "wearable_key": "kaykit-adventurers-barbarian-shoes",
@@ -842,8 +842,8 @@
       "covers": [
         "feet"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+      "model_asset_key": "modular-kaykit-adventurers-barbarian-683c6971a129",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-683c6971a129",
       "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-shoes-c3d0e2a4af27",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-shoes-c3d0e2a4af27"
     },
@@ -863,8 +863,8 @@
         "scalp",
         "brows"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-mage-7a39543bda05",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-7a39543bda05",
+      "model_asset_key": "modular-kaykit-adventurers-mage-446ba36492f2",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-446ba36492f2",
       "thumbnail_asset_key": "modular-kaykit-adventurers-mage-head-9edf0520b6bb",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-mage-head-9edf0520b6bb"
     },
@@ -881,8 +881,8 @@
         "back_cape"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-mage-7a39543bda05",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-7a39543bda05",
+      "model_asset_key": "modular-kaykit-adventurers-mage-446ba36492f2",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-446ba36492f2",
       "thumbnail_asset_key": "modular-kaykit-adventurers-mage-back-cape-f32d75388ae9",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-mage-back-cape-f32d75388ae9"
     },
@@ -900,8 +900,8 @@
         "upper_hands001"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-mage-7a39543bda05",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-7a39543bda05",
+      "model_asset_key": "modular-kaykit-adventurers-mage-446ba36492f2",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-446ba36492f2",
       "thumbnail_asset_key": "modular-kaykit-adventurers-mage-upper-6e0c093c29f5",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-mage-upper-6e0c093c29f5"
     },
@@ -918,10 +918,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-mage-7a39543bda05",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-7a39543bda05",
-      "thumbnail_asset_key": "modular-kaykit-adventurers-mage-lower-15e83f4b723d",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-mage-lower-15e83f4b723d"
+      "model_asset_key": "modular-kaykit-adventurers-mage-446ba36492f2",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-446ba36492f2",
+      "thumbnail_asset_key": "modular-kaykit-adventurers-mage-lower-84ace2d52e3e",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-mage-lower-84ace2d52e3e"
     },
     {
       "wearable_key": "kaykit-adventurers-mage-shoes",
@@ -938,8 +938,8 @@
       "covers": [
         "feet"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-mage-7a39543bda05",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-7a39543bda05",
+      "model_asset_key": "modular-kaykit-adventurers-mage-446ba36492f2",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-mage-446ba36492f2",
       "thumbnail_asset_key": "modular-kaykit-adventurers-mage-shoes-f90a3b25da53",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-mage-shoes-f90a3b25da53"
     },
@@ -959,8 +959,8 @@
         "scalp",
         "brows"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-rogue-f467961f3d95",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-f467961f3d95",
+      "model_asset_key": "modular-kaykit-adventurers-rogue-9eba8422e7a4",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-9eba8422e7a4",
       "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-head-20739f95d66d",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-head-20739f95d66d"
     },
@@ -977,8 +977,8 @@
         "back_cape"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-rogue-f467961f3d95",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-f467961f3d95",
+      "model_asset_key": "modular-kaykit-adventurers-rogue-9eba8422e7a4",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-9eba8422e7a4",
       "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-back-cape-e0632841982d",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-back-cape-e0632841982d"
     },
@@ -996,8 +996,8 @@
         "upper_hands"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-rogue-f467961f3d95",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-f467961f3d95",
+      "model_asset_key": "modular-kaykit-adventurers-rogue-9eba8422e7a4",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-9eba8422e7a4",
       "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-upper-34817e250e79",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-upper-34817e250e79"
     },
@@ -1014,10 +1014,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-rogue-f467961f3d95",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-f467961f3d95",
-      "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-lower-3617c5636266",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-lower-3617c5636266"
+      "model_asset_key": "modular-kaykit-adventurers-rogue-9eba8422e7a4",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-9eba8422e7a4",
+      "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-lower-866e541f2795",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-lower-866e541f2795"
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-shoes",
@@ -1034,8 +1034,8 @@
       "covers": [
         "feet"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-rogue-f467961f3d95",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-f467961f3d95",
+      "model_asset_key": "modular-kaykit-adventurers-rogue-9eba8422e7a4",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-9eba8422e7a4",
       "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-shoes-989607bafe6a",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-shoes-989607bafe6a"
     },
@@ -1055,8 +1055,8 @@
         "scalp",
         "brows"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
+      "model_asset_key": "modular-kaykit-adventurers-rogue-hooded-293208a9b609",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-293208a9b609",
       "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-hooded-head-c99a7cd5bda5",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-head-c99a7cd5bda5"
     },
@@ -1074,8 +1074,8 @@
         "upper_hands"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
+      "model_asset_key": "modular-kaykit-adventurers-rogue-hooded-293208a9b609",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-293208a9b609",
       "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-hooded-upper-abbbb1363b10",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-upper-abbbb1363b10"
     },
@@ -1092,10 +1092,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
-      "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-hooded-lower-eadfb87ed947",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-lower-eadfb87ed947"
+      "model_asset_key": "modular-kaykit-adventurers-rogue-hooded-293208a9b609",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-293208a9b609",
+      "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-hooded-lower-50c085cfb3ff",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-lower-50c085cfb3ff"
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-hooded-shoes",
@@ -1112,8 +1112,8 @@
       "covers": [
         "feet"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-27f668c28e1b",
+      "model_asset_key": "modular-kaykit-adventurers-rogue-hooded-293208a9b609",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-293208a9b609",
       "thumbnail_asset_key": "modular-kaykit-adventurers-rogue-hooded-shoes-6e782a87f2dc",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-shoes-6e782a87f2dc"
     },
@@ -1140,8 +1140,8 @@
           "ranger_smile_beard"
         ]
       },
-      "model_asset_key": "modular-kaykit-adventurers-ranger-797fddbaa43b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-797fddbaa43b",
+      "model_asset_key": "modular-kaykit-adventurers-ranger-8bc78bbd3081",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-8bc78bbd3081",
       "thumbnail_asset_key": "modular-kaykit-adventurers-ranger-head-c50f1307772a",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-head-c50f1307772a"
     },
@@ -1158,8 +1158,8 @@
         "back_cape"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-ranger-797fddbaa43b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-797fddbaa43b",
+      "model_asset_key": "modular-kaykit-adventurers-ranger-8bc78bbd3081",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-8bc78bbd3081",
       "thumbnail_asset_key": "modular-kaykit-adventurers-ranger-back-cape-f92427e3c373",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-back-cape-f92427e3c373"
     },
@@ -1176,8 +1176,8 @@
         "back_quiver"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-ranger-797fddbaa43b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-797fddbaa43b",
+      "model_asset_key": "modular-kaykit-adventurers-ranger-8bc78bbd3081",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-8bc78bbd3081",
       "thumbnail_asset_key": "modular-kaykit-adventurers-ranger-back-quiver-d6b02517374d",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-back-quiver-d6b02517374d"
     },
@@ -1195,8 +1195,8 @@
         "upper_hands"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-ranger-797fddbaa43b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-797fddbaa43b",
+      "model_asset_key": "modular-kaykit-adventurers-ranger-8bc78bbd3081",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-8bc78bbd3081",
       "thumbnail_asset_key": "modular-kaykit-adventurers-ranger-upper-9cf7bbe3106c",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-upper-9cf7bbe3106c"
     },
@@ -1213,10 +1213,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-ranger-797fddbaa43b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-797fddbaa43b",
-      "thumbnail_asset_key": "modular-kaykit-adventurers-ranger-lower-7aa7451c33d1",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-lower-7aa7451c33d1"
+      "model_asset_key": "modular-kaykit-adventurers-ranger-8bc78bbd3081",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-8bc78bbd3081",
+      "thumbnail_asset_key": "modular-kaykit-adventurers-ranger-lower-6fa582f29b85",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-lower-6fa582f29b85"
     },
     {
       "wearable_key": "kaykit-adventurers-ranger-shoes",
@@ -1233,8 +1233,8 @@
       "covers": [
         "feet"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-ranger-797fddbaa43b",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-797fddbaa43b",
+      "model_asset_key": "modular-kaykit-adventurers-ranger-8bc78bbd3081",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-8bc78bbd3081",
       "thumbnail_asset_key": "modular-kaykit-adventurers-ranger-shoes-404e4558afb5",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-ranger-shoes-404e4558afb5"
     },
@@ -1251,8 +1251,8 @@
         "back_cloak"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-skeletons-minion-d23f91ef5a7e",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-minion-d23f91ef5a7e",
+      "model_asset_key": "modular-kaykit-skeletons-minion-ac07eb81b29e",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-minion-ac07eb81b29e",
       "thumbnail_asset_key": "modular-kaykit-skeletons-minion-back-cloak-bcc50387f023",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-minion-back-cloak-bcc50387f023"
     },
@@ -1269,10 +1269,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-skeletons-minion-d23f91ef5a7e",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-minion-d23f91ef5a7e",
-      "thumbnail_asset_key": "modular-skeleton-minion-lower-v1-49068c7d8566",
-      "thumbnail_url": "/api/v1/assets/modular-skeleton-minion-lower-v1-49068c7d8566"
+      "model_asset_key": "modular-kaykit-skeletons-minion-ac07eb81b29e",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-minion-ac07eb81b29e",
+      "thumbnail_asset_key": "modular-skeleton-minion-lower-v1-f2f79101a879",
+      "thumbnail_url": "/api/v1/assets/modular-skeleton-minion-lower-v1-f2f79101a879"
     },
     {
       "wearable_key": "kaykit-skeletons-mage-head",
@@ -1289,8 +1289,8 @@
       "covers": [
         "scalp"
       ],
-      "model_asset_key": "modular-kaykit-skeletons-mage-b120122a73d5",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-mage-b120122a73d5",
+      "model_asset_key": "modular-kaykit-skeletons-mage-98d701bbb501",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-mage-98d701bbb501",
       "thumbnail_asset_key": "modular-kaykit-skeletons-mage-head-58b3544a4dfe",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-mage-head-58b3544a4dfe"
     },
@@ -1307,8 +1307,8 @@
         "upper_outfit001"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-skeletons-mage-b120122a73d5",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-mage-b120122a73d5",
+      "model_asset_key": "modular-kaykit-skeletons-mage-98d701bbb501",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-mage-98d701bbb501",
       "thumbnail_asset_key": "modular-kaykit-skeletons-mage-upper-76a35ce7b582",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-mage-upper-76a35ce7b582"
     },
@@ -1325,10 +1325,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-skeletons-mage-b120122a73d5",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-mage-b120122a73d5",
-      "thumbnail_asset_key": "modular-kaykit-skeletons-mage-lower-689b97b92e9e",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-mage-lower-689b97b92e9e"
+      "model_asset_key": "modular-kaykit-skeletons-mage-98d701bbb501",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-mage-98d701bbb501",
+      "thumbnail_asset_key": "modular-kaykit-skeletons-mage-lower-de2f888762af",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-mage-lower-de2f888762af"
     },
     {
       "wearable_key": "kaykit-skeletons-rogue-head",
@@ -1440,8 +1440,8 @@
       "covers": [
         "scalp"
       ],
-      "model_asset_key": "modular-kaykit-skeletons-warrior-52ef48e422e3",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-52ef48e422e3",
+      "model_asset_key": "modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
       "thumbnail_asset_key": "modular-kaykit-skeletons-warrior-head-8ef90b99f3fe",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-head-8ef90b99f3fe"
     },
@@ -1458,8 +1458,8 @@
         "back_cloak"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-skeletons-warrior-52ef48e422e3",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-52ef48e422e3",
+      "model_asset_key": "modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
       "thumbnail_asset_key": "modular-kaykit-skeletons-warrior-back-cloak-dd55de7a864f",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-back-cloak-dd55de7a864f"
     },
@@ -1477,8 +1477,8 @@
         "upper_hands"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-skeletons-warrior-52ef48e422e3",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-52ef48e422e3",
+      "model_asset_key": "modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
       "thumbnail_asset_key": "modular-kaykit-skeletons-warrior-upper-76f95e86e457",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-upper-76f95e86e457"
     },
@@ -1495,10 +1495,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-skeletons-warrior-52ef48e422e3",
-      "model_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-52ef48e422e3",
-      "thumbnail_asset_key": "modular-kaykit-skeletons-warrior-lower-cd76673dbdc4",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-lower-cd76673dbdc4"
+      "model_asset_key": "modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
+      "model_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
+      "thumbnail_asset_key": "modular-kaykit-skeletons-warrior-lower-738b9fd66f2a",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-skeletons-warrior-lower-738b9fd66f2a"
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-minion-upper",
@@ -1513,8 +1513,8 @@
         "upper_outfit001"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-minion-c62ec1a3cb17",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-c62ec1a3cb17",
+      "model_asset_key": "modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
       "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-minion-upper-717609183137",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-upper-717609183137"
     },
@@ -1531,10 +1531,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-minion-c62ec1a3cb17",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-c62ec1a3cb17",
-      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-minion-lower-6d1f5c44d275",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-lower-6d1f5c44d275"
+      "model_asset_key": "modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
+      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-minion-lower-a5985a808d6d",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-lower-a5985a808d6d"
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-archer-head",
@@ -1551,8 +1551,8 @@
       "covers": [
         "scalp"
       ],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-archer-c0aba4902cc1",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-c0aba4902cc1",
+      "model_asset_key": "modular-kaykit-legacy-skeleton-archer-14f70736321a",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-14f70736321a",
       "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-archer-head-5371bfed7710",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-head-5371bfed7710"
     },
@@ -1569,10 +1569,10 @@
         "upper_outfit001"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-archer-c0aba4902cc1",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-c0aba4902cc1",
-      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-archer-upper-edf8912e424e",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-upper-edf8912e424e"
+      "model_asset_key": "modular-kaykit-legacy-skeleton-archer-14f70736321a",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-14f70736321a",
+      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-archer-upper-12c9ad51ed03",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-upper-12c9ad51ed03"
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-archer-lower",
@@ -1587,10 +1587,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-archer-c0aba4902cc1",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-c0aba4902cc1",
-      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-archer-lower-e0305b60925a",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-lower-e0305b60925a"
+      "model_asset_key": "modular-kaykit-legacy-skeleton-archer-14f70736321a",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-14f70736321a",
+      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-archer-lower-b1c8f03f1479",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-lower-b1c8f03f1479"
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-mage-head",
@@ -1605,8 +1605,8 @@
         "head_provider"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-mage-6360d367fca9",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-6360d367fca9",
+      "model_asset_key": "modular-kaykit-legacy-skeleton-mage-a399310e49fa",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-a399310e49fa",
       "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-mage-head-43e6aeeb16cb",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-head-43e6aeeb16cb"
     },
@@ -1623,8 +1623,8 @@
         "back_cloak"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-mage-6360d367fca9",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-6360d367fca9",
+      "model_asset_key": "modular-kaykit-legacy-skeleton-mage-a399310e49fa",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-a399310e49fa",
       "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-mage-back-cloak-a1e0c0e9f284",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-back-cloak-a1e0c0e9f284"
     },
@@ -1641,8 +1641,8 @@
         "upper_outfit001"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-mage-6360d367fca9",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-6360d367fca9",
+      "model_asset_key": "modular-kaykit-legacy-skeleton-mage-a399310e49fa",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-a399310e49fa",
       "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-mage-upper-3b8748f2d631",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-upper-3b8748f2d631"
     },
@@ -1659,10 +1659,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-mage-6360d367fca9",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-6360d367fca9",
-      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-mage-lower-c1d09a448fa4",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-lower-c1d09a448fa4"
+      "model_asset_key": "modular-kaykit-legacy-skeleton-mage-a399310e49fa",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-a399310e49fa",
+      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-mage-lower-b10cb9109975",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-mage-lower-b10cb9109975"
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-warrior-head",
@@ -1680,8 +1680,8 @@
         "scalp",
         "smile_scalp"
       ],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-warrior-f4d141f5c25c",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-f4d141f5c25c",
+      "model_asset_key": "modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
       "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-warrior-head-e7ae82db0c81",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-head-e7ae82db0c81"
     },
@@ -1698,10 +1698,10 @@
         "upper_outfit001"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-warrior-f4d141f5c25c",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-f4d141f5c25c",
-      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-warrior-upper-8cf47b513d6f",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-upper-8cf47b513d6f"
+      "model_asset_key": "modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
+      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-warrior-upper-69b57ed84c9e",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-upper-69b57ed84c9e"
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-warrior-lower",
@@ -1716,10 +1716,10 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-legacy-skeleton-warrior-f4d141f5c25c",
-      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-f4d141f5c25c",
-      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-warrior-lower-8c8a391eb2d9",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-lower-8c8a391eb2d9"
+      "model_asset_key": "modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
+      "model_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
+      "thumbnail_asset_key": "modular-kaykit-legacy-skeleton-warrior-lower-e3528182e8c8",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-lower-e3528182e8c8"
     },
     {
       "wearable_key": "head-arrow-v1",
