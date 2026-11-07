@@ -46,7 +46,10 @@ func requireRefreshedOffer(t *testing.T, f shopFixture, id, artwork string, enab
 func TestCharacterAndSceneSeedsRefreshOnlyVersionedArtwork(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	body, _ := character.Get("kaykit-adventurers-barbarian")
+	body, ok := character.Get("kaykit-skeleton-v1")
+	if !ok {
+		t.Fatal("missing basic skeleton")
+	}
 	scene, _ := island.SpatialSceneFind("forest-courtyard-v1")
 	oldBody := "kaykit-adventurers-barbarian-m-a608430851cc-thumbnail"
 	oldScene := "camp-sports-area-v1-thumbnail"
@@ -92,11 +95,14 @@ func TestCharacterAndSceneSeedsRefreshOnlyVersionedArtwork(t *testing.T) {
 	}
 }
 
-// 旧角色报价刷新后仍按同一人物成交，购买资格与四槽权益没有依赖旧图片。
+// 旧角色报价刷新后仍按同一人物成交，购买资格与身体权益没有依赖旧图片。
 func TestCharacterSeedRefreshAllowsBuyingHistoricalOffer(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	body, _ := character.Get("kaykit-adventurers-barbarian")
+	body, ok := character.Get("kaykit-skeleton-v1")
+	if !ok {
+		t.Fatal("missing basic skeleton")
+	}
 	historicalOffer(t, f, "old-character", shop.TypeCharacter, body.Key, "kaykit-adventurers-barbarian-m-a608430851cc-thumbnail", 1, nil)
 	if err := shop.SeedCharacterProducts(ctx, f.DB, 100); err != nil {
 		t.Fatal(err)
@@ -107,7 +113,7 @@ func TestCharacterSeedRefreshAllowsBuyingHistoricalOffer(t *testing.T) {
 		t.Fatalf("historical character purchase=%+v err=%v", order, err)
 	}
 	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: body.Key})
-	if err != nil || saved.CharacterKey != body.Key || len(saved.Inventory) != 4 {
+	if err != nil || saved.CharacterKey != body.Key || len(saved.Inventory) != 0 {
 		t.Fatalf("historical offer lost character capability: %+v err=%v", saved, err)
 	}
 }

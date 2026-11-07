@@ -42,7 +42,7 @@ func TestAttachmentWinsCleanup(t *testing.T) {
 		t.Fatalf("cleanup bypassed held write lock: %v", err)
 	case <-time.After(30 * time.Millisecond):
 	}
-	if err := Replace(ctx, tx, References{}, References{PhotoID: &upload.ID}, fixtureTime, s.Config.MediaOrphanTTL); err != nil {
+	if err := Replace(ctx, tx, p.AccountID, References{}, References{PhotoID: &upload.ID}, fixtureTime, s.Config.MediaOrphanTTL); err != nil {
 		t.Fatal(err)
 	}
 	insertAttachedRecord(t, tx, upload.ID)
@@ -94,7 +94,7 @@ func TestFailedDeletionRecovers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = Replace(ctx, tx, References{}, References{PhotoID: &upload.ID}, s.Now(), s.Config.MediaOrphanTTL)
+	err = Replace(ctx, tx, p.AccountID, References{}, References{PhotoID: &upload.ID}, s.Now(), s.Config.MediaOrphanTTL)
 	mediaCode(t, err, "INVALID_MEDIA")
 	tx.Rollback()
 	if err := os.Remove(blocker); err != nil {

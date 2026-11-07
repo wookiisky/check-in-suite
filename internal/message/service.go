@@ -72,7 +72,7 @@ func (s *Service) Create(ctx context.Context, p account.Principal, key string, i
 	if err := account.Authorize(ctx, tx, p, false, now); err != nil {
 		return out, err
 	}
-	saved, err := idempotency.Lookup(ctx, tx, "message.create", key, hash)
+	saved, err := idempotency.Lookup(ctx, tx, p.AccountID, "message.create", key, hash)
 	if err != nil {
 		return out, err
 	}
@@ -88,10 +88,10 @@ func (s *Service) Create(ctx context.Context, p account.Principal, key string, i
 		return out, err
 	}
 	out = Message{ID: core.ID(), Text: input.Text, CreatedAt: core.Timestamp(now.UnixMilli())}
-	if _, err := tx.ExecContext(ctx, "INSERT INTO messages(id,text,created_at) VALUES(?,?,?)", out.ID, out.Text, now.UnixMilli()); err != nil {
+	if _, err := tx.ExecContext(ctx, "INSERT INTO messages(id,account_id,text,created_at) VALUES(?,?,?,?)", out.ID, p.AccountID, out.Text, now.UnixMilli()); err != nil {
 		return Message{}, err
 	}
-	if err := idempotency.Save(ctx, tx, "message.create", key, hash, out.ID, 201, receipt{out.ID, out.CreatedAt}, now); err != nil {
+	if err := idempotency.Save(ctx, tx, p.AccountID, "message.create", key, hash, out.ID, 201, receipt{out.ID, out.CreatedAt}, now); err != nil {
 		return Message{}, err
 	}
 	return out, tx.Commit()
@@ -107,7 +107,7 @@ func (s *Service) Delete(ctx context.Context, p account.Principal, id string) er
 	if err := account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
 		return err
 	}
-	if _, err := tx.ExecContext(ctx, "DELETE FROM messages WHERE id=?", id); err != nil {
+	if _, err := tx.ExecContext(ctx, "DELETE FROM messages WHERE account_id=? AND id=?", p.AccountID, id); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -134,10 +134,10 @@ func (s *Service) List(ctx context.Context, p account.Principal, after string, l
 	if err := account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
 		return out, err
 	}
-	query := "SELECT id,text,created_at FROM messages"
-	args := []any{}
+	query := "SELECT id,text,created_at FROM messages WHERE account_id=?"
+	args := []any{p.AccountID}
 	if after != "" {
-		query += " WHERE (created_at,id)<(?,?)"
+		query += " AND (created_at,id)<(?,?)"
 		args = append(args, position.Created, position.ID)
 	}
 	query += " ORDER BY created_at DESC,id DESC LIMIT ?"

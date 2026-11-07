@@ -39,25 +39,53 @@
   "showCombinations": "查看16种混搭",
   "showSingle": "返回单人样片",
   "combinationHelp": "全部16种组合播放同一动作。返回单人样片后，可以继续调整当前外观。",
-  "slotLabels": { "hair": "发型", "upper": "上衣", "lower": "下装", "shoes": "鞋子" },
+  "slotLabels": {
+    "hair": "发型",
+    "upper": "上衣",
+    "lower": "下装",
+    "shoes": "鞋子"
+  },
   "optionLabels": {
-    "hair-rogue": "短发",
-    "hair-barbarian": "光头短须",
-    "upper-rogue": "绿色旅行装",
-    "upper-barbarian": "蓝色皮甲",
-    "lower-rogue": "旅行短装",
-    "lower-barbarian": "皮质短装",
-    "shoes-rogue": "旅行靴",
-    "shoes-barbarian": "护边靴"
+    "hair-rogue": "棕色及肩发",
+    "hair-barbarian": "灰色眉毛与胡须",
+    "upper-rogue": "绿色短袖上衣与棕色护腕",
+    "lower-rogue": "绿色短裤与棕色腰带",
+    "shoes-rogue": "棕色翻边皮靴",
+    "upper-barbarian": "蓝色毛边上衣与护腕",
+    "lower-barbarian": "棕色铆钉腰带与毛边短裤",
+    "shoes-barbarian": "灰色毛边靴"
   },
   "independent": "右侧人物独立播放待机动作，用于检查两个骨架互不影响。",
-  "cameraDirections": ["东南视角", "东北视角", "西北视角", "西南视角"],
+  "cameraDirections": [
+    "东南视角",
+    "东北视角",
+    "西北视角",
+    "西南视角"
+  ],
   "animations": [
-    { "clip": "Idle", "label": "待机" },
-    { "clip": "Walking_A", "label": "行走" },
-    { "clip": "Running_A", "label": "跑步" },
-    { "clip": "Sit_Chair_Idle", "label": "坐下" },
-    { "clip": "Cheer", "label": "抬手" },
-    { "clip": "Exercise", "label": "运动 · Mixamo样片" }
+    {
+      "clip": "Idle",
+      "label": "待机"
+    },
+    {
+      "clip": "Walking_A",
+      "label": "行走"
+    },
+    {
+      "clip": "Running_A",
+      "label": "跑步"
+    },
+    {
+      "clip": "Sit_Chair_Idle",
+      "label": "坐下"
+    },
+    {
+      "clip": "Cheer",
+      "label": "抬手"
+    },
+    {
+      "clip": "Exercise",
+      "label": "运动 · Mixamo样片"
+    }
   ]
 }

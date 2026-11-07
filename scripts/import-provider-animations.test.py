@@ -6,6 +6,7 @@ import math
 import hashlib
 import tempfile
 import subprocess
+import shutil
 import sys
 from unittest.mock import patch
 from pathlib import Path
@@ -84,13 +85,48 @@ class ProviderAnimationDeliveryTest(unittest.TestCase):
 class ProviderAnimationBatchTest(unittest.TestCase):
     """用实际GLB与临时清单验证分批、去重、恢复和失败的持久结果。"""
 
+    # CLI 将产物与进度放进候选镜像，正式文件不参与写入。
+    def test_cli_writes_candidate_and_keeps_production_unchanged(self):
+        source = self.source("first")
+        self.configuration["content"] = {"description": "fixture", "select_batch": "select"}
+        configuration = self.root / "sources.json"
+        configuration.write_text(json.dumps(self.configuration))
+        production = self.root / "internal/assets/provider-animation-manifest.json"
+        production.parent.mkdir(parents=True)
+        production.write_bytes(b"existing production")
+        candidate = self.root / ".local/candidate"
+        with patch.object(MODULE, "ROOT", self.root), patch.object(MODULE, "retarget", return_value=(self.times, self.poses, {"method": "fixture"})):
+            result = MODULE.main(["--all", "--sources", str(configuration), "--canonical", str(self.canonical), "--output", str(candidate)])
+        self.assertEqual(result, 0)
+        report = json.loads((candidate / "internal/assets/provider-animation-manifest.json").read_text())
+        self.assertTrue(report["processing_complete"])
+        self.assertEqual(report["checks"], "not_run")
+        self.assertEqual(report["application"], "not_run")
+        self.assertTrue(list((candidate / "internal/assets/builtin").glob("*.glb")))
+        candidate_report = json.loads((candidate / "candidate.json").read_text())
+        self.assertEqual(candidate_report["states"]["processing"], "passed")
+        self.assertEqual(candidate_report["states"]["checks"], "not_run")
+        self.assertIn("--output", report["checkpoint"]["command"])
+        self.assertEqual(production.read_bytes(), b"existing production")
+
+    # 输出目录不能指回正式素材，即使显式给参数也不允许。
+    def test_cli_rejects_production_output_before_conversion(self):
+        self.source("first")
+        self.configuration["content"] = {"description": "fixture", "select_batch": "select"}
+        configuration = self.root / "sources.json"
+        configuration.write_text(json.dumps(self.configuration))
+        with patch.object(MODULE, "ROOT", self.root), patch.object(MODULE, "import_sources") as convert:
+            with self.assertRaises(SystemExit):
+                MODULE.main(["--all", "--sources", str(configuration), "--output", str(self.root / "internal")])
+        convert.assert_not_called()
+
     # 最小动作夹具包含实际时间与旋转轨道，不依赖源包或Blender。
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
-        self.output = self.root / "outputs"
-        self.output.mkdir()
+        self.output = self.root / ".local/outputs"
+        self.output.mkdir(parents=True)
         self.manifest = self.root / "manifest.json"
         self.nodes = [{"name": "root"}]
         self.times = [0.0, 1.0]
@@ -113,6 +149,69 @@ class ProviderAnimationBatchTest(unittest.TestCase):
         with patch.object(MODULE, "retarget", return_value=result) as converter:
             report = MODULE.import_sources(self.configuration, sources, self.manifest, self.output, self.canonical)
         return report, converter.call_count
+
+    # 外链缓冲变化必须重算，即使GLTF主文件及审核hash保持不变。
+    def test_external_buffer_change_invalidates_source_resume(self):
+        source = self.source("external")
+        path = self.root / "external.gltf"
+        buffer = self.root / "motion.bin"
+        buffer.write_bytes(b"aaaa")
+        path.write_text(json.dumps({"nodes": self.nodes, "buffers": [{"uri": "motion.bin", "byteLength": 4}], "animations": [{"name": "walk"}]}))
+        source.update(source_file=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+        _, calls = self.convert([source])
+        self.assertEqual(calls, 1)
+        _, calls = self.convert([source])
+        self.assertEqual(calls, 0)
+        buffer.write_bytes(b"bbbb")
+        _, calls = self.convert([source])
+        self.assertEqual(calls, 1)
+
+    # 单批成功就是候选的加工成功，全局待办仍单独保留。
+    def test_cli_selected_scope_is_complete_without_processing_other_batches(self):
+        self.source("first")
+        self.source("second")
+        self.configuration["content"] = {"description": "fixture", "select_batch": "select"}
+        configuration = self.root / "sources.json"
+        configuration.write_text(json.dumps(self.configuration))
+        candidate = self.root / ".local/candidate"
+        with patch.object(MODULE, "ROOT", self.root), patch.object(MODULE, "retarget", return_value=(self.times, self.poses, {"method": "fixture"})):
+            result = MODULE.main(["--batch", "first", "--sources", str(configuration), "--canonical", str(self.canonical), "--output", str(candidate)])
+        self.assertEqual(result, 0)
+        report = json.loads((candidate / "internal/assets/provider-animation-manifest.json").read_text())
+        self.assertEqual(report["counts"]["pending_clips"], 1)
+        self.assertEqual(json.loads((candidate / "candidate.json").read_text())["states"]["processing"], "passed")
+
+    # 已完成候选不能被直接入口覆盖，恢复也只针对未完成加工。
+    def test_cli_rejects_passed_candidate_even_when_resume_is_requested(self):
+        self.source("first")
+        self.configuration["content"] = {"description": "fixture", "select_batch": "select"}
+        configuration = self.root / "sources.json"
+        configuration.write_text(json.dumps(self.configuration))
+        candidate = self.root / ".local/candidate"
+        candidate.mkdir(parents=True)
+        (candidate/'candidate.json').write_text(json.dumps({'pipeline': 'animations', 'states': {'processing': 'passed'}}))
+        with patch.object(MODULE, "ROOT", self.root), patch.object(MODULE, "import_sources") as convert:
+            with self.assertRaises(SystemExit):
+                MODULE.main(['--all', '--sources', str(configuration), '--output', str(candidate), '--resume'])
+        convert.assert_not_called()
+
+    # 未完成候选恢复保留成功项，仅重新处理失败来源。
+    def test_cli_resume_failed_candidate_preserves_successful_outputs(self):
+        first, second = self.source('first'), self.source('second')
+        self.configuration['content'] = {'description': 'fixture', 'select_batch': 'select'}
+        configuration = self.root/'sources.json'
+        configuration.write_text(json.dumps(self.configuration))
+        candidate = self.root/'.local/candidate'
+        args = ['--all', '--sources', str(configuration), '--canonical', str(self.canonical), '--output', str(candidate)]
+        with patch.object(MODULE, 'ROOT', self.root):
+            with patch.object(MODULE, 'retarget', side_effect=[(self.times, self.poses, {'method': 'fixture'}), ValueError('fixture failure')]):
+                self.assertEqual(MODULE.main(args), 1)
+            before = {path.name: path.read_bytes() for path in (candidate/'internal/assets/builtin').glob('*.glb')}
+            with patch.object(MODULE, 'retarget', return_value=(self.times, self.poses, {'method': 'fixture'})) as converter:
+                self.assertEqual(MODULE.main([*args, '--resume']), 0)
+                self.assertEqual(converter.call_count, 1)
+        for name, data in before.items():
+            self.assertEqual((candidate/'internal/assets/builtin'/name).read_bytes(), data)
 
     # 第二批保留第一批，恢复成功项不重新转换或改写既有文件。
     def test_batches_preserve_results_and_resume_validated_outputs(self):
@@ -263,11 +362,17 @@ class ProviderAnimationBatchTest(unittest.TestCase):
         configuration = self.root / "sources.json"
         self.configuration["content"] = {"description": "fixture", "select_batch": "select"}
         configuration.write_text(json.dumps(self.configuration))
-        result = subprocess.run([sys.executable, str(ROOT / "scripts/import-provider-animations.py"), "--batch", "bad", "--sources", str(configuration), "--manifest", str(self.manifest), "--output", str(self.output)], capture_output=True, text=True)
+        scripts = self.root / "scripts"
+        scripts.mkdir()
+        for name in ["import-provider-animations.py", "asset-pipeline-candidate.py", "provider-animation-fbx.py", "provider-animation-sources.json"]:
+            shutil.copyfile(ROOT / "scripts" / name, scripts / name)
+        result = subprocess.run([sys.executable, str(scripts / "import-provider-animations.py"), "--batch", "bad", "--sources", str(configuration), "--manifest", str(self.output / "internal/assets/progress.json"), "--output", str(self.output), "--canonical", str(self.canonical)], capture_output=True, text=True)
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-        report = json.loads(self.manifest.read_text())
+        report = json.loads((self.output / "internal/assets/progress.json").read_text())
         self.assertEqual(report["counts"]["failed_clips"], 1)
         self.assertFalse(report["complete"])
+        candidate_report = json.loads((self.output / "candidate.json").read_text())
+        self.assertEqual(candidate_report["states"]["processing"], "failed")
 
     # FBX语义映射包含实际四肢关节，不把辅助控制骨当手脚。
     def test_fbx_joint_mapping_uses_reviewed_humanoid_bones(self):
@@ -341,4 +446,7 @@ class ProviderAnimationBatchTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    if "--fixtures-only" in sys.argv:
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(ProviderAnimationBatchTest)
+        raise SystemExit(not unittest.TextTestRunner().run(suite).wasSuccessful())
     unittest.main()

@@ -1,0 +1,3168 @@
+{
+  "recipe": "modular-six-slots-v4-fit-repairs",
+  "upper_clothing_fit": {
+    "upper-rogue-v1": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_rogue"
+          ]
+        },
+        "scale": [
+          1,
+          1.25,
+          1.25
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "bind_bone": "hand",
+        "scale": [
+          1.04,
+          1.04,
+          1.04
+        ]
+      }
+    ],
+    "upper-barbarian-v1": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_barbarian"
+          ]
+        },
+        "scale": [
+          1,
+          1.28,
+          1.28
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "bind_bone": "hand",
+        "scale": [
+          1.1,
+          1.06,
+          1.09
+        ]
+      }
+    ],
+    "kaykit-adventurers-knight-upper": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "scale": [
+          1,
+          1.28,
+          1.28
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "bind_bone": "hand",
+        "scale": [
+          1.04,
+          1.04,
+          1.04
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso"
+        },
+        "scale": [
+          1,
+          1.025,
+          1
+        ],
+        "transform_weight": {
+          "from_abs_x": 0,
+          "to_abs_x": "component_end",
+          "values": [
+            1,
+            1
+          ],
+          "z_bounds": [
+            0.8,
+            1.05
+          ]
+        }
+      }
+    ],
+    "kaykit-adventurers-mage-upper": [
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "wrist"
+        },
+        "bind_bone": "hand"
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001",
+            "upper_outfit.001"
+          ],
+          "bone_region": "upperarm"
+        },
+        "scale": [
+          1,
+          1.3,
+          1.3
+        ],
+        "bind_bone": "lowerarm",
+        "bind_from_bone": "lowerarm"
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001",
+            "upper_outfit.001"
+          ],
+          "bone_region": "upperarm"
+        },
+        "translation": [
+          0,
+          -0.025,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.58,
+          "to_abs_x": 0.76,
+          "values": [
+            0,
+            1
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "wrist"
+        },
+        "scale": [
+          1,
+          1.3,
+          1.3
+        ],
+        "translation": [
+          0,
+          -0.0286571147,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.76,
+          "to_abs_x": "component_end",
+          "values": [
+            1,
+            0
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso"
+        },
+        "weight_remap": {
+          "upperleg.l": "hips",
+          "upperleg.r": "hips"
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso"
+        },
+        "scale": [
+          1.01,
+          1,
+          1
+        ],
+        "translation": [
+          0.002120073288679125,
+          -0.0,
+          0
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso"
+        },
+        "scale": [
+          1,
+          1.18,
+          1
+        ],
+        "translation": [
+          0.0,
+          0.03099999192155009,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0,
+          "to_abs_x": 0.32,
+          "values": [
+            1,
+            0
+          ],
+          "z_bounds": [
+            0.76,
+            0.9
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001",
+            "upper_outfit.001"
+          ],
+          "bone_region": "upperarm"
+        },
+        "arm_surface_fit": {
+          "refine_abs_x": [
+            0.12,
+            0.45
+          ],
+          "refine_min_z": 1.17,
+          "subdivisions": 1,
+          "fit_abs_x": [
+            0.3,
+            0.42
+          ],
+          "fit_z": [
+            1.14,
+            1.2
+          ],
+          "offset": 0.003,
+          "strength": 0.98
+        }
+      }
+    ],
+    "kaykit-adventurers-barbarian-upper": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "scale": [
+          1,
+          1.12,
+          1.12
+        ]
+      },
+      {
+        "selector": {
+          "bone_region": "forearm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "bind_bone": "lowerarm",
+        "scale": [
+          1,
+          1.1,
+          1.1
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "bind_bone": "hand",
+        "scale": [
+          1.04,
+          1.04,
+          1.04
+        ]
+      }
+    ],
+    "kaykit-adventurers-rogue-upper": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "scale": [
+          1,
+          1.2,
+          1.2
+        ],
+        "bind_bone": "lowerarm",
+        "bind_from_bone": "lowerarm"
+      },
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "translation": [
+          0,
+          0.025,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.58,
+          "to_abs_x": 0.76,
+          "values": [
+            0,
+            1
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "bind_bone": "hand",
+        "scale": [
+          1.015,
+          1.04,
+          1.15
+        ],
+        "translation": [
+          0,
+          0,
+          -0.006
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "scale": [
+          0.9852217435836792,
+          1.153846263885498,
+          1.0434783697128296
+        ],
+        "translation": [
+          5.133281888447527e-08,
+          0.022561869248168148,
+          0.0062609081266913336
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.7588489198684693,
+          "to_abs_x": 0.8400489187240601,
+          "values": [
+            1,
+            0
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso",
+          "face_count": 476
+        },
+        "scale": [
+          1,
+          1.2,
+          1
+        ],
+        "translation": [
+          0,
+          0.03099999192155009,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0,
+          "to_abs_x": 0.32,
+          "values": [
+            1,
+            0
+          ],
+          "z_bounds": [
+            0.76,
+            0.9
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso",
+          "face_count": 94
+        },
+        "scale": [
+          1,
+          1.2,
+          1
+        ],
+        "translation": [
+          0,
+          0.03099999192155009,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0,
+          "to_abs_x": 0.32,
+          "values": [
+            1,
+            0
+          ],
+          "z_bounds": [
+            0.76,
+            0.9
+          ]
+        }
+      }
+    ],
+    "kaykit-adventurers-rogue-hooded-upper": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "scale": [
+          1,
+          1.1,
+          1.1
+        ],
+        "bind_bone": "lowerarm",
+        "bind_from_bone": "lowerarm"
+      },
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "translation": [
+          0,
+          0.025,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.58,
+          "to_abs_x": 0.76,
+          "values": [
+            0,
+            1
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "bind_bone": "hand",
+        "scale": [
+          1.015,
+          1.14,
+          1.15
+        ],
+        "translation": [
+          0,
+          0,
+          -0.006
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "scale": [
+          0.9852216839790344,
+          0.9649122357368469,
+          0.95652174949646
+        ],
+        "translation": [
+          1.459326881558809e-09,
+          0.023780934997693202,
+          0.005739069314216749
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.7588489198684693,
+          "to_abs_x": 0.8400489187240601,
+          "values": [
+            1,
+            0
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso",
+          "face_count": 476
+        },
+        "scale": [
+          1,
+          1.2,
+          1
+        ],
+        "translation": [
+          0,
+          0.03099999192155009,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0,
+          "to_abs_x": 0.32,
+          "values": [
+            1,
+            0
+          ],
+          "z_bounds": [
+            0.76,
+            0.9
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso",
+          "face_count": 94
+        },
+        "scale": [
+          1,
+          1.2,
+          1
+        ],
+        "translation": [
+          0,
+          0.03099999192155009,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0,
+          "to_abs_x": 0.32,
+          "values": [
+            1,
+            0
+          ],
+          "z_bounds": [
+            0.76,
+            0.9
+          ]
+        }
+      }
+    ],
+    "kaykit-adventurers-ranger-upper": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "scale": [
+          1,
+          1.2,
+          1.2
+        ]
+      },
+      {
+        "selector": {
+          "bone_region": "forearm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "bind_bone": "lowerarm",
+        "scale": [
+          1,
+          1.1,
+          1.1
+        ],
+        "bind_from_bone": "lowerarm"
+      },
+      {
+        "selector": {
+          "bone_region": "forearm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "translation": [
+          0,
+          0.025,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.58,
+          "to_abs_x": 0.76,
+          "values": [
+            0,
+            1
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "bind_bone": "hand",
+        "scale": [
+          1.015,
+          1.05,
+          1.04
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "scale": [
+          0.9852217435836792,
+          1.047619104385376,
+          1.0576924085617065
+        ],
+        "translation": [
+          4.8370736749348e-08,
+          0.024897832951967333,
+          9.845648207829072e-08
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.7589767718315125,
+          "to_abs_x": 0.8401767706871033,
+          "values": [
+            1,
+            0
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso",
+          "face_count": 329
+        },
+        "scale": [
+          1.08,
+          1,
+          1
+        ],
+        "translation": [
+          0.016960586309433,
+          0,
+          0
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso",
+          "face_count": 329
+        },
+        "scale": [
+          1.04,
+          1,
+          1
+        ],
+        "translation": [
+          0.008480293154716491,
+          0,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0,
+          "to_abs_x": 1,
+          "values": [
+            1,
+            1
+          ],
+          "z_bounds": [
+            0.9,
+            1.05
+          ]
+        }
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso",
+          "face_count": 329
+        },
+        "scale": [
+          1,
+          1.16,
+          1
+        ],
+        "translation": [
+          0.0,
+          0.019999994614366728,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0,
+          "to_abs_x": 0.32,
+          "values": [
+            1,
+            0
+          ],
+          "z_bounds": [
+            0.76,
+            0.9
+          ]
+        }
+      }
+    ],
+    "kaykit-skeletons-mage-upper": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "scale": [
+          1,
+          1.15,
+          1.15
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_outfit001"
+          ],
+          "bone_region": "torso",
+          "face_count": 616
+        },
+        "scale": [
+          1.015,
+          1.22,
+          1
+        ],
+        "translation": [
+          0.00318010926246641,
+          0,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0,
+          "to_abs_x": 1,
+          "values": [
+            1,
+            1
+          ],
+          "z_bounds": [
+            0.9,
+            1.05
+          ]
+        }
+      }
+    ],
+    "kaykit-skeletons-rogue-upper": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "scale": [
+          0.85,
+          1.65,
+          1.65
+        ],
+        "translation": [
+          0.055,
+          0,
+          0
+        ],
+        "bind_weights": {
+          "chest": 0.15,
+          "upperarm": 0.85
+        }
+      },
+      {
+        "selector": {
+          "bone_region": "forearm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "bind_bone": "lowerarm",
+        "scale": [
+          1,
+          1.4,
+          1.4
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "bind_bone": "hand",
+        "scale": [
+          1.04,
+          1.04,
+          1.04
+        ]
+      }
+    ],
+    "kaykit-skeletons-warrior-upper": [
+      {
+        "selector": {
+          "bone_region": "upperarm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "scale": [
+          0.85,
+          1.65,
+          1.65
+        ],
+        "translation": [
+          0.055,
+          0,
+          0
+        ],
+        "bind_weights": {
+          "chest": 0.15,
+          "upperarm": 0.85
+        }
+      },
+      {
+        "selector": {
+          "bone_region": "forearm",
+          "nodes": [
+            "upper_outfit001"
+          ]
+        },
+        "bind_bone": "lowerarm",
+        "scale": [
+          1,
+          1.4,
+          1.4
+        ]
+      },
+      {
+        "selector": {
+          "nodes": [
+            "upper_hands",
+            "upper_hands001"
+          ],
+          "bone_region": "hand"
+        },
+        "bind_bone": "hand",
+        "scale": [
+          1.04,
+          1.04,
+          1.04
+        ]
+      }
+    ],
+    "kaykit-legacy-skeleton-minion-upper": [
+      {
+        "selector": {
+          "materials": [
+            "Stone"
+          ],
+          "bone_region": [
+            "wrist",
+            "hand"
+          ]
+        },
+        "center_on_axis": true,
+        "scale": [
+          1,
+          0.9,
+          1.8
+        ],
+        "translation": [
+          -0.195,
+          0,
+          0.013
+        ],
+        "bind_bone": "lowerarm",
+        "cuff_opening": {
+          "bone": "lowerarm",
+          "radii": [
+            0.08,
+            0.079
+          ],
+          "lining": {
+            "radii": [
+              0.075,
+              0.074
+            ],
+            "contact_radii": [
+              0.031,
+              0.031
+            ],
+            "axis_offset": 0.01,
+            "thickness": 0.0015,
+            "color": [
+              0.035,
+              0.04,
+              0.045,
+              1
+            ]
+          }
+        }
+      }
+    ],
+    "kaykit-legacy-skeleton-warrior-upper": [
+      {
+        "selector": {
+          "materials": [
+            "Stone"
+          ],
+          "bone_region": "forearm",
+          "face_count": 100
+        },
+        "center_on_axis": true,
+        "scale": [
+          0.6,
+          1.2,
+          2.15
+        ],
+        "bind_bone": "lowerarm",
+        "cuff_opening": {
+          "bone": "lowerarm",
+          "radii": [
+            0.09,
+            0.085
+          ],
+          "wall_thickness": 0.004
+        },
+        "translation": [
+          -0.03,
+          0,
+          0
+        ]
+      },
+      {
+        "selector": {
+          "materials": [
+            "Stone"
+          ],
+          "bone_region": "forearm",
+          "face_count": 96
+        },
+        "scale": [
+          1,
+          1.2,
+          1.2
+        ],
+        "translation": [
+          -0.04,
+          0,
+          0
+        ],
+        "bind_bone": "lowerarm",
+        "center_on_axis": true,
+        "align_on_axis": "smallest"
+      },
+      {
+        "selector": {
+          "materials": [
+            "Stone"
+          ],
+          "bone_region": [
+            "wrist",
+            "hand"
+          ]
+        },
+        "center_on_axis": true,
+        "scale": [
+          1,
+          0.9,
+          1.8
+        ],
+        "translation": [
+          -0.195,
+          0,
+          0.013
+        ],
+        "bind_bone": "lowerarm",
+        "cuff_opening": {
+          "bone": "lowerarm",
+          "radii": [
+            0.08,
+            0.079
+          ]
+        }
+      },
+      {
+        "selector": {
+          "materials": [
+            "BrownDark"
+          ],
+          "bone_region": "upperarm"
+        },
+        "center_on_axis": true,
+        "align_on_axis": "smallest",
+        "scale": [
+          1,
+          1.4,
+          1.4
+        ],
+        "translation": [
+          -0.035,
+          0,
+          0
+        ],
+        "bind_bone": "upperarm",
+        "cuff_opening": {
+          "bone": "upperarm",
+          "radii": [
+            0.088,
+            0.088
+          ]
+        }
+      },
+      {
+        "selector": {
+          "materials": [
+            "Stone"
+          ],
+          "bone_region": "forearm",
+          "face_count": 16
+        },
+        "translation": [
+          0,
+          0,
+          0.06
+        ],
+        "bind_bone": "lowerarm"
+      }
+    ],
+    "kaykit-legacy-skeleton-mage-upper": [
+      {
+        "selector": {
+          "materials": [
+            "PurpleDark",
+            "WoodDark"
+          ],
+          "bone_region": "upperarm"
+        },
+        "scale": [
+          1,
+          1.35,
+          1
+        ],
+        "translation": [
+          0,
+          0,
+          -0.035
+        ],
+        "bind_bone": "upperarm"
+      },
+      {
+        "selector": {
+          "materials": [
+            "PurpleDark"
+          ],
+          "bone_region": "forearm"
+        },
+        "center_on_axis": true,
+        "scale": [
+          0.65,
+          1.2,
+          2.15
+        ],
+        "bind_bone": "lowerarm",
+        "translation": [
+          -0.07,
+          0,
+          0
+        ],
+        "cuff_opening": {
+          "bone": "lowerarm",
+          "radii": [
+            0.09,
+            0.085
+          ],
+          "wall_thickness": 0.004
+        }
+      },
+      {
+        "selector": {
+          "materials": [
+            "Stone"
+          ],
+          "bone_region": [
+            "wrist",
+            "hand"
+          ]
+        },
+        "center_on_axis": true,
+        "scale": [
+          1,
+          0.9,
+          1.8
+        ],
+        "translation": [
+          -0.195,
+          0,
+          0.013
+        ],
+        "bind_bone": "lowerarm",
+        "cuff_opening": {
+          "bone": "lowerarm",
+          "radii": [
+            0.08,
+            0.079
+          ]
+        }
+      }
+    ],
+    "kaykit-legacy-skeleton-archer-upper": [
+      {
+        "selector": {
+          "materials": [
+            "BrownDark"
+          ],
+          "bone_region": [
+            "wrist",
+            "hand"
+          ],
+          "face_count": 186
+        },
+        "palm_surface_fit": {
+          "offset": 0.008,
+          "cuff_x_scale": 0.4,
+          "max_edge_length": 0.025,
+          "subdivision_passes": 2,
+          "split_cuff": true,
+          "wrist_lining": {
+            "offset": 0.004,
+            "bounds": [
+              0.695,
+              0.845
+            ]
+          }
+        }
+      },
+      {
+        "selector": {
+          "materials": [
+            "Stone"
+          ],
+          "bone_region": "forearm"
+        },
+        "center_on_axis": true,
+        "scale": [
+          0.6,
+          1.2,
+          2.15
+        ],
+        "bind_bone": "lowerarm",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "cuff_opening": {
+          "bone": "lowerarm",
+          "radii": [
+            0.09,
+            0.085
+          ],
+          "wall_thickness": 0.004
+        }
+      },
+      {
+        "selector": {
+          "materials": [
+            "Stone"
+          ],
+          "bone_region": [
+            "wrist",
+            "hand"
+          ]
+        },
+        "center_on_axis": true,
+        "scale": [
+          1,
+          0.9,
+          1.8
+        ],
+        "translation": [
+          -0.192,
+          0,
+          0.013
+        ],
+        "bind_bone": "lowerarm",
+        "cuff_opening": {
+          "bone": "lowerarm",
+          "radii": [
+            0.08,
+            0.079
+          ]
+        }
+      },
+      {
+        "selector": {
+          "materials": [
+            "PurpleDark"
+          ],
+          "bone_region": "hand"
+        },
+        "center_on_axis": true,
+        "scale": [
+          0.540643111015759,
+          1.4453065836371535,
+          2.6668806724654366
+        ],
+        "translation": [
+          0.014295928478240967,
+          -2.0140038259341964e-07,
+          -0.014878153800964355
+        ],
+        "bind_bone": "hand"
+      },
+      {
+        "selector": {
+          "materials": [
+            "Stone"
+          ],
+          "bone_region": "forearm",
+          "face_count": 16
+        },
+        "translation": [
+          0,
+          0,
+          0.06
+        ]
+      },
+      {
+        "selector": {
+          "materials": [
+            "BrownDark"
+          ],
+          "bone_region": "torso",
+          "face_count": 168
+        },
+        "scale": [
+          1.05,
+          1.3,
+          1
+        ],
+        "translation": [
+          0.0106003642082214,
+          0,
+          0
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.2,
+          "to_abs_x": 0.4,
+          "values": [
+            0,
+            1
+          ],
+          "z_bounds": [
+            1.04,
+            0.96
+          ]
+        }
+      }
+    ]
+  },
+  "body_key": "kaykit-medium-body-v1",
+  "rig_key": "kaykit-adventurers-medium-v1",
+  "canonical": {
+    "character_key": "kaykit-medium-v1",
+    "rig_key": "kaykit-adventurers-medium-v1",
+    "model_asset_key": "character-medium-v1",
+    "model_url": "/api/v1/assets/character-medium-v1",
+    "scale": 0.8230534189366623,
+    "fixed_nodes": [
+      "body_head",
+      "body_hands"
+    ],
+    "body_regions": {
+      "scalp": [
+        "body_scalp"
+      ],
+      "torso": [
+        "body_torso"
+      ],
+      "arms": [
+        "body_arms"
+      ],
+      "legs": [
+        "body_legs"
+      ],
+      "feet": [
+        "body_feet"
+      ]
+    },
+    "defaults": {
+      "hair": "hair-rogue-v1",
+      "upper": "upper-rogue-v1",
+      "lower": "lower-rogue-v1",
+      "shoes": "shoes-rogue-v1"
+    },
+    "animations": {
+      "idle": {
+        "clip": "Idle",
+        "asset_key": "character-medium-v1",
+        "url": "/api/v1/assets/character-medium-v1"
+      },
+      "walk": {
+        "clip": "Walking_A",
+        "asset_key": "character-medium-v1",
+        "url": "/api/v1/assets/character-medium-v1"
+      },
+      "run": {
+        "clip": "Running_A",
+        "asset_key": "character-medium-v1",
+        "url": "/api/v1/assets/character-medium-v1"
+      },
+      "sit": {
+        "clip": "Sit_Chair_Idle",
+        "asset_key": "character-medium-v1",
+        "url": "/api/v1/assets/character-medium-v1"
+      },
+      "cheer": {
+        "clip": "Cheer",
+        "asset_key": "character-medium-v1",
+        "url": "/api/v1/assets/character-medium-v1"
+      },
+      "exercise": {
+        "clip": "Exercise",
+        "asset_key": "character-exercise-v1",
+        "url": "/api/v1/assets/character-exercise-v1"
+      },
+      "read": {
+        "clip": "Read",
+        "asset_key": "character-living-v1",
+        "url": "/api/v1/assets/character-living-v1"
+      },
+      "play": {
+        "clip": "Play",
+        "asset_key": "character-living-v1",
+        "url": "/api/v1/assets/character-living-v1"
+      },
+      "rest": {
+        "clip": "Rest",
+        "asset_key": "character-living-v1",
+        "url": "/api/v1/assets/character-living-v1"
+      }
+    },
+    "name": "规范营地人物",
+    "body_key": "kaykit-medium-body-v1",
+    "provider": "kaykit",
+    "pack_key": "adventurers",
+    "preview_animations": [
+      {
+        "clip": "kaykit/kaykit-humanoid/Death_A",
+        "asset_key": "pa-f01f141a441215a4501ce8ed",
+        "url": "/api/v1/assets/pa-f01f141a441215a4501ce8ed"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Death_A_Pose",
+        "asset_key": "pa-bbf4da4e6e0b194feaf08875",
+        "url": "/api/v1/assets/pa-bbf4da4e6e0b194feaf08875"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Death_B",
+        "asset_key": "pa-ec52656bd7e1af73d4fbccae",
+        "url": "/api/v1/assets/pa-ec52656bd7e1af73d4fbccae"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Death_B_Pose",
+        "asset_key": "pa-548e58ec1e2a24c72fc6ef80",
+        "url": "/api/v1/assets/pa-548e58ec1e2a24c72fc6ef80"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Hit_A",
+        "asset_key": "pa-98bd8873527edbafdafdf611",
+        "url": "/api/v1/assets/pa-98bd8873527edbafdafdf611"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Hit_B",
+        "asset_key": "pa-74f77bdc9a81e81c57e01d65",
+        "url": "/api/v1/assets/pa-74f77bdc9a81e81c57e01d65"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Idle_A",
+        "asset_key": "pa-04a3bc9271e047f028319d51",
+        "url": "/api/v1/assets/pa-04a3bc9271e047f028319d51"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Idle_B",
+        "asset_key": "pa-872024c4a748990ee723e602",
+        "url": "/api/v1/assets/pa-872024c4a748990ee723e602"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Interact",
+        "asset_key": "pa-260c917f79c71a8399f531a0",
+        "url": "/api/v1/assets/pa-260c917f79c71a8399f531a0"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/PickUp",
+        "asset_key": "pa-383c081f67e4b3da27ffcf0c",
+        "url": "/api/v1/assets/pa-383c081f67e4b3da27ffcf0c"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Spawn_Air",
+        "asset_key": "pa-99cf8bf0f2c5a6bd1df4f438",
+        "url": "/api/v1/assets/pa-99cf8bf0f2c5a6bd1df4f438"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Spawn_Ground",
+        "asset_key": "pa-98a8c0c91bbc501eb57ad060",
+        "url": "/api/v1/assets/pa-98a8c0c91bbc501eb57ad060"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/T-Pose",
+        "asset_key": "pa-214305621324b6ada0949516",
+        "url": "/api/v1/assets/pa-214305621324b6ada0949516"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Throw",
+        "asset_key": "pa-9fd0bcbfe461b74facc84915",
+        "url": "/api/v1/assets/pa-9fd0bcbfe461b74facc84915"
+      },
+      {
+        "clip": "kaykit/kaykit-humanoid/Use_Item",
+        "asset_key": "pa-58011619c8ae5da95c8d1f96",
+        "url": "/api/v1/assets/pa-58011619c8ae5da95c8d1f96"
+      }
+    ]
+  },
+  "canonical_asset": {
+    "key": "character-medium-v1",
+    "name": "规范营地人物",
+    "kind": "model",
+    "url": "/api/v1/assets/character-medium-v1",
+    "format": "glb",
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "adventurers"
+  },
+  "sources": [
+    {
+      "key": "kaykit-adventurers-knight",
+      "name": "骑士",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-adventurers-knight.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/extracted/KayKit_Adventurers_2.0_FREE/Characters/gltf/Knight.glb",
+      "source_sha256": "e484370733824a0740683e7f6040aae0d20e5efd4107dde1175d6a2ad7e2f199",
+      "source_archive_sha256": "abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers",
+        "filename": "Knight.glb",
+        "key": "kaykit-adventurers-knight",
+        "name": "骑士",
+        "prefix": "Knight",
+        "head_nodes": [
+          "Knight_Head"
+        ],
+        "hair_nodes": [
+          "Knight_Helmet",
+          "Knight_HelmetVisor"
+        ],
+        "hair_uv_regions": [
+          [
+            0.125,
+            0.25,
+            0.75,
+            1
+          ]
+        ],
+        "upper_nodes": [
+          "Knight_Cape"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-adventurers-knight-m-8acff0347ab7",
+        "name": "骑士",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-adventurers-knight-m-8acff0347ab7",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers"
+      },
+      "normalized_sha256": "8acff0347ab7e77fc1bfe27185aa0fad4d165e40f11421eda1eb529ff475ffe1"
+    },
+    {
+      "key": "kaykit-adventurers-barbarian",
+      "name": "野蛮人",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-adventurers-barbarian.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/extracted/KayKit_Adventurers_2.0_FREE/Characters/gltf/Barbarian.glb",
+      "source_sha256": "d37824a1d6e8e8af57ef9ae4a87e9271c3986210fbc432fb44670749a577ccac",
+      "source_archive_sha256": "abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers",
+        "filename": "Barbarian.glb",
+        "key": "kaykit-adventurers-barbarian",
+        "name": "野蛮人",
+        "prefix": "Barbarian",
+        "head_nodes": [
+          "Barbarian_Head"
+        ],
+        "hair_nodes": [
+          "Barbarian_BearHat"
+        ],
+        "hair_uv_regions": [
+          [
+            0.125,
+            0.25,
+            0.75,
+            1
+          ]
+        ],
+        "upper_nodes": [],
+        "partition_scalp": true,
+        "scalp_source_nodes": [
+          "Barbarian_Head"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-adventurers-barbarian-m-b0b40798ef25",
+        "name": "野蛮人",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-adventurers-barbarian-m-b0b40798ef25",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers"
+      },
+      "normalized_sha256": "08ebdc25dc5e1921fdfb0dd043f226afcf2701b0563fce3a2395d32bd92629d1",
+      "complete_face_from_canonical": true
+    },
+    {
+      "key": "kaykit-adventurers-mage",
+      "name": "法师",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-adventurers-mage.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/extracted/KayKit_Adventurers_2.0_FREE/Characters/gltf/Mage.glb",
+      "source_sha256": "1f7d891bde50b879c70965f155b7b765b166dc3f8518e5abb86c0002f191a26e",
+      "source_archive_sha256": "abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers",
+        "filename": "Mage.glb",
+        "key": "kaykit-adventurers-mage",
+        "name": "法师",
+        "prefix": "Mage",
+        "head_nodes": [
+          "Mage_Head"
+        ],
+        "hair_nodes": [
+          "Mage_Hat"
+        ],
+        "hair_uv_regions": [
+          [
+            0.125,
+            0.25,
+            0.75,
+            1
+          ]
+        ],
+        "upper_nodes": [
+          "Mage_Cape"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-adventurers-mage-m-e4347fc1fe9a",
+        "name": "法师",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-adventurers-mage-m-e4347fc1fe9a",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers"
+      },
+      "normalized_sha256": "e4347fc1fe9a6304acb8e875337fb89725b2374c7caa5f2fea8779a481af1fab",
+      "hand_body_uv_regions": [
+        [
+          0.875,
+          1,
+          0.25,
+          0.5
+        ]
+      ]
+    },
+    {
+      "key": "kaykit-adventurers-rogue",
+      "name": "游侠",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-adventurers-rogue.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/extracted/KayKit_Adventurers_2.0_FREE/Characters/gltf/Rogue.glb",
+      "source_sha256": "cae5d9b2f08d53f7b4ab2617d9f42f021c546eb10920455fdcd82a110867fae4",
+      "source_archive_sha256": "abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers",
+        "filename": "Rogue.glb",
+        "key": "kaykit-adventurers-rogue",
+        "name": "游侠",
+        "prefix": "Rogue",
+        "head_nodes": [
+          "Rogue_Head"
+        ],
+        "hair_nodes": [],
+        "hair_uv_regions": [
+          [
+            0.125,
+            0.25,
+            0.75,
+            1
+          ]
+        ],
+        "upper_nodes": [
+          "Rogue_Cape"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-adventurers-rogue-m-a674352b1043",
+        "name": "游侠",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-adventurers-rogue-m-a674352b1043",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers"
+      },
+      "normalized_sha256": "a674352b1043a50ceae6858c4b9f1577817366d97113a131de44e264c57802dd"
+    },
+    {
+      "key": "kaykit-adventurers-rogue-hooded",
+      "name": "兜帽游侠",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-adventurers-rogue-hooded.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/extracted/KayKit_Adventurers_2.0_FREE/Characters/gltf/Rogue_Hooded.glb",
+      "source_sha256": "e8f3233c6db190506fbef3ad855683e6cb8bd7350de637d923e14a08aef088dc",
+      "source_archive_sha256": "abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers",
+        "filename": "Rogue_Hooded.glb",
+        "key": "kaykit-adventurers-rogue-hooded",
+        "name": "兜帽游侠",
+        "prefix": "RogueHooded",
+        "head_nodes": [
+          "RogueHooded_Head"
+        ],
+        "hair_nodes": [
+          "RogueHooded_Mask"
+        ],
+        "hair_uv_regions": [
+          [
+            0.125,
+            0.25,
+            0.75,
+            1
+          ],
+          [
+            0.125,
+            0.25,
+            0.5,
+            0.75
+          ]
+        ],
+        "upper_nodes": [
+          "RogueHooded_Cape"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-adventurers-rogue-hooded-m-a8c852f5ff9e",
+        "name": "兜帽游侠",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-adventurers-rogue-hooded-m-a8c852f5ff9e",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers"
+      },
+      "normalized_sha256": "a8c852f5ff9e6a77ceb6faf0cd091e6a405b847a216e6dc32145afedc08b11e1"
+    },
+    {
+      "key": "kaykit-adventurers-ranger",
+      "name": "巡林客",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-adventurers-ranger.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-adventurers/extracted/KayKit_Adventurers_2.0_FREE/Characters/gltf/Ranger.glb",
+      "source_sha256": "3a0b0166b9d61d58dcaaa739c3cc0538be46e00d2928dd5cb513d9a41770d2e9",
+      "source_archive_sha256": "abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers",
+        "filename": "Ranger.glb",
+        "key": "kaykit-adventurers-ranger",
+        "name": "巡林客",
+        "prefix": "Ranger",
+        "head_nodes": [
+          "Ranger_Head"
+        ],
+        "hair_nodes": [],
+        "hair_uv_regions": [
+          [
+            0.125,
+            0.25,
+            0.75,
+            1
+          ]
+        ],
+        "upper_nodes": [
+          "Ranger_Cape",
+          "Ranger_Quiver"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-adventurers-ranger-m-74caec9afa7d",
+        "name": "巡林客",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-adventurers-ranger-m-74caec9afa7d",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-adventurers"
+      },
+      "normalized_sha256": "74caec9afa7d91bfb28a9b5a3297e1226cc05bd40c6f462c87a0bf4265368cf2"
+    },
+    {
+      "key": "kaykit-skeletons-minion",
+      "name": "骷髅侍从",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-minion.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-skeletons/extracted/KayKit_Skeletons_1.1_FREE/characters/gltf/Skeleton_Minion.glb",
+      "source_sha256": "1fadbf1bc66fd7ce008eecd0ffccc8f8089e1c2887813559ca553680a738fece",
+      "source_archive_sha256": "21fbad59ee6cc1d7bed12d0e425acab8ebe564b8620bbc1d017aedb29dd8a3d2",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeletons",
+        "filename": "Skeleton_Minion.glb",
+        "key": "kaykit-skeletons-minion",
+        "name": "骷髅侍从",
+        "prefix": "Skeleton_Minion",
+        "head_nodes": [
+          "Skeleton_Minion_Eyes",
+          "Skeleton_Minion_Jaw",
+          "Skeleton_Minion_Head"
+        ],
+        "hair_nodes": [],
+        "upper_nodes": [
+          "Skeleton_Minion_Cloak"
+        ],
+        "hair_kind": "none",
+        "partition_scalp": true,
+        "scalp_source_nodes": [
+          "Skeleton_Minion_Head"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-skeletons-minion-m-a5950acbe6a9",
+        "name": "骷髅侍从",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-skeletons-minion-m-a5950acbe6a9",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeletons"
+      },
+      "normalized_sha256": "13be0b44a3e5f92e305ac49e801a0b51a144f413c01e1823293edd9252a78d4a"
+    },
+    {
+      "key": "kaykit-skeletons-mage",
+      "name": "骷髅法师",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-mage.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-skeletons/extracted/KayKit_Skeletons_1.1_FREE/characters/gltf/Skeleton_Mage.glb",
+      "source_sha256": "aee903d0febd151dbc49a4784ad4135862b20c1b025bf433b98a08d52e5f7849",
+      "source_archive_sha256": "21fbad59ee6cc1d7bed12d0e425acab8ebe564b8620bbc1d017aedb29dd8a3d2",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeletons",
+        "filename": "Skeleton_Mage.glb",
+        "key": "kaykit-skeletons-mage",
+        "name": "骷髅法师",
+        "prefix": "Skeleton_Mage",
+        "head_nodes": [
+          "Skeleton_Mage_Eyes",
+          "Skeleton_Mage_Jaw",
+          "Skeleton_Mage_Skull"
+        ],
+        "hair_nodes": [
+          "Skeleton_Mage_Hat"
+        ],
+        "upper_nodes": [],
+        "hair_kind": "independent",
+        "partition_scalp": true,
+        "scalp_source_nodes": [
+          "Skeleton_Mage_Skull"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-skeletons-mage-m-fa2492c4660c",
+        "name": "骷髅法师",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-skeletons-mage-m-fa2492c4660c",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeletons"
+      },
+      "normalized_sha256": "0186becb3cb06836e59b5bd9f4869693a266243fc303e28319bd21559c2ae7a1"
+    },
+    {
+      "key": "kaykit-skeletons-rogue",
+      "name": "骷髅游侠",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-rogue.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-skeletons/extracted/KayKit_Skeletons_1.1_FREE/characters/gltf/Skeleton_Rogue.glb",
+      "source_sha256": "d5b8f074a78a9972af0966014905ea1df2e71d2c3495d37a211980e6343ee774",
+      "source_archive_sha256": "21fbad59ee6cc1d7bed12d0e425acab8ebe564b8620bbc1d017aedb29dd8a3d2",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeletons",
+        "filename": "Skeleton_Rogue.glb",
+        "key": "kaykit-skeletons-rogue",
+        "name": "骷髅游侠",
+        "prefix": "Skeleton_Rogue",
+        "head_nodes": [
+          "Skeleton_Rogue_Eyes",
+          "Skeleton_Rogue_Jaw",
+          "Skeleton_Rogue_Head"
+        ],
+        "hair_nodes": [
+          "Skeleton_Rogue_Hood"
+        ],
+        "upper_nodes": [
+          "Skeleton_Rogue_Cape"
+        ],
+        "hair_kind": "independent",
+        "partition_scalp": true,
+        "scalp_source_nodes": [
+          "Skeleton_Rogue_Head"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-skeletons-rogue-m-65e85f775e0e",
+        "name": "骷髅游侠",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-skeletons-rogue-m-65e85f775e0e",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeletons"
+      },
+      "normalized_sha256": "2e9ff368098a9a93169e40b2a107703b37ea89db4f8a541331574345856b5840"
+    },
+    {
+      "key": "kaykit-skeletons-warrior",
+      "name": "骷髅战士",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-warrior.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-skeletons/extracted/KayKit_Skeletons_1.1_FREE/characters/gltf/Skeleton_Warrior.glb",
+      "source_sha256": "992d5cfd6beb5565c50f742587d492f2a2cfcdfb3ffe4435aa16461c6d0e54be",
+      "source_archive_sha256": "21fbad59ee6cc1d7bed12d0e425acab8ebe564b8620bbc1d017aedb29dd8a3d2",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeletons",
+        "filename": "Skeleton_Warrior.glb",
+        "key": "kaykit-skeletons-warrior",
+        "name": "骷髅战士",
+        "prefix": "Skeleton_Warrior",
+        "head_nodes": [
+          "Skeleton_Warrior_Eyes",
+          "Skeleton_Warrior_Jaw",
+          "Skeleton_Warrior_Head"
+        ],
+        "hair_nodes": [
+          "Skeleton_Warrior_Helmet"
+        ],
+        "upper_nodes": [
+          "Skeleton_Warrior_Cloak"
+        ],
+        "hair_kind": "independent",
+        "partition_scalp": true,
+        "scalp_source_nodes": [
+          "Skeleton_Warrior_Head"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-skeletons-warrior-m-ad0b491d22b6",
+        "name": "骷髅战士",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-skeletons-warrior-m-ad0b491d22b6",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeletons"
+      },
+      "normalized_sha256": "4b29e2415a98027e0f9bdf2436e49f4ec96cdbace2dae4faa8e3e82d30cdcdf7"
+    },
+    {
+      "key": "kaykit-legacy-skeleton-minion",
+      "name": "旧版骷髅侍从",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/waist-fit-v5-20261103/kaykit-legacy-skeleton-minion.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-skeleton-pack/extracted/Models/characters/gltf/character_skeleton_minion.gltf",
+      "source_sha256": "8b983d51d8dd308c429ffd40769906752304afdba5a73fdca53d8df8b0b90391",
+      "source_archive_sha256": "a26d454abbe6366164135491fecba54f07ffb65ff222433ffad7769ffb5a89b1",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeleton-pack",
+        "filename": "character_skeleton_minion.gltf",
+        "source_relative_path": "Models/characters/gltf/character_skeleton_minion.gltf",
+        "key": "kaykit-legacy-skeleton-minion",
+        "name": "旧版骷髅侍从",
+        "prefix": "character_skeleton_minion",
+        "head_nodes": [
+          "character_skeleton_minion_head",
+          "character_skeleton_minion_eyes",
+          "character_skeleton_minion_jaw"
+        ],
+        "hair_nodes": [],
+        "hair_uv_regions": [],
+        "body_nodes": [
+          "character_skeleton_minion_body"
+        ],
+        "left_arm_nodes": [
+          "character_skeleton_minion_armLeft"
+        ],
+        "right_arm_nodes": [
+          "character_skeleton_minion_armRight"
+        ],
+        "left_leg_nodes": [],
+        "right_leg_nodes": [],
+        "upper_nodes": [],
+        "bone_map": {},
+        "requires_standard_body_augmentation": true,
+        "default_wearables": {
+          "lower": "lower-rogue-v1",
+          "shoes": "shoes-rogue-v1"
+        },
+        "source_geometry": {
+          "rigged": false,
+          "animated": false,
+          "has_legs": false,
+          "has_separate_shoes": false,
+          "head_parts_are_separate": true,
+          "hair_is_empty": true,
+          "battleworn_variant": false
+        },
+        "normalization": {
+          "binding": "bind-static-segments-to-canonical-rig",
+          "source_parts": [
+            "fixed-face",
+            "headwear",
+            "upper-outfit"
+          ],
+          "augmentation": [
+            "canonical-lower-body",
+            "canonical-default-lower",
+            "canonical-default-shoes"
+          ],
+          "head_binding": "head",
+          "head_nodes_include_complete_skull": true,
+          "empty_hair_policy": "empty-default-without-replacing-fixed-skull"
+        },
+        "evidence": {
+          "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+          "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_minion.png",
+          "source_bounds_z_up": {
+            "min": [
+              -0.5323613882064819,
+              -0.4461822211742401,
+              -2.2351741790771484e-08
+            ],
+            "max": [
+              0.5323613882064819,
+              0.47003865242004395,
+              1.6339221000671387
+            ]
+          }
+        },
+        "support_material": {
+          "nodes": [
+            "character_skeleton_minion_head",
+            "character_skeleton_minion_eyes",
+            "character_skeleton_minion_jaw"
+          ],
+          "material": "White",
+          "regions": [
+            "scalp"
+          ],
+          "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+        },
+        "native_waist_accessory_top": 0.81,
+        "partition_scalp": true,
+        "scalp_source_nodes": [
+          "character_skeleton_minion_head"
+        ],
+        "torso_clothing_fit": {
+          "clearance": 0.024,
+          "minimum_height": 0.6,
+          "reference": {
+            "path": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-minion.glb",
+            "sha256": "13be0b44a3e5f92e305ac49e801a0b51a144f413c01e1823293edd9252a78d4a",
+            "node": "upper_provider",
+            "bone_uv_region": [
+              0.125,
+              0.25,
+              0.5,
+              0.75
+            ],
+            "max_abs_x": 0.33
+          }
+        }
+      },
+      "asset": {
+        "key": "kaykit-legacy-skeleton-minion-m-960f17f41331",
+        "name": "旧版骷髅侍从",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-legacy-skeleton-minion-m-960f17f41331",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeleton-pack"
+      },
+      "normalized_sha256": "8e72670e9464cf8ea317949afdaaddca6494c1e5453d255e407cb6d173f50248",
+      "excluded_slots": [
+        "shoes"
+      ]
+    },
+    {
+      "key": "kaykit-legacy-skeleton-archer",
+      "name": "旧版骷髅弓手",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/waist-fit-v5-20261103/kaykit-legacy-skeleton-archer.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-skeleton-pack/extracted/Models/characters/gltf/character_skeleton_archer.gltf",
+      "source_sha256": "b2abda743267135a096d999dbbedec325ed3747c0170731b0db753e18697b68a",
+      "source_archive_sha256": "a26d454abbe6366164135491fecba54f07ffb65ff222433ffad7769ffb5a89b1",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeleton-pack",
+        "filename": "character_skeleton_archer.gltf",
+        "source_relative_path": "Models/characters/gltf/character_skeleton_archer.gltf",
+        "key": "kaykit-legacy-skeleton-archer",
+        "name": "旧版骷髅弓手",
+        "prefix": "character_skeleton_archer",
+        "head_nodes": [
+          "character_skeleton_archer_head",
+          "character_skeleton_archer_eyes",
+          "character_skeleton_archer_jaw"
+        ],
+        "hair_nodes": [
+          "character_skeleton_archer_hood",
+          "character_skeleton_archer_mask"
+        ],
+        "hair_uv_regions": [],
+        "body_nodes": [
+          "character_skeleton_archer_body"
+        ],
+        "left_arm_nodes": [
+          "character_skeleton_archer_armLeft"
+        ],
+        "right_arm_nodes": [
+          "character_skeleton_archer_armRight"
+        ],
+        "left_leg_nodes": [],
+        "right_leg_nodes": [],
+        "upper_nodes": [],
+        "bone_map": {},
+        "requires_standard_body_augmentation": true,
+        "default_wearables": {
+          "lower": "lower-rogue-v1",
+          "shoes": "shoes-rogue-v1"
+        },
+        "source_geometry": {
+          "rigged": false,
+          "animated": false,
+          "has_legs": false,
+          "has_separate_shoes": false,
+          "head_parts_are_separate": true,
+          "hair_is_empty": false,
+          "battleworn_variant": false
+        },
+        "normalization": {
+          "binding": "bind-static-segments-to-canonical-rig",
+          "source_parts": [
+            "fixed-face",
+            "headwear",
+            "upper-outfit"
+          ],
+          "augmentation": [
+            "canonical-lower-body",
+            "canonical-default-lower",
+            "canonical-default-shoes"
+          ],
+          "head_binding": "head",
+          "head_nodes_include_complete_skull": true,
+          "empty_hair_policy": "independent-headwear"
+        },
+        "evidence": {
+          "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+          "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_archer.png",
+          "source_bounds_z_up": {
+            "min": [
+              -0.5594391226768494,
+              -0.5614029169082642,
+              -2.2351741790771484e-08
+            ],
+            "max": [
+              0.5594359040260315,
+              0.519874095916748,
+              1.7818753719329834
+            ]
+          }
+        },
+        "support_material": {
+          "nodes": [
+            "character_skeleton_archer_head",
+            "character_skeleton_archer_eyes",
+            "character_skeleton_archer_jaw"
+          ],
+          "material": "White",
+          "regions": [
+            "scalp"
+          ],
+          "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+        },
+        "native_waist_accessory_top": 0.81,
+        "torso_clothing_fit": {
+          "clearance": 0.024,
+          "minimum_height": 0.6,
+          "reference": {
+            "path": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-minion.glb",
+            "sha256": "13be0b44a3e5f92e305ac49e801a0b51a144f413c01e1823293edd9252a78d4a",
+            "node": "upper_provider",
+            "bone_uv_region": [
+              0.125,
+              0.25,
+              0.5,
+              0.75
+            ],
+            "max_abs_x": 0.33
+          }
+        },
+        "partition_scalp": true,
+        "scalp_source_nodes": [
+          "character_skeleton_archer_head"
+        ],
+        "rigid_hand_clothing": {
+          "materials": [
+            "BrownDark"
+          ],
+          "reference": {
+            "path": ".local/3d-sources/modular-character-inputs/kaykit-adventurers-mage.glb",
+            "sha256": "e4347fc1fe9a6304acb8e875337fb89725b2374c7caa5f2fea8779a481af1fab",
+            "node": "body_hands",
+            "uv_regions": [
+              [
+                0.875,
+                1,
+                0.25,
+                0.5
+              ]
+            ]
+          },
+          "clearance": 0.003,
+          "palm_max_z": 0.28
+        }
+      },
+      "asset": {
+        "key": "kaykit-legacy-skeleton-archer-m-5921e9408742",
+        "name": "旧版骷髅弓手",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-legacy-skeleton-archer-m-5921e9408742",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeleton-pack"
+      },
+      "normalized_sha256": "c5289af4c102561a51907032683570c755dabcb5c012b046c1906dd64152d3dd",
+      "excluded_slots": [
+        "shoes"
+      ]
+    },
+    {
+      "key": "kaykit-legacy-skeleton-mage",
+      "name": "旧版骷髅法师",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/waist-fit-v5-20261103/kaykit-legacy-skeleton-mage.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-skeleton-pack/extracted/Models/characters/gltf/character_skeleton_mage.gltf",
+      "source_sha256": "127fe3b92b3cdb41fa675a99bb878650f3298b2ef1b643ccde3bec0c2fac8a50",
+      "source_archive_sha256": "a26d454abbe6366164135491fecba54f07ffb65ff222433ffad7769ffb5a89b1",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeleton-pack",
+        "filename": "character_skeleton_mage.gltf",
+        "source_relative_path": "Models/characters/gltf/character_skeleton_mage.gltf",
+        "key": "kaykit-legacy-skeleton-mage",
+        "name": "旧版骷髅法师",
+        "prefix": "character_skeleton_mage",
+        "head_nodes": [
+          "character_skeleton_mage_head",
+          "character_skeleton_mage_eyes",
+          "character_skeleton_mage_jaw"
+        ],
+        "hair_nodes": [
+          "character_skeleton_mage_cowl"
+        ],
+        "hair_uv_regions": [],
+        "body_nodes": [
+          "character_skeleton_mage_body"
+        ],
+        "left_arm_nodes": [
+          "character_skeleton_mage_armLeft"
+        ],
+        "right_arm_nodes": [
+          "character_skeleton_mage_armRight"
+        ],
+        "left_leg_nodes": [],
+        "right_leg_nodes": [],
+        "upper_nodes": [
+          "character_skeleton_mage_cloak"
+        ],
+        "bone_map": {},
+        "requires_standard_body_augmentation": true,
+        "default_wearables": {
+          "lower": "lower-rogue-v1",
+          "shoes": "shoes-rogue-v1"
+        },
+        "source_geometry": {
+          "rigged": false,
+          "animated": false,
+          "has_legs": false,
+          "has_separate_shoes": false,
+          "head_parts_are_separate": true,
+          "hair_is_empty": false,
+          "battleworn_variant": false
+        },
+        "normalization": {
+          "binding": "bind-static-segments-to-canonical-rig",
+          "source_parts": [
+            "fixed-face",
+            "headwear",
+            "upper-outfit"
+          ],
+          "augmentation": [
+            "canonical-lower-body",
+            "canonical-default-lower",
+            "canonical-default-shoes"
+          ],
+          "head_binding": "head",
+          "head_nodes_include_complete_skull": true,
+          "empty_hair_policy": "independent-headwear"
+        },
+        "evidence": {
+          "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+          "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_mage.png",
+          "source_bounds_z_up": {
+            "min": [
+              -0.5323613882064819,
+              -0.47211509943008423,
+              -2.2351741790771484e-08
+            ],
+            "max": [
+              0.5323537588119507,
+              0.5391244292259216,
+              1.6339221000671387
+            ]
+          }
+        },
+        "support_material": {
+          "nodes": [
+            "character_skeleton_mage_head",
+            "character_skeleton_mage_eyes",
+            "character_skeleton_mage_jaw"
+          ],
+          "material": "White",
+          "regions": [
+            "scalp"
+          ],
+          "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+        },
+        "hair_covers": [],
+        "partition_scalp": true,
+        "scalp_source_nodes": [
+          "character_skeleton_mage_head"
+        ],
+        "native_waist_accessory_top": 0.81,
+        "torso_clothing_fit": {
+          "clearance": 0.024,
+          "minimum_height": 0.6,
+          "reference": {
+            "path": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-minion.glb",
+            "sha256": "13be0b44a3e5f92e305ac49e801a0b51a144f413c01e1823293edd9252a78d4a",
+            "node": "upper_provider",
+            "bone_uv_region": [
+              0.125,
+              0.25,
+              0.5,
+              0.75
+            ],
+            "max_abs_x": 0.33
+          }
+        }
+      },
+      "asset": {
+        "key": "kaykit-legacy-skeleton-mage-m-858e5a0a71e1",
+        "name": "旧版骷髅法师",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-legacy-skeleton-mage-m-858e5a0a71e1",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeleton-pack"
+      },
+      "normalized_sha256": "39773b9f102646b5c0695f6b2a907233bf570c8e55131a409e6875d6e533710b",
+      "excluded_slots": [
+        "shoes"
+      ]
+    },
+    {
+      "key": "kaykit-legacy-skeleton-warrior",
+      "name": "旧版骷髅战士",
+      "normalized_model": ".local/3d-sources/modular-character-inputs/waist-fit-v5-20261103/kaykit-legacy-skeleton-warrior.glb",
+      "source": ".local/3d-sources/provider-packs/kaykit/kaykit-skeleton-pack/extracted/Models/characters/gltf/character_skeleton_warrior.gltf",
+      "source_sha256": "b1cb839351353a4bd093d44bb7f75f98673ab41c32bd53b6666c38c049062cdb",
+      "source_archive_sha256": "a26d454abbe6366164135491fecba54f07ffb65ff222433ffad7769ffb5a89b1",
+      "spec": {
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeleton-pack",
+        "filename": "character_skeleton_warrior.gltf",
+        "source_relative_path": "Models/characters/gltf/character_skeleton_warrior.gltf",
+        "key": "kaykit-legacy-skeleton-warrior",
+        "name": "旧版骷髅战士",
+        "prefix": "character_skeleton_warrior",
+        "head_nodes": [
+          "character_skeleton_warrior_head",
+          "character_skeleton_warrior_eyes",
+          "character_skeleton_warrior_jaw"
+        ],
+        "hair_nodes": [
+          "character_skeleton_warrior_helmet"
+        ],
+        "hair_uv_regions": [],
+        "body_nodes": [
+          "character_skeleton_warrior_body"
+        ],
+        "left_arm_nodes": [
+          "character_skeleton_warrior_armLeft"
+        ],
+        "right_arm_nodes": [
+          "character_skeleton_warrior_armRight"
+        ],
+        "left_leg_nodes": [],
+        "right_leg_nodes": [],
+        "upper_nodes": [],
+        "bone_map": {},
+        "requires_standard_body_augmentation": true,
+        "default_wearables": {
+          "lower": "lower-rogue-v1",
+          "shoes": "shoes-rogue-v1"
+        },
+        "source_geometry": {
+          "rigged": false,
+          "animated": false,
+          "has_legs": false,
+          "has_separate_shoes": false,
+          "head_parts_are_separate": true,
+          "hair_is_empty": false,
+          "battleworn_variant": false
+        },
+        "normalization": {
+          "binding": "bind-static-segments-to-canonical-rig",
+          "source_parts": [
+            "fixed-face",
+            "headwear",
+            "upper-outfit"
+          ],
+          "augmentation": [
+            "canonical-lower-body",
+            "canonical-default-lower",
+            "canonical-default-shoes"
+          ],
+          "head_binding": "head",
+          "head_nodes_include_complete_skull": true,
+          "empty_hair_policy": "independent-headwear"
+        },
+        "evidence": {
+          "inspection": ".local/3d-sources/character-inspection/legacy-kaykit/inspection.json",
+          "render": ".local/3d-sources/character-inspection/legacy-kaykit/character_skeleton_warrior.png",
+          "source_bounds_z_up": {
+            "min": [
+              -0.6959787607192993,
+              -0.5423132181167603,
+              -2.2351741790771484e-08
+            ],
+            "max": [
+              0.6827869415283203,
+              0.5423130989074707,
+              2.0166666507720947
+            ]
+          }
+        },
+        "support_material": {
+          "nodes": [
+            "character_skeleton_warrior_head",
+            "character_skeleton_warrior_eyes",
+            "character_skeleton_warrior_jaw"
+          ],
+          "material": "White",
+          "regions": [
+            "scalp"
+          ],
+          "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+        },
+        "native_waist_accessory_top": 0.81,
+        "torso_clothing_fit": {
+          "clearance": 0.024,
+          "minimum_height": 0.6,
+          "reference": {
+            "path": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-minion.glb",
+            "sha256": "13be0b44a3e5f92e305ac49e801a0b51a144f413c01e1823293edd9252a78d4a",
+            "node": "upper_provider",
+            "bone_uv_region": [
+              0.125,
+              0.25,
+              0.5,
+              0.75
+            ],
+            "max_abs_x": 0.33
+          }
+        },
+        "partition_scalp": true,
+        "scalp_source_nodes": [
+          "character_skeleton_warrior_head"
+        ]
+      },
+      "asset": {
+        "key": "kaykit-legacy-skeleton-warrior-m-2faceb431796",
+        "name": "旧版骷髅战士",
+        "kind": "model",
+        "url": "/api/v1/assets/kaykit-legacy-skeleton-warrior-m-2faceb431796",
+        "format": "glb",
+        "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+        "license": "CC0-1.0",
+        "provider": "kaykit",
+        "pack_key": "kaykit-skeleton-pack"
+      },
+      "normalized_sha256": "dff46f66b86d316f6eeb646022eb536195f54de6cefd165575c8a1d291f92957",
+      "excluded_slots": [
+        "shoes"
+      ]
+    }
+  ],
+  "labels": {
+    "human": "基础人形",
+    "skeleton": "基础骷髅",
+    "face_default": "圆脸与银色耳饰",
+    "skeleton_face": "裂纹骷髅",
+    "none_head": "不戴头饰",
+    "none_back": "不背物品",
+    "none_upper": "不穿上装",
+    "none_shoes": "不穿鞋子",
+    "arrow": "青色尾羽插箭"
+  },
+  "prices": {
+    "face": 25,
+    "head": 20,
+    "upper": 35,
+    "lower": 25,
+    "shoes": 15,
+    "back": 25
+  },
+  "canonical_wearables": [
+    [
+      "head",
+      "hair_rogue",
+      "hair-rogue-v1",
+      "棕色及肩发"
+    ],
+    [
+      "head",
+      "hair_barbarian",
+      "hair-barbarian-v1",
+      "灰色眉毛与胡须"
+    ],
+    [
+      "upper",
+      "upper_rogue",
+      "upper-rogue-v1",
+      "绿色短袖上衣与棕色手套"
+    ],
+    [
+      "lower",
+      "lower_rogue",
+      "lower-rogue-v1",
+      "绿色短裤与棕色腰带"
+    ],
+    [
+      "shoes",
+      "shoes_rogue",
+      "shoes-rogue-v1",
+      "棕色翻边皮靴"
+    ],
+    [
+      "upper",
+      "upper_barbarian",
+      "upper-barbarian-v1",
+      "蓝色毛边上衣与灰色手套"
+    ],
+    [
+      "lower",
+      "lower_barbarian",
+      "lower-barbarian-v1",
+      "棕色铆钉腰带与毛边短裤"
+    ],
+    [
+      "shoes",
+      "shoes_barbarian",
+      "shoes-barbarian-v1",
+      "灰色毛边靴"
+    ]
+  ],
+  "names": {
+    "kaykit-adventurers-knight": {
+      "face": "圆脸与微笑嘴",
+      "head": "银灰色封闭头盔",
+      "upper": "银灰色胸甲、护臂和手套",
+      "lower": "灰色腰甲与棕色腰带",
+      "shoes": "银灰色铁靴",
+      "back": {
+        "cape": "红色披风"
+      }
+    },
+    "kaykit-adventurers-barbarian": {
+      "face": "宽鼻圆脸",
+      "head": "棕色熊帽与灰色胡须",
+      "upper": "棕色毛边背带与灰色手套",
+      "lower": "棕色毛边皮裙与黑色短裤",
+      "shoes": "棕色绑带靴",
+      "back": {}
+    },
+    "kaykit-adventurers-mage": {
+      "face": "圆脸与细长嘴",
+      "head": "紫色尖帽与黑色长发",
+      "upper": "紫色纽扣长袖上衣与灰色袖口",
+      "lower": "紫色衣摆与挂袋腰带",
+      "shoes": "棕色翻边靴",
+      "back": {
+        "cape": "紫红色披风"
+      }
+    },
+    "kaykit-adventurers-rogue": {
+      "face": "圆脸与银色耳环",
+      "head": "棕色长发与眉毛",
+      "upper": "绿色披肩上衣与棕色露指手套",
+      "lower": "绿色腰带短裤",
+      "shoes": "浅棕色皮靴",
+      "back": {
+        "cape": "绿色披风"
+      }
+    },
+    "kaykit-adventurers-rogue-hooded": {
+      "face": "圆脸与上扬眉眼",
+      "head": "绿色兜帽与面巾",
+      "upper": "浅绿色披肩上衣与棕色露指手套",
+      "lower": "深绿色腰带短裤",
+      "shoes": "浅棕色翻边靴",
+      "back": {
+        "cape": "深绿色披风"
+      }
+    },
+    "kaykit-adventurers-ranger": {
+      "face": "微笑脸",
+      "head": "棕色短发与山羊胡",
+      "upper": "白色上衣、蓝色领巾与棕色露指手套",
+      "lower": "米色短裤与挂袋腰带",
+      "shoes": "深棕色皮靴",
+      "back": {
+        "cape": "蓝色披风",
+        "quiver": "棕色箭袋与蓝羽箭"
+      }
+    },
+    "kaykit-skeletons-minion": {
+      "face": "裂纹骷髅",
+      "head": "无头饰",
+      "upper": "金属护腕",
+      "lower": "棕色短裤与银扣腰带",
+      "shoes": "无鞋",
+      "back": {
+        "cloak": "棕色围巾与披肩"
+      }
+    },
+    "kaykit-skeletons-mage": {
+      "face": "红纹骷髅",
+      "head": "红色尖顶帽",
+      "upper": "红色立领上衣与肩甲",
+      "lower": "红色衣摆与药水腰带",
+      "shoes": "无鞋",
+      "back": {}
+    },
+    "kaykit-skeletons-rogue": {
+      "face": "皱眉黄眼骷髅脸",
+      "head": "紫红色兜帽",
+      "upper": "灰色交叉胸带与金属护手",
+      "lower": "紫红色短裤与棕色腰带",
+      "shoes": "银灰色折边铁靴",
+      "back": {
+        "cape": "紫红色短披风"
+      }
+    },
+    "kaykit-skeletons-warrior": {
+      "face": "尖颌黄眼骷髅脸",
+      "head": "银灰色牛角盔",
+      "upper": "银灰色胸甲与金属护手",
+      "lower": "银灰色腰甲与棕色腰带",
+      "shoes": "银灰色护甲靴",
+      "back": {
+        "cloak": "紫红色围巾与披肩"
+      }
+    },
+    "kaykit-legacy-skeleton-minion": {
+      "face": "骷髅",
+      "head": "无头饰",
+      "upper": "成对银灰色臂环",
+      "lower": "棕色腰带与金属扣",
+      "shoes": "无鞋",
+      "back": {}
+    },
+    "kaykit-legacy-skeleton-archer": {
+      "face": "绿眼圆头骷髅脸",
+      "head": "紫色兜帽与面巾",
+      "upper": "灰色胸甲、金属护臂与棕色手套",
+      "lower": "棕色腰带与侧腰包",
+      "shoes": "无鞋",
+      "back": {}
+    },
+    "kaykit-legacy-skeleton-mage": {
+      "face": "绿眼圆头骷髅脸",
+      "head": "紫色围领",
+      "upper": "棕色开襟衣与紫色衣袖",
+      "lower": "棕色宽腰带",
+      "shoes": "无鞋",
+      "back": {
+        "cloak": "紫色披肩"
+      }
+    },
+    "kaykit-legacy-skeleton-warrior": {
+      "face": "绿眼圆头骷髅脸",
+      "head": "棕顶牛角铁盔",
+      "upper": "灰色胸甲、棕色臂环与银灰色护臂",
+      "lower": "棕色腰带与银色方扣",
+      "shoes": "无鞋",
+      "back": {}
+    }
+  },
+  "arrow_asset": {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeleton-pack"
+  },
+  "canonical_input": {
+    "path": ".local/3d-sources/modular-character-inputs/canonical.glb",
+    "sha256": "171603624a18b9179c4b50d3316f429ea0f7e68d995254c40384c526a85135b8"
+  },
+  "arrow_input": {
+    "path": ".local/3d-sources/provider-packs/kaykit/kaykit-skeleton-pack/extracted/Models/assets/gltf/arrow_green.gltf.glb",
+    "sha256": "ddb21eda2559e5568450ccc8e4e1e285446329861170094f81b26dc056866aa7"
+  },
+  "human_face_source": "kaykit-adventurers-ranger",
+  "face_order": [
+    "face-kaykit-adventurers-ranger",
+    "face-kaykit-legacy-skeleton-minion",
+    "face-skeleton-default-v1",
+    "face-kaykit-skeletons-mage"
+  ],
+  "wearable_covers": {
+    "hair-rogue-v1": [
+      "scalp",
+      "brows"
+    ],
+    "hair-barbarian-v1": [
+      "brows"
+    ],
+    "kaykit-adventurers-knight-head": [
+      "scalp",
+      "brows"
+    ],
+    "kaykit-adventurers-barbarian-head": [
+      "scalp",
+      "brows"
+    ],
+    "kaykit-adventurers-mage-head": [
+      "scalp",
+      "brows"
+    ],
+    "kaykit-adventurers-rogue-head": [
+      "scalp",
+      "brows"
+    ],
+    "kaykit-adventurers-rogue-hooded-head": [
+      "scalp",
+      "brows"
+    ],
+    "kaykit-adventurers-ranger-head": [],
+    "kaykit-skeletons-mage-head": [
+      "scalp"
+    ],
+    "kaykit-skeletons-rogue-head": [
+      "scalp"
+    ],
+    "kaykit-skeletons-warrior-head": [
+      "scalp"
+    ],
+    "kaykit-legacy-skeleton-archer-head": [
+      "scalp"
+    ],
+    "kaykit-legacy-skeleton-mage-head": [],
+    "kaykit-legacy-skeleton-warrior-head": [
+      "scalp",
+      "smile_scalp"
+    ],
+    "head-arrow-v1": [],
+    "shoes-rogue-v1": [
+      "feet"
+    ],
+    "shoes-barbarian-v1": [
+      "feet"
+    ],
+    "kaykit-adventurers-knight-shoes": [
+      "feet"
+    ],
+    "kaykit-adventurers-barbarian-shoes": [
+      "feet"
+    ],
+    "kaykit-adventurers-mage-shoes": [
+      "feet"
+    ],
+    "kaykit-adventurers-rogue-shoes": [
+      "feet"
+    ],
+    "kaykit-adventurers-rogue-hooded-shoes": [
+      "feet"
+    ],
+    "kaykit-adventurers-ranger-shoes": [
+      "feet"
+    ],
+    "kaykit-skeletons-rogue-shoes": [
+      "feet"
+    ],
+    "kaykit-skeletons-warrior-shoes": [
+      "feet"
+    ]
+  },
+  "canonical_hand_sources": {
+    "upper-rogue-v1": {
+      "path": ".local/3d-sources/modular-character-inputs/canonical.glb",
+      "sha256": "171603624a18b9179c4b50d3316f429ea0f7e68d995254c40384c526a85135b8",
+      "nodes": [
+        "body_hands"
+      ],
+      "wrist_abs_x": 0.76
+    },
+    "upper-barbarian-v1": {
+      "path": ".local/3d-sources/kaykit-adventurers/Characters/gltf/Barbarian.glb",
+      "sha256": "cefc311a0e10c7858b6141f5ada7e33268727564fb8ac1347aab97d000669cc6",
+      "nodes": [
+        "Barbarian_ArmLeft",
+        "Barbarian_ArmRight"
+      ],
+      "wrist_abs_x": 0.76
+    }
+  },
+  "human_body_shape": {
+    "torso_sections": [
+      [
+        0.82,
+        0.28,
+        0.22
+      ],
+      [
+        0.99,
+        0.245,
+        0.15
+      ],
+      [
+        1.10676,
+        0.245,
+        0.145
+      ],
+      [
+        1.22,
+        0.225,
+        0.12
+      ],
+      [
+        1.27,
+        0.13,
+        0.095
+      ],
+      [
+        1.3,
+        0.085,
+        0.075
+      ]
+    ],
+    "arm_sections": [
+      [
+        "upperarm",
+        0.28,
+        0.086,
+        0.098
+      ],
+      [
+        "upperarm",
+        0.62,
+        0.082,
+        0.091
+      ],
+      [
+        "upperarm",
+        0.9,
+        0.073,
+        0.081
+      ],
+      [
+        "lowerarm",
+        0.0,
+        0.072,
+        0.079
+      ],
+      [
+        "lowerarm",
+        0.18,
+        0.073,
+        0.078
+      ],
+      [
+        "lowerarm",
+        0.58,
+        0.061,
+        0.066
+      ],
+      [
+        "lowerarm",
+        1,
+        0.048,
+        0.054
+      ],
+      [
+        "wrist",
+        0.634,
+        0.046,
+        0.052
+      ]
+    ],
+    "skin_color": [
+      0.72,
+      0.39,
+      0.21,
+      1
+    ],
+    "skin_roughness": 0.8,
+    "arm_skinning_reference": {
+      "path": ".local/3d-sources/modular-character-inputs/skeleton-arm-skinning-reference.glb",
+      "sha256": "f835398b4849e0e744dc41aca1355f45ca10ee521b4aae1350757fa4bf9187a2",
+      "nodes": [
+        "body_torso",
+        "body_arms",
+        "body_hands"
+      ]
+    },
+    "hand_surface_reference": {
+      "path": ".local/3d-sources/modular-character-inputs/kaykit-adventurers-mage.glb",
+      "sha256": "e4347fc1fe9a6304acb8e875337fb89725b2374c7caa5f2fea8779a481af1fab",
+      "node": "body_hands",
+      "uv_regions": [
+        [
+          0.875,
+          1,
+          0.25,
+          0.5
+        ]
+      ]
+    },
+    "wrist_joint": {
+      "forearm_cap_sections": [
+        [
+          0,
+          0.046,
+          0.052
+        ],
+        [
+          0.027,
+          0.034,
+          0.038
+        ],
+        [
+          0.044,
+          0.005,
+          0.006
+        ]
+      ],
+      "palm_cap_sections": [
+        [
+          -0.022,
+          0.046,
+          0.052
+        ],
+        [
+          -0.052,
+          0.025,
+          0.028
+        ],
+        [
+          -0.067,
+          0.005,
+          0.006
+        ]
+      ]
+    }
+  },
+  "skeleton_knee_fit": {
+    "overlap_fraction": 0.2
+  },
+  "back_clothing_fit": {
+    "kaykit-skeletons-minion-back-cloak": {
+      "anchor_bone": "chest",
+      "radius_x": 0.3,
+      "radius_z": 0.2,
+      "posterior_start": 0.0,
+      "posterior_full": 0.15,
+      "offset": 0.048
+    },
+    "kaykit-skeletons-warrior-back-cloak": {
+      "anchor_bone": "chest",
+      "radius_x": 0.3,
+      "radius_z": 0.2,
+      "posterior_start": 0.0,
+      "posterior_full": 0.15,
+      "offset": 0.048
+    },
+    "kaykit-skeletons-warrior-upper": {
+      "anchor_bone": "chest",
+      "radius_x": 0.22,
+      "radius_z": 0.22,
+      "posterior_start": 0.0,
+      "posterior_full": 0.1,
+      "offset": 0.045
+    }
+  },
+  "body_neck_support": {
+    "kaykit-medium-v1": {
+      "segments": 12,
+      "sections": [
+        [
+          1.285,
+          0.066,
+          0.056,
+          0
+        ],
+        [
+          1.32,
+          0.066,
+          0.056,
+          0.25
+        ],
+        [
+          1.39,
+          0.063,
+          0.054,
+          0.7
+        ],
+        [
+          1.46,
+          0.06,
+          0.052,
+          1
+        ]
+      ]
+    },
+    "kaykit-skeleton-v1": {
+      "segments": 12,
+      "sections": [
+        [
+          1.4,
+          0.045,
+          0.045,
+          0
+        ],
+        [
+          1.43,
+          0.045,
+          0.045,
+          0.5
+        ],
+        [
+          1.46,
+          0.045,
+          0.045,
+          1
+        ]
+      ]
+    }
+  },
+  "head_clothing_fit": {
+    "kaykit-adventurers-rogue-hooded-head": {
+      "anchor_bone": "head",
+      "scale_x": 1.22,
+      "scale_y": 1.16,
+      "cloth_uv_bounds": [
+        0,
+        0.25,
+        0,
+        0.75
+      ]
+    }
+  },
+  "skeleton_waist_fit": {
+    "scale_xy": [
+      0.84,
+      0.8
+    ],
+    "height_band": [
+      0.58,
+      0.62,
+      0.76,
+      0.91
+    ]
+  },
+  "human_waist_fit": {
+    "sections": [
+      [
+        0.47,
+        0.22,
+        0.1
+      ],
+      [
+        0.54,
+        0.245,
+        0.14
+      ],
+      [
+        0.63,
+        0.285,
+        0.21
+      ]
+    ],
+    "segments": 16,
+    "seam_height": 0.72
+  },
+  "skeleton_hip_fit": {
+    "upper_ring_bone": "hips"
+  },
+  "clothing_fit": {
+    "kaykit-legacy-skeleton-mage-back-cloak": [
+      {
+        "selector": {},
+        "translation": [
+          0,
+          0,
+          0.022
+        ],
+        "transform_weight": {
+          "from_abs_x": 0.15,
+          "to_abs_x": 0.25,
+          "values": [
+            0,
+            1
+          ],
+          "z_bounds": [
+            1.08,
+            1.02
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -25,9 +25,9 @@ func addOwnership(first, second ownershipCount) ownershipCount {
 }
 
 // applyProductOwnership resolves all visible quotes with one grouped order query.
-func applyProductOwnership(ctx context.Context, tx *sql.Tx, items []Product) error {
+func applyProductOwnership(ctx context.Context, tx *sql.Tx, accountID int64, items []Product) error {
 	counts := map[ownershipIdentity]ownershipCount{}
-	rows, err := tx.QueryContext(ctx, `SELECT product_id,item_key_snapshot,character_key_snapshot,scene_key_snapshot,type_snapshot,status,count(*) FROM purchases GROUP BY product_id,item_key_snapshot,character_key_snapshot,scene_key_snapshot,type_snapshot,status`)
+	rows, err := tx.QueryContext(ctx, `SELECT product_id,item_key_snapshot,character_key_snapshot,scene_key_snapshot,type_snapshot,status,count(*) FROM purchases WHERE account_id=? GROUP BY product_id,item_key_snapshot,character_key_snapshot,scene_key_snapshot,type_snapshot,status`, accountID)
 	if err != nil {
 		return err
 	}

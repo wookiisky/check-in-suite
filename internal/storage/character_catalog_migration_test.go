@@ -37,8 +37,9 @@ func TestCharacterCatalogMigrationPreservesPurchasesAndReferences(t *testing.T) 
 	_, err = db.ExecContext(ctx, `
         INSERT INTO accounts(id,username,display_name,login_password_hash,management_password_hash,created_at,updated_at) VALUES(1,'kept','保留账户','hash','hash',1,1);
         INSERT INTO products(id,type,name,asset_key,coin_price,diamond_price,enabled,created_at,updated_at) VALUES('kept-offer','wearable','保留衣物','old-art',7,0,1,1,1);
-        INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,wearable_key_snapshot) VALUES('kept-purchase','kept-offer','wearable','旧名字','旧说明','old-art',7,0,'owned',1,'hair-barbarian-v1');
-        INSERT INTO appearance_state(id,version,character_key,hair_purchase_id) VALUES(1,4,'kaykit-medium-v1','kept-purchase');
+        INSERT INTO products(id,type,name,asset_key,coin_price,diamond_price,enabled,created_at,updated_at) VALUES('face-offer','wearable','形象','face-art',0,0,1,1,1),('back-offer','wearable','披风','back-art',0,0,1,1,1);
+        INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,wearable_key_snapshot) VALUES('kept-purchase','kept-offer','wearable','旧名字','旧说明','old-art',7,0,'owned',1,'head-kept'),('face-purchase','face-offer','wearable','形象','','face-art',0,0,'owned',1,'face-kept'),('back-purchase','back-offer','wearable','披风','','back-art',0,0,'owned',1,'back-kept');
+        INSERT INTO appearance_state(id,version,character_key,face_purchase_id,head_purchase_id,back_purchase_id) VALUES(1,4,'kaykit-medium-v1','face-purchase','kept-purchase','back-purchase');
         INSERT INTO wallet_entries(id,account_id,event_type,purchase_id,coin_delta,diamond_delta,created_at) VALUES('kept-ledger',1,'purchase_debit','kept-purchase',-7,0,1);
     `)
 	if err != nil {
@@ -47,12 +48,12 @@ func TestCharacterCatalogMigrationPreservesPurchasesAndReferences(t *testing.T) 
 	if err := Migrate(ctx, db, migrations.Files); err != nil {
 		t.Fatal(err)
 	}
-	var name, hair, ledger string
-	if err := db.QueryRowContext(ctx, `SELECT p.name_snapshot,a.hair_purchase_id,w.purchase_id FROM purchases p JOIN appearance_state a ON a.hair_purchase_id=p.id JOIN wallet_entries w ON w.purchase_id=p.id`).Scan(&name, &hair, &ledger); err != nil {
+	var name, head, face, back, ledger string
+	if err := db.QueryRowContext(ctx, `SELECT p.name_snapshot,a.head_purchase_id,a.face_purchase_id,a.back_purchase_id,w.purchase_id FROM purchases p JOIN appearance_state a ON a.head_purchase_id=p.id JOIN wallet_entries w ON w.purchase_id=p.id`).Scan(&name, &head, &face, &back, &ledger); err != nil {
 		t.Fatal(err)
 	}
-	if name != "旧名字" || hair != "kept-purchase" || ledger != hair {
-		t.Fatalf("lost snapshot: %s %s %s", name, hair, ledger)
+	if name != "旧名字" || head != "kept-purchase" || ledger != head || face != "face-purchase" || back != "back-purchase" {
+		t.Fatalf("lost snapshot: %s %s %s %s %s", name, head, face, back, ledger)
 	}
 	_, err = db.ExecContext(ctx, `INSERT INTO products(id,type,name,asset_key,character_key,coin_price,diamond_price,enabled,created_at,updated_at) VALUES('new-character','character','新角色','new-art','new-character',95,0,1,2,2)`)
 	if err != nil {

@@ -9,11 +9,11 @@ import (
 )
 
 // loadFacts retains disabled/deleted task identities and reads only effective check-in records.
-func loadFacts(ctx context.Context, tx *sql.Tx) ([]TaskFact, []RecordFact, error) {
+func loadFacts(ctx context.Context, tx *sql.Tx, accountID int64) ([]TaskFact, []RecordFact, error) {
 	tasks := []TaskFact{}
 	records := []RecordFact{}
 	indices := map[string]int{}
-	rows, err := tx.QueryContext(ctx, "SELECT id,category_id FROM tasks ORDER BY id")
+	rows, err := tx.QueryContext(ctx, "SELECT id,category_id FROM tasks WHERE account_id=? ORDER BY id", accountID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -31,7 +31,7 @@ func loadFacts(ctx context.Context, tx *sql.Tx) ([]TaskFact, []RecordFact, error
 	if err != nil {
 		return nil, nil, err
 	}
-	rows, err = tx.QueryContext(ctx, "SELECT task_id,start_date,weekday_mask,enabled FROM task_schedule_history ORDER BY task_id,start_date")
+	rows, err = tx.QueryContext(ctx, "SELECT task_id,start_date,weekday_mask,enabled FROM task_schedule_history WHERE task_id IN (SELECT id FROM tasks WHERE account_id=?) ORDER BY task_id,start_date", accountID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -50,7 +50,7 @@ func loadFacts(ctx context.Context, tx *sql.Tx) ([]TaskFact, []RecordFact, error
 	if err != nil {
 		return nil, nil, err
 	}
-	rows, err = tx.QueryContext(ctx, "SELECT task_id,business_date,coin_reward_snapshot,diamond_reward_snapshot FROM checkins WHERE deleted_at IS NULL ORDER BY business_date,id")
+	rows, err = tx.QueryContext(ctx, "SELECT task_id,business_date,coin_reward_snapshot,diamond_reward_snapshot FROM checkins WHERE account_id=? AND deleted_at IS NULL ORDER BY business_date,id", accountID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -68,12 +68,12 @@ func loadFacts(ctx context.Context, tx *sql.Tx) ([]TaskFact, []RecordFact, error
 }
 
 // Reconcile changes progress, qualification and equipment within the caller's fact mutation.
-func Reconcile(ctx context.Context, tx *sql.Tx, now time.Time) error {
-	items, err := readAchievements(ctx, tx, "")
+func Reconcile(ctx context.Context, tx *sql.Tx, accountID int64, now time.Time) error {
+	items, err := readAchievements(ctx, tx, accountID, "")
 	if err != nil || len(items) == 0 {
 		return err
 	}
-	tasks, records, err := loadFacts(ctx, tx)
+	tasks, records, err := loadFacts(ctx, tx, accountID)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func Reconcile(ctx context.Context, tx *sql.Tx, now time.Time) error {
 			continue
 		}
 		// Requalification records a new actual grant time and leaves equipment off.
-		_, err = tx.ExecContext(ctx, `UPDATE achievements SET progress=?,qualified=?,equipped=CASE WHEN ?=0 THEN 0 ELSE equipped END,earned_at=CASE WHEN qualified=0 AND ?=1 THEN ? ELSE earned_at END WHERE id=?`, progress, qualified, qualified, qualified, now.UnixMilli(), item.ID)
+		_, err = tx.ExecContext(ctx, `UPDATE achievements SET progress=?,qualified=?,equipped=CASE WHEN ?=0 THEN 0 ELSE equipped END,earned_at=CASE WHEN qualified=0 AND ?=1 THEN ? ELSE earned_at END WHERE account_id=? AND id=?`, progress, qualified, qualified, qualified, now.UnixMilli(), accountID, item.ID)
 		if err != nil {
 			return err
 		}

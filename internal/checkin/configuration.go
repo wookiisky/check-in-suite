@@ -55,7 +55,7 @@ func (s *Service) CreateCategory(ctx context.Context, p account.Principal, key s
 	if err != nil {
 		return result, err
 	}
-	saved, err := idempotency.Lookup(ctx, tx, "category.create", key, hash)
+	saved, err := idempotency.Lookup(ctx, tx, p.AccountID, "category.create", key, hash)
 	if err != nil {
 		return result, err
 	}
@@ -67,10 +67,10 @@ func (s *Service) CreateCategory(ctx context.Context, p account.Principal, key s
 		return result, err
 	}
 	result = Category{ID: core.ID(), Name: in.Name, SortOrder: in.SortOrder, Version: 1}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO categories(id,name,sort_order,version,created_at,updated_at) VALUES(?,?,?,1,?,?)", result.ID, result.Name, result.SortOrder, now.UnixMilli(), now.UnixMilli()); err != nil {
+	if _, err = tx.ExecContext(ctx, "INSERT INTO categories(account_id,id,name,sort_order,version,created_at,updated_at) VALUES(?,?,?,?,1,?,?)", p.AccountID, result.ID, result.Name, result.SortOrder, now.UnixMilli(), now.UnixMilli()); err != nil {
 		return result, err
 	}
-	if err = idempotency.Save(ctx, tx, "category.create", key, hash, result.ID, 201, result, now); err != nil {
+	if err = idempotency.Save(ctx, tx, p.AccountID, "category.create", key, hash, result.ID, 201, result, now); err != nil {
 		return result, err
 	}
 	return result, tx.Commit()
@@ -87,7 +87,7 @@ func (s *Service) UpdateCategory(ctx context.Context, p account.Principal, id st
 		return result, err
 	}
 	defer tx.Rollback()
-	result, err = categoryByID(ctx, tx, id)
+	result, err = categoryByID(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
@@ -97,7 +97,7 @@ func (s *Service) UpdateCategory(ctx context.Context, p account.Principal, id st
 	result.Name = in.Name
 	result.SortOrder = in.SortOrder
 	result.Version++
-	_, err = tx.ExecContext(ctx, "UPDATE categories SET name=?,sort_order=?,version=?,updated_at=? WHERE id=?", result.Name, result.SortOrder, result.Version, now.UnixMilli(), id)
+	_, err = tx.ExecContext(ctx, "UPDATE categories SET name=?,sort_order=?,version=?,updated_at=? WHERE account_id=? AND id=?", result.Name, result.SortOrder, result.Version, now.UnixMilli(), p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
@@ -111,7 +111,7 @@ func (s *Service) DeleteCategory(ctx context.Context, p account.Principal, id st
 		return err
 	}
 	defer tx.Rollback()
-	item, err := categoryByID(ctx, tx, id)
+	item, err := categoryByID(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return err
 	}
@@ -119,22 +119,22 @@ func (s *Service) DeleteCategory(ctx context.Context, p account.Principal, id st
 		return core.VersionConflict(item.Version)
 	}
 	var n int
-	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM tasks WHERE category_id=? AND deleted_at IS NULL", id).Scan(&n); err != nil {
+	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM tasks WHERE account_id=? AND category_id=? AND deleted_at IS NULL", p.AccountID, id).Scan(&n); err != nil {
 		return err
 	}
 	if n > 0 {
 		return core.Fail(409, "CATEGORY_NOT_EMPTY")
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE categories SET deleted_at=?,updated_at=?,version=version+1 WHERE id=?", now.UnixMilli(), now.UnixMilli(), id); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE categories SET deleted_at=?,updated_at=?,version=version+1 WHERE account_id=? AND id=?", now.UnixMilli(), now.UnixMilli(), p.AccountID, id); err != nil {
 		return err
 	}
 	return tx.Commit()
 }
 
 // categoryByID returns a stable not-found error instead of leaking SQL diagnostics.
-func categoryByID(ctx context.Context, tx *sql.Tx, id string) (Category, error) {
+func categoryByID(ctx context.Context, tx *sql.Tx, accountID int64, id string) (Category, error) {
 	var c Category
-	err := tx.QueryRowContext(ctx, "SELECT id,name,sort_order,version FROM categories WHERE id=? AND deleted_at IS NULL", id).Scan(&c.ID, &c.Name, &c.SortOrder, &c.Version)
+	err := tx.QueryRowContext(ctx, "SELECT id,name,sort_order,version FROM categories WHERE account_id=? AND id=? AND deleted_at IS NULL", accountID, id).Scan(&c.ID, &c.Name, &c.SortOrder, &c.Version)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = core.Fail(404, "NOT_FOUND")
 	}
@@ -142,9 +142,9 @@ func categoryByID(ctx context.Context, tx *sql.Tx, id string) (Category, error) 
 }
 
 // readCategories is shared by ordinary configuration reads and the camp snapshot.
-func readCategories(ctx context.Context, tx *sql.Tx) ([]Category, error) {
+func readCategories(ctx context.Context, tx *sql.Tx, accountID int64) ([]Category, error) {
 	items := []Category{}
-	rows, err := tx.QueryContext(ctx, "SELECT id,name,sort_order,version FROM categories WHERE deleted_at IS NULL ORDER BY sort_order,id")
+	rows, err := tx.QueryContext(ctx, "SELECT id,name,sort_order,version FROM categories WHERE account_id=? AND deleted_at IS NULL ORDER BY sort_order,id", accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (s *Service) Categories(ctx context.Context, p account.Principal) ([]Catego
 	if err := account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
 		return nil, err
 	}
-	return readCategories(ctx, tx)
+	return readCategories(ctx, tx, p.AccountID)
 }
 
 // normalizeTask canonicalizes inputs without applying limits that may change after a successful command.
@@ -254,7 +254,7 @@ func (s *Service) CreateTask(ctx context.Context, p account.Principal, key strin
 	if err != nil {
 		return result, err
 	}
-	saved, err := idempotency.Lookup(ctx, tx, "task.create", key, hash)
+	saved, err := idempotency.Lookup(ctx, tx, p.AccountID, "task.create", key, hash)
 	if err != nil {
 		return result, err
 	}
@@ -269,12 +269,12 @@ func (s *Service) CreateTask(ctx context.Context, p account.Principal, key strin
 		return result, err
 	}
 	if in.CategoryID != nil {
-		if _, err := categoryByID(ctx, tx, *in.CategoryID); err != nil {
+		if _, err := categoryByID(ctx, tx, p.AccountID, *in.CategoryID); err != nil {
 			return result, err
 		}
 	}
 	result = Task{UnlockActivities: in.UnlockActivities, ID: core.ID(), CategoryID: in.CategoryID, Name: in.Name, IconKey: in.IconKey, CoinReward: in.CoinReward, DiamondReward: in.DiamondReward, DailyLimit: in.DailyLimit, Weekdays: in.Weekdays, Enabled: in.Enabled, Version: 1}
-	_, err = tx.ExecContext(ctx, "INSERT INTO tasks(id,category_id,name,icon_key,coin_reward,diamond_reward,daily_limit,weekday_mask,enabled,version,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,1,?,?)", result.ID, in.CategoryID, in.Name, in.IconKey, in.CoinReward, in.DiamondReward, in.DailyLimit, weekdayMask(in.Weekdays), in.Enabled, now.UnixMilli(), now.UnixMilli())
+	_, err = tx.ExecContext(ctx, "INSERT INTO tasks(account_id,id,category_id,name,icon_key,coin_reward,diamond_reward,daily_limit,weekday_mask,enabled,version,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,1,?,?)", p.AccountID, result.ID, in.CategoryID, in.Name, in.IconKey, in.CoinReward, in.DiamondReward, in.DailyLimit, weekdayMask(in.Weekdays), in.Enabled, now.UnixMilli(), now.UnixMilli())
 	if err != nil {
 		return result, err
 	}
@@ -284,10 +284,10 @@ func (s *Service) CreateTask(ctx context.Context, p account.Principal, key strin
 	if err = achievement.RecordSchedule(ctx, tx, result.ID, core.Today(now), weekdayMask(in.Weekdays), in.Enabled); err != nil {
 		return result, err
 	}
-	if err = achievement.Reconcile(ctx, tx, now); err != nil {
+	if err = achievement.Reconcile(ctx, tx, p.AccountID, now); err != nil {
 		return result, err
 	}
-	if err = idempotency.Save(ctx, tx, "task.create", key, hash, result.ID, 201, result, now); err != nil {
+	if err = idempotency.Save(ctx, tx, p.AccountID, "task.create", key, hash, result.ID, 201, result, now); err != nil {
 		return result, err
 	}
 	return result, tx.Commit()
@@ -305,7 +305,7 @@ func (s *Service) UpdateTask(ctx context.Context, p account.Principal, id string
 		return result, err
 	}
 	defer tx.Rollback()
-	old, err := taskByID(ctx, tx, id)
+	old, err := taskByID(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
@@ -313,11 +313,11 @@ func (s *Service) UpdateTask(ctx context.Context, p account.Principal, id string
 		return result, core.VersionConflict(old.Version)
 	}
 	if in.CategoryID != nil {
-		if _, err := categoryByID(ctx, tx, *in.CategoryID); err != nil {
+		if _, err := categoryByID(ctx, tx, p.AccountID, *in.CategoryID); err != nil {
 			return result, err
 		}
 	}
-	_, err = tx.ExecContext(ctx, "UPDATE tasks SET category_id=?,name=?,icon_key=?,coin_reward=?,diamond_reward=?,daily_limit=?,weekday_mask=?,enabled=?,version=version+1,updated_at=? WHERE id=?", in.CategoryID, in.Name, in.IconKey, in.CoinReward, in.DiamondReward, in.DailyLimit, weekdayMask(in.Weekdays), in.Enabled, now.UnixMilli(), id)
+	_, err = tx.ExecContext(ctx, "UPDATE tasks SET category_id=?,name=?,icon_key=?,coin_reward=?,diamond_reward=?,daily_limit=?,weekday_mask=?,enabled=?,version=version+1,updated_at=? WHERE account_id=? AND id=?", in.CategoryID, in.Name, in.IconKey, in.CoinReward, in.DiamondReward, in.DailyLimit, weekdayMask(in.Weekdays), in.Enabled, now.UnixMilli(), p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
@@ -331,10 +331,10 @@ func (s *Service) UpdateTask(ctx context.Context, p account.Principal, id string
 			return result, err
 		}
 	}
-	if err = achievement.Reconcile(ctx, tx, now); err != nil {
+	if err = achievement.Reconcile(ctx, tx, p.AccountID, now); err != nil {
 		return result, err
 	}
-	result, err = taskByID(ctx, tx, id)
+	result, err = taskByID(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
@@ -348,14 +348,14 @@ func (s *Service) DeleteTask(ctx context.Context, p account.Principal, id string
 		return err
 	}
 	defer tx.Rollback()
-	item, err := taskByID(ctx, tx, id)
+	item, err := taskByID(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return err
 	}
 	if item.Version != version {
 		return core.VersionConflict(item.Version)
 	}
-	_, err = tx.ExecContext(ctx, "UPDATE tasks SET enabled=0,deleted_at=?,updated_at=?,version=version+1 WHERE id=?", now.UnixMilli(), now.UnixMilli(), id)
+	_, err = tx.ExecContext(ctx, "UPDATE tasks SET enabled=0,deleted_at=?,updated_at=?,version=version+1 WHERE account_id=? AND id=?", now.UnixMilli(), now.UnixMilli(), p.AccountID, id)
 	if err != nil {
 		return err
 	}
@@ -363,7 +363,7 @@ func (s *Service) DeleteTask(ctx context.Context, p account.Principal, id string
 	if err = achievement.RecordSchedule(ctx, tx, id, day.AddDate(0, 0, 1).Format(time.DateOnly), weekdayMask(item.Weekdays), false); err != nil {
 		return err
 	}
-	if err = achievement.Reconcile(ctx, tx, now); err != nil {
+	if err = achievement.Reconcile(ctx, tx, p.AccountID, now); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -388,8 +388,8 @@ func scanTask(row scanner) (Task, error) {
 }
 
 // taskByID excludes soft-deleted tasks from mutable configuration reads.
-func taskByID(ctx context.Context, tx *sql.Tx, id string) (Task, error) {
-	t, err := scanTask(tx.QueryRowContext(ctx, "SELECT "+taskColumns+" FROM tasks WHERE id=? AND deleted_at IS NULL", id))
+func taskByID(ctx context.Context, tx *sql.Tx, accountID int64, id string) (Task, error) {
+	t, err := scanTask(tx.QueryRowContext(ctx, "SELECT "+taskColumns+" FROM tasks WHERE account_id=? AND id=? AND deleted_at IS NULL", accountID, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		err = core.Fail(404, "NOT_FOUND")
 	}
@@ -406,12 +406,12 @@ func (s *Service) Tasks(ctx context.Context, p account.Principal, includeInactiv
 	if err := account.Authorize(ctx, tx, p, includeInactive, s.Now()); err != nil {
 		return nil, err
 	}
-	query := "SELECT " + taskColumns + " FROM tasks WHERE deleted_at IS NULL"
+	query := "SELECT " + taskColumns + " FROM tasks WHERE account_id=? AND deleted_at IS NULL"
 	if !includeInactive {
 		query += " AND enabled=1"
 	}
 	query += " ORDER BY name,id"
-	rows, err := tx.QueryContext(ctx, query)
+	rows, err := tx.QueryContext(ctx, query, p.AccountID)
 	if err != nil {
 		return nil, err
 	}

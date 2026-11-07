@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Matrix4, Mesh, SkinnedMesh, Vector3 } from 'three';
 import { GltfResourceCache } from '../../graphics/gltf-resources';
 import { activityBookSource, appearanceFixture, characterSource, characterWithBookBone, deferred } from './character3d-test-fixtures';
-import { resolveAppearance } from './character3d-appearance';
+import { draftFromAppearance, resolveAppearance } from './character3d-appearance';
 import { prepareCharacter } from './character3d-model';
 import type { GLTFSource } from '../../graphics/gltf-resources';
 
@@ -12,7 +12,7 @@ describe('正式人物组装与动画', () => {
     const dispose = vi.spyOn((source.scene.getObjectByName('face') as SkinnedMesh).geometry, 'dispose');
     const cache = new GltfResourceCache(async () => source);
     const first = await prepareCharacter(resolveAppearance(snapshot), cache);
-    const second = await prepareCharacter(resolveAppearance(snapshot, { character_key: 'body', hair_purchase_id: null, upper_purchase_id: 'purchase-upper', lower_purchase_id: null, shoes_purchase_id: null }), cache);
+    const second = await prepareCharacter(resolveAppearance(snapshot, { character_key: 'body', face_purchase_id: null, back_purchase_id: null, head_purchase_id: null, upper_purchase_id: 'purchase-upper', lower_purchase_id: null, shoes_purchase_id: null }), cache);
     expect(first.root.getObjectByName('body')!.visible).toBe(false);
     expect(second.root.getObjectByName('body')!.visible).toBe(true);
     expect(first.root.getObjectByName('upper-b')!.visible).toBe(false);
@@ -20,6 +20,25 @@ describe('正式人物组装与动画', () => {
     const firstBody = first.root.getObjectByName('face') as SkinnedMesh; const secondBody = second.root.getObjectByName('face') as SkinnedMesh;
     expect(firstBody.skeleton.bones[0]).not.toBe(secondBody.skeleton.bones[0]);
     first.dispose(); expect(dispose).not.toHaveBeenCalled(); second.dispose(); expect(dispose).toHaveBeenCalledTimes(1); expect(cache.size).toBe(0);
+  });
+
+  it('头饰只遮住所选形象的头皮，卸下后恢复原脸和裸头皮', async () => {
+    const snapshot = appearanceFixture();
+    const face = snapshot.wearables.find((item) => item.wearable_key === 'face-a')!;
+    Object.assign(face, { nodes: ['face-a', 'scalp-a'], regions: { scalp: ['scalp-a'] }, covers: ['head', 'scalp'] });
+    snapshot.wearables.find((item) => item.wearable_key === 'head-a')!.covers = ['scalp'];
+    Object.assign(snapshot.wearables.find((item) => item.wearable_key === 'head-b')!, { empty: true, nodes: [], covers: [] });
+    const source = characterSource();
+    const scalp = (source.scene.getObjectByName('face-a') as SkinnedMesh).clone(); scalp.name = 'scalp-a'; source.scene.add(scalp);
+    const cache = new GltfResourceCache(async () => source);
+    const dressed = await prepareCharacter(resolveAppearance(snapshot), cache);
+    const bare = await prepareCharacter(resolveAppearance(snapshot, { ...draftFromAppearance(snapshot), head_purchase_id: 'purchase-head' }), cache);
+    expect(dressed.root.getObjectByName('face-a')!.visible).toBe(true);
+    expect(dressed.root.getObjectByName('scalp-a')!.visible).toBe(false);
+    expect(bare.root.getObjectByName('face-a')!.visible).toBe(true);
+    expect(bare.root.getObjectByName('scalp-a')!.visible).toBe(true);
+    expect(bare.root.getObjectByName('head-a')!.visible).toBe(false);
+    dressed.dispose(); bare.dispose(); expect(cache.size).toBe(0);
   });
 
   it('不同资源的服装重绑到身体实例的同一组骨骼', async () => {

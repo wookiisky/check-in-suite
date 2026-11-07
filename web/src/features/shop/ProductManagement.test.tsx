@@ -47,8 +47,8 @@ describe('商品配置', () => {
     render(<ProductEditor client={{ request }} session={session} product={null} assets={assets} characters={productCatalog.characters} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);
     expect(screen.queryByRole('option', { name: '动物形象' })).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'upper' } });
-    expect(screen.queryByRole('option', { name: '上衣默认款' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: '发型新款' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: '上装默认款' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: '头部新款' })).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(content.asset), { target: { value: 'catalog-preview-q' } });
     fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新的服装' } });
     fireEvent.click(screen.getByRole('button', { name: content.save }));
@@ -91,7 +91,7 @@ describe('商品配置', () => {
     fireEvent.click(screen.getByRole('button', { name: content.addProduct }));
     fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'upper' } });
     expect(screen.getByRole('option', { name: '森林款' })).toHaveValue('catalog-preview-q');
-    expect(screen.queryByRole('option', { name: '上衣默认款' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: '上装默认款' })).not.toBeInTheDocument();
   });
 
   it('改为非服装商品时清除服装身份，不沿用旧的 key', async () => {

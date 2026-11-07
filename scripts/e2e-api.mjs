@@ -31,6 +31,14 @@ try {
       'Manage-Test-2026', 'Manage-Test-2026', ''].join('\n'),
     stdio: ['pipe', 'inherit', 'inherit'],
   });
+  // 组流程使用独立账户，不修改其他浏览器测试的主账户归属。
+  for (const [username, name] of [['island-group-viewer', '组内查看者'], ['island-group-peer', '组内小伙伴'], ['island-group-outsider', '组外小伙伴']]) {
+    execFileSync(binary, ['init', '-config', configPath], {
+      input: [username, name, 'Island-Test-2026', 'Island-Test-2026', 'Manage-Test-2026', 'Manage-Test-2026', ''].join('\n'),
+      stdio: ['pipe', 'inherit', 'inherit'],
+    });
+  }
+  execFileSync(binary, ['create-group', '-config', configPath], { input: '浏览器测试组\n', stdio: ['pipe', 'inherit', 'inherit'] });
   const server = spawn(binary, ['serve', '-config', configPath], { stdio: 'inherit' });
   // Playwright 会向进程组发送信号；转发也支持手动停止此脚本。
   const stop = () => server.kill('SIGTERM');

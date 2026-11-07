@@ -53,32 +53,29 @@ function regionBounds(model, names) {
 }
 
 // 每个可选人物与每件衣服都必须满足同一标准，不能只抽查首个角色。
-test('全部交付人物和四槽服装共用实际骨骼层级与逆绑定矩阵', async () => {
+test('两个基础身体与六槽穿戴共用实际骨骼层级与逆绑定矩阵', async () => {
   const catalog = JSON.parse(await readFile(new URL('internal/character/character-catalog.json', root), 'utf8'));
-  const manifest = JSON.parse(await readFile(new URL('internal/assets/provider-character-manifest.json', root), 'utf8'));
-  const partitionedHeads = new Set(manifest.characters.filter((entry) => entry.scalp_partition).map((entry) => entry.definition.character_key));
+  assert.deepEqual(catalog.characters.map((item) => item.character_key).sort(), ['kaykit-medium-v1', 'kaykit-skeleton-v1']);
+  assert.ok(catalog.characters.every((item) => item.provider !== 'kenney'));
   const base = catalog.characters.find((item) => item.character_key === 'kaykit-medium-v1');
   const readModel = await modelReader();
   const canonical = await readModel(base.model_asset_key);
   const expected = binding(canonical, canonical.document.skins[0]);
-  const assets = new Set([...catalog.characters, ...catalog.wearables].map((item) => item.model_asset_key));
+  const assets = new Set([...catalog.characters, ...catalog.wearables].map((item) => item.model_asset_key).filter(Boolean));
   for (const character of catalog.characters) {
     assert.equal(character.body_key, base.body_key, character.character_key);
     assert.equal(character.rig_key, base.rig_key, character.character_key);
     assert.equal(character.scale, base.scale, character.character_key);
     const model = await readModel(character.model_asset_key);
-    for (const [region, names] of Object.entries(base.body_regions)) {
-      if (region === 'scalp' && partitionedHeads.has(character.character_key)) continue;
-      const standard = regionBounds(canonical, names);
-      const actual = regionBounds(model, character.body_regions[region]);
-      actual.forEach((value, axis) => assert.ok(Math.abs(value - standard[axis]) < 0.00001, `${character.character_key}/${region}: body proportion changed`));
-    }
-    if (partitionedHeads.has(character.character_key)) {
-      // 头皮来自真实头壳分区，不能再用整球的六个边界值证明脸与头皮兼容。
-      const standard = regionBounds(canonical, ['body_head', ...base.body_regions.scalp]);
-      const actual = regionBounds(model, ['body_head', ...character.body_regions.scalp]);
-      actual.forEach((value, axis) => assert.ok(axis < 3 ? value >= standard[axis] - 0.00001 : value <= standard[axis] + 0.00001,
-        `${character.character_key}: head exceeds standard envelope`));
+    assert.deepEqual(Object.keys(character.defaults).sort(), ['back', 'face', 'head', 'lower', 'shoes', 'upper']);
+    // 骷髅与人形的表面不同；真实区域必须存在，不把相同包围盒当作相同身体。
+    for (const [region, names] of Object.entries(character.body_regions)) {
+      if (!names.length) continue;
+      const actual = regionBounds(model, names);
+      assert.ok(actual.every(Number.isFinite), `${character.character_key}/${region}`);
+      for (let axis = 0; axis < 3; axis += 1) {
+        assert.ok(actual[axis] <= actual[axis + 3], `${character.character_key}/${region}: invalid bounds`);
+      }
     }
     for (const [slot, key] of Object.entries(character.defaults)) {
       const wearable = catalog.wearables.find((item) => item.wearable_key === key);
@@ -105,12 +102,12 @@ test('全部交付人物和四槽服装共用实际骨骼层级与逆绑定矩�
 });
 
 // 检查所有部件的真实蒙皮和身体遮盖，空发型必须明确声明而非伪造网格。
-test('全部服装是有归一化权重的独立部件，脸不包含在发型槽中', async () => {
+test('全部六槽穿戴使用归一化蒙皮，头饰与形象的脸部分开', async () => {
   const catalog = JSON.parse(await readFile(new URL('internal/character/character-catalog.json', root), 'utf8'));
   const readModel = await modelReader();
   for (const wearable of catalog.wearables) {
     if (wearable.empty) {
-      assert.equal(wearable.slot, 'hair');
+      assert.notEqual(wearable.slot, 'face');
       assert.deepEqual(wearable.nodes, []);
       assert.deepEqual(wearable.covers, []);
       continue;
@@ -120,7 +117,10 @@ test('全部服装是有归一化权重的独立部件，脸不包含在发型�
     for (const name of wearable.nodes) {
       const node = model.document.nodes.find((item) => item.name === name);
       assert.ok(node && node.mesh !== undefined && node.skin !== undefined, `${wearable.wearable_key}/${name}: skinned mesh missing`);
-      assert.notEqual(name, 'body_head', '换发型不能同时换掉固定脸');
+      if (wearable.slot === 'head') {
+        const faceNodes = catalog.wearables.filter((item) => item.slot === 'face' && item.model_asset_key === wearable.model_asset_key).flatMap((item) => item.nodes);
+        assert.ok(!faceNodes.includes(name), '头饰不能同时包含所选形象的脸或头皮');
+      }
       for (const primitive of model.document.meshes[node.mesh].primitives) {
         assert.ok(primitive.attributes.JOINTS_0 !== undefined);
         assert.ok(primitive.attributes.WEIGHTS_0 !== undefined);

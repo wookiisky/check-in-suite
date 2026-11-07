@@ -12,17 +12,17 @@ import (
 )
 
 // readSpatialState 保留初始海边读取入口，供既有调用继续使用。
-func readSpatialState(ctx context.Context, tx *sql.Tx) (SpatialState, error) {
-	return readSpatialSceneState(ctx, tx, spatialIndex.configuration.Scene.Key)
+func readSpatialState(ctx context.Context, tx *sql.Tx, accountID int64) (SpatialState, error) {
+	return readSpatialSceneState(ctx, tx, accountID, spatialIndex.configuration.Scene.Key)
 }
 
 // readSpatialSceneState 在同一快照读取目标布局、全量库存及跨场景占用。
-func readSpatialSceneState(ctx context.Context, tx *sql.Tx, key string) (SpatialState, error) {
+func readSpatialSceneState(ctx context.Context, tx *sql.Tx, accountID int64, key string) (SpatialState, error) {
 	definition, found := SpatialSceneFind(key)
 	if !found {
 		return SpatialState{}, core.Invalid("scene_key", "INVALID_VALUE")
 	}
-	owned, err := spatialSceneOwned(ctx, tx, definition)
+	owned, err := spatialSceneOwned(ctx, tx, accountID, definition)
 	if err != nil {
 		return SpatialState{}, err
 	}
@@ -34,17 +34,17 @@ func readSpatialSceneState(ctx context.Context, tx *sql.Tx, key string) (Spatial
 	if key == configuration.Scene.Key {
 		state.Placements = configuration.DefaultPlacements
 	}
-	err = tx.QueryRowContext(ctx, `SELECT version,environment_key FROM island_scene_states WHERE scene_key=?`, key).Scan(&state.Version, &state.EnvironmentKey)
+	err = tx.QueryRowContext(ctx, `SELECT version,environment_key FROM island_scene_states WHERE account_id=? AND scene_key=?`, accountID, key).Scan(&state.Version, &state.EnvironmentKey)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return state, err
 	}
 	if err == nil {
-		state.Placements, err = readSpatialPlacements(ctx, tx, key)
+		state.Placements, err = readSpatialPlacements(ctx, tx, accountID, key)
 		if err != nil {
 			return state, err
 		}
 	} else if key == configuration.Scene.Key {
-		if err = readLegacySpatialState(ctx, tx, &state); err != nil {
+		if err = readLegacySpatialState(ctx, tx, accountID, &state); err != nil {
 			return state, err
 		}
 	}
@@ -52,14 +52,14 @@ func readSpatialSceneState(ctx context.Context, tx *sql.Tx, key string) (Spatial
 	if err != nil {
 		return state, err
 	}
-	locations, err := spatialLocations(ctx, tx, configuration)
+	locations, err := spatialLocations(ctx, tx, accountID, configuration)
 	if err != nil {
 		return state, err
 	}
 	for _, placement := range configuration.DefaultPlacements {
 		state.Inventory = append(state.Inventory, SpatialOwnedItem{InstanceID: placement.InstanceID, ItemKey: placement.ItemKey, PlacedSceneKey: locations[placement.InstanceID]})
 	}
-	rows, err := tx.QueryContext(ctx, `SELECT id,item_key_snapshot FROM purchases WHERE status='owned' ORDER BY created_at,id`)
+	rows, err := tx.QueryContext(ctx, `SELECT id,item_key_snapshot FROM purchases WHERE account_id=? AND status='owned' ORDER BY created_at,id`, accountID)
 	if err != nil {
 		return state, err
 	}
@@ -78,9 +78,9 @@ func readSpatialSceneState(ctx context.Context, tx *sql.Tx, key string) (Spatial
 }
 
 // readLegacySpatialState 兼容迁移后尚由旧初始化入口写入的海边布局。
-func readLegacySpatialState(ctx context.Context, tx *sql.Tx, state *SpatialState) error {
+func readLegacySpatialState(ctx context.Context, tx *sql.Tx, accountID int64, state *SpatialState) error {
 	var raw string
-	err := tx.QueryRowContext(ctx, `SELECT version,environment_key,placements FROM island_spatial_state WHERE id=1`).Scan(&state.Version, &state.EnvironmentKey, &raw)
+	err := tx.QueryRowContext(ctx, `SELECT version,environment_key,placements FROM island_spatial_state WHERE id=?`, accountID).Scan(&state.Version, &state.EnvironmentKey, &raw)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil
 	}
@@ -91,8 +91,8 @@ func readLegacySpatialState(ctx context.Context, tx *sql.Tx, state *SpatialState
 }
 
 // readSpatialPlacements 保留提交顺序，未知结果核对不会因存储顺序改变而误判。
-func readSpatialPlacements(ctx context.Context, tx *sql.Tx, key string) ([]SpatialPlacement, error) {
-	rows, err := tx.QueryContext(ctx, `SELECT instance_id,item_key,space,x_cm,z_cm,rotation FROM island_scene_placements WHERE scene_key=? ORDER BY position_index,instance_id`, key)
+func readSpatialPlacements(ctx context.Context, tx *sql.Tx, accountID int64, key string) ([]SpatialPlacement, error) {
+	rows, err := tx.QueryContext(ctx, `SELECT instance_id,item_key,space,x_cm,z_cm,rotation FROM island_scene_placements WHERE account_id=? AND scene_key=? ORDER BY position_index,instance_id`, accountID, key)
 	if err != nil {
 		return nil, err
 	}
@@ -109,22 +109,22 @@ func readSpatialPlacements(ctx context.Context, tx *sql.Tx, key string) ([]Spati
 }
 
 // spatialLocations 将尚未保存的海边默认布局也视为真实占用，避免复制免费实例。
-func spatialLocations(ctx context.Context, tx *sql.Tx, configuration spatialConfiguration) (map[string]string, error) {
+func spatialLocations(ctx context.Context, tx *sql.Tx, accountID int64, configuration spatialConfiguration) (map[string]string, error) {
 	locations := map[string]string{}
 	var persisted bool
-	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM island_scene_states WHERE scene_key=?)`, configuration.Scene.Key).Scan(&persisted); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM island_scene_states WHERE account_id=? AND scene_key=?)`, accountID, configuration.Scene.Key).Scan(&persisted); err != nil {
 		return nil, err
 	}
 	if !persisted {
 		state := SpatialState{Version: 1, EnvironmentKey: configuration.DefaultEnvironment, Placements: configuration.DefaultPlacements}
-		if err := readLegacySpatialState(ctx, tx, &state); err != nil {
+		if err := readLegacySpatialState(ctx, tx, accountID, &state); err != nil {
 			return nil, err
 		}
 		for _, placement := range state.Placements {
 			locations[placement.InstanceID] = configuration.Scene.Key
 		}
 	}
-	rows, err := tx.QueryContext(ctx, `SELECT instance_id,scene_key FROM island_scene_placements`)
+	rows, err := tx.QueryContext(ctx, `SELECT instance_id,scene_key FROM island_scene_placements WHERE account_id=?`, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +146,7 @@ func (service *Service) ReadSpatial(ctx context.Context, principal account.Princ
 
 // ReadSpatialScene 读取家庭拥有的独立场景，不在GET中创建状态。
 func (service *Service) ReadSpatialScene(ctx context.Context, principal account.Principal, key string) (SpatialState, error) {
+	accountID := principal.AccountID
 	if key == "" {
 		key = spatialIndex.configuration.Scene.Key
 	}
@@ -157,7 +158,7 @@ func (service *Service) ReadSpatialScene(ctx context.Context, principal account.
 	if err = account.Authorize(ctx, tx, principal, false, service.Now()); err != nil {
 		return SpatialState{}, err
 	}
-	state, err := readSpatialSceneState(ctx, tx, key)
+	state, err := readSpatialSceneState(ctx, tx, accountID, key)
 	if err != nil {
 		return state, err
 	}
@@ -165,32 +166,32 @@ func (service *Service) ReadSpatialScene(ctx context.Context, principal account.
 }
 
 // materializeSpatialSeaside 在首次写入时固定默认海边基线，收起后不会再次虚拟生成。
-func materializeSpatialSeaside(ctx context.Context, tx *sql.Tx) error {
+func materializeSpatialSeaside(ctx context.Context, tx *sql.Tx, accountID int64) error {
 	key := spatialIndex.configuration.Scene.Key
 	var exists bool
-	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM island_scene_states WHERE scene_key=?)`, key).Scan(&exists); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM island_scene_states WHERE account_id=? AND scene_key=?)`, accountID, key).Scan(&exists); err != nil {
 		return err
 	}
 	if exists {
 		return nil
 	}
-	state, err := readSpatialSceneState(ctx, tx, key)
+	state, err := readSpatialSceneState(ctx, tx, accountID, key)
 	if err != nil {
 		return err
 	}
-	return writeSpatialScene(ctx, tx, state)
+	return writeSpatialScene(ctx, tx, accountID, state)
 }
 
 // writeSpatialScene 同一事务替换当前场景的整套位置，实例主键约束跨场景唯一。
-func writeSpatialScene(ctx context.Context, tx *sql.Tx, state SpatialState) error {
-	if _, err := tx.ExecContext(ctx, `INSERT INTO island_scene_states(scene_key,version,environment_key) VALUES(?,?,?) ON CONFLICT(scene_key) DO UPDATE SET version=excluded.version,environment_key=excluded.environment_key`, state.SceneKey, state.Version, state.EnvironmentKey); err != nil {
+func writeSpatialScene(ctx context.Context, tx *sql.Tx, accountID int64, state SpatialState) error {
+	if _, err := tx.ExecContext(ctx, `INSERT INTO island_scene_states(account_id,scene_key,version,environment_key) VALUES(?,?,?,?) ON CONFLICT(account_id,scene_key) DO UPDATE SET version=excluded.version,environment_key=excluded.environment_key`, accountID, state.SceneKey, state.Version, state.EnvironmentKey); err != nil {
 		return err
 	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM island_scene_placements WHERE scene_key=?`, state.SceneKey); err != nil {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM island_scene_placements WHERE account_id=? AND scene_key=?`, accountID, state.SceneKey); err != nil {
 		return err
 	}
 	for index, item := range state.Placements {
-		if _, err := tx.ExecContext(ctx, `INSERT INTO island_scene_placements(instance_id,scene_key,item_key,space,x_cm,z_cm,rotation,position_index) VALUES(?,?,?,?,?,?,?,?)`, item.InstanceID, state.SceneKey, item.ItemKey, item.Space, item.XCM, item.ZCM, item.Rotation, index); err != nil {
+		if _, err := tx.ExecContext(ctx, `INSERT INTO island_scene_placements(account_id,instance_id,scene_key,item_key,space,x_cm,z_cm,rotation,position_index) VALUES(?,?,?,?,?,?,?,?,?)`, accountID, item.InstanceID, state.SceneKey, item.ItemKey, item.Space, item.XCM, item.ZCM, item.Rotation, index); err != nil {
 			return err
 		}
 	}
@@ -199,6 +200,7 @@ func writeSpatialScene(ctx context.Context, tx *sql.Tx, state SpatialState) erro
 
 // SaveSpatial 在单个写事务复核场景资格、实例占用和几何，再更新目标场景版本。
 func (service *Service) SaveSpatial(ctx context.Context, principal account.Principal, input SpatialSaveInput) (SpatialState, error) {
+	accountID := principal.AccountID
 	tx, err := service.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return SpatialState{}, err
@@ -207,7 +209,7 @@ func (service *Service) SaveSpatial(ctx context.Context, principal account.Princ
 	if err = account.Authorize(ctx, tx, principal, false, service.Now()); err != nil {
 		return SpatialState{}, err
 	}
-	state, err := readSpatialSceneState(ctx, tx, input.SceneKey)
+	state, err := readSpatialSceneState(ctx, tx, accountID, input.SceneKey)
 	if err != nil {
 		return state, err
 	}
@@ -233,15 +235,15 @@ func (service *Service) SaveSpatial(ctx context.Context, principal account.Princ
 	if err != nil {
 		return SpatialState{}, err
 	}
-	if err = materializeSpatialSeaside(ctx, tx); err != nil {
+	if err = materializeSpatialSeaside(ctx, tx, accountID); err != nil {
 		return SpatialState{}, err
 	}
 	state.EnvironmentKey = input.EnvironmentKey
 	state.Placements = input.Placements
-	if err = writeSpatialScene(ctx, tx, state); err != nil {
+	if err = writeSpatialScene(ctx, tx, accountID, state); err != nil {
 		return SpatialState{}, err
 	}
-	state, err = readSpatialSceneState(ctx, tx, input.SceneKey)
+	state, err = readSpatialSceneState(ctx, tx, accountID, input.SceneKey)
 	if err != nil {
 		return state, err
 	}

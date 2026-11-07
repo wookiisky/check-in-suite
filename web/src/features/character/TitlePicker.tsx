@@ -17,7 +17,7 @@ interface PendingTitle {
 }
 const pendingTitles = new WeakMap<Pick<ApiClient, 'request'>, PendingTitle>();
 
-// 称号逐次设置并采用完整保存响应，不参与四槽外观版本和账户版本。
+// 称号逐次设置并采用完整保存响应，不参与六槽外观版本和账户版本。
 export function TitlePicker({ client, equipment, onClose, onSaved }: {
   client: Pick<ApiClient, 'request'>;
   equipment: Equipment;

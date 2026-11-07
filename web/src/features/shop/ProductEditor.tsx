@@ -64,7 +64,7 @@ export function ProductEditor({
   const [initial] = useState(() => original?.body ?? draftFor(product, assets));
   const [draft, setDraft] = useState<ProductInput>(initial);
   const [category, setCategory] = useState<ShopCategory>(() => initial.type === 'wearable'
-    ? wearables.find((item) => item.wearable_key === initial.wearable_key)?.slot ?? 'hair'
+    ? wearables.find((item) => item.wearable_key === initial.wearable_key)?.slot ?? 'head'
     : initial.type as ShopCategory);
   const [pending, setPending] = useState(original ?? null);
   const [version, setVersion] = useState(product?.version ?? 0);

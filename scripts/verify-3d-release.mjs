@@ -148,7 +148,12 @@ async function verifyAssets(api) {
 
 // 构造完整请求时只选择可写字段，不把响应目录或库存重新提交。
 function appearanceInput(state) {
-  return { expected_version: state.version, character_key: state.character_key, hair_purchase_id: state.hair_purchase_id, upper_purchase_id: state.upper_purchase_id, lower_purchase_id: state.lower_purchase_id, shoes_purchase_id: state.shoes_purchase_id };
+  const input = { expected_version: state.version, character_key: state.character_key };
+  for (const slot of ['face', 'head', 'upper', 'lower', 'shoes', 'back']) {
+    input[`${slot}_purchase_id`] = state[`${slot}_purchase_id`];
+    input[`${slot}_free_wearable_key`] = state[`${slot}_free_wearable_key`] ?? null;
+  }
+  return input;
 }
 function layoutInput(state) { return { expected_version: state.version, scene_key: state.scene_key, environment_key: state.environment_key, placements: state.placements }; }
 
@@ -263,7 +268,7 @@ try {
   const savedAppearance = await api.json('/api/v1/appearance', 'PUT', appearanceBody);
   const savedLayout = await api.json('/api/v1/island/layout', 'PUT', layoutBody);
   check(savedAppearance.version === initialAppearance.version + 1 && savedLayout.version === initialLayout.version + 1, '完整保存未递增版本');
-  check(JSON.stringify(appearanceInput(savedAppearance)) === JSON.stringify({ ...appearanceBody, expected_version: savedAppearance.version }), '保存响应没有采用实际提交的四槽选择');
+  check(JSON.stringify(appearanceInput(savedAppearance)) === JSON.stringify({ ...appearanceBody, expected_version: savedAppearance.version }), '保存响应没有采用实际提交的六槽选择');
   check(JSON.stringify(layoutInput(savedLayout)) === JSON.stringify({ ...layoutBody, expected_version: savedLayout.version }), '保存响应没有采用实际提交的完整布局');
   check((await api.json('/api/v1/appearance', 'PUT', appearanceBody, 409)).code === 'VERSION_CONFLICT', '外观旧版本没有冲突');
   check((await api.json('/api/v1/island/layout', 'PUT', layoutBody, 409)).code === 'VERSION_CONFLICT', '布局旧版本没有冲突');

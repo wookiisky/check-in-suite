@@ -1,3 +1,4 @@
+import { draftFromAppearance, wearableFitsCharacter } from '../src/features/character/character3d-appearance';
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import type { components } from '../src/api/schema';
@@ -23,11 +24,13 @@ export async function openCharacterPreview(page: Page) {
   await expect(page.getByTestId('character-render-status')).toHaveText(preview.status.ready);
 }
 
-// 从实际目录选出上衣替代项；商品和订单仍通过正式购买事务生成。
-export async function ownedAlternativeUpper(page: Page, name: string) {
+// 从实际目录选出上装替代项；商品和订单仍通过正式购买事务生成。
+export async function ownedAlternativeUpper(page: Page, name: string, wearableKey?: string) {
   const current = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
   const body = current.characters.find((value) => value.character_key === current.character_key)!;
-  const wearable = current.wearables.find((value) => value.slot === 'upper' && value.character_key === body.character_key && value.wearable_key !== body.defaults.upper)!;
+  const defaults = new Set(current.characters.flatMap((item) => Object.values(item.defaults)));
+  const wearable = current.wearables.find((value) => value.slot === 'upper' && !defaults.has(value.wearable_key) && (!wearableKey || value.wearable_key === wearableKey) && wearableFitsCharacter(value, body, current.characters))!;
+  expect(wearable, wearableKey ?? '需要可购买的替代上装').toBeDefined();
   let owned = current.inventory.find((value) => value.wearable_key === wearable.wearable_key);
   if (!owned) {
     expect((await appearanceAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' })).ok()).toBe(true);
@@ -61,7 +64,7 @@ export async function ownedAlternativeUpper(page: Page, name: string) {
   return { ...owned, wearable };
 }
 
-// 构造整套外观请求，明确保留四个默认空值。
+// 构造整套外观请求，明确保留六个默认空值。
 export function appearanceRequest(state: Appearance) {
-  return { expected_version: state.version, character_key: state.character_key, hair_purchase_id: state.hair_purchase_id, upper_purchase_id: state.upper_purchase_id, lower_purchase_id: state.lower_purchase_id, shoes_purchase_id: state.shoes_purchase_id };
+  return { expected_version: state.version, ...draftFromAppearance(state) };
 }

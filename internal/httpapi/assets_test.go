@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/wookiisky/check-in-suite/internal/assets"
+	"github.com/wookiisky/check-in-suite/internal/character"
 )
 
 // TestControlledAssetsHTTP checks authentication and real SVG bytes through the public routes.
@@ -149,7 +150,15 @@ func TestGraphicsAssetsHTTP(t *testing.T) {
 			t.Fatalf("private GLB headers: %v", response.Header())
 		}
 	}
-	response := apiRequest(app, "GET", "/api/v1/assets/wearable-upper-rogue-v1", "", cookie, "")
+	body, ok := character.Get(character.DefaultCharacterKey)
+	if !ok {
+		t.Fatal("missing basic human")
+	}
+	upper, ok := character.GetWearable(body.Defaults.Upper)
+	if !ok {
+		t.Fatal("missing default upper garment")
+	}
+	response := apiRequest(app, "GET", upper.ThumbnailURL, "", cookie, "")
 	if response.Code != 200 || response.Header().Get("Content-Type") != "image/png" {
 		t.Fatalf("wearable image response: %d %v", response.Code, response.Header())
 	}

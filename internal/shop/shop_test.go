@@ -189,12 +189,12 @@ func TestTitleEquipmentOwnershipAndIndependentAppearance(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
 	title := buyProduct(t, f, createProduct(t, f, productInput("title"))).Purchase
-	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase
+	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("head", "barbarian"))).Purchase
 	equipment, err := f.Service.SetTitle(ctx, f.Principal, &title.ID)
 	if err != nil || equipment.Title == nil || equipment.Title.ID != title.ID {
 		t.Fatalf("title=%+v %v", equipment, err)
 	}
-	if _, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HairPurchaseID: &hair.ID}); err != nil {
+	if _, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HeadPurchaseID: &hair.ID}); err != nil {
 		t.Fatal(err)
 	}
 	equipment, err = f.Service.Equipment(ctx, f.Principal)
@@ -208,7 +208,7 @@ func TestTitleEquipmentOwnershipAndIndependentAppearance(t *testing.T) {
 		t.Fatalf("clear=%+v %v", equipment, err)
 	}
 	appearance, err := f.Service.Appearance(ctx, f.Principal)
-	if err != nil || appearance.HairPurchaseID == nil || *appearance.HairPurchaseID != hair.ID {
+	if err != nil || appearance.HeadPurchaseID == nil || *appearance.HeadPurchaseID != hair.ID {
 		t.Fatalf("title changed appearance: %+v %v", appearance, err)
 	}
 	state, err := f.Accounts.Session(ctx, f.Principal)

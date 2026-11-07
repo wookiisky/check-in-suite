@@ -30,7 +30,7 @@
   "types": {
     "character": "人物",
     "title": "称号",
-    "wearable": "人物服装",
+    "wearable": "人物装扮",
     "reward": "文本奖励",
     "island": "营地物品",
     "scene": "独立场景"
@@ -130,10 +130,12 @@
     "VERSION_CONFLICT": "商品已发生变化，请先加载最新配置。"
   },
   "wearableSlots": {
-    "hair": "发型",
+    "face": "形象",
+    "head": "头部",
     "upper": "上装",
     "lower": "下装",
-    "shoes": "鞋"
+    "shoes": "鞋子",
+    "back": "背部"
   },
   "backpack": "背包",
   "wardrobeTitle": "形象装扮",

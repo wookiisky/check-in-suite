@@ -77,9 +77,14 @@ func demoWearableForAsset(assetKey string) (character.Wearable, bool) {
 		if wearable.ThumbnailAssetKey != assetKey {
 			continue
 		}
-		body, found := character.Get(wearable.CharacterKey)
-		if !found || wearable.Key == body.Defaults.Hair || wearable.Key == body.Defaults.Upper || wearable.Key == body.Defaults.Lower || wearable.Key == body.Defaults.Shoes {
+		// 默认项可以被两个基础身体共用，来源身体身份不决定其是否需要购买。
+		if wearable.Empty {
 			return character.Wearable{}, false
+		}
+		for _, body := range character.Definitions() {
+			if wearable.Key == body.Defaults.ForSlot(wearable.Slot) {
+				return character.Wearable{}, false
+			}
 		}
 		return wearable, true
 	}
@@ -107,7 +112,7 @@ func seedHistory(ctx context.Context, tx *sql.Tx, items []assets.Asset, content 
 			if err != nil {
 				return err
 			}
-			if _, err := wallet.Apply(ctx, tx, wallet.Event{Type: wallet.CheckinGrant, ResourceID: id, Coins: content.CoinReward, Diamonds: content.DiamondReward, At: at}); err != nil {
+			if _, err := wallet.Apply(ctx, tx, 1, wallet.Event{Type: wallet.CheckinGrant, ResourceID: id, Coins: content.CoinReward, Diamonds: content.DiamondReward, At: at}); err != nil {
 				return err
 			}
 			result.Checkins++

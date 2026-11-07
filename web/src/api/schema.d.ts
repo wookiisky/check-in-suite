@@ -4,6 +4,80 @@
  */
 
 export interface paths {
+    "/api/v1/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取已有组、当前组与同组成员 */
+        get: operations["getGroups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 以自己的管理密码加入任意已有组
+         * @description 每人最多加入一个组；已在其他组时须先退出。不设邀请、审批或组角色。每次操作均校验本账户的管理密码，已有管理授权不能代替该校验。
+         */
+        post: operations["joinGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 以自己的管理密码退出当前组
+         * @description 只移除自己的组关系，保留所有个人数据；退出后后续请求不能再读取原组成员数据。
+         */
+        post: operations["leaveGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/group-today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 只读查看本人或同组成员今日全部安排任务及完成次数 */
+        get: operations["getGroupToday"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/island/scenes": {
         parameters: {
             query?: never;
@@ -230,7 +304,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 修改密码并撤销全部会话 */
+        /** 修改密码并撤销本账户全部会话 */
         post: operations["changeLoginPassword"];
         delete?: never;
         options?: never;
@@ -247,7 +321,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 修改密码并撤销全部会话 */
+        /** 修改密码并撤销本账户全部会话 */
         post: operations["changeManagementPassword"];
         delete?: never;
         options?: never;
@@ -816,6 +890,36 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Group: {
+            id: number;
+            name: string;
+        };
+        GroupMember: {
+            id: number;
+            display_name: string;
+        };
+        GroupState: {
+            groups: components["schemas"]["Group"][];
+            current_group: components["schemas"]["Group"] | null;
+            members: components["schemas"]["GroupMember"][];
+        };
+        JoinGroupRequest: {
+            group_id: number;
+            password: string;
+        };
+        MemberTodayTask: {
+            id: string;
+            name: string;
+            icon_key: string;
+            daily_limit: number;
+            completed: number;
+            remaining: number;
+        };
+        MemberToday: {
+            /** Format: date */
+            today: string;
+            tasks: components["schemas"]["MemberTodayTask"][];
+        };
         HealthResponse: {
             /** @enum {string} */
             status: "ok" | "unavailable";
@@ -1369,12 +1473,14 @@ export interface components {
             next_cursor: string | null;
         };
         /**
-         * @description 三维人物的四个独立穿戴部位。
+         * @description 三维人物的六个独立穿戴部位：形象、头部、上装、下装、鞋子和背部。
          * @enum {string}
          */
-        CharacterSlot: "hair" | "upper" | "lower" | "shoes";
+        CharacterSlot: "face" | "head" | "upper" | "lower" | "shoes" | "back";
         CharacterSelection: {
-            hair: string;
+            face: string;
+            back: string;
+            head: string;
             upper: string;
             lower: string;
             shoes: string;
@@ -1411,7 +1517,11 @@ export interface components {
             };
         };
         CharacterWearable: {
-            /** @description 仅用于明确的无发型定义；此时 hair 槽 nodes 与 covers 为空，不能单独作为商品出售。 */
+            /** @description 可被其他穿戴部件覆盖的子区域，例如形象的头皮。 */
+            regions?: {
+                [key: string]: string[];
+            };
+            /** @description 明确不穿戴的默认定义，其 nodes 与 covers 为空，不能单独作为商品出售；形象不可为空。 */
             empty?: boolean;
             /** @description 统一身体比例和绑定姿势的兼容身份。 */
             body_key?: string;
@@ -1425,7 +1535,7 @@ export interface components {
             model_url: string;
             thumbnail_asset_key: string;
             thumbnail_url: string;
-            /** @description 实际网格节点；仅明确 empty 的无发型定义可为空。 */
+            /** @description 实际网格节点；仅明确 empty 的不穿戴定义可为空。 */
             nodes: string[];
             covers: string[];
         };
@@ -1440,13 +1550,17 @@ export interface components {
         AppearanceState: {
             /** @description 统一骨架共用的原始动作目录，只返回一份，选中动作后才加载模型。 */
             preview_animations?: components["schemas"]["CharacterAnimation"][];
-            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
-            hair_free_wearable_key?: string | null;
-            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
+            face_free_wearable_key?: string | null;
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
+            back_free_wearable_key?: string | null;
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
+            head_free_wearable_key?: string | null;
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
             upper_free_wearable_key?: string | null;
-            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
             lower_free_wearable_key?: string | null;
-            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
             shoes_free_wearable_key?: string | null;
             /** @description 无需购买的初始角色身份。 */
             default_character_key?: string;
@@ -1454,28 +1568,38 @@ export interface components {
             character_inventory?: components["schemas"]["AppearanceOwnedCharacter"][];
             version: number;
             character_key: string;
-            hair_purchase_id: string | null;
+            face_purchase_id: string | null;
+            back_purchase_id: string | null;
+            head_purchase_id: string | null;
             upper_purchase_id: string | null;
             lower_purchase_id: string | null;
             shoes_purchase_id: string | null;
             characters: components["schemas"]["CharacterDefinition"][];
             wearables: components["schemas"]["CharacterWearable"][];
-            /** @description 全部服装权益；角色订单展开四件默认服装，因此同一 purchase_id 可对应多个槽位，须结合服装定义的 slot 解析。不受订单列表分页影响。 */
+            /** @description 全部独立穿戴商品订单，不展开身体订单；不受订单列表分页影响。 */
             inventory: components["schemas"]["AppearanceOwnedItem"][];
         };
         AppearanceSave: {
-            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
-            hair_free_wearable_key?: string | null;
-            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
+            face_free_wearable_key?: string | null;
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
+            back_free_wearable_key?: string | null;
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
+            head_free_wearable_key?: string | null;
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
             upper_free_wearable_key?: string | null;
-            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
             lower_free_wearable_key?: string | null;
-            /** @description 显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。 */
+            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
             shoes_free_wearable_key?: string | null;
             expected_version: number;
             character_key: string;
             /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
-            hair_purchase_id: string | null;
+            face_purchase_id: string | null;
+            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
+            back_purchase_id: string | null;
+            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
+            head_purchase_id: string | null;
             /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
             upper_purchase_id: string | null;
             /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
@@ -1665,6 +1789,8 @@ export interface components {
         };
     };
     parameters: {
+        /** @description 省略时读取本人；指定他人时在同一读取事务中检查双方仍属于同一组。可读取全部有效历史，不改变登录账户或授予写权限。 */
+        ReadAccountID: number;
         CSRF: string;
         /** @description 同一明确提交及未知结果重试必须使用原键和原请求；权限检查先于重放。 */
         IdempotencyKey: string;
@@ -1675,6 +1801,105 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getGroups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupState"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    joinGroup: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupState"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    leaveGroup: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupState"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getGroupToday: {
+        parameters: {
+            query?: {
+                /** @description 省略时读取本人；指定他人时在同一读取事务中检查双方仍属于同一组。可读取全部有效历史，不改变登录账户或授予写权限。 */
+                account_id?: components["parameters"]["ReadAccountID"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberToday"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     listSpatialScenes: {
         parameters: {
             query?: never;
@@ -2100,6 +2325,8 @@ export interface operations {
     listCheckins: {
         parameters: {
             query: {
+                /** @description 省略时读取本人；指定他人时在同一读取事务中检查双方仍属于同一组。可读取全部有效历史，不改变登录账户或授予写权限。 */
+                account_id?: components["parameters"]["ReadAccountID"];
                 start_date: string;
                 end_date: string;
                 cursor?: string;
@@ -2300,6 +2527,8 @@ export interface operations {
     getCalendar: {
         parameters: {
             query: {
+                /** @description 省略时读取本人；指定他人时在同一读取事务中检查双方仍属于同一组。可读取全部有效历史，不改变登录账户或授予写权限。 */
+                account_id?: components["parameters"]["ReadAccountID"];
                 month: string;
             };
             header?: never;
@@ -2323,6 +2552,8 @@ export interface operations {
     getStats: {
         parameters: {
             query: {
+                /** @description 省略时读取本人；指定他人时在同一读取事务中检查双方仍属于同一组。可读取全部有效历史，不改变登录账户或授予写权限。 */
+                account_id?: components["parameters"]["ReadAccountID"];
                 start_date: string;
                 end_date: string;
             };

@@ -21,7 +21,7 @@ def historical_thumbnail_pairs(document):
         for previous in item.get('previous_library_versions', []):
             if previous.get('thumbnail_asset_key'):
                 yield previous['thumbnail_asset_key'], key
-    for item in document.get('definitions', []):
+    for item in [*document.get('definitions', []), *document.get('catalog', [])]:
         yield item['thumbnail_asset_key'], item['item_key']
 
 
@@ -43,16 +43,17 @@ def build_aliases(current, previous, sources):
 
 
 # Git blob 仅作为制作期输入，运行包只包含紧凑映射及来源校验信息。
-def main():
+def main(arguments=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'internal/assets/provider-asset-manifest.json')
     parser.add_argument('--history', type=Path, action='append', default=[])
     parser.add_argument('--history-git-blob', action='append', default=[])
     parser.add_argument('--catalog', type=Path, default=ROOT / 'internal/island/spatial-scene.json')
-    parser.add_argument('--output', type=Path, default=ROOT / 'internal/island/spatial-thumbnail-aliases.json')
-    options = parser.parse_args()
+    parser.add_argument('--output', type=Path, default=ROOT / '.local/asset-pipeline/aliases/spatial-thumbnail-aliases.json')
+    options = parser.parse_args(arguments)
     current = {item['item_key']: item['thumbnail_asset_key'] for item in json.loads(options.catalog.read_text())['catalog']}
-    previous = json.loads(options.output.read_text()) if options.output.exists() else {}
+    previous_path = options.output if options.output.exists() else ROOT / 'internal/island/spatial-thumbnail-aliases.json'
+    previous = json.loads(previous_path.read_text()) if previous_path.exists() else {}
     paths = [options.manifest, *options.history]
     sources = [(str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path), path.read_bytes()) for path in paths]
     sources.extend((f'git-blob:{oid}', subprocess.check_output(['git', 'cat-file', 'blob', oid], cwd=ROOT)) for oid in options.history_git_blob)

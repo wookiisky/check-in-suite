@@ -8,7 +8,8 @@ func TestCatalogUsesSharedBodySpecification(t *testing.T) {
 		if definition.BodyKey != DefaultBodyKey {
 			t.Fatalf("character %s has body %q", definition.Key, definition.BodyKey)
 		}
-		for _, key := range []string{definition.Defaults.Hair, definition.Defaults.Upper, definition.Defaults.Lower, definition.Defaults.Shoes} {
+		for _, slot := range Slots() {
+			key := definition.Defaults.ForSlot(slot)
 			wearable, ok := GetWearable(key)
 			if !ok || wearable.BodyKey != definition.BodyKey || wearable.RigKey != definition.RigKey {
 				t.Fatalf("incompatible default for %s: %#v", definition.Key, wearable)

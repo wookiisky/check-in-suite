@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -60,9 +61,20 @@ func (input *terminalInput) password(key string) (string, error) {
 }
 
 // maintain executes the authorized local account lifecycle without password arguments.
-func maintain(ctx context.Context, command, kind string, service *account.Service, input io.Reader, output io.Writer) error {
+func maintain(ctx context.Context, command, kind, targetUsername string, service *account.Service, input io.Reader, output io.Writer) error {
 	terminal := &terminalInput{Reader: bufio.NewReader(input), Output: output}
 	terminal.File, _ = input.(*os.File)
+	if command == "create-group" {
+		name, err := terminal.read("group_name_prompt", false)
+		if err != nil {
+			return err
+		}
+		if _, err := service.CreateGroup(ctx, name); err != nil {
+			return maintenanceError(err)
+		}
+		_, err = fmt.Fprintln(output, content.Text("group_created"))
+		return err
+	}
 	if command == "reset-password" {
 		if kind != "login" && kind != "management" {
 			return errors.New(content.Text("invalid_password_kind"))
@@ -71,7 +83,12 @@ func maintain(ctx context.Context, command, kind string, service *account.Servic
 		if err != nil {
 			return err
 		}
-		if err := service.ResetPassword(ctx, kind, password); err != nil {
+		if targetUsername == "" {
+			err = service.ResetPassword(ctx, kind, password)
+		} else {
+			err = service.ResetPasswordFor(ctx, targetUsername, kind, password)
+		}
+		if err != nil {
 			return maintenanceError(err)
 		}
 		_, err = fmt.Fprintln(output, content.Text("password_reset"))
@@ -93,20 +110,15 @@ func maintain(ctx context.Context, command, kind string, service *account.Servic
 	if err != nil {
 		return err
 	}
-	// Seed first so a failed catalog write leaves account initialization retryable.
-	if err := shop.SeedCharacterProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {
-		return maintenanceError(err)
-	}
-	if err := shop.SeedWearableProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {
-		return maintenanceError(err)
-	}
-	if err := shop.SeedSpatialProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {
-		return maintenanceError(err)
-	}
-	if err := shop.SeedSceneProducts(ctx, service.DB, service.Now().UnixMilli()); err != nil {
-		return maintenanceError(err)
-	}
-	if err := service.Initialize(ctx, username, displayName, loginPassword, managementPassword); err != nil {
+	// Account, wallet and catalog become visible together, so a failed seed is retryable.
+	err = service.InitializeWith(ctx, username, displayName, loginPassword, managementPassword, func(tx *sql.Tx) error {
+		var accountID int64
+		if err := tx.QueryRowContext(ctx, "SELECT id FROM accounts WHERE username=?", strings.TrimSpace(username)).Scan(&accountID); err != nil {
+			return err
+		}
+		return shop.SeedCatalogInTx(ctx, tx, accountID, service.Now().UnixMilli())
+	})
+	if err != nil {
 		return maintenanceError(err)
 	}
 	_, err = fmt.Fprintln(output, content.Text("account_initialized"))

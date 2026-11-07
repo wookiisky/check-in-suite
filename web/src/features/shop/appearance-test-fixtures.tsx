@@ -6,14 +6,14 @@ import type { ComponentProps } from 'react';
 import type { CharacterPreview3D } from '../character/CharacterPreview3D';
 
 type AppearanceState = components['schemas']['AppearanceState'];
-const fixtureSlots = ['hair', 'upper', 'lower', 'shoes'] as const;
-const slotNames = { hair: '发型', upper: '上衣', lower: '下装', shoes: '鞋子' };
+const fixtureSlots = ['face', 'head', 'upper', 'lower', 'shoes', 'back'] as const;
+const slotNames = { face: '形象', head: '头部', upper: '上装', lower: '下装', shoes: '鞋子', back: '背部' };
 
 // 测试目录保留完整协议结构，部件名称不依赖实际商品或模型版本。
 export function appearanceFixture(version = 1): AppearanceState {
   return {
-    version, character_key: 'body-fixture', hair_purchase_id: null, upper_purchase_id: null, lower_purchase_id: null, shoes_purchase_id: null,
-    characters: [{ name: '测试人物', character_key: 'body-fixture', rig_key: 'rig-fixture', model_asset_key: 'body-model', model_url: '/body.glb', scale: 1, fixed_nodes: ['face'], body_regions: { torso: ['torso'] }, defaults: { hair: 'hair-default', upper: 'upper-default', lower: 'lower-default', shoes: 'shoes-default' }, animations: { idle: { clip: 'Idle', asset_key: 'body-model', url: '/body.glb' } } }],
+    version, character_key: 'body-fixture', face_purchase_id: null, back_purchase_id: null, head_purchase_id: null, upper_purchase_id: null, lower_purchase_id: null, shoes_purchase_id: null,
+    characters: [{ name: '测试人物', character_key: 'body-fixture', rig_key: 'rig-fixture', model_asset_key: 'body-model', model_url: '/body.glb', scale: 1, fixed_nodes: ['face'], body_regions: { torso: ['torso'] }, defaults: { face: 'face-default', back: 'back-default', head: 'head-default', upper: 'upper-default', lower: 'lower-default', shoes: 'shoes-default' }, animations: { idle: { clip: 'Idle', asset_key: 'body-model', url: '/body.glb' } } }],
     wearables: fixtureSlots.flatMap((slot) => ['default', 'owned'].map((kind) => ({ name: `${slotNames[slot]}${kind === 'default' ? '默认款' : '新款'}`, wearable_key: `${slot}-${kind}`, slot, character_key: 'body-fixture', rig_key: 'rig-fixture', model_asset_key: 'body-model', model_url: '/body.glb', thumbnail_asset_key: `${slot}-${kind}-thumb`, thumbnail_url: `/${slot}-${kind}.png`, nodes: [`${slot}-${kind}`], covers: slot === 'upper' ? ['torso'] : [] }))),
     inventory: fixtureSlots.map((slot) => ({ purchase_id: `${slot}-purchase`, wearable_key: `${slot}-owned` })),
   };

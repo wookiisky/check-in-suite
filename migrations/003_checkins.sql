@@ -1,6 +1,7 @@
 -- All business tables are created together so cross-module references remain real foreign keys.
 CREATE TABLE media_files (
     id TEXT PRIMARY KEY,
+    account_id INTEGER NOT NULL DEFAULT 1 CHECK(account_id > 0),
     storage_key TEXT NOT NULL UNIQUE,
     kind TEXT NOT NULL CHECK(kind IN ('photo','audio')),
     mime_type TEXT NOT NULL,
@@ -17,6 +18,7 @@ CREATE INDEX media_cleanup ON media_files(state,unreferenced_at);
 
 CREATE TABLE products (
     id TEXT PRIMARY KEY,
+    account_id INTEGER NOT NULL DEFAULT 1 CHECK(account_id > 0),
     type TEXT NOT NULL CHECK(type IN ('title','reward','island','wearable')),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     asset_key TEXT NOT NULL,
@@ -35,6 +37,7 @@ CREATE INDEX products_visible ON products(enabled,deleted_at,type);
 
 CREATE TABLE purchases (
     id TEXT PRIMARY KEY,
+    account_id INTEGER NOT NULL DEFAULT 1 CHECK(account_id > 0),
     product_id TEXT NOT NULL REFERENCES products(id),
     repeatable INTEGER NOT NULL DEFAULT 0 CHECK(repeatable IN (0,1)),
     item_key_snapshot TEXT NOT NULL DEFAULT '',
@@ -52,11 +55,12 @@ CREATE TABLE purchases (
     CHECK((type_snapshot='reward' AND status IN ('pending','redeemed')) OR (type_snapshot!='reward' AND status='owned')),
     CHECK((status='redeemed' AND redeemed_at IS NOT NULL) OR (status!='redeemed' AND redeemed_at IS NULL))
 ) STRICT;
-CREATE UNIQUE INDEX purchases_permanent ON purchases(product_id) WHERE type_snapshot!='reward' AND repeatable=0;
+CREATE UNIQUE INDEX purchases_permanent ON purchases(account_id,product_id) WHERE type_snapshot!='reward' AND repeatable=0;
 CREATE INDEX purchases_date ON purchases(created_at,id);
 
 CREATE TABLE messages (
     id TEXT PRIMARY KEY,
+    account_id INTEGER NOT NULL DEFAULT 1 CHECK(account_id > 0),
     text TEXT NOT NULL CHECK(length(trim(text)) > 0),
     created_at INTEGER NOT NULL
 ) STRICT;
@@ -64,6 +68,7 @@ CREATE INDEX messages_date ON messages(created_at,id);
 
 CREATE TABLE categories (
     id TEXT PRIMARY KEY,
+    account_id INTEGER NOT NULL DEFAULT 1 CHECK(account_id > 0),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     sort_order INTEGER NOT NULL DEFAULT 0,
     deleted_at INTEGER,
@@ -74,6 +79,7 @@ CREATE TABLE categories (
 
 CREATE TABLE tasks (
     id TEXT PRIMARY KEY,
+    account_id INTEGER NOT NULL DEFAULT 1 CHECK(account_id > 0),
     category_id TEXT REFERENCES categories(id),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     icon_key TEXT NOT NULL,
@@ -87,7 +93,7 @@ CREATE TABLE tasks (
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 ) STRICT;
-CREATE INDEX tasks_category ON tasks(category_id);
+CREATE INDEX tasks_category ON tasks(account_id,category_id);
 
 CREATE TABLE task_schedule_history (
     task_id TEXT NOT NULL REFERENCES tasks(id),
@@ -99,6 +105,7 @@ CREATE TABLE task_schedule_history (
 
 CREATE TABLE achievements (
     id TEXT PRIMARY KEY,
+    account_id INTEGER NOT NULL DEFAULT 1 CHECK(account_id > 0),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     asset_key TEXT NOT NULL,
     metric TEXT NOT NULL CHECK(metric IN ('count','days','streak','coins','diamonds')),
@@ -127,6 +134,7 @@ CREATE TABLE achievement_tasks (
 
 CREATE TABLE checkins (
     id TEXT PRIMARY KEY,
+    account_id INTEGER NOT NULL DEFAULT 1 CHECK(account_id > 0),
     task_id TEXT NOT NULL REFERENCES tasks(id),
     business_date TEXT NOT NULL,
     task_name_snapshot TEXT NOT NULL,
@@ -142,7 +150,7 @@ CREATE TABLE checkins (
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 ) STRICT;
-CREATE INDEX checkins_task_date ON checkins(task_id,business_date) WHERE deleted_at IS NULL;
+CREATE INDEX checkins_task_date ON checkins(account_id,task_id,business_date) WHERE deleted_at IS NULL;
 CREATE INDEX checkins_date ON checkins(business_date,created_at,id) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX checkins_photo ON checkins(photo_media_id) WHERE photo_media_id IS NOT NULL;
 CREATE UNIQUE INDEX checkins_audio ON checkins(audio_media_id) WHERE audio_media_id IS NOT NULL;
@@ -179,20 +187,30 @@ CREATE TABLE idempotency_requests (
 
 -- A complete three-dimensional appearance has its own optimistic version.
 CREATE TABLE appearance_state (
-    id INTEGER PRIMARY KEY CHECK(id=1),
+    id INTEGER PRIMARY KEY CHECK(id > 0),
     version INTEGER NOT NULL CHECK(version>0),
     character_key TEXT NOT NULL,
-    hair_purchase_id TEXT REFERENCES purchases(id),
+    face_purchase_id TEXT REFERENCES purchases(id),
+    head_purchase_id TEXT REFERENCES purchases(id),
     upper_purchase_id TEXT REFERENCES purchases(id),
     lower_purchase_id TEXT REFERENCES purchases(id),
-    shoes_purchase_id TEXT REFERENCES purchases(id)
+    shoes_purchase_id TEXT REFERENCES purchases(id),
+    back_purchase_id TEXT REFERENCES purchases(id)
 ) STRICT;
 
 -- The 3D layout keeps centimeter coordinates independently from the retiring 2D layout.
 CREATE TABLE island_spatial_state (
-    id INTEGER PRIMARY KEY CHECK(id=1),
+    id INTEGER PRIMARY KEY CHECK(id > 0),
     version INTEGER NOT NULL CHECK(version>0),
     scene_key TEXT NOT NULL,
     environment_key TEXT NOT NULL,
     placements TEXT NOT NULL CHECK(json_valid(placements))
 ) STRICT;
+
+-- 所有普通业务列表都先按账户过滤。
+CREATE INDEX tasks_account ON tasks(account_id,deleted_at,enabled);
+CREATE INDEX categories_account ON categories(account_id,deleted_at);
+CREATE INDEX checkins_account_date ON checkins(account_id,business_date,created_at,id) WHERE deleted_at IS NULL;
+CREATE INDEX media_account ON media_files(account_id);
+CREATE INDEX achievements_account ON achievements(account_id);
+CREATE INDEX messages_account_date ON messages(account_id,created_at,id);

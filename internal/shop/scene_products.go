@@ -22,27 +22,40 @@ var sceneOffersJSON []byte
 
 // SeedSceneProducts 补入场景报价，重试不覆盖管理值或恢复已删除商品。
 func SeedSceneProducts(ctx context.Context, db *sql.DB, now int64) error {
-	var offers []sceneOffer
-	if err := json.Unmarshal(sceneOffersJSON, &offers); err != nil {
-		return err
-	}
+	return seedCatalogAccounts(ctx, db, now, seedSceneProducts)
+}
+
+// seedSceneProducts only writes the selected account's offers.
+func seedSceneProducts(ctx context.Context, db *sql.DB, accountID, now int64) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+	if err := seedSceneProductsInTx(ctx, tx, accountID, now); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// seedSceneProductsInTx shares the account initialization transaction.
+func seedSceneProductsInTx(ctx context.Context, tx *sql.Tx, accountID, now int64) error {
+	var offers []sceneOffer
+	if err := json.Unmarshal(sceneOffersJSON, &offers); err != nil {
+		return err
+	}
 	for _, offer := range offers {
 		scene, found := island.SpatialSceneFind(offer.Key)
 		if !found || scene.Free {
 			return fmt.Errorf("invalid paid scene offer %q", offer.Key)
 		}
-		_, err := tx.ExecContext(ctx, `INSERT INTO products(id,type,name,asset_key,scene_key,description,coin_price,diamond_price,enabled,created_at,updated_at) VALUES(?,?,?,?,?,'',?,?,1,?,?) ON CONFLICT(id) DO NOTHING`, "scene-offer-"+scene.Key, TypeScene, scene.Name, scene.ThumbnailAssetKey, scene.Key, offer.Coins, offer.Diamonds, now, now)
+		_, err := tx.ExecContext(ctx, `INSERT INTO products(id,account_id,type,name,asset_key,scene_key,description,coin_price,diamond_price,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,'',?,?,1,?,?) ON CONFLICT(id) DO NOTHING`, catalogProductID(accountID, "scene-offer-"+scene.Key), accountID, TypeScene, scene.Name, scene.ThumbnailAssetKey, scene.Key, offer.Coins, offer.Diamonds, now, now)
 		if err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, `UPDATE products SET asset_key=?,version=version+1,updated_at=? WHERE type=? AND scene_key=? AND asset_key!=?`, scene.ThumbnailAssetKey, now, TypeScene, scene.Key, scene.ThumbnailAssetKey); err != nil {
+		if _, err := tx.ExecContext(ctx, `UPDATE products SET asset_key=?,version=version+1,updated_at=? WHERE account_id=? AND type=? AND scene_key=? AND asset_key!=?`, scene.ThumbnailAssetKey, now, accountID, TypeScene, scene.Key, scene.ThumbnailAssetKey); err != nil {
 			return err
 		}
 	}
-	return tx.Commit()
+	return nil
 }

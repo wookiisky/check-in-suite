@@ -1,5 +1,5 @@
 {
-  "usage": "用法：island version；或 island <serve|migrate|init|reset-password|seed-demo|reset-demo|db-status> [-config 配置路径]；reset-demo 清空数据库并写入测试数据，执行前须停服；重置密码还需 -kind login 或 management；数据库状态支持 -format json 或 tsv。",
+  "usage": "用法：island version；或 island <serve|migrate|init|create-group|reset-password|seed-demo|reset-demo|db-status> [-config 配置路径]；init 新建账户，create-group 交互创建组；reset-demo 清空数据库并写入测试数据，执行前须停服；重置密码使用 -username 用户名 -kind login 或 management；数据库状态支持 -format json 或 tsv。",
   "unexpected_arguments": "不接受额外参数；密码必须通过交互输入。",
   "username_prompt": "用户名：",
   "display_name_prompt": "姓名或昵称：",
@@ -10,11 +10,11 @@
   "password_mismatch": "两次输入的密码不一致。",
   "invalid_password_kind": "请选择 login 或 management 密码。",
   "input_failed": "无法读取完整输入。",
-  "account_initialized": "账户初始化完成。",
-  "password_reset": "密码已重置，所有登录会话已撤销。",
+  "account_initialized": "账户已创建。",
+  "password_reset": "密码已重置，该账户的全部登录会话已撤销。",
   "INVALID_REQUEST": "输入不符合要求，请检查用户名、姓名和密码。",
-  "ACCOUNT_EXISTS": "账户已经存在，不能重复初始化。",
-  "ACCOUNT_NOT_FOUND": "账户尚未初始化。",
+  "ACCOUNT_EXISTS": "用户名已经存在，请使用其他用户名。",
+  "ACCOUNT_NOT_FOUND": "找不到指定账户。",
   "ACCOUNT_NOT_INITIALIZED": "账户尚未初始化。",
   "PASSWORD_INVALID": "密码不符合长度要求。",
   "PASSWORD_MISMATCH": "两次输入的密码不一致。",
@@ -22,5 +22,9 @@
   "INTERNAL_ERROR": "操作失败，请检查服务日志。",
   "DEMO_REQUIRES_EMPTY_DATABASE": "测试初始化只允许空数据库；已有账户或业务数据时，请明确选择重置后再初始化。",
   "invalid_status_format": "数据库状态输出格式必须为 json 或 tsv。",
-  "invalid_status_field": "配置路径或地址不能包含制表符、换行等控制字符。"
+  "invalid_status_field": "配置路径或地址不能包含制表符、换行等控制字符。",
+  "group_name_prompt": "组名称：",
+  "group_created": "组已创建。",
+  "GROUP_EXISTS": "组名称已经存在，请使用其他名称。",
+  "ACCOUNT_SELECTION_REQUIRED": "存在多个账户，请用 -username 指定要重置的用户名。"
 }

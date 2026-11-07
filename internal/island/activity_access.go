@@ -7,7 +7,7 @@ import (
 )
 
 // readActivityAccess derives task eligibility without reading inventory or layout geometry.
-func readActivityAccess(ctx context.Context, tx *sql.Tx, today string) ([]ActivityAccess, error) {
+func readActivityAccess(ctx context.Context, tx *sql.Tx, accountID int64, today string) ([]ActivityAccess, error) {
 	activities := []string{"ball", "read", "run"}
 	access := make([]ActivityAccess, 0, len(activities))
 	for _, activity := range activities {
@@ -15,9 +15,9 @@ func readActivityAccess(ctx context.Context, tx *sql.Tx, today string) ([]Activi
 	}
 	// Disabled tasks keep their association and already-earned access. Deleting a task removes its requirement.
 	rows, err := tx.QueryContext(ctx, `SELECT a.activity,t.id,t.name,t.enabled,
-		EXISTS(SELECT 1 FROM checkins c WHERE c.task_id=t.id AND c.business_date=? AND c.deleted_at IS NULL)
+		EXISTS(SELECT 1 FROM checkins c WHERE c.account_id=t.account_id AND c.task_id=t.id AND c.business_date=? AND c.deleted_at IS NULL)
 		FROM task_island_activities a JOIN tasks t ON t.id=a.task_id
-		WHERE t.deleted_at IS NULL ORDER BY a.activity,t.name,t.id`, today)
+		WHERE t.account_id=? AND t.deleted_at IS NULL ORDER BY a.activity,t.name,t.id`, today, accountID)
 	if err != nil {
 		return nil, err
 	}

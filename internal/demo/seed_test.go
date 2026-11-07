@@ -115,10 +115,10 @@ func TestSeedPopulatesUsableHistory(t *testing.T) {
 		t.Fatalf("demo missing title: %+v %v", equipment, err)
 	}
 	appearance, err := shop.New(db, cfg, service).Appearance(ctx, principal)
-	if err != nil || appearance.CharacterKey != character.DefaultCharacterKey || appearance.HairPurchaseID == nil || appearance.UpperPurchaseID == nil || appearance.LowerPurchaseID == nil || appearance.ShoesPurchaseID == nil || len(appearance.Inventory) != 4 {
+	if err != nil || appearance.CharacterKey != character.DefaultCharacterKey || appearance.HeadPurchaseID == nil || appearance.UpperPurchaseID == nil || appearance.LowerPurchaseID == nil || appearance.ShoesPurchaseID == nil || len(appearance.Inventory) != 4 {
 		t.Fatalf("demo missing 3D outfit: %+v %v", appearance, err)
 	}
-	if _, err := shop.New(db, cfg, service).SaveAppearance(ctx, principal, shop.SaveAppearanceInput{ExpectedVersion: appearance.Version, CharacterKey: appearance.CharacterKey, HairPurchaseID: appearance.HairPurchaseID, UpperPurchaseID: appearance.UpperPurchaseID, LowerPurchaseID: appearance.LowerPurchaseID, ShoesPurchaseID: appearance.ShoesPurchaseID}); err != nil {
+	if _, err := shop.New(db, cfg, service).SaveAppearance(ctx, principal, shop.SaveAppearanceInput{ExpectedVersion: appearance.Version, CharacterKey: appearance.CharacterKey, HeadPurchaseID: appearance.HeadPurchaseID, UpperPurchaseID: appearance.UpperPurchaseID, LowerPurchaseID: appearance.LowerPurchaseID, ShoesPurchaseID: appearance.ShoesPurchaseID}); err != nil {
 		t.Fatalf("demo 3D outfit invalid: %v", err)
 	}
 	state, err := island.New(db, time.Now).ReadSpatial(ctx, principal)
@@ -164,7 +164,8 @@ func TestDemoOffersMatchStartup(t *testing.T) {
 		t.Fatal("normal startup duplicated demo offers")
 	}
 	for _, body := range character.Definitions() {
-		for _, key := range []string{body.Defaults.Hair, body.Defaults.Upper, body.Defaults.Lower, body.Defaults.Shoes} {
+		for _, slot := range character.Slots() {
+			key := body.Defaults.ForSlot(slot)
 			wearable, found := character.GetWearable(key)
 			if !found {
 				t.Fatal("missing default wearable")

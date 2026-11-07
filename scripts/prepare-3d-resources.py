@@ -1,14 +1,13 @@
-"""整理已经验收的首批模型；这不是通用素材生成或自动服装适配管线。"""
+"""仅整理首批建筑与动作；人物和穿戴由prepare-modular-characters.py制作。"""
 import argparse
 import json
-from pathlib import Path
+import importlib.util
 import shutil
+from pathlib import Path
 import struct
-import subprocess
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-BUILTIN = ROOT / 'internal/assets/builtin'
+BUILTIN = ROOT / '.local/asset-pipeline/resources/internal/assets/builtin'
 P0 = ROOT / 'web/public/models/p0'
 BUILDING_FILES = {
     'camp-wall-v1': 'wall.glb',
@@ -40,86 +39,47 @@ def embed_building_texture(source, target):
     content = json.dumps(document, separators=(',', ':')).encode()
     content += b' ' * (-len(content) % 4)
     total = 12 + 8 + len(content) + 8 + len(binary)
-    target.write_bytes(struct.pack('<III', 0x46546C67, 2, total) + struct.pack('<II', len(content), 0x4E4F534A) + content + struct.pack('<II', len(binary), 0x004E4942) + binary)
+    write_immutable(target, struct.pack('<III', 0x46546C67, 2, total) + struct.pack('<II', len(content), 0x4E4F534A) + content + struct.pack('<II', len(binary), 0x004E4942) + binary)
 
 
-# 使用交付 GLB 的实际网格渲染透明图；不读取未交付的 Blender 草稿。
-def render_thumbnails():
-    import bpy
-    from mathutils import Vector
-    bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.object.delete(use_global=False)
-    bpy.ops.import_scene.gltf(filepath=str(BUILTIN / 'character-medium-v1.glb'))
-    manifest = json.loads((ROOT / 'internal/character/character-catalog.json').read_text())
-    rig = next(obj for obj in bpy.data.objects if obj.type == 'ARMATURE')
-    meshes = [obj for obj in bpy.data.objects if obj.type == 'MESH']
-    for track in rig.animation_data.nla_tracks:
-        track.mute = True
-    idle = next(action for action in bpy.data.actions if action.name == 'Idle')
-    rig.animation_data.action = idle
-    rig.animation_data.action_slot = idle.slots[0]
-    scene = bpy.context.scene
-    scene.frame_set(1)
-    scene.render.engine = 'CYCLES'
-    scene.cycles.samples = 16
-    scene.cycles.use_denoising = True
-    scene.render.resolution_x = scene.render.resolution_y = 256
-    scene.render.resolution_percentage = 100
-    scene.render.image_settings.file_format = 'PNG'
-    scene.render.image_settings.color_mode = 'RGBA'
-    scene.render.film_transparent = True
-    scene.world.color = (.35, .35, .35)
-    camera_data = bpy.data.cameras.new('ThumbnailCamera')
-    camera_data.type = 'ORTHO'
-    camera = bpy.data.objects.new('ThumbnailCamera', camera_data)
-    scene.collection.objects.link(camera)
-    scene.camera = camera
-    for position, energy, size in [((4, -6, 7), 700, 6), ((-4, -2, 3), 400, 5)]:
-        light_data = bpy.data.lights.new('ThumbnailLight', 'AREA')
-        light_data.energy = energy
-        light_data.size = size
-        light = bpy.data.objects.new('ThumbnailLight', light_data)
-        scene.collection.objects.link(light)
-        light.location = position
-        light.rotation_euler = (Vector((0, 0, 1)) - light.location).to_track_quat('-Z', 'Y').to_euler()
-    for wearable in manifest['wearables']:
-        visible = set(wearable['nodes'])
-        if wearable['slot'] == 'hair':
-            visible.update(['body_head', 'body_scalp'])
-        for mesh in meshes:
-            mesh.hide_render = mesh.name not in visible
-        bpy.context.view_layer.update()
-        graph = bpy.context.evaluated_depsgraph_get()
-        corners = [obj.matrix_world @ Vector(corner) for obj in meshes if not obj.hide_render for corner in obj.evaluated_get(graph).bound_box]
-        lower = Vector(tuple(min(point[index] for point in corners) for index in range(3)))
-        upper = Vector(tuple(max(point[index] for point in corners) for index in range(3)))
-        center = (lower + upper) / 2
-        camera.location = center + Vector((3, -7, 3.2))
-        camera.rotation_euler = (center - camera.location).to_track_quat('-Z', 'Y').to_euler()
-        rotation = camera.rotation_euler.to_matrix()
-        horizontal, vertical = rotation.col[0], rotation.col[1]
-        width = max((point - center).dot(horizontal) for point in corners) - min((point - center).dot(horizontal) for point in corners)
-        height = max((point - center).dot(vertical) for point in corners) - min((point - center).dot(vertical) for point in corners)
-        camera_data.ortho_scale = max(width, height) * 1.18
-        scene.render.filepath = str(BUILTIN / (wearable['thumbnail_asset_key'] + '.png'))
-        bpy.ops.render.render(write_still=True)
+# 已发布身份只能重用相同字节，人物目录由新的六槽制作入口管理。
+def write_immutable(target, data):
+    if target.exists():
+        if target.read_bytes() != data:
+            raise ValueError('immutable-resource-changed: ' + target.name)
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
 
 
-# 文件复制与纹理内嵌不依赖 Blender；需要重绘缩略图时显式传入 Blender。
-def prepare(blender):
-    shutil.copyfile(P0 / 'character/modular.glb', BUILTIN / 'character-medium-v1.glb')
-    shutil.copyfile(P0 / 'animations/exercise.glb', BUILTIN / 'character-exercise-v1.glb')
+# 文件复制与纹理内嵌不依赖Blender，也不读取或修改人物目录。
+def prepare(output=None):
+    destination = output / 'internal/assets/builtin' if output is not None else BUILTIN
+    write_immutable(destination/'character-exercise-v1.glb', (P0/'animations/exercise.glb').read_bytes())
     for key, filename in BUILDING_FILES.items():
-        embed_building_texture(P0 / 'kenney' / filename, BUILTIN / (key + '.glb'))
-    if blender:
-        subprocess.run([blender, '--background', '--factory-startup', '--python', str(Path(__file__).resolve()), '--', '--render'], check=True, cwd=ROOT)
+        embed_building_texture(P0/'kenney'/filename, destination/(key+'.glb'))
+
+
+# CLI仅构建候选；注册表逐字节复用既有登记，不新增商品。
+def main(arguments=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=ROOT / '.local/asset-pipeline/resources')
+    options = parser.parse_args(arguments)
+    specification = importlib.util.spec_from_file_location('legacy_candidate', Path(__file__).with_name('asset-pipeline-candidate.py'))
+    helper = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(helper)
+    output = helper.validate_candidate_output(ROOT, options.output)
+    if (output / 'candidate.json').exists():
+        raise ValueError('candidate output already finalized; choose a new output directory')
+    baseline = helper.capture_baseline(ROOT)
+    dependency_paths = [Path(__file__)]
+    for source in [P0/'animations/exercise.glb', *[P0/'kenney'/name for name in BUILDING_FILES.values()]]:
+        dependency_paths.extend(helper.source_dependencies(source))
+    dependencies = helper.capture_dependencies(ROOT, dependency_paths)
+    prepare(output)
+    shutil.copyfile(ROOT / 'internal/assets/builtin/catalog.json', output / 'internal/assets/builtin/catalog.json')
+    helper.finalize_candidate(ROOT, output, 'resources', baseline=baseline, dependencies=dependencies)
 
 
 if __name__ == '__main__':
-    if '--render' in sys.argv:
-        render_thumbnails()
-    else:
-        parser = argparse.ArgumentParser(description=__doc__)
-        parser.add_argument('--blender', help='显式指定 Blender 可执行文件以重绘缩略图')
-        options = parser.parse_args()
-        prepare(options.blender)
+    main()

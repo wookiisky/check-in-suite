@@ -202,7 +202,7 @@ func (s *Service) process(ctx context.Context, p account.Principal, kind, rawPat
 	if err := account.Authorize(ctx, tx, p, false, now); err != nil {
 		return Media{}, err
 	}
-	_, err = tx.ExecContext(ctx, `INSERT INTO media_files(id,storage_key,kind,mime_type,size_bytes,duration_ms,width,height,sha256,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,'ready',?)`, result.ID, key, kind, result.MIMEType, size, result.DurationMS, result.Width, result.Height, hex.EncodeToString(hash.Sum(nil)), now.UnixMilli())
+	_, err = tx.ExecContext(ctx, `INSERT INTO media_files(id,account_id,storage_key,kind,mime_type,size_bytes,duration_ms,width,height,sha256,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,'ready',?)`, result.ID, p.AccountID, key, kind, result.MIMEType, size, result.DurationMS, result.Width, result.Height, hex.EncodeToString(hash.Sum(nil)), now.UnixMilli())
 	if err != nil {
 		return Media{}, err
 	}

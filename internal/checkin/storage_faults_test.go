@@ -315,7 +315,7 @@ func TestConstrainedFilesystemCommitFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	balance, err := wallet.Apply(ctx, tx, wallet.Event{Type: wallet.CheckinGrant, ResourceID: id, Coins: 10, Diamonds: 2, At: now})
+	balance, err := wallet.Apply(ctx, tx, f.principal.AccountID, wallet.Event{Type: wallet.CheckinGrant, ResourceID: id, Coins: 10, Diamonds: 2, At: now})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -324,7 +324,7 @@ func TestConstrainedFilesystemCommitFailure(t *testing.T) {
 		t.Fatal(err)
 	}
 	receipt := map[string]any{"checkin_id": id, "wallet": balance, "task_remaining": 999, "today": "2026-10-29"}
-	if err := idempotency.Save(ctx, tx, "checkin.create", "commit-full", hash, id, 201, receipt, now); err != nil {
+	if err := idempotency.Save(ctx, tx, f.principal.AccountID, "checkin.create", "commit-full", hash, id, 201, receipt, now); err != nil {
 		t.Fatal(err)
 	}
 	t.Log("记录、钱包、流水与幂等收据SQL全部成功；现在填满卷再调用Commit")

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { ApiClient } from '../../api/client';
+import { ApiFailure, type ApiClient } from '../../api/client';
 import { monthStart, shiftDate, weekStart } from '../../api/dates';
 import type { Session } from '../../api/types';
 import type { components } from '../../api/schema';
@@ -21,7 +21,7 @@ function presetStart(preset: Preset, today: string): string {
 }
 
 // 预设变化立即查询，自定义范围在明确提交且验证后查询。
-export function StatsPage({ client, session }: { client: Pick<ApiClient, 'request'> & Partial<Pick<ApiClient, 'now'>>; session: Session }) {
+export function StatsPage({ client, session, accountID = session.account.id, onAccessDenied }: { client: Pick<ApiClient, 'request'> & Partial<Pick<ApiClient, 'now'>>; session: Session; accountID?: number; onAccessDenied?: () => void }) {
   const today = useBusinessToday(client, session);
   const [preset, setPreset] = useState<Preset>('month');
   const [start, setStart] = useState(monthStart(today));
@@ -37,12 +37,16 @@ export function StatsPage({ client, session }: { client: Pick<ApiClient, 'reques
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(null); setData(null);
-    client.request<Stats>(`/stats?start_date=${rangeStart}&end_date=${rangeEnd}`, { signal: controller.signal })
+    client.request<Stats>(`/stats?start_date=${rangeStart}&end_date=${rangeEnd}${accountID === session.account.id ? '' : `&account_id=${accountID}`}`, { signal: controller.signal })
       .then((result) => { if (!controller.signal.aborted) setData(result); })
-      .catch((reason: unknown) => { if (!controller.signal.aborted) setError(reason); })
+      .catch((reason: unknown) => {
+        if (controller.signal.aborted) return;
+        if (accountID !== session.account.id && reason instanceof ApiFailure && (reason.status === 403 || reason.status === 404)) { onAccessDenied?.(); return; }
+        setError(reason);
+      })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [client, rangeStart, rangeEnd, attempt, today]);
+  }, [client, rangeStart, rangeEnd, attempt, today, accountID, session.account.id, onAccessDenied]);
 
   // 非法范围不继续展示旧统计，避免被当作本次查询结果。
   function apply(event: FormEvent) {

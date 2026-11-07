@@ -21,6 +21,6 @@ export async function runtimeCharacterSource(url:string):Promise<GLTFSource> {
 // 库存是本测试的选择夹具；正式购买、图片解码和GPU显示另由真实浏览器验证。
 export function runtimeCharacterAppearance():AppearanceState {
   return {version:1,character_key:catalog.characters[0]!.character_key,default_character_key:catalog.characters[0]!.character_key,
-    hair_purchase_id:null,upper_purchase_id:null,lower_purchase_id:null,shoes_purchase_id:null,
+    face_purchase_id:null,back_purchase_id:null,head_purchase_id:null,upper_purchase_id:null,lower_purchase_id:null,shoes_purchase_id:null,
     characters:structuredClone(catalog.characters),wearables:structuredClone(catalog.wearables),inventory:[] } as AppearanceState;
 }

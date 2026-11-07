@@ -4,10 +4,10 @@ import content from './content.json';
 export type ShopCategory = CharacterSlot | 'character' | 'title' | 'reward' | 'island' | 'scene';
 
 // 商品用途由正式类型及服装定义决定，不从名称或素材key推测。
-export const wardrobeCategories: ShopCategory[] = ['character', 'hair', 'upper', 'lower', 'shoes', 'title'];
+export const wardrobeCategories: ShopCategory[] = ['character', 'face', 'head', 'upper', 'lower', 'shoes', 'back', 'title'];
 export const shopCategories: ShopCategory[] = [...wardrobeCategories, 'reward', 'island', 'scene'];
 
-// 四个槽位共用人物目录的稳定类型。
+// 六个槽位共用人物目录的稳定类型。
 export function isWearableSlot(value: string): value is CharacterSlot {
   return Object.hasOwn(content.wearableSlots, value);
 }

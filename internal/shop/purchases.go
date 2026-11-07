@@ -6,12 +6,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/wookiisky/check-in-suite/internal/character"
 	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/idempotency"
 	"github.com/wookiisky/check-in-suite/internal/island"
@@ -39,8 +39,8 @@ func scanPurchase(row rowScanner) (Purchase, error) {
 }
 
 // readPurchase does not join live products, allowing deleted offers to retain their ownership.
-func readPurchase(ctx context.Context, tx *sql.Tx, id string) (Purchase, error) {
-	p, err := scanPurchase(tx.QueryRowContext(ctx, "SELECT "+purchaseColumns+" FROM purchases p WHERE p.id=?", id))
+func readPurchase(ctx context.Context, tx *sql.Tx, accountID int64, id string) (Purchase, error) {
+	p, err := scanPurchase(tx.QueryRowContext(ctx, "SELECT "+purchaseColumns+" FROM purchases p WHERE p.account_id=? AND p.id=?", accountID, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		return Purchase{}, core.Fail(404, "NOT_FOUND")
 	}
@@ -54,6 +54,7 @@ type purchaseReceipt struct {
 
 // Buy commits ownership, both currency debits, stock and the replay receipt atomically.
 func (s *Service) Buy(ctx context.Context, p account.Principal, key string, input BuyInput) (PurchaseResult, error) {
+	accountID := p.AccountID
 	var result PurchaseResult
 	hash, err := idempotency.Hash(purchaseOperation, input)
 	if err != nil {
@@ -68,7 +69,7 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 	if err = account.Authorize(ctx, tx, p, false, now); err != nil {
 		return result, err
 	}
-	saved, err := idempotency.Lookup(ctx, tx, purchaseOperation, key, hash)
+	saved, err := idempotency.Lookup(ctx, tx, accountID, purchaseOperation, key, hash)
 	if err != nil {
 		return result, err
 	}
@@ -77,13 +78,13 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 		if err = json.Unmarshal(saved.JSON, &receipt); err != nil {
 			return result, err
 		}
-		purchase, err := readPurchase(ctx, tx, saved.ResourceID)
+		purchase, err := readPurchase(ctx, tx, accountID, saved.ResourceID)
 		if err != nil {
 			return result, err
 		}
 		return PurchaseResult{Purchase: purchase, Wallet: receipt.Wallet}, tx.Commit()
 	}
-	product, err := readProduct(ctx, tx, input.ProductID, false)
+	product, err := readProduct(ctx, tx, accountID, input.ProductID, false)
 	if err != nil {
 		return result, err
 	}
@@ -93,7 +94,7 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 	if product.Version != input.ExpectedProductVersion {
 		return result, core.Fail(409, "PRODUCT_CHANGED")
 	}
-	balance, err := wallet.Get(ctx, tx)
+	balance, err := wallet.Get(ctx, tx, accountID)
 	if err != nil {
 		return result, err
 	}
@@ -113,23 +114,23 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 	if product.Type == TypeReward {
 		status = StatusPending
 	}
-	_, err = tx.ExecContext(ctx, "INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,repeatable,item_key_snapshot,wearable_key_snapshot,character_key_snapshot,scene_key_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli(), product.Repeatable, product.IslandItemKey, product.WearableKey, product.CharacterKey, product.SceneKey)
+	_, err = tx.ExecContext(ctx, "INSERT INTO purchases(id,account_id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,repeatable,item_key_snapshot,wearable_key_snapshot,character_key_snapshot,scene_key_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, accountID, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli(), product.Repeatable, product.IslandItemKey, product.WearableKey, product.CharacterKey, product.SceneKey)
 	if err != nil {
 		return result, err
 	}
 	if product.Stock != nil {
-		if _, err = tx.ExecContext(ctx, "UPDATE products SET stock=stock-1,version=version+1,updated_at=? WHERE id=?", now.UnixMilli(), product.ID); err != nil {
+		if _, err = tx.ExecContext(ctx, "UPDATE products SET stock=stock-1,version=version+1,updated_at=? WHERE account_id=? AND id=?", now.UnixMilli(), accountID, product.ID); err != nil {
 			return result, err
 		}
 	}
-	balance, err = wallet.Apply(ctx, tx, wallet.Event{Type: wallet.PurchaseDebit, ResourceID: id, Coins: -product.CoinPrice, Diamonds: -product.DiamondPrice, At: now})
+	balance, err = wallet.Apply(ctx, tx, accountID, wallet.Event{Type: wallet.PurchaseDebit, ResourceID: id, Coins: -product.CoinPrice, Diamonds: -product.DiamondPrice, At: now})
 	if err != nil {
 		return result, err
 	}
-	if err = idempotency.Save(ctx, tx, purchaseOperation, key, hash, id, 201, purchaseReceipt{Wallet: balance}, now); err != nil {
+	if err = idempotency.Save(ctx, tx, accountID, purchaseOperation, key, hash, id, 201, purchaseReceipt{Wallet: balance}, now); err != nil {
 		return result, err
 	}
-	purchase, err := readPurchase(ctx, tx, id)
+	purchase, err := readPurchase(ctx, tx, accountID, id)
 	if err != nil {
 		return result, err
 	}
@@ -155,13 +156,14 @@ type purchaseCursor struct {
 
 // ListPurchases preserves ownership across product deletion and reports further pages explicitly.
 func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input PurchaseQuery) (PurchaseList, error) {
+	accountID := p.AccountID
 	result := PurchaseList{Items: []Purchase{}}
 	input.Search = strings.ToLower(strings.TrimSpace(input.Search))
 	input.Provider = strings.ToLower(input.Provider)
 	if input.Group != "" && input.Group != "appearance" {
 		return result, core.Invalid("group", "INVALID_VALUE")
 	}
-	if input.Slot != "" && input.Slot != "hair" && input.Slot != "upper" && input.Slot != "lower" && input.Slot != "shoes" {
+	if input.Slot != "" && input.Slot != "face" && input.Slot != "back" && input.Slot != "head" && input.Slot != "upper" && input.Slot != "lower" && input.Slot != "shoes" {
 		return result, core.Invalid("slot", "INVALID_VALUE")
 	}
 	if input.Type != "" && !validType(input.Type) {
@@ -176,8 +178,8 @@ func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input 
 	if input.Limit < 1 || input.Limit > 100 {
 		return result, core.Invalid("limit", "INVALID_VALUE")
 	}
-	query := "SELECT " + purchaseColumns + " FROM purchases p WHERE 1=1"
-	args := []any{}
+	query := "SELECT " + purchaseColumns + " FROM purchases p WHERE p.account_id=?"
+	args := []any{accountID}
 	if input.Type != "" {
 		query += " AND p.type_snapshot=?"
 		args = append(args, input.Type)
@@ -260,7 +262,7 @@ func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input 
 		cursor := base64.RawURLEncoding.EncodeToString(data)
 		result.NextCursor = &cursor
 	}
-	result.Facets, err = purchaseFacets(ctx, tx)
+	result.Facets, err = purchaseFacets(ctx, tx, accountID)
 	if err != nil {
 		return result, err
 	}
@@ -269,7 +271,8 @@ func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input 
 
 // Redeem verifies this request's password outside the write transaction and then rechecks revocation.
 func (s *Service) Redeem(ctx context.Context, p account.Principal, id, password string) (Purchase, error) {
-	credentialVersion, err := s.verifyManagement(ctx, password)
+	accountID := p.AccountID
+	credentialVersion, err := s.verifyManagement(ctx, accountID, password)
 	if err != nil {
 		return Purchase{}, err
 	}
@@ -285,7 +288,7 @@ func (s *Service) Redeem(ctx context.Context, p account.Principal, id, password 
 	if credentialVersion != p.CredentialVersion {
 		return Purchase{}, core.Fail(401, "SESSION_REQUIRED")
 	}
-	purchase, err := readPurchase(ctx, tx, id)
+	purchase, err := readPurchase(ctx, tx, accountID, id)
 	if err != nil {
 		return Purchase{}, err
 	}
@@ -295,10 +298,10 @@ func (s *Service) Redeem(ctx context.Context, p account.Principal, id, password 
 	if purchase.Status == StatusRedeemed {
 		return purchase, tx.Commit()
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE purchases SET status='redeemed',redeemed_at=?,version=version+1 WHERE id=? AND status='pending'", now.UnixMilli(), id); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE purchases SET status='redeemed',redeemed_at=?,version=version+1 WHERE account_id=? AND id=? AND status='pending'", now.UnixMilli(), accountID, id); err != nil {
 		return Purchase{}, err
 	}
-	purchase, err = readPurchase(ctx, tx, id)
+	purchase, err = readPurchase(ctx, tx, accountID, id)
 	if err != nil {
 		return Purchase{}, err
 	}

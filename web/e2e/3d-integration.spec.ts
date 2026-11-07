@@ -110,7 +110,7 @@ test('真实购买服装不自动换装，背包与首页共享外观且保留�
   }
 });
 
-// 称号只更新独立装备关系，不改人物四槽、账户版本或任务草稿。
+// 称号只更新独立装备关系，不改人物六槽、账户版本或任务草稿。
 test('真实称号购买后独立佩戴与卸下且不改三维外观版本', async ({ page }, testInfo) => {
   await loginMain(page);
   const original = await shopAPI<Camp>(page, '/camp');

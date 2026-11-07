@@ -103,9 +103,12 @@ test('管理类别和任务的新增、编辑、排序、停启及引用删除�
   await expect(configurationRow(page, taskName).getByRole('button', { name: checkin.editConfig, exact: true })).toBeEnabled();
 
   await configurationRow(page, taskName).getByRole('button', { name: checkin.editConfig, exact: true }).click();
+  // 等待异步图标选项就绪，再填写并核对输入值，避免未完成加载时提交。
+  await expect(dialog.getByRole('combobox', { name: checkin.icon, exact: true })).toHaveValue(task.icon_key);
   await dialog.getByLabel(checkin.name, { exact: true }).fill(renamedTask);
   await dialog.getByRole('combobox', { name: checkin.category, exact: true }).selectOption('');
   await dialog.getByLabel(checkin.coins, { exact: true }).fill('-1');
+  await expect(dialog.getByLabel(checkin.coins, { exact: true })).toHaveValue('-1');
   await dialog.getByRole('button', { name: checkin.save, exact: true }).click();
   await expect(dialog).toBeVisible();
   expect(await dialog.getByLabel(checkin.coins, { exact: true }).evaluate((element) => (element as HTMLInputElement).validity.rangeUnderflow)).toBe(true);

@@ -58,8 +58,8 @@ func TestPasswordResetWinsAgainstVerifiedRedemption(t *testing.T) {
 		t.Fatal(err)
 	}
 	verified, release := make(chan struct{}), make(chan struct{})
-	service.verifyManagement = func(ctx context.Context, password string) (int64, error) {
-		version, err := accounts.VerifyManagement(ctx, password)
+	service.verifyManagement = func(ctx context.Context, accountID int64, password string) (int64, error) {
+		version, err := accounts.VerifyManagement(ctx, accountID, password)
 		close(verified)
 		<-release
 		return version, err

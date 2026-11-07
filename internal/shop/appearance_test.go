@@ -12,18 +12,18 @@ func TestAppearanceDefaultsAndAtomicRestore(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
 	initial, err := f.Service.Appearance(ctx, f.Principal)
-	if err != nil || initial.Version != 1 || initial.CharacterKey != "kaykit-medium-v1" || initial.HairPurchaseID != nil || len(initial.Inventory) != 0 || len(initial.Characters) == 0 || len(initial.Wearables) < 8 {
+	if err != nil || initial.Version != 1 || initial.CharacterKey != "kaykit-medium-v1" || initial.HeadPurchaseID != nil || len(initial.Inventory) != 0 || len(initial.Characters) == 0 || len(initial.Wearables) < 8 {
 		t.Fatalf("initial=%+v err=%v", initial, err)
 	}
-	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase
+	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("head", "barbarian"))).Purchase
 	upper := buyProduct(t, f, createProduct(t, f, appearanceProduct("upper", "barbarian"))).Purchase
-	input := shop.SaveAppearanceInput{ExpectedVersion: initial.Version, CharacterKey: initial.CharacterKey, HairPurchaseID: &hair.ID, UpperPurchaseID: &upper.ID}
+	input := shop.SaveAppearanceInput{ExpectedVersion: initial.Version, CharacterKey: initial.CharacterKey, HeadPurchaseID: &hair.ID, UpperPurchaseID: &upper.ID}
 	saved, err := f.Service.SaveAppearance(ctx, f.Principal, input)
-	if err != nil || saved.Version != 2 || saved.HairPurchaseID == nil || *saved.HairPurchaseID != hair.ID || saved.UpperPurchaseID == nil || *saved.UpperPurchaseID != upper.ID || len(saved.Inventory) != 2 {
+	if err != nil || saved.Version != 2 || saved.HeadPurchaseID == nil || *saved.HeadPurchaseID != hair.ID || saved.UpperPurchaseID == nil || *saved.UpperPurchaseID != upper.ID || len(saved.Inventory) != 2 {
 		t.Fatalf("saved=%+v err=%v", saved, err)
 	}
 	restored, err := f.Contender.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: initial.CharacterKey})
-	if err != nil || restored.Version != 3 || restored.HairPurchaseID != nil || restored.UpperPurchaseID != nil || len(restored.Inventory) != 2 {
+	if err != nil || restored.Version != 3 || restored.HeadPurchaseID != nil || restored.UpperPurchaseID != nil || len(restored.Inventory) != 2 {
 		t.Fatalf("restored=%+v err=%v", restored, err)
 	}
 	equipment, err := f.Service.Equipment(ctx, f.Principal)
@@ -36,14 +36,14 @@ func TestAppearanceDefaultsAndAtomicRestore(t *testing.T) {
 func TestAppearanceRejectsInvalidSelectionsWithoutPartialSave(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase
+	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("head", "barbarian"))).Purchase
 	old := buyProduct(t, f, createProduct(t, f, productInput("title"))).Purchase
-	valid := shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HairPurchaseID: &hair.ID}
+	valid := shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HeadPurchaseID: &hair.ID}
 	if _, err := f.Service.SaveAppearance(ctx, f.Principal, valid); err != nil {
 		t.Fatal(err)
 	}
 	invalid := []shop.SaveAppearanceInput{
-		{ExpectedVersion: 2, CharacterKey: valid.CharacterKey, HairPurchaseID: &old.ID},
+		{ExpectedVersion: 2, CharacterKey: valid.CharacterKey, HeadPurchaseID: &old.ID},
 		{ExpectedVersion: 2, CharacterKey: valid.CharacterKey, UpperPurchaseID: &hair.ID},
 	}
 	for _, input := range invalid {
@@ -51,17 +51,17 @@ func TestAppearanceRejectsInvalidSelectionsWithoutPartialSave(t *testing.T) {
 		requireShopCode(t, err, "INVALID_EQUIPMENT")
 	}
 	empty := ""
-	_, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: valid.CharacterKey, HairPurchaseID: &empty})
+	_, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: valid.CharacterKey, HeadPurchaseID: &empty})
 	requireShopCode(t, err, "INVALID_REQUEST")
 	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: "missing"})
 	requireShopCode(t, err, "INVALID_REQUEST")
 	missing := "missing"
-	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: valid.CharacterKey, HairPurchaseID: &missing})
+	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: valid.CharacterKey, HeadPurchaseID: &missing})
 	requireShopCode(t, err, "NOT_FOUND")
 	_, err = f.Service.SetTitle(ctx, f.Principal, &hair.ID)
 	requireShopCode(t, err, "INVALID_EQUIPMENT")
 	result, err := f.Service.Appearance(ctx, f.Principal)
-	if err != nil || result.Version != 2 || result.HairPurchaseID == nil || *result.HairPurchaseID != hair.ID || result.UpperPurchaseID != nil {
+	if err != nil || result.Version != 2 || result.HeadPurchaseID == nil || *result.HeadPurchaseID != hair.ID || result.UpperPurchaseID != nil {
 		t.Fatalf("partial update=%+v %v", result, err)
 	}
 }
@@ -91,10 +91,10 @@ func TestAppearanceUsesPurchasedDefinitionAfterOfferDeletion(t *testing.T) {
 func TestAppearanceConcurrentVersionHasSingleWinner(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase
+	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("head", "barbarian"))).Purchase
 	shoes := buyProduct(t, f, createProduct(t, f, appearanceProduct("shoes", "barbarian"))).Purchase
 	results := compete(func() error {
-		_, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HairPurchaseID: &hair.ID})
+		_, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HeadPurchaseID: &hair.ID})
 		return err
 	}, func() error {
 		_, err := f.Contender.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", ShoesPurchaseID: &shoes.ID})
@@ -112,7 +112,7 @@ func TestAppearanceConcurrentVersionHasSingleWinner(t *testing.T) {
 		t.Fatalf("results=%v", results)
 	}
 	state, err := f.Service.Appearance(ctx, f.Principal)
-	if err != nil || state.Version != 2 || (state.HairPurchaseID == nil) == (state.ShoesPurchaseID == nil) {
+	if err != nil || state.Version != 2 || (state.HeadPurchaseID == nil) == (state.ShoesPurchaseID == nil) {
 		t.Fatalf("state=%+v err=%v", state, err)
 	}
 }
@@ -151,7 +151,7 @@ func TestAppearanceCommitFailureAndSessionRevocation(t *testing.T) {
 func TestWearableProductRequiresMatchingDefinition(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	invalid := []shop.ProductInput{appearanceProduct("hair", "barbarian"), appearanceProduct("hair", "barbarian"), appearanceProduct("hair", "barbarian")}
+	invalid := []shop.ProductInput{appearanceProduct("head", "barbarian"), appearanceProduct("head", "barbarian"), appearanceProduct("head", "barbarian")}
 	invalid[0].WearableKey = "missing"
 	invalid[1].AssetKey = "wearable-upper-barbarian-v1"
 	invalid[2].Type = "accessory"
@@ -168,7 +168,7 @@ func TestAppearanceInventoryDoesNotUsePurchasePagination(t *testing.T) {
 	ctx := context.Background()
 	var last shop.Purchase
 	for index := 0; index < 51; index++ {
-		last = buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase
+		last = buyProduct(t, f, createProduct(t, f, appearanceProduct("head", "barbarian"))).Purchase
 	}
 	page, err := f.Service.ListPurchases(ctx, f.Principal, shop.PurchaseQuery{Type: shop.TypeWearable})
 	if err != nil || len(page.Items) != 50 || page.NextCursor == nil {
@@ -178,8 +178,8 @@ func TestAppearanceInventoryDoesNotUsePurchasePagination(t *testing.T) {
 	if err != nil || len(state.Inventory) != 51 {
 		t.Fatalf("inventory count=%d err=%v", len(state.Inventory), err)
 	}
-	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: state.Version, CharacterKey: state.CharacterKey, HairPurchaseID: &last.ID})
-	if err != nil || saved.HairPurchaseID == nil || *saved.HairPurchaseID != last.ID {
+	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: state.Version, CharacterKey: state.CharacterKey, HeadPurchaseID: &last.ID})
+	if err != nil || saved.HeadPurchaseID == nil || *saved.HeadPurchaseID != last.ID {
 		t.Fatalf("complete ownership lost: %+v %v", saved, err)
 	}
 }

@@ -91,7 +91,7 @@ func creditFixture(t *testing.T, f shopFixture, coins, diamonds int64) wallet.Ba
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := wallet.Apply(ctx, tx, wallet.Event{Type: wallet.CheckinGrant, ResourceID: recordID, Coins: coins, Diamonds: diamonds, At: f.Now})
+	b, err := wallet.Apply(ctx, tx, f.Principal.AccountID, wallet.Event{Type: wallet.CheckinGrant, ResourceID: recordID, Coins: coins, Diamonds: diamonds, At: f.Now})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +110,7 @@ func readBalance(t *testing.T, f shopFixture) wallet.Balance {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
-	b, err := wallet.Get(ctx, tx)
+	b, err := wallet.Get(ctx, tx, f.Principal.AccountID)
 	if err != nil {
 		t.Fatal(err)
 	}

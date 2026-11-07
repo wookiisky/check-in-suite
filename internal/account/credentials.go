@@ -9,7 +9,7 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/core"
 )
 
-// Initialize creates the sole account and empty wallet without demo records.
+// Initialize creates an independent account and empty wallet without demo records.
 func (s *Service) Initialize(ctx context.Context, username, displayName, loginPassword, managementPassword string) error {
 	return s.InitializeWith(ctx, username, displayName, loginPassword, managementPassword, nil)
 }
@@ -51,17 +51,22 @@ func (s *Service) InitializeWith(ctx context.Context, username, displayName, log
 	}
 	defer tx.Rollback()
 	var count int
-	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM accounts").Scan(&count); err != nil {
+	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM accounts WHERE username=?", username).Scan(&count); err != nil {
 		return err
 	}
 	if count != 0 {
 		return core.Fail(409, "ACCOUNT_EXISTS")
 	}
 	now := s.Now().UnixMilli()
-	if _, err = tx.ExecContext(ctx, "INSERT INTO accounts(id,username,display_name,login_password_hash,management_password_hash,created_at,updated_at) VALUES(1,?,?,?,?,?,?)", username, displayName, loginHash, managementHash, now, now); err != nil {
+	created, err := tx.ExecContext(ctx, "INSERT INTO accounts(username,display_name,login_password_hash,management_password_hash,created_at,updated_at) VALUES(?,?,?,?,?,?)", username, displayName, loginHash, managementHash, now, now)
+	if err != nil {
 		return err
 	}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO wallets(account_id) VALUES(1)"); err != nil {
+	accountID, err := created.LastInsertId()
+	if err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, "INSERT INTO wallets(account_id) VALUES(?)", accountID); err != nil {
 		return err
 	}
 	if populate != nil {
@@ -73,14 +78,14 @@ func (s *Service) InitializeWith(ctx context.Context, username, displayName, log
 }
 
 // credential loads a stored hash and its version before slow verification starts.
-func (s *Service) credential(ctx context.Context, kind string) (string, int64, error) {
+func (s *Service) credential(ctx context.Context, accountID int64, kind string) (string, int64, error) {
 	column, err := passwordColumn(kind)
 	if err != nil {
 		return "", 0, err
 	}
 	var hash string
 	var version int64
-	err = s.DB.QueryRowContext(ctx, "SELECT "+column+",credential_version FROM accounts WHERE id=1").Scan(&hash, &version)
+	err = s.DB.QueryRowContext(ctx, "SELECT "+column+",credential_version FROM accounts WHERE id=?", accountID).Scan(&hash, &version)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", 0, core.Fail(401, "INVALID_CREDENTIALS")
 	}
@@ -99,8 +104,24 @@ func passwordColumn(kind string) (string, error) {
 	}
 }
 
-// ResetPassword replaces one credential through the local maintenance interface and revokes all sessions.
+// ResetPassword allows an omitted username only when there is exactly one account.
 func (s *Service) ResetPassword(ctx context.Context, kind, password string) error {
+	var username string
+	var count int
+	if err := s.DB.QueryRowContext(ctx, "SELECT count(*),coalesce(min(username),'') FROM accounts").Scan(&count, &username); err != nil {
+		return err
+	}
+	if count == 0 {
+		return core.Fail(404, "ACCOUNT_NOT_INITIALIZED")
+	}
+	if count != 1 {
+		return core.Fail(422, "ACCOUNT_SELECTION_REQUIRED")
+	}
+	return s.ResetPasswordFor(ctx, username, kind, password)
+}
+
+// ResetPasswordFor replaces one named account credential and revokes only its sessions.
+func (s *Service) ResetPasswordFor(ctx context.Context, username, kind, password string) error {
 	column, err := passwordColumn(kind)
 	if err != nil {
 		return err
@@ -122,7 +143,7 @@ func (s *Service) ResetPassword(ctx context.Context, kind, password string) erro
 		return err
 	}
 	defer tx.Rollback()
-	result, err := tx.ExecContext(ctx, "UPDATE accounts SET "+column+"=?,credential_version=credential_version+1,updated_at=? WHERE id=1", hash, s.Now().UnixMilli())
+	result, err := tx.ExecContext(ctx, "UPDATE accounts SET "+column+"=?,credential_version=credential_version+1,updated_at=? WHERE username=?", hash, s.Now().UnixMilli(), username)
 	if err != nil {
 		return err
 	}
@@ -133,7 +154,7 @@ func (s *Service) ResetPassword(ctx context.Context, kind, password string) erro
 	if n != 1 {
 		return core.Fail(404, "ACCOUNT_NOT_INITIALIZED")
 	}
-	if _, err = tx.ExecContext(ctx, "DELETE FROM sessions"); err != nil {
+	if _, err = tx.ExecContext(ctx, "DELETE FROM sessions WHERE account_id=(SELECT id FROM accounts WHERE username=?)", username); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -155,7 +176,8 @@ func (s *Service) ChangePassword(ctx context.Context, p Principal, kind, oldPass
 	if err != nil {
 		return err
 	}
-	if err = s.checkAttempts(kind); err != nil {
+	bucket := passwordBucket(kind, p.AccountID)
+	if err = s.checkAttempts(bucket); err != nil {
 		return err
 	}
 	if newPassword != confirmation {
@@ -169,14 +191,14 @@ func (s *Service) ChangePassword(ctx context.Context, p Principal, kind, oldPass
 	}
 	var version int64
 	var replacement string
-	err = s.passwordWork(ctx, kind, func() error {
-		hash, current, err := s.credential(ctx, kind)
+	err = s.passwordWork(ctx, bucket, func() error {
+		hash, current, err := s.credential(ctx, p.AccountID, kind)
 		if err != nil {
 			return err
 		}
 		version = current
 		if !s.verify(hash, oldPassword) {
-			s.failedAttempt(kind)
+			s.failedAttempt(bucket)
 			return core.Fail(422, "INVALID_CREDENTIALS")
 		}
 		if err := ctx.Err(); err != nil {
@@ -198,38 +220,39 @@ func (s *Service) ChangePassword(ctx context.Context, p Principal, kind, oldPass
 		return err
 	}
 	var current int64
-	if err = tx.QueryRowContext(ctx, "SELECT credential_version FROM accounts WHERE id=1").Scan(&current); err != nil {
+	if err = tx.QueryRowContext(ctx, "SELECT credential_version FROM accounts WHERE id=?", p.AccountID).Scan(&current); err != nil {
 		return err
 	}
 	if current != version {
 		return core.Fail(401, "SESSION_REQUIRED")
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE accounts SET "+column+"=?,credential_version=credential_version+1,updated_at=? WHERE id=1", replacement, now.UnixMilli()); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE accounts SET "+column+"=?,credential_version=credential_version+1,updated_at=? WHERE id=?", replacement, now.UnixMilli(), p.AccountID); err != nil {
 		return err
 	}
-	if _, err = tx.ExecContext(ctx, "DELETE FROM sessions"); err != nil {
+	if _, err = tx.ExecContext(ctx, "DELETE FROM sessions WHERE account_id=?", p.AccountID); err != nil {
 		return err
 	}
 	return tx.Commit()
 }
 
 // VerifyManagement returns the credential version that must be rechecked by a later business transaction.
-func (s *Service) VerifyManagement(ctx context.Context, password string) (int64, error) {
-	if err := s.checkAttempts("management"); err != nil {
+func (s *Service) VerifyManagement(ctx context.Context, accountID int64, password string) (int64, error) {
+	bucket := passwordBucket("management", accountID)
+	if err := s.checkAttempts(bucket); err != nil {
 		return 0, err
 	}
 	if err := core.Text("password", password, 1, s.Config.Limits.PasswordMax); err != nil {
 		return 0, err
 	}
 	var version int64
-	err := s.passwordWork(ctx, "management", func() error {
-		hash, current, err := s.credential(ctx, "management")
+	err := s.passwordWork(ctx, bucket, func() error {
+		hash, current, err := s.credential(ctx, accountID, "management")
 		if err != nil {
 			return err
 		}
 		version = current
 		if !s.verify(hash, password) {
-			s.failedAttempt("management")
+			s.failedAttempt(bucket)
 			return core.Fail(422, "INVALID_CREDENTIALS")
 		}
 		return nil

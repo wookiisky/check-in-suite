@@ -94,7 +94,12 @@ func (app *App) RegisterCheckins(service *checkin.Service) {
 				return
 			}
 		}
-		result, err := service.List(r.Context(), p, q.Get("start_date"), q.Get("end_date"), q.Get("cursor"), limit)
+		targetID, err := readAccountID(r, p)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		result, err := service.ListFor(r.Context(), p, targetID, q.Get("start_date"), q.Get("end_date"), q.Get("cursor"), limit)
 		if err != nil {
 			WriteError(w, r, err)
 			return

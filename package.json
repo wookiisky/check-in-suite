@@ -24,7 +24,7 @@
     "test:go": "go test ./...",
     "test:race": "go test -race ./...",
     "test:web": "npm run test --workspace @island/web",
-    "test:assets": "node --test scripts/inspect-glb.test.mjs scripts/p0-character-assets.test.mjs scripts/retarget-p0-mixamo.test.mjs scripts/provider-character-assets.test.mjs scripts/check-gltf-assets.test.mjs",
+    "test:assets": "node --test scripts/inspect-glb.test.mjs scripts/p0-character-assets.test.mjs scripts/retarget-p0-mixamo.test.mjs scripts/provider-character-assets.test.mjs scripts/check-gltf-assets.test.mjs scripts/modular-character-assets.test.mjs",
     "test:e2e": "playwright test",
     "check:go": "go vet ./...",
     "build:api": "go build -o .local/bin/island ./cmd/island",
@@ -42,8 +42,10 @@
     "assets:check": "node scripts/check-gltf-assets.mjs",
     "assets:inspect": "gltf-transform inspect",
     "assets:preview": "uv run --locked python scripts/preview-gltf-assets.py",
-    "test:asset-tools": "uv run --locked python scripts/preview-gltf-assets.test.py && uv run --locked python scripts/import-provider-assets.test.py && uv run --locked python scripts/fetch-provider-assets.test.py && uv run --locked python scripts/import-provider-characters.test.py && uv run --locked python scripts/import-provider-animations.test.py && uv run --locked python scripts/inspect-kenney-characters.test.py && uv run --locked python scripts/kenney-character-heads.test.py && uv run --locked python scripts/prepare-kenney-characters.test.py && uv run --locked python scripts/verify-kenney-character-appearance.test.py && uv run --locked python scripts/prepare-tiny-treats.test.py && uv run --locked python scripts/update-spatial-thumbnail-aliases.test.py",
-    "test:asset-renderer": "uv run --locked python scripts/render-gltf-previews.test.py"
+    "test:asset-tools": "npm run test:asset-pipeline && uv run --locked python scripts/preview-gltf-assets.test.py && uv run --locked python scripts/import-provider-assets.test.py && uv run --locked python scripts/fetch-provider-assets.test.py && uv run --locked python scripts/import-provider-characters.test.py && uv run --locked python scripts/import-provider-animations.test.py --fixtures-only && uv run --locked python scripts/prepare-camp-assets.test.py && uv run --locked python scripts/prepare-tiny-treats.test.py && uv run --locked python scripts/render-tiny-treats-previews.test.py && uv run --locked python scripts/update-spatial-thumbnail-aliases.test.py && uv run --locked python scripts/prepare-3d-resources.test.py && uv run --locked python scripts/prepare-modular-characters.test.py && uv run --locked python scripts/verify-modular-character-appearance.test.py && uv run --locked python scripts/verify-modular-character-arms.test.py",
+    "test:asset-renderer": "uv run --locked python scripts/render-gltf-previews.test.py",
+    "assets:pipeline": "uv run --locked python scripts/asset-pipeline.py",
+    "test:asset-pipeline": "uv run --locked python scripts/asset-pipeline.test.py && uv run --locked python scripts/asset-pipeline-candidate.test.py"
   },
   "devDependencies": {
     "@gltf-transform/cli": "4.5.1",

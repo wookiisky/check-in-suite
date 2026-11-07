@@ -1,6 +1,374 @@
 [
-  { "wearable_key": "hair-barbarian-v1", "name": "光头短须", "coin_price": 20, "diamond_price": 0 },
-  { "wearable_key": "upper-barbarian-v1", "name": "蓝色皮甲", "coin_price": 35, "diamond_price": 0 },
-  { "wearable_key": "lower-barbarian-v1", "name": "皮质短装", "coin_price": 25, "diamond_price": 0 },
-  { "wearable_key": "shoes-barbarian-v1", "name": "护边靴", "coin_price": 15, "diamond_price": 0 }
+  {
+    "wearable_key": "face-kaykit-legacy-skeleton-minion",
+    "name": "骷髅",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "face-kaykit-skeletons-mage",
+    "name": "红纹骷髅",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-rogue-v1",
+    "name": "棕色及肩发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-barbarian-v1",
+    "name": "灰色眉毛与胡须",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "upper-barbarian-v1",
+    "name": "蓝色毛边上衣与灰色手套",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "lower-barbarian-v1",
+    "name": "棕色铆钉腰带与毛边短裤",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "shoes-barbarian-v1",
+    "name": "灰色毛边靴",
+    "coin_price": 15,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-knight-head",
+    "name": "银灰色封闭头盔",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-knight-back-cape",
+    "name": "红色披风",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-knight-upper",
+    "name": "银灰色胸甲、护臂和手套",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-knight-lower",
+    "name": "灰色腰甲与棕色腰带",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-knight-shoes",
+    "name": "银灰色铁靴",
+    "coin_price": 15,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-barbarian-head",
+    "name": "棕色熊帽与灰色胡须",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-barbarian-upper",
+    "name": "棕色毛边背带与灰色手套",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-barbarian-lower",
+    "name": "棕色毛边皮裙与黑色短裤",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-barbarian-shoes",
+    "name": "棕色绑带靴",
+    "coin_price": 15,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-mage-head",
+    "name": "紫色尖帽与黑色长发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-mage-back-cape",
+    "name": "紫红色披风",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-mage-upper",
+    "name": "紫色纽扣长袖上衣与灰色袖口",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-mage-lower",
+    "name": "紫色衣摆与挂袋腰带",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-mage-shoes",
+    "name": "棕色翻边靴",
+    "coin_price": 15,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-rogue-head",
+    "name": "棕色长发与眉毛",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-rogue-back-cape",
+    "name": "绿色披风",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-rogue-upper",
+    "name": "绿色披肩上衣与棕色露指手套",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-rogue-lower",
+    "name": "绿色腰带短裤",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-rogue-shoes",
+    "name": "浅棕色皮靴",
+    "coin_price": 15,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-rogue-hooded-head",
+    "name": "绿色兜帽与面巾",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-rogue-hooded-upper",
+    "name": "浅绿色披肩上衣与棕色露指手套",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-rogue-hooded-lower",
+    "name": "深绿色腰带短裤",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-rogue-hooded-shoes",
+    "name": "浅棕色翻边靴",
+    "coin_price": 15,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-ranger-head",
+    "name": "棕色短发与山羊胡",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-ranger-back-cape",
+    "name": "蓝色披风",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-ranger-back-quiver",
+    "name": "棕色箭袋与蓝羽箭",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-ranger-upper",
+    "name": "白色上衣、蓝色领巾与棕色露指手套",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-ranger-lower",
+    "name": "米色短裤与挂袋腰带",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-adventurers-ranger-shoes",
+    "name": "深棕色皮靴",
+    "coin_price": 15,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-minion-back-cloak",
+    "name": "棕色围巾与披肩",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-mage-head",
+    "name": "红色尖顶帽",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-mage-upper",
+    "name": "红色立领上衣与肩甲",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-mage-lower",
+    "name": "红色衣摆与药水腰带",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-rogue-head",
+    "name": "紫红色兜帽",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-rogue-back-cape",
+    "name": "紫红色短披风",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-rogue-upper",
+    "name": "灰色交叉胸带与金属护手",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-rogue-lower",
+    "name": "紫红色短裤与棕色腰带",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-rogue-shoes",
+    "name": "银灰色折边铁靴",
+    "coin_price": 15,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-warrior-head",
+    "name": "银灰色牛角盔",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-warrior-back-cloak",
+    "name": "紫红色围巾与披肩",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-warrior-upper",
+    "name": "银灰色胸甲与金属护手",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-skeletons-warrior-lower",
+    "name": "银灰色腰甲与棕色腰带",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-minion-upper",
+    "name": "成对银灰色臂环",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-minion-lower",
+    "name": "棕色腰带与金属扣",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-archer-head",
+    "name": "紫色兜帽与面巾",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-archer-upper",
+    "name": "灰色胸甲、金属护臂与棕色手套",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-archer-lower",
+    "name": "棕色腰带与侧腰包",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-mage-head",
+    "name": "紫色围领",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-mage-back-cloak",
+    "name": "紫色披肩",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-mage-upper",
+    "name": "棕色开襟衣与紫色衣袖",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-mage-lower",
+    "name": "棕色宽腰带",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-warrior-head",
+    "name": "棕顶牛角铁盔",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-warrior-upper",
+    "name": "灰色胸甲、棕色臂环与银灰色护臂",
+    "coin_price": 35,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "kaykit-legacy-skeleton-warrior-lower",
+    "name": "棕色腰带与银色方扣",
+    "coin_price": 25,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "head-arrow-v1",
+    "name": "青色尾羽插箭",
+    "coin_price": 20,
+    "diamond_price": 0
+  }
 ]

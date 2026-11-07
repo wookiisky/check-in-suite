@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import json
 import math
+import shlex
 from pathlib import Path
 import struct
 import sys
@@ -15,7 +16,12 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 PACKS = ROOT / ".local/3d-sources/provider-packs"
 BUILTIN = ROOT / "internal/assets/builtin"
-MANIFEST = ROOT / "internal/assets/provider-animation-manifest.json"
+DEFAULT_CANDIDATE = ROOT / ".local/asset-pipeline/animations"
+MANIFEST = DEFAULT_CANDIDATE / "internal/assets/provider-animation-manifest.json"
+CANDIDATE_BUILTIN = DEFAULT_CANDIDATE / "internal/assets/builtin"
+CANDIDATE_SPEC = importlib.util.spec_from_file_location("animation_candidate", Path(__file__).with_name("asset-pipeline-candidate.py"))
+CANDIDATE_TOOLS = importlib.util.module_from_spec(CANDIDATE_SPEC)
+CANDIDATE_SPEC.loader.exec_module(CANDIDATE_TOOLS)
 NORMALIZATION_VERSION = 3  # 固定水平根位置，并以实际骨架、曲线与来源族确定交付身份。
 CANONICAL_BONES = ("root", "hips", "spine", "chest", "head", *(
     name + "." + side for side in ("l", "r")
@@ -337,6 +343,9 @@ def save_progress(configuration, manifest, records, path):
         "pending_clips": len(pending), "total_source_clips": sum(sum(item[key] for key in ("imported", "duplicate", "failed", "pending")) for item in batches),
     }
     manifest["complete"] = not pending and not manifest["counts"]["failed_clips"]
+    # 兼容字段 complete 只描述加工范围；检查与应用必须单独留下证据。
+    manifest["processing_complete"] = manifest["complete"]
+    manifest.update(checks="not_run", visual_review="not_run", application="not_run", application_regression="not_run")
     manifest["completed_scope"] = [item["key"] for item in batches if not item["pending"] and not item["failed"]]
     manifest["remaining_scope"] = [item["key"] for item in batches if item["pending"] or item["failed"]]
     next_batch = manifest["remaining_scope"][0] if manifest["remaining_scope"] else (batches[0]["key"] if batches else "")
@@ -353,9 +362,13 @@ def save_progress(configuration, manifest, records, path):
 
 
 # 分批处理只追加新资源；恢复必须核对源和产物字节，单源失败仍保留其他成果。
-def import_sources(configuration, sources, manifest_path=MANIFEST, output_directory=BUILTIN, canonical_path=BUILTIN / "character-medium-v1.glb"):
+def import_sources(configuration, sources, manifest_path=MANIFEST, output_directory=CANDIDATE_BUILTIN, canonical_path=BUILTIN / "character-medium-v1.glb"):
+    for target in (manifest_path, output_directory):
+        if target.resolve().is_relative_to((ROOT / "internal").resolve()):
+            raise ValueError("candidate output must stay outside production assets")
     canonical, canonical_blob = read_document(canonical_path)
     canonical_hash = hashlib.sha256(canonical_path.read_bytes()).hexdigest()
+    canonical_dependencies = CANDIDATE_TOOLS.capture_dependencies(ROOT, CANDIDATE_TOOLS.source_dependencies(canonical_path))
     nodes, roots = skeleton_nodes(canonical)
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {
         "body_key": "kaykit-medium-body-v1", "rig_key": "kaykit-adventurers-medium-v1",
@@ -365,9 +378,19 @@ def import_sources(configuration, sources, manifest_path=MANIFEST, output_direct
     families = {provider: {"provider": provider, "source_url": metadata.get("source_url"), "license": metadata.get("license")}
                 for provider, metadata in configuration.get("shared_asset_metadata", {}).items()}
     records = {(item["source_file"], item["source_clip"]): item for item in manifest["sources"]}
-    # 全局hash只能说明当前输入；未处理批次仍须保留各自的旧骨架证明。
+    # 全局hash只能说明当前输入；未处理批次也不能保留已过期输入的成功状态。
+    dependency_hashes = {}
     for record in records.values():
-        if record["status"] in {"imported", "duplicate"} and (record.get("canonical_sha256") != canonical_hash or record.get("shared_asset_metadata") != families.get(record["provider"])):
+        current_inputs = bool(record.get("input_dependencies"))
+        for dependency in record.get("input_dependencies", []):
+            name = dependency["path"]
+            if name not in dependency_hashes:
+                try:
+                    dependency_hashes[name] = CANDIDATE_TOOLS.file_hash(name)
+                except OSError:
+                    dependency_hashes[name] = None
+            current_inputs = current_inputs and dependency_hashes[name] == dependency["sha256"]
+        if record["status"] in {"imported", "duplicate"} and (not current_inputs or record.get("canonical_sha256") != canonical_hash or record.get("canonical_dependencies") != canonical_dependencies or record.get("shared_asset_metadata") != families.get(record["provider"])):
             record["status"] = "pending"
     animations = {item["asset_key"]: item for item in manifest["animations"]}
     assets = {item["key"]: item for item in manifest["assets"]}
@@ -380,6 +403,8 @@ def import_sources(configuration, sources, manifest_path=MANIFEST, output_direct
             family = families.get(source["provider"])
             if not family or not family["source_url"] or not family["license"] or family["license"] != source["license"]:
                 raise ValueError("来源与共享动作出处或许可配置不匹配: " + source["source_file"])
+            input_dependencies = CANDIDATE_TOOLS.capture_dependencies(ROOT, [*CANDIDATE_TOOLS.source_dependencies(path),
+                Path(__file__), Path(__file__).with_name("provider-animation-fbx.py"), Path(__file__).with_name("asset-pipeline-candidate.py")])
             source_hash = hashlib.sha256(path.read_bytes()).hexdigest()
             if source_hash != source["sha256"]:
                 raise ValueError("来源字节与审核快照不一致: " + source["source_file"])
@@ -405,9 +430,9 @@ def import_sources(configuration, sources, manifest_path=MANIFEST, output_direct
         for name in source["clips"]:
             identity = (source["source_file"], name)
             previous = records.get(identity, {})
-            record = {"provider": source["provider"], "pack_key": source["pack_key"], "source_url": source["source_url"], "license": source["license"], "source_file": source["source_file"], "source_sha256": source_hash, "source_clip": name, "canonical_sha256": canonical_hash, "shared_asset_metadata": family}
+            record = {"input_dependencies": input_dependencies, "canonical_dependencies": canonical_dependencies, "provider": source["provider"], "pack_key": source["pack_key"], "source_url": source["source_url"], "license": source["license"], "source_file": source["source_file"], "source_sha256": source_hash, "source_clip": name, "canonical_sha256": canonical_hash, "shared_asset_metadata": family}
             try:
-                if previous.get("canonical_sha256") == canonical_hash and previous.get("shared_asset_metadata") == family and previous.get("normalization_version") == NORMALIZATION_VERSION and previous.get("status") in {"imported", "duplicate"} and previous.get("source_sha256") == source_hash:
+                if all(previous.get(field) == record.get(field) for field in ["provider", "pack_key", "source_url", "license"]) and previous.get("canonical_sha256") == canonical_hash and previous.get("input_dependencies") == input_dependencies and previous.get("canonical_dependencies") == canonical_dependencies and previous.get("shared_asset_metadata") == family and previous.get("normalization_version") == NORMALIZATION_VERSION and previous.get("status") in {"imported", "duplicate"} and previous.get("source_sha256") == source_hash:
                     previous_path = output_directory / (previous["asset_key"] + ".glb")
                     expected = previous.get("output_sha256") or output_hashes.get(previous["asset_key"])
                     if previous_path.exists() and expected and hashlib.sha256(previous_path.read_bytes()).hexdigest() != expected:
@@ -457,8 +482,10 @@ def main(argv=None):
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--first-medium", action="store_true")
-    parser.add_argument("--manifest", type=Path, default=MANIFEST)
-    parser.add_argument("--output", type=Path, default=BUILTIN)
+    parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--output", type=Path, default=DEFAULT_CANDIDATE)
+    parser.add_argument("--canonical", type=Path, default=BUILTIN / "character-medium-v1.glb")
     parser.add_argument("--sources", type=Path, default=default_sources)
     arguments = argv if argv is not None else (sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else None)
     args = parser.parse_args(arguments)
@@ -473,11 +500,55 @@ def main(argv=None):
         parser.error(configuration["content"]["select_batch"])
     try:
         sources = select_sources(configuration, batches, args.only)
-        manifest = import_sources(configuration, sources, args.manifest, args.output)
+        candidate_tools = CANDIDATE_TOOLS
+        candidate = candidate_tools.validate_candidate_output(ROOT, args.output)
+        previous_candidate_path = candidate / "candidate.json"
+        if candidate.exists() and any(candidate.iterdir()) and not args.resume:
+            raise ValueError("nonempty candidate requires --resume")
+        previous_candidate = json.loads(previous_candidate_path.read_text()) if previous_candidate_path.exists() else None
+        if previous_candidate and (previous_candidate.get("pipeline") != "animations" or previous_candidate.get("states", {}).get("processing") not in {"failed", "pending"}):
+            raise ValueError("only failed or pending animation candidates can resume")
+        baseline = candidate_tools.capture_baseline(ROOT)
+        if previous_candidate:
+            for entry in previous_candidate.get("baseline", []):
+                if baseline.get(entry["path"]) != entry["sha256"]:
+                    raise ValueError("production baseline changed before resume: " + entry["path"])
+        manifest_path = args.manifest.resolve() if args.manifest else candidate / "internal/assets/provider-animation-manifest.json"
+        if not manifest_path.is_relative_to(candidate / "internal"):
+            raise ValueError("candidate manifest must stay inside candidate internal directory")
+        dependencies = [args.sources, Path(__file__), Path(__file__).with_name("provider-animation-fbx.py"), Path(__file__).with_name("asset-pipeline-candidate.py")]
+        dependencies.extend(candidate_tools.source_dependencies(args.canonical))
+        for source in sources:
+            path = ROOT / source["source_file"]
+            if path.exists():
+                try:
+                    dependencies.extend(candidate_tools.source_dependencies(path))
+                except (OSError, ValueError):
+                    # 坏源仍交给逐来源处理写失败记录，不能丢失本次失败清单。
+                    dependencies.append(path)
+        dependency_records = candidate_tools.capture_dependencies(ROOT, [path for path in dependencies if path.exists()])
+        manifest = import_sources(configuration, sources, manifest_path, candidate / "internal/assets/builtin", args.canonical)
+        # 候选目录保留全部既有定义；未重新生成的不可变资源由共享清单显式复用。
+        catalog_path = candidate / "internal/assets/builtin/catalog.json"
+        production_catalog = ROOT / "internal/assets/builtin/catalog.json"
+        catalog = json.loads(production_catalog.read_text()) if production_catalog.exists() else []
+        entries = {entry["key"]: entry for entry in catalog}
+        entries.update({entry["key"]: entry for entry in manifest["assets"]})
+        catalog_path.write_text(json.dumps(list(entries.values()), ensure_ascii=False, indent=2) + "\n")
+        manifest["checkpoint"]["command"] += " " + shlex.join(["--resume", "--output", str(candidate), "--manifest", str(manifest_path), "--sources", str(args.sources), "--canonical", str(args.canonical)])
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+        selected = {(source["source_file"], clip) for source in sources for clip in source["clips"]}
+        selected_records = [record for record in manifest["sources"] if (record["source_file"], record["source_clip"]) in selected]
+        state = "passed" if len(selected_records) == len(selected) and all(record["status"] in {"imported", "duplicate"} for record in selected_records) else "failed"
+        manifest["selected_scope"] = [{"source_file": path, "source_clip": clip} for path, clip in sorted(selected)]
+        manifest["selected_scope_complete"] = state == "passed"
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+        candidate_tools.finalize_candidate(ROOT, candidate, "animations", baseline=baseline,
+                                           dependencies=dependency_records, processing=state)
     except (OSError, ValueError) as error:
         parser.error(str(error))
     print(json.dumps(manifest["counts"]), flush=True)
-    return int(manifest["counts"]["failed_clips"] > 0)
+    return int(state != "passed")
 
 
 if __name__ == "__main__":

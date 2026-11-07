@@ -101,6 +101,12 @@
     "MEDIA_TOO_LARGE": "附件超过允许的大小，请选择较小的文件。",
     "MEDIA_ATTACHED": "附件正在被记录使用，不能直接移除。",
     "INVALID_RANGE": "请选择有效的日期范围。",
-    "ACHIEVEMENT_NOT_QUALIFIED": "这项成就尚未获得或已不再达标，请重新加载。"
+    "ACHIEVEMENT_NOT_QUALIFIED": "这项成就尚未获得或已不再达标，请重新加载。",
+    "GROUP_ACCESS_DENIED": "只能查看自己或当前同组成员的数据。",
+    "GROUP_ALREADY_JOINED": "你已加入一个组，请先退出当前组。",
+    "GROUP_NOT_JOINED": "你目前没有加入组。",
+    "GROUP_NOT_FOUND": "这个组不存在，请重新加载组列表。",
+    "GROUP_EXISTS": "这个组名已存在，请使用已有组。",
+    "GROUP_CHANGED": "组成员关系已变化，请重新加载后确认。"
   }
 }

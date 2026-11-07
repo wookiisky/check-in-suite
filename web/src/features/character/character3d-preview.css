@@ -1,7 +1,21 @@
 .character3d-preview { position: relative; width: 100%; min-height: 260px; height: 320px; overflow: hidden; border-radius: 18px; background: #edf2e5; }
 .character3d-preview canvas { display: block; }
+.character3d-stage { position: relative; height: 100%; min-height: inherit; }
+.character3d-rotatable { height: auto; }
+.character3d-rotatable .character3d-stage { height: 320px; touch-action: pan-y pinch-zoom; cursor: grab; user-select: none; }
+.character3d-rotatable .character3d-dragging { cursor: grabbing; }
+.character3d-rotation-controls { padding: 12px; background: var(--paper, #fff); color: var(--ink, #304c3c); }
+.character3d-rotation-controls p { margin: 0 0 10px; font-size: 14px; line-height: 1.5; color: var(--muted, #52645b); }
+.character3d-rotation-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.character3d-rotation-buttons button { flex: 1; min-height: 44px; min-width: 44px; padding: 8px; border: 1px solid var(--line, #afbfaf); border-radius: 8px; background: var(--paper, #fff); color: var(--ink, #304c3c); font: inherit; font-size: 14px; cursor: pointer; }
+.character3d-rotation-buttons button:hover { background: var(--mint, #edf6ee); }
+.character3d-rotation-buttons button:focus-visible { outline: 3px solid var(--accent, #35654e); outline-offset: 2px; }
 .character3d-notice { position: absolute; left: 12px; right: 12px; bottom: 12px; margin: 0; padding: 10px 12px; border-radius: 10px; background: #fffffff0; color: #3a5145; font-size: 22px; line-height: 1.5; }
 .character3d-error { color: #7a3d32; }
 .character3d-error p { margin: 0 0 8px; }
 .character3d-error button { min-height: 56px; min-width: 56px; font-size: 22px; padding: 8px 14px; border: 1px solid #afbfaf; border-radius: 8px; color: #304c3c; background: #fff; cursor: pointer; }
 .character3d-error button:focus-visible { outline: 3px solid #5a8668; outline-offset: 2px; }
+/* 窄屏为旋转按钮留出空间，避免初次打开时落在底部保存栏后方。 */
+@media (max-width: 760px) {
+  .character3d-rotatable .character3d-stage { height: 260px; }
+}

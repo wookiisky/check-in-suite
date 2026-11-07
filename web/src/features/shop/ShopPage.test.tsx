@@ -152,28 +152,28 @@ describe('商店页面读取与动作边界', () => {
   });
 
   it('商店按服装定义分类，营地物品不混入角色装扮', async () => {
-    const hair = { ...product, id: 'hair', name: '短发', type: 'wearable' as const, wearable_key: 'hair-owned' };
+    const head = { ...product, id: 'head', name: '短发', type: 'wearable' as const, wearable_key: 'head-owned' };
     const island = { ...product, id: 'island', type: 'island' as const, name: '营地树木', island_item_key: 'star' };
     const reward = { ...product, id: 'reward', name: '家庭奖励', type: 'reward' as const };
-    const request = vi.fn().mockImplementation(async (path: string) => path === '/camp' ? camp : { items: [hair, island, reward] });
+    const request = vi.fn().mockImplementation(async (path: string) => path === '/camp' ? camp : { items: [head, island, reward] });
     render(<ShopPage client={{ request }} session={session} />);
-    await screen.findByRole('heading', { name: hair.name });
+    await screen.findByRole('heading', { name: head.name });
     fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
-    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.hair }));
-    expect(await screen.findByRole('heading', { name: hair.name })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.head }));
+    expect(await screen.findByRole('heading', { name: head.name })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: island.name })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: '营地物品' }));
     expect(await screen.findByRole('heading', { name: island.name })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: hair.name })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: head.name })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
     expect(within(screen.getByRole('tablist', { name: '装扮分类' })).getByRole('tab', { name: content.allTypes })).toHaveAttribute('aria-selected', 'true');
     expect(screen.queryByRole('heading', { name: island.name })).not.toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: hair.name })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: head.name })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: reward.name })).not.toBeInTheDocument();
   });
 
   it('服装目录加载与失败单独反馈，恢复后沿用已选分类显示商品', async () => {
-    const garment = { ...product, type: 'wearable' as const, wearable_key: 'hair-owned' };
+    const garment = { ...product, type: 'wearable' as const, wearable_key: 'head-owned' };
     const refresh = vi.fn();
     const unavailable = { snapshot: null, loading: true, error: null, refresh, publishSaved: vi.fn() };
     vi.mocked(useAppearance).mockReturnValue(unavailable);
@@ -182,7 +182,7 @@ describe('商店页面读取与动作边界', () => {
     const view = render(<ShopPage {...props} />);
     await screen.findByRole('heading', { name: garment.name });
     fireEvent.click(screen.getByRole('tab', { name: content.categoryGroups.appearance }));
-    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.hair }));
+    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.head }));
     expect(screen.getByRole('status')).toHaveTextContent(content.loading);
     expect(screen.queryByText(content.emptyCategoryProducts)).not.toBeInTheDocument();
     vi.mocked(useAppearance).mockReturnValue({ ...unavailable, loading: false, error: new TypeError('offline') });
@@ -194,7 +194,7 @@ describe('商店页面读取与动作边界', () => {
     vi.mocked(useAppearance).mockReturnValue({ ...unavailable, snapshot: appearanceFixture(), loading: false });
     view.rerender(<ShopPage {...props} />);
     expect(await screen.findByRole('heading', { name: garment.name })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: content.wearableSlots.hair })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: content.wearableSlots.head })).toHaveAttribute('aria-selected', 'true');
     expect(request.mock.calls.filter(([path]) => path === '/camp')).toHaveLength(1);
   });
 

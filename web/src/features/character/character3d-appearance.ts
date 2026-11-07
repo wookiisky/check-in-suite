@@ -2,11 +2,11 @@ import type { components } from '../../api/schema';
 
 export type AppearanceState = components['schemas']['AppearanceState'];
 export type FreeWearableSelection = Partial<Record<`${CharacterSlot}_free_wearable_key`, string | null>>;
-export type AppearanceDraft = Pick<AppearanceState, 'character_key' | 'hair_purchase_id' | 'upper_purchase_id' | 'lower_purchase_id' | 'shoes_purchase_id'> & FreeWearableSelection;
+export type AppearanceDraft = Pick<AppearanceState, 'character_key' | `${CharacterSlot}_purchase_id`> & FreeWearableSelection;
 export type CharacterDefinition = components['schemas']['CharacterDefinition'];
 export type CharacterWearable = components['schemas']['CharacterWearable'];
 export type CharacterLoadStatus = { phase: 'loading' } | { phase: 'ready' } | { phase: 'error'; error: unknown };
-export const characterSlots = ['hair', 'upper', 'lower', 'shoes'] as const;
+export const characterSlots = ['face', 'head', 'upper', 'lower', 'shoes', 'back'] as const;
 export type CharacterSlot = typeof characterSlots[number];
 
 // 活动道具由受控场景提供，不属于购买或穿戴槽位。
@@ -18,7 +18,7 @@ export interface CharacterAttachment {
 
 // 外观编辑只持有选择，库存和目录继续来自确认后的服务器快照。
 export function draftFromAppearance(snapshot: AppearanceState & FreeWearableSelection): AppearanceDraft {
-  const draft: AppearanceDraft = { character_key: snapshot.character_key, hair_purchase_id: snapshot.hair_purchase_id, upper_purchase_id: snapshot.upper_purchase_id, lower_purchase_id: snapshot.lower_purchase_id, shoes_purchase_id: snapshot.shoes_purchase_id };
+  const draft: AppearanceDraft = { character_key: snapshot.character_key, face_purchase_id: snapshot.face_purchase_id, back_purchase_id: snapshot.back_purchase_id, head_purchase_id: snapshot.head_purchase_id, upper_purchase_id: snapshot.upper_purchase_id, lower_purchase_id: snapshot.lower_purchase_id, shoes_purchase_id: snapshot.shoes_purchase_id };
   for (const slot of characterSlots) {
     const field = `${slot}_free_wearable_key` as const;
     if (snapshot[field] != null) draft[field] = snapshot[field];
@@ -34,11 +34,19 @@ export function wearableFitsCharacter(wearable: CharacterWearable, definition: C
   return wearableBodyKey === bodyKey && wearable.rig_key === definition.rig_key;
 }
 
+
+// 已取得身体的基础部件无需订单，未购买身体的默认项不能借免费来源使用。
+export function freeCharacterDefinitions(snapshot: AppearanceState): CharacterDefinition[] {
+  const owned = new Set(snapshot.character_inventory?.map((item) => item.character_key));
+  const initial = snapshot.default_character_key || snapshot.characters[0]?.character_key;
+  return snapshot.characters.filter((item) => item.character_key === initial || owned.has(item.character_key));
+}
+
 // 解析结果由资源身份决定，与购买分页、名称和图片前缀无关。
 export interface ResolvedAppearance {
   key: string; // 人物定义、所选部件和活动道具组成的准备身份。
   definition: CharacterDefinition; // 同一个实例使用的规范身体。
-  wearables: CharacterWearable[]; // 按四个固定部位排序。
+  wearables: CharacterWearable[]; // 按六个固定部位排序。
   attachments: readonly CharacterAttachment[]; // 与人物一起准备和切换的活动道具。
 }
 
@@ -51,8 +59,8 @@ export function resolveAppearance(snapshot: AppearanceState, draft = draftFromAp
     const purchaseID = draft[`${slot}_purchase_id`];
     const freeKey = draft[`${slot}_free_wearable_key`];
     if (freeKey != null) {
-      const freeCharacter = snapshot.characters.find((item) => item.character_key === (snapshot.default_character_key || snapshot.characters[0]?.character_key));
-      if (purchaseID !== null || freeKey !== freeCharacter?.defaults[slot]) throw new Error('CHARACTER_FREE_WEARABLE_INVALID');
+      const freeCharacters = freeCharacterDefinitions(snapshot);
+      if (purchaseID !== null || !freeCharacters.some((item) => freeKey === item.defaults[slot])) throw new Error('CHARACTER_FREE_WEARABLE_INVALID');
     }
     const owned = purchaseID === null ? null : snapshot.inventory.find((item) => item.purchase_id === purchaseID && definitions.get(item.wearable_key)?.slot === slot);
     if (purchaseID !== null && !owned) throw new Error('CHARACTER_PURCHASE_MISSING');
@@ -64,6 +72,6 @@ export function resolveAppearance(snapshot: AppearanceState, draft = draftFromAp
   const preparedAttachments = attachments.map((item) => ({ model_url: item.model_url, bone: item.bone, matrix: [...item.matrix] }));
   const body = [definition.character_key, definition.model_asset_key, definition.model_url, definition.scale, definition.fixed_nodes, definition.body_regions];
   const animations = Object.entries(definition.animations).sort(([first], [second]) => first.localeCompare(second));
-  const parts = wearables.map((item) => [item.wearable_key, item.model_asset_key, item.model_url, item.nodes, item.covers]);
+  const parts = wearables.map((item) => [item.wearable_key, item.model_asset_key, item.model_url, item.nodes, item.covers, item.regions]);
   return { key: JSON.stringify([body, animations, parts, preparedAttachments]), definition, wearables, attachments: preparedAttachments };
 }

@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { appearanceFixture } from './character3d-test-fixtures';
-import { draftFromAppearance, resolveAppearance } from './character3d-appearance';
+import { characterSlots, draftFromAppearance, resolveAppearance } from './character3d-appearance';
 
 describe('正式人物外观解析', () => {
+  it('形象、头部和背部与衣物一起解析为六个独立槽位', () => {
+    expect(characterSlots).toEqual(['face', 'head', 'upper', 'lower', 'shoes', 'back']);
+  });
+
   it('空槽解析免费默认，购买实例按目录身份选择', () => {
     const snapshot = appearanceFixture();
     const resolved = resolveAppearance(snapshot);
-    expect(resolved.wearables.map((item) => item.wearable_key)).toEqual(['hair-a', 'upper-a', 'lower-a', 'shoes-a']);
+    expect(resolved.wearables.map((item) => item.wearable_key)).toEqual(['face-a', 'head-a', 'upper-a', 'lower-a', 'shoes-a', 'back-a']);
     const draft = { ...draftFromAppearance(snapshot), upper_purchase_id: 'purchase-upper' };
-    expect(resolveAppearance(snapshot, draft).wearables[1]?.wearable_key).toBe('upper-b');
+    expect(resolveAppearance(snapshot, draft).wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-b');
     expect(snapshot.upper_purchase_id).toBeNull();
     expect(resolveAppearance({ ...snapshot, version: 2 })).toEqual(resolved);
   });
@@ -16,7 +20,7 @@ describe('正式人物外观解析', () => {
   it('拒绝不属于库存、错误部位和不兼容身体骨架', () => {
     const snapshot = appearanceFixture(); const draft = draftFromAppearance(snapshot);
     expect(() => resolveAppearance(snapshot, { ...draft, upper_purchase_id: 'absent' })).toThrow();
-    expect(() => resolveAppearance(snapshot, { ...draft, upper_purchase_id: 'purchase-hair' })).toThrow();
+    expect(() => resolveAppearance(snapshot, { ...draft, upper_purchase_id: 'purchase-head' })).toThrow();
     expect(() => resolveAppearance(snapshot, { ...draft, character_key: 'unknown' })).toThrow();
     snapshot.wearables.find((item) => item.wearable_key === 'upper-b')!.rig_key = 'other';
     expect(() => resolveAppearance(snapshot, { ...draft, upper_purchase_id: 'purchase-upper' })).toThrow();
@@ -36,7 +40,7 @@ describe('正式人物外观解析', () => {
     expect(resolveAppearance(snapshot, undefined, [attachment]).key).not.toBe(resolved.key);
   });
 
-  it('同一标准身体与骨架的不同人物共用已购四槽服装', () => {
+  it('同一标准身体与骨架的不同人物共用已购六槽服装', () => {
     const snapshot = appearanceFixture();
     const first = snapshot.characters[0]!;
     Object.assign(first, { body_key: 'medium' });
@@ -45,7 +49,7 @@ describe('正式人物外观解析', () => {
     const draft = { ...draftFromAppearance(snapshot), character_key: 'second-character', upper_purchase_id: 'purchase-upper' };
     const resolved = resolveAppearance(snapshot, draft);
     expect(resolved.definition.character_key).toBe('second-character');
-    expect(resolved.wearables[1]?.wearable_key).toBe('upper-b');
+    expect(resolved.wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-b');
 
     Object.assign(snapshot.wearables.find((item) => item.wearable_key === 'upper-b')!, { body_key: 'large' });
     expect(() => resolveAppearance(snapshot, draft)).toThrow('CHARACTER_WEARABLE_INCOMPATIBLE');
@@ -57,7 +61,7 @@ describe('正式人物外观解析', () => {
     Object.assign(original, { body_key: 'medium' });
     snapshot.characters.push({ ...original, character_key: 'second-character' });
     const draft = { ...draftFromAppearance(snapshot), character_key: 'second-character', upper_purchase_id: 'purchase-upper' };
-    expect(resolveAppearance(snapshot, draft).wearables[1]?.wearable_key).toBe('upper-b');
+    expect(resolveAppearance(snapshot, draft).wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-b');
     const upper = snapshot.wearables.find((item) => item.wearable_key === 'upper-b')!;
     upper.character_key = 'unknown';
     expect(() => resolveAppearance(snapshot, draft)).toThrow('CHARACTER_WEARABLE_INCOMPATIBLE');
@@ -65,11 +69,10 @@ describe('正式人物外观解析', () => {
     expect(() => resolveAppearance(snapshot, draft)).toThrow('CHARACTER_WEARABLE_INCOMPATIBLE');
   });
 
-  it('同一角色购买订单可分别作为四个槽的服装来源', () => {
+  it('六个部位分别保留独立商品订单，不根据订单顺序猜测槽位', () => {
     const snapshot = appearanceFixture();
-    snapshot.inventory = snapshot.inventory.map((item) => ({ ...item, purchase_id: 'character-purchase' }));
-    const draft = { ...draftFromAppearance(snapshot), hair_purchase_id: 'character-purchase', upper_purchase_id: 'character-purchase', lower_purchase_id: 'character-purchase', shoes_purchase_id: 'character-purchase' };
-    expect(resolveAppearance(snapshot, draft).wearables.map((item) => item.wearable_key)).toEqual(['hair-b', 'upper-b', 'lower-b', 'shoes-b']);
+    const draft = { ...draftFromAppearance(snapshot), face_purchase_id: 'purchase-face', head_purchase_id: 'purchase-head', upper_purchase_id: 'purchase-upper', lower_purchase_id: 'purchase-lower', shoes_purchase_id: 'purchase-shoes', back_purchase_id: 'purchase-back' };
+    expect(resolveAppearance(snapshot, draft).wearables.map((item) => item.wearable_key)).toEqual(['face-b', 'head-b', 'upper-b', 'lower-b', 'shoes-b', 'back-b']);
     snapshot.inventory = snapshot.inventory.filter((item) => item.wearable_key !== 'lower-b');
     expect(() => resolveAppearance(snapshot, draft)).toThrow('CHARACTER_PURCHASE_MISSING');
   });
@@ -96,10 +99,10 @@ describe('正式人物外观解析', () => {
     const second = { ...first, character_key: 'second', defaults: { ...first.defaults, upper: 'upper-b' } };
     snapshot.characters.push(second);
     const draft = { ...draftFromAppearance(snapshot), character_key: 'second', upper_free_wearable_key: 'upper-a' };
-    expect(resolveAppearance(snapshot, draft).wearables[1]?.wearable_key).toBe('upper-a');
+    expect(resolveAppearance(snapshot, draft).wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-a');
     Object.assign(snapshot, { character_key: 'second', upper_free_wearable_key: 'upper-a' });
     expect(draftFromAppearance(snapshot).upper_free_wearable_key).toBe('upper-a');
-    expect(resolveAppearance(snapshot).wearables[1]?.wearable_key).toBe('upper-a');
+    expect(resolveAppearance(snapshot).wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-a');
   });
 
   it('免费来源不能指定付费人物衣服或和购买来源同时存在', () => {

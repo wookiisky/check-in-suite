@@ -15,7 +15,7 @@ vi.mock('../character/AppearanceProvider', async () => {
 });
 
 // 分页与奖励夹具保留真实订单的类型、状态及能力字段。
-const hair: Purchase = { ...purchase, id: 'hair', name_snapshot: '短发', type_snapshot: 'wearable', wearable_key: 'hair-owned' };
+const head: Purchase = { ...purchase, id: 'head', name_snapshot: '短发', type_snapshot: 'wearable', wearable_key: 'head-owned' };
 const reward: Purchase = { ...purchase, id: 'reward', type_snapshot: 'reward', name_snapshot: '看电影', status: 'pending' };
 const redeemed: Purchase = { ...reward, id: 'redeemed', name_snapshot: '吃冰淇淋', status: 'redeemed' };
 const island: Purchase = { ...purchase, id: 'tree', name_snapshot: '树木', type_snapshot: 'island', island_item_key: 'tree' };
@@ -52,24 +52,24 @@ describe('背包分类与奖励', () => {
     expect(request.mock.calls.some(([, options]) => options?.method)).toBe(false);
   });
 
-  it('发型使用服装查询且保留后续分页，不因第一页没有匹配项宣称为空', async () => {
+  it('头部使用服装查询且保留后续分页，不因第一页没有匹配项宣称为空', async () => {
     const request = vi.fn().mockImplementation(async (path: string) => {
-      if (path.includes('cursor=')) return { items: [hair], next_cursor: null };
-      if (path.includes('type=wearable')) return { items: [purchase], next_cursor: 'hair-next' };
+      if (path.includes('cursor=')) return { items: [head], next_cursor: null };
+      if (path.includes('type=wearable')) return { items: [purchase], next_cursor: 'head-next' };
       return { items: [purchase], next_cursor: null };
     });
     renderBackpack(request);
     fireEvent.click(screen.getByRole('tab', { name: content.categoryGroups.appearance }));
-    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.hair }));
+    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.head }));
     const more = await screen.findByRole('button', { name: content.more });
     expect(screen.queryByText(content.emptyCategoryPurchases)).not.toBeInTheDocument();
     expect(screen.getByText(content.moreHint)).toBeInTheDocument();
     fireEvent.click(more);
-    await screen.findByRole('heading', { name: hair.name_snapshot });
+    await screen.findByRole('heading', { name: head.name_snapshot });
     const nextQuery = new URL(String(request.mock.calls.at(-1)?.[0]), 'http://test').searchParams;
     expect(nextQuery.get('type')).toBe('wearable');
     expect(nextQuery.get('status')).toBe('owned');
-    expect(nextQuery.get('cursor')).toBe('hair-next');
+    expect(nextQuery.get('cursor')).toBe('head-next');
     expect(screen.queryByRole('heading', { name: purchase.name_snapshot })).not.toBeInTheDocument();
   });
 
@@ -157,34 +157,34 @@ describe('背包分类与奖励', () => {
         reads += 1;
         if (reads === 1) return staleFirst.promise;
         if (reads === 2) return { items: [upper], next_cursor: 'upper-next' };
-        return { items: [hair], next_cursor: null };
+        return { items: [head], next_cursor: null };
       }
       return { items: [], next_cursor: null };
     });
     renderBackpack(request);
     fireEvent.click(screen.getByRole('tab', { name: content.categoryGroups.appearance }));
-    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.hair }));
+    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.head }));
     fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.upper }));
     await screen.findByRole('heading', { name: upper.name_snapshot });
-    await act(async () => staleFirst.resolve({ items: [hair], next_cursor: 'stale-first' }));
+    await act(async () => staleFirst.resolve({ items: [head], next_cursor: 'stale-first' }));
     expect(screen.getByRole('heading', { name: upper.name_snapshot })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: content.more }));
-    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.hair }));
-    await screen.findByRole('heading', { name: hair.name_snapshot });
+    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.head }));
+    await screen.findByRole('heading', { name: head.name_snapshot });
     await act(async () => staleMore.resolve({ items: [upper], next_cursor: 'stale-more' }));
     await waitFor(() => expect(screen.queryByRole('button', { name: content.more })).not.toBeInTheDocument());
     expect(screen.queryByRole('heading', { name: upper.name_snapshot })).not.toBeInTheDocument();
     const queries = request.mock.calls.map(([path]) => new URL(String(path), 'http://test').searchParams).filter((query) => query.get('type') === 'wearable' && !query.has('cursor'));
-    expect(queries.map((query) => query.get('slot'))).toEqual(['hair', 'upper', 'hair']);
+    expect(queries.map((query) => query.get('slot'))).toEqual(['head', 'upper', 'head']);
   });
 
   it('缺少服装目录时显示读取失败与重试，不误报空库存', async () => {
     const refresh = vi.fn();
     vi.mocked(useAppearance).mockReturnValue({ snapshot: null, loading: false, error: new TypeError('offline'), refresh, publishSaved: vi.fn() });
-    const request = vi.fn().mockResolvedValue({ items: [hair], next_cursor: null });
+    const request = vi.fn().mockResolvedValue({ items: [head], next_cursor: null });
     renderBackpack(request);
     fireEvent.click(screen.getByRole('tab', { name: content.categoryGroups.appearance }));
-    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.hair }));
+    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.head }));
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(screen.queryByText(content.emptyCategoryPurchases)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: content.reload }));

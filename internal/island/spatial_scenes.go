@@ -102,17 +102,18 @@ func resolveSpatialHouse(scene SpatialScene, placements []SpatialPlacement, cata
 }
 
 // spatialSceneOwned 在调用者事务中从订单快照核对永久进入资格。
-func spatialSceneOwned(ctx context.Context, tx *sql.Tx, scene SpatialSceneOption) (bool, error) {
+func spatialSceneOwned(ctx context.Context, tx *sql.Tx, accountID int64, scene SpatialSceneOption) (bool, error) {
 	if scene.Free {
 		return true, nil
 	}
 	var owned bool
-	err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM purchases WHERE type_snapshot='scene' AND scene_key_snapshot=? AND status='owned')`, scene.Key).Scan(&owned)
+	err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM purchases WHERE account_id=? AND type_snapshot='scene' AND scene_key_snapshot=? AND status='owned')`, accountID, scene.Key).Scan(&owned)
 	return owned, err
 }
 
 // ReadSpatialScenes 只读取场景资格，不创建布局或影响其他设备的所在位置。
 func (service *Service) ReadSpatialScenes(ctx context.Context, principal account.Principal) ([]SpatialSceneOption, error) {
+	accountID := principal.AccountID
 	tx, err := service.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
@@ -123,7 +124,7 @@ func (service *Service) ReadSpatialScenes(ctx context.Context, principal account
 	}
 	scenes := SpatialSceneDefinitions()
 	for i := range scenes {
-		scenes[i].Owned, err = spatialSceneOwned(ctx, tx, scenes[i])
+		scenes[i].Owned, err = spatialSceneOwned(ctx, tx, accountID, scenes[i])
 		if err != nil {
 			return nil, err
 		}

@@ -12,7 +12,7 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/wallet"
 )
 
-// seedPurchases 在同一事务建立真实订单、账务、称号、四槽外观和厘米布局。
+// seedPurchases 在同一事务建立真实订单、账务、称号、六槽外观和厘米布局。
 func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.Time, result *Result) error {
 	layout := island.SpatialDefaultLayout()
 	placements := append(layout.Placements, content.Placements...)
@@ -38,7 +38,7 @@ func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.T
 		if err != nil {
 			return err
 		}
-		if _, err := wallet.Apply(ctx, tx, wallet.Event{Type: wallet.PurchaseDebit, ResourceID: id, Coins: -coins, Diamonds: -diamonds, At: at}); err != nil {
+		if _, err := wallet.Apply(ctx, tx, 1, wallet.Event{Type: wallet.PurchaseDebit, ResourceID: id, Coins: -coins, Diamonds: -diamonds, At: at}); err != nil {
 			return err
 		}
 		result.Purchases++
@@ -49,7 +49,7 @@ func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.T
 			if err != nil {
 				return err
 			}
-			if _, err := wallet.Apply(ctx, tx, wallet.Event{Type: wallet.PurchaseDebit, ResourceID: redeemedID, Coins: -coins, Diamonds: -diamonds, At: at.Add(-time.Hour)}); err != nil {
+			if _, err := wallet.Apply(ctx, tx, 1, wallet.Event{Type: wallet.PurchaseDebit, ResourceID: redeemedID, Coins: -coins, Diamonds: -diamonds, At: at.Add(-time.Hour)}); err != nil {
 				return err
 			}
 			result.Purchases++
@@ -65,8 +65,12 @@ func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.T
 				return core.Invalid("wearable_key", "INVALID_VALUE")
 			}
 			switch wearable.Slot {
-			case character.SlotHair:
-				appearance.HairPurchaseID = &id
+			case character.SlotFace:
+				appearance.FacePurchaseID = &id
+			case character.SlotBack:
+				appearance.BackPurchaseID = &id
+			case character.SlotHead:
+				appearance.HeadPurchaseID = &id
 			case character.SlotUpper:
 				appearance.UpperPurchaseID = &id
 			case character.SlotLower:
@@ -84,7 +88,7 @@ func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.T
 			}
 		}
 	}
-	if _, err := tx.ExecContext(ctx, `INSERT INTO appearance_state(id,version,character_key,hair_purchase_id,upper_purchase_id,lower_purchase_id,shoes_purchase_id) VALUES(1,?,?,?,?,?,?)`, appearance.Version, appearance.CharacterKey, appearance.HairPurchaseID, appearance.UpperPurchaseID, appearance.LowerPurchaseID, appearance.ShoesPurchaseID); err != nil {
+	if _, err := tx.ExecContext(ctx, `INSERT INTO appearance_state(id,version,character_key,face_purchase_id,head_purchase_id,upper_purchase_id,lower_purchase_id,shoes_purchase_id,back_purchase_id) VALUES(1,?,?,?,?,?,?,?,?)`, appearance.Version, appearance.CharacterKey, appearance.FacePurchaseID, appearance.HeadPurchaseID, appearance.UpperPurchaseID, appearance.LowerPurchaseID, appearance.ShoesPurchaseID, appearance.BackPurchaseID); err != nil {
 		return err
 	}
 	if _, err := tx.ExecContext(ctx, `INSERT INTO island_scene_states(scene_key,version,environment_key) VALUES(?,1,?)`, layout.SceneKey, layout.EnvironmentKey); err != nil {

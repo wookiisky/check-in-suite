@@ -16,6 +16,11 @@ SPEC.loader.exec_module(MODULE)
 
 
 class ProviderStaticImportTest(unittest.TestCase):
+    # 独立纯函数用临时根验证旧输出语义，CLI另验候选隔离。
+    def setUp(self):
+        self.addCleanup(patch.stopall)
+        patch.object(MODULE, "write_root", lambda: MODULE.ROOT).start()
+
     # 外链缓冲与图片都必须写入交付 GLB，而不是留下源目录依赖。
     def test_external_gltf_is_embedded_and_grounded(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -235,14 +240,22 @@ class ProviderStaticCacheTest(unittest.TestCase):
 
 
 class ProviderSelectedScaleTest(unittest.TestCase):
+    # 独立纯函数用临时根验证旧输出语义，CLI另验候选隔离。
+    def setUp(self):
+        self.addCleanup(patch.stopall)
+        patch.object(MODULE, "write_root", lambda: MODULE.ROOT).start()
+
     # 用实际床模型证明一米多的原始家具在两倍适配后能容纳标准人物，且占地一致变化。
     def test_selected_scale_updates_real_bed_and_preserves_unselected_library(self):
-        original_bed = MODULE.ROOT / 'internal/assets/builtin/camp-bed-v1.glb'
         with tempfile.TemporaryDirectory() as directory, patch.object(MODULE, 'ROOT', Path(directory)):
             root = Path(directory)
             library = root / '.local/3d-sources/provider-prepared/library'
             library.mkdir(parents=True)
             source = library / 'bed-source.glb'
+            positions = struct.pack('<9f', 0, 0, 0, 1, 0, 0, 0, 1, 2.25)
+            document = {'asset': {'version': '2.0'}, 'buffers': [{'byteLength': 36}], 'bufferViews': [{'buffer': 0, 'byteLength': 36}], 'accessors': [{'bufferView': 0, 'componentType': 5126, 'count': 3, 'type': 'VEC3'}], 'meshes': [{'primitives': [{'attributes': {'POSITION': 0}}]}], 'nodes': [{'mesh': 0}], 'scenes': [{'nodes': [0]}], 'scene': 0}
+            original_bed = root / 'fixture-bed.glb'
+            original_bed.write_bytes(MODULE.glb_bytes(document, positions))
             metadata = MODULE.prepare_gltf(original_bed, source, source_scale=.5)
             thumbnail = library / 'bed-source-thumb.png'
             thumbnail.write_bytes(b'unchanged-uniform-projection')
@@ -276,8 +289,8 @@ class ProviderSelectedScaleTest(unittest.TestCase):
             scene_path.write_text('{"catalog":[]}\n')
             fragment = root / 'merge.json'
             MODULE.publish_selection(records[:1], assets, definitions, configuration, fragment)
-            self.assertEqual(shared_catalog.read_text(), '[{"key":"existing-resource"}]\n')
-            self.assertEqual(scene_path.read_text(), '{"catalog":[]}\n')
+            self.assertEqual(len(json.loads(shared_catalog.read_text())), 3)
+            self.assertEqual(len(json.loads(scene_path.read_text())['catalog']), 1)
             result = json.loads(fragment.read_text())
             self.assertEqual(len(result['assets']), 2)
             self.assertEqual(len(result['definitions']), 1)
@@ -292,10 +305,13 @@ class ProviderStaticCLITest(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
-        for name in ['scripts', 'internal/assets/builtin', 'source/previews']:
+        for name in ['scripts', 'internal/assets/builtin', 'internal/island', 'source/previews']:
             (self.root/name).mkdir(parents=True)
-        shutil.copy2(Path(__file__).with_name('import-provider-assets.py'), self.root/'scripts/import-provider-assets.py')
+        for name in ['import-provider-assets.py', 'asset-pipeline-candidate.py', 'update-spatial-thumbnail-aliases.py']:
+            shutil.copy2(Path(__file__).with_name(name), self.root/'scripts'/name)
+        self.output = self.root / '.local/asset-pipeline/static'
         self.write('internal/assets/builtin/catalog.json', [])
+        self.write('internal/island/spatial-scene.json', {'catalog': []})
         self.write('internal/assets/provider-pack-manifest.json', {'snapshot_at': 'test', 'packs': [{'status': 'downloaded', 'provider': 'kenney', 'id': 'fixture', 'name': 'fixture', 'source_url': 'https://example.test', 'directory': 'source'}]})
         self.write('scripts/provider-static-policy.json', {'packs': {'kenney/fixture': {'include': ['good', 'bad'], 'exclude': {'wall': 'building-component'}}}})
         self.write('scripts/provider-release-selection.json', {'items': [], 'target_count': 0, 'csv_headers': {}, 'unselected_reason': 'library-only'})
@@ -313,9 +329,9 @@ class ProviderStaticCLITest(unittest.TestCase):
         (self.root/path).write_text(json.dumps(value))
 
     # 子进程使用真实解析、缓存和清单写入，不模拟CLI返回码。
-    def run_cli(self):
-        result = subprocess.run([sys.executable, str(self.root/'scripts/import-provider-assets.py'), '--catalog-output', str(self.root/'publication.json')], cwd=self.root, capture_output=True, text=True, timeout=30)
-        path = self.root/'internal/assets/provider-asset-manifest.json'
+    def run_cli(self, extra=()):
+        result = subprocess.run([sys.executable, str(self.root/'scripts/import-provider-assets.py'), '--catalog-output', str(self.output/'publication.json'), *extra], cwd=self.root, capture_output=True, text=True, timeout=30)
+        path = self.output/'internal/assets/provider-asset-manifest.json'
         self.assertTrue(path.exists(), result.stdout+result.stderr)
         report = json.loads(path.read_text())
         return result, report
@@ -326,7 +342,7 @@ class ProviderStaticCLITest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertEqual(report['counts'], {'failed': 1, 'prepared': 1, 'excluded': 1})
         good = next(item for item in report['items'] if item['model_id'] == 'good')
-        library = self.root/'.local/3d-sources/provider-prepared/library'
+        library = self.output/'.local/3d-sources/provider-prepared/library'
         good_model = library/(good['model_asset_key']+'.glb')
         before = good_model.read_bytes()
         (self.root/'source/bad.glb').write_bytes(self.model)
@@ -335,6 +351,101 @@ class ProviderStaticCLITest(unittest.TestCase):
         self.assertEqual(report['counts'], {'prepared': 2, 'excluded': 1})
         self.assertEqual(good_model.read_bytes(), before)
         self.assertEqual(len(report['definitions']), 2)
+        self.assertEqual(json.loads((self.root/'internal/assets/builtin/catalog.json').read_text()), [])
+        self.assertFalse((self.root/'internal/assets/provider-asset-manifest.json').exists())
+        self.assertTrue((self.output/'candidate.json').exists())
+
+
+    # 真实选择包含损坏模型时也必须产出逐项失败报告，并在修复后恢复。
+    def test_selected_failure_keeps_report_and_old_catalog_for_retry(self):
+        selection = {'items': [{'provider': 'kenney', 'pack_key': 'fixture', 'model_id': name, 'reason': 'fixture', 'category': 'furniture', 'name': name, 'coin_price': 5, 'spaces': ['outdoor']} for name in ['good', 'bad']], 'target_count': 2, 'csv_headers': {}, 'unselected_reason': 'library-only'}
+        self.write('scripts/provider-release-selection.json', selection)
+        result, report = self.run_cli()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(report['counts']['failed'], 1)
+        self.assertEqual(json.loads((self.output/'internal/assets/builtin/catalog.json').read_text()), [])
+        self.assertFalse((self.output/'candidate.json').exists())
+        (self.root/'source/bad.glb').write_bytes(self.model)
+        result, report = self.run_cli()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(report['selected_assets']), 4)
+        self.assertTrue((self.output/'candidate.json').exists())
+
+    # 换版时保留历史映射，正式当前缩略图也成为新版本的别名。
+    def test_successful_build_updates_historical_thumbnail_aliases(self):
+        selection = {'provider': 'kenney', 'pack_key': 'fixture', 'model_id': 'good', 'reason': 'fixture', 'category': 'furniture', 'name': 'good', 'coin_price': 5, 'spaces': ['outdoor']}
+        identity = 'kenney-fixture-good-' + __import__('hashlib').sha256(b'kenney/fixture/good').hexdigest()[:6]
+        self.write('scripts/custom-policy.json', {'packs': {'kenney/fixture': {'include': ['good'], 'exclude': {'bad': 'outside', 'wall': 'component'}}}})
+        self.write('scripts/provider-release-selection.json', {'items': [selection], 'target_count': 1, 'csv_headers': {}, 'unselected_reason': 'library-only'})
+        self.write('internal/island/spatial-scene.json', {'catalog': [{'item_key': identity, 'thumbnail_asset_key': 'previous-published'}]})
+        previous_aliases = {'sources': [{'source': 'old-evidence', 'sha256': 'a'*64}], 'aliases': {'historical-thumbnail': identity}}
+        self.write('internal/island/spatial-thumbnail-aliases.json', previous_aliases)
+        result, _ = self.run_cli(['--policy', str(self.root/'scripts/custom-policy.json')])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        aliases = json.loads((self.output/'internal/island/spatial-thumbnail-aliases.json').read_text())
+        self.assertEqual(aliases['aliases']['historical-thumbnail'], identity)
+        self.assertEqual(aliases['aliases']['previous-published'], identity)
+        self.assertIn(previous_aliases['sources'][0], aliases['sources'])
+        self.assertEqual(json.loads((self.root/'internal/island/spatial-thumbnail-aliases.json').read_text()), previous_aliases)
+
+    # 选择配置自身无效时保留原因和成功库，不写成可应用候选。
+    def test_invalid_selection_preserves_diagnostic_report(self):
+        (self.root/'source/bad.glb').write_bytes(self.model)
+        self.write('scripts/provider-release-selection.json', {'items': [{'provider': 'kenney', 'pack_key': 'fixture', 'model_id': 'missing'}], 'target_count': 1, 'csv_headers': {}, 'unselected_reason': 'library-only'})
+        result, report = self.run_cli()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('selected-object-not-prepared', report['failures'][0]['reason'])
+        self.assertFalse((self.output/'candidate.json').exists())
+
+    # 清点结果不代表制作完成，不生成可应用候选。
+    def test_inventory_only_does_not_finalize_candidate(self):
+        result, report = self.run_cli(['--inventory-only'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(report['counts']['included'], 2)
+        self.assertFalse((self.output/'candidate.json').exists())
+        self.assertFalse(list((self.output/'internal/assets/builtin').glob('*.glb')))
+
+    # 自定义审核范围不能被同目录的内置分片覆盖。
+    def test_explicit_policy_is_not_overwritten_by_builtin_fragments(self):
+        self.write('scripts/custom-policy.json', {'packs': {'kenney/fixture': {'include': ['good'], 'exclude': {'bad': 'outside-scope', 'wall': 'component'}}}})
+        self.write('scripts/provider-static-policy-kenney.json', {'packs': {'kenney/fixture': {'include': ['bad']}}})
+        result, report = self.run_cli(['--policy', str(self.root/'scripts/custom-policy.json')])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(report['counts'], {'prepared': 1, 'excluded': 2})
+        candidate = json.loads((self.output/'candidate.json').read_text())
+        dependencies = {Path(item['path']) for item in candidate['dependencies']}
+        self.assertIn((self.root/'source/previews/good.png').resolve(), dependencies)
+        self.assertNotIn((self.root/'scripts/provider-static-policy-kenney.json').resolve(), dependencies)
+
+
+
+class ProviderCandidateOutputTest(unittest.TestCase):
+    """候选根与来源根分离，转换缓存必须核对依赖和实际输出。"""
+
+    # 预期候选路径不得退回正式目录。
+    def test_candidate_output_defaults_outside_internal(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(MODULE, 'ROOT', Path(directory)), patch.object(MODULE, 'OUTPUT_ROOT', None):
+            self.assertEqual(MODULE.write_root(), Path(directory) / '.local/asset-pipeline/static')
+
+    # OBJ的材质或贴图变化必须使转换缓存失效，损坏输出也不能复用。
+    def test_conversion_cache_tracks_external_dependencies_and_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'mesh.obj'
+            source.write_text('mtllib mesh.mtl\nv 0 0 0\n')
+            (root / 'mesh.mtl').write_text('map_Kd color.png\n')
+            image = root / 'color.png'
+            image.write_bytes(b'first')
+            first = MODULE.conversion_fingerprint(source, 'Blender fixture')
+            image.write_bytes(b'second')
+            self.assertNotEqual(first, MODULE.conversion_fingerprint(source, 'Blender fixture'))
+            self.assertNotEqual(first, MODULE.conversion_fingerprint(source, 'Blender changed'))
+            target = root / 'converted.glb'
+            target.write_bytes(b'valid')
+            MODULE.save_conversion_cache(target, first)
+            self.assertTrue(MODULE.conversion_cache_valid(target, first))
+            target.write_bytes(b'broken')
+            self.assertFalse(MODULE.conversion_cache_valid(target, first))
 
 
 if __name__ == '__main__':

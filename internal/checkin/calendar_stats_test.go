@@ -144,7 +144,7 @@ func TestStatisticsUseOneSnapshot(t *testing.T) {
 	if _, err := writer.Create(ctx, f.p, false, "snapshot-writer", CreateInput{TaskID: task.ID, ExpectedToday: "2026-10-29", ExpectedTaskVersion: 1}); err != nil {
 		t.Fatal(err)
 	}
-	old, err := readStatistics(ctx, reader, "2026-10-01", "2026-10-29")
+	old, err := readStatistics(ctx, reader, f.p.AccountID, "2026-10-01", "2026-10-29")
 	if err != nil || old.TotalCount != 0 || old.ActiveDays != 0 || len(old.Items) != 0 {
 		t.Fatalf("mixed snapshot: %+v %v", old, err)
 	}

@@ -13,7 +13,8 @@ import (
 func TestDefaultWearableCannotBeSold(t *testing.T) {
 	f := newShopFixture(t)
 	for _, body := range character.Definitions() {
-		for _, key := range []string{body.Defaults.Hair, body.Defaults.Upper, body.Defaults.Lower, body.Defaults.Shoes} {
+		for _, slot := range character.Slots() {
+			key := body.Defaults.ForSlot(slot)
 			item, ok := character.GetWearable(key)
 			if !ok {
 				t.Fatal(key)
@@ -32,7 +33,7 @@ func TestSeedWearableProductsPreservesManagedOffers(t *testing.T) {
 		t.Fatal(err)
 	}
 	offers, err := f.Service.ListProducts(ctx, f.Principal, true)
-	if err != nil || len(offers.Items) != 4 {
+	if err != nil || len(offers.Items) < 5 {
 		t.Fatalf("offers=%+v %v", offers, err)
 	}
 	for _, offer := range offers.Items {
@@ -44,7 +45,8 @@ func TestSeedWearableProductsPreservesManagedOffers(t *testing.T) {
 			t.Fatal(offer.WearableKey)
 		}
 		body, _ := character.Get(item.CharacterKey)
-		for _, key := range []string{body.Defaults.Hair, body.Defaults.Upper, body.Defaults.Lower, body.Defaults.Shoes} {
+		for _, slot := range character.Slots() {
+			key := body.Defaults.ForSlot(slot)
 			if key == item.Key {
 				t.Fatal("default garment seeded")
 			}
@@ -62,7 +64,7 @@ func TestSeedWearableProductsPreservesManagedOffers(t *testing.T) {
 		t.Fatal(err)
 	}
 	var count, price, enabled, version int
-	if err = f.DB.QueryRow("SELECT COUNT(*) FROM products").Scan(&count); err != nil || count != 4 {
+	if err = f.DB.QueryRow("SELECT COUNT(*) FROM products").Scan(&count); err != nil || count != len(offers.Items) {
 		t.Fatalf("count=%d %v", count, err)
 	}
 	if err = f.DB.QueryRow("SELECT coin_price,enabled,version FROM products WHERE id=?", managed.ID).Scan(&price, &enabled, &version); err != nil || price != 77 || enabled != 0 || version != 5 {

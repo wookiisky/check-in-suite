@@ -68,7 +68,7 @@ func TestPasswordEntryPointsShareWorkLimit(t *testing.T) {
 			return err
 		}, "", 2},
 		{"management", func(ctx context.Context, s *Service, _ Principal) error {
-			_, err := s.VerifyManagement(ctx, "manage password")
+			_, err := s.VerifyManagement(ctx, 1, "manage password")
 			return err
 		}, "", 2},
 		{"change", func(ctx context.Context, s *Service, p Principal) error {
@@ -91,7 +91,7 @@ func TestPasswordEntryPointsShareWorkLimit(t *testing.T) {
 			s.verify = func(_, _ string) bool { probe.run("verify"); return true }
 			s.hash = func(_ string) (string, error) { probe.run("hash"); return "test-hash", nil }
 			blocker := make(chan error, 1)
-			go func() { _, err := s.VerifyManagement(context.Background(), "manage password"); blocker <- err }()
+			go func() { _, err := s.VerifyManagement(context.Background(), 1, "manage password"); blocker <- err }()
 			<-probe.entered
 			result := make(chan error, 1)
 			go func() { result <- test.run(context.Background(), s, p) }()
@@ -125,7 +125,7 @@ func TestPasswordWorkCancellation(t *testing.T) {
 	s.verify = func(_, _ string) bool { probe.run("verify"); return true }
 	s.hash = func(_ string) (string, error) { probe.run("hash"); return "test-hash", nil }
 	blocker := make(chan error, 1)
-	go func() { _, err := s.VerifyManagement(context.Background(), "manage password"); blocker <- err }()
+	go func() { _, err := s.VerifyManagement(context.Background(), 1, "manage password"); blocker <- err }()
 	<-probe.entered
 	ctx, cancel := context.WithCancel(context.Background())
 	loginContext := &passwordWaitContext{Context: ctx, waiting: make(chan struct{})}
@@ -171,7 +171,7 @@ func TestPasswordWorkCancellation(t *testing.T) {
 	if calls := probe.calls.Load(); calls != 1 {
 		t.Fatalf("already canceled work reached calculation: calls=%d", calls)
 	}
-	if _, err := s.VerifyManagement(context.Background(), "manage password"); err != nil {
+	if _, err := s.VerifyManagement(context.Background(), 1, "manage password"); err != nil {
 		t.Fatal(err)
 	}
 	if probe.calls.Load() != 2 {
@@ -227,7 +227,7 @@ func TestPasswordHashFailureReleasesWork(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	if _, err := s.VerifyManagement(ctx, "manage password"); err != nil {
+	if _, err := s.VerifyManagement(ctx, 1, "manage password"); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -241,7 +241,7 @@ func TestSuccessfulPasswordWorkDoesNotUseFailureBudget(t *testing.T) {
 		if _, _, err := s.Login(context.Background(), "island", "login password"); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := s.VerifyManagement(context.Background(), "manage password"); err != nil {
+		if _, err := s.VerifyManagement(context.Background(), 1, "manage password"); err != nil {
 			t.Fatal(err)
 		}
 	}

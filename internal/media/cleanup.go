@@ -30,7 +30,7 @@ func (s *Service) Cleanup(ctx context.Context) error {
 	defer tx.Rollback()
 	rows, err := tx.QueryContext(ctx, `SELECT id,storage_key FROM media_files m WHERE
  (state='deleting' OR (state='ready' AND COALESCE(unreferenced_at,created_at)<=?))
- AND NOT EXISTS(SELECT 1 FROM checkins c WHERE c.deleted_at IS NULL AND (c.photo_media_id=m.id OR c.audio_media_id=m.id))
+ AND NOT EXISTS(SELECT 1 FROM checkins c WHERE c.account_id=m.account_id AND c.deleted_at IS NULL AND (c.photo_media_id=m.id OR c.audio_media_id=m.id))
  ORDER BY created_at,id LIMIT 100`, cutoff.UnixMilli())
 	if err != nil {
 		return err

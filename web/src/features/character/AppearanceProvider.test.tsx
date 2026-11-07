@@ -21,7 +21,7 @@ describe('已保存外观共享快照', () => {
     const view = render(<AppearanceProvider client={client} active={false}><Consumer /></AppearanceProvider>);
     expect(request).not.toHaveBeenCalled();
     view.rerender(<AppearanceProvider client={client} active><Consumer /></AppearanceProvider>);
-    await waitFor(() => expect(screen.getByTestId('snapshot')).toHaveTextContent('hair-purchase'));
+    await waitFor(() => expect(screen.getByTestId('snapshot')).toHaveTextContent('head-purchase'));
     fireEvent.click(screen.getByText('刷新外观'));
     await waitFor(() => expect(JSON.parse(screen.getByTestId('snapshot').textContent!).inventory).toEqual([]));
     view.rerender(<AppearanceProvider client={client} active={false}><Consumer /></AppearanceProvider>);
@@ -67,7 +67,7 @@ describe('已保存外观共享快照', () => {
     await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('false'));
     fireEvent.click(screen.getByText('刷新外观'));
     await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('true'));
-    expect(JSON.parse(screen.getByTestId('snapshot').textContent!).inventory).toHaveLength(4);
+    expect(JSON.parse(screen.getByTestId('snapshot').textContent!).inventory).toHaveLength(6);
     fireEvent.click(screen.getByText('刷新外观'));
     await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('false'));
     expect(JSON.parse(screen.getByTestId('snapshot').textContent!).inventory).toHaveLength(0);

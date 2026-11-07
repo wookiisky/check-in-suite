@@ -10,6 +10,8 @@ import { ManagementPanel } from './features/account/ManagementPanel';
 import type { AccountFormState } from './features/account/ManagementPanel';
 import { UnlockDialog } from './features/account/UnlockDialog';
 import { CampPage } from './features/checkin/CampPage';
+import { GroupBrowse } from './features/groups/GroupBrowse';
+import { MemberCheckins } from './features/groups/MemberCheckins';
 import { CheckinManagement } from './features/checkin/CheckinManagement';
 import { ShopPage } from './features/shop/ShopPage';
 import { BackpackPage } from './features/shop/BackpackPage';
@@ -89,12 +91,25 @@ export function IslandApp() {
   const titleRequest=useRef<AbortController|null>(null); // 只取消尚未打开称号选择器前的聚合读取。
   const titleGeneration=useRef(0); // 导航或新会话使迟到读取失效。
   const rememberEquipment=useCallback((equipment:Equipment,recipient:((equipment:Equipment)=>void)|null)=>{equipmentCache.current=equipment;equipmentRecipient.current=recipient;},[]);
-  const client = useMemo(() => new ApiClient((status) => {
+  const accountClients = useRef(new Map<number, ApiClient>()); // 每个账户的内存草稿和未知命令使用独立客户端。
+  const authorizationFailure = useCallback((status: number) => {
     setManagement(false); setUnlocking(false); setExpiresAt(null);
     if (status === 401) { setSession(null); setNotice(content.account.sessionExpired); }
     else setNotice(content.account.managementExpired);
-  }), []);
-
+  }, []);
+  const authenticationClient = useMemo(() => new ApiClient(authorizationFailure), [authorizationFailure]);
+  const client = useMemo(() => {
+    if (!session) return authenticationClient;
+    let scoped = accountClients.current.get(session.account.id);
+    if (!scoped) {
+      scoped = new ApiClient(authorizationFailure);
+      accountClients.current.set(session.account.id, scoped);
+    }
+    scoped.setCsrfToken(session.csrf_token); scoped.recordServerTime(session.server_now);
+    return scoped;
+  }, [authenticationClient, authorizationFailure, session?.account.id, session?.csrf_token]);
+  // 离开账户后旧请求不能撤销新账户授权；同账户重登仍能恢复原客户端中的未知命令。
+  useEffect(() => () => client.setCsrfToken(''), [client]);
 
   // 登录会话切换清除旧入口和读取，外观版本更新不会触发此清理。
   useEffect(()=>{
@@ -125,9 +140,9 @@ export function IslandApp() {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(null);
-    client.request<Session>('/session', { signal: controller.signal }).then((value) => {
+    authenticationClient.request<Session>('/session', { signal: controller.signal }).then((value) => {
       if (controller.signal.aborted) return;
-      client.setCsrfToken(value.csrf_token); client.recordServerTime(value.server_now); serverOffset.current = Date.parse(value.server_now) - Date.now();
+      authenticationClient.setCsrfToken(value.csrf_token); authenticationClient.recordServerTime(value.server_now); serverOffset.current = Date.parse(value.server_now) - Date.now();
       setSession(value); setNotice('');
     }).catch((reason: unknown) => {
       if (controller.signal.aborted) return;
@@ -135,7 +150,7 @@ export function IslandApp() {
       else setError(reason);
     }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [client, loadAttempt]);
+  }, [authenticationClient, loadAttempt]);
 
   // 到期只关闭当前管理页面，服务器仍是权限判断依据。
   useEffect(() => {
@@ -247,7 +262,7 @@ export function IslandApp() {
         </> : <>
           {page === 'camp' && <>
             <h1 className="page-heading">{content.navigation.camp}</h1>
-            <CampPage client={client} session={session} renderSidebar={(camp, updateEquipment) => <>
+            <GroupBrowse client={client} session={session}>{(accountID, onAccessDenied) => accountID !== session.account.id ? <MemberCheckins client={client} session={session} accountID={accountID} onAccessDenied={onAccessDenied} /> : <CampPage client={client} session={session} renderSidebar={(camp, updateEquipment) => <>
               <CampEquipmentObserver equipment={camp.equipment} updateEquipment={updateEquipment} onCurrent={rememberEquipment}/>
               <section className="camp-character-panel">
                 <CharacterPanel equipment={camp.equipment} displayName={camp.account.display_name} reduceMotion={session.account.preferences.reduce_motion} onAppearance={openAppearance} onTitle={()=>void openTitle(camp.equipment,updateEquipment)}/>
@@ -255,14 +270,14 @@ export function IslandApp() {
               </section>
               <AchievementStrip items={camp.achievements} onViewAll={() => navigate('achievements')} />
               <FamilyPanel client={client} session={session} />
-            </>} />
+            </>} />}</GroupBrowse>
           </>}
           {page === 'island' && <Suspense fallback={<section className="island-loading"><button className="secondary" onClick={() => navigate(islandReturnPage)}>{islandContent.back}</button><p role="status">{content.common.loading}</p></section>}><IslandPage client={client} session={session} {...(islandInitialScene ? { initialSceneKey: islandInitialScene } : {})} onCamp={() => navigate('camp')} onShop={openSceneShop} onBack={() => navigate(islandReturnPage)} onSettings={() => setSoundOpen(true)} /></Suspense>}
           {page === 'shop' && <ShopPage client={client} session={session} {...(shopInitialGroup ? { initialGroup: shopInitialGroup } : {})} onBackpack={() => navigate('backpack')} />}
           {page === 'backpack' && <BackpackPage client={client} session={session} onBack={() => navigate('camp')} onIsland={openIsland} onAppearance={openAppearance} onTitle={()=>void openTitle()} />}
           {page === 'achievements' && <AchievementPage client={client} session={session} />}
-          {page === 'calendar' && <CalendarPage client={client} session={session} />}
-          {page === 'stats' && <StatsPage client={client} session={session} />}
+          {page === 'calendar' && <GroupBrowse client={client} session={session}>{(accountID, onAccessDenied) => <CalendarPage client={client} session={session} accountID={accountID} onAccessDenied={onAccessDenied} />}</GroupBrowse>}
+          {page === 'stats' && <GroupBrowse client={client} session={session}>{(accountID, onAccessDenied) => <StatsPage client={client} session={session} accountID={accountID} onAccessDenied={onAccessDenied} />}</GroupBrowse>}
         </>}
         </div>
         {appearanceOpen&&<AppearanceOverlay client={client} session={session} onClose={()=>setAppearanceOpen(false)}/>}

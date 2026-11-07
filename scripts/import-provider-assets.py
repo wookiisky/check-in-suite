@@ -3,6 +3,8 @@ import argparse
 import base64
 import csv
 import hashlib
+import importlib.util
+import shutil
 import json
 import math
 from pathlib import Path
@@ -13,9 +15,39 @@ import sys
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_ROOT = None
 FORMATS = {'.glb': 0, '.gltf': 1, '.fbx': 2, '.obj': 3, '.dae': 4}
 IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
 STATIC_PIPELINE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()  # 加工代码变化使旧缓存失效。
+
+
+# 写入目标始终位于候选，来源ROOT只读。
+def write_root():
+    return OUTPUT_ROOT if OUTPUT_ROOT is not None else ROOT / '.local/asset-pipeline/static'
+
+
+# 非glTF转换保守纳入包内材质和贴图，避免只按主模型字节复用。
+def conversion_fingerprint(source, blender_version, dependency_root=None):
+    directory = dependency_root or source.parent
+    sidecars = {'.mtl', '.png', '.jpg', '.jpeg', '.tga', '.bmp', '.tif', '.tiff', '.dds', '.webp'}
+    files = {source} | {path for path in directory.rglob('*') if path.is_file() and path.suffix.lower() in sidecars}
+    payload = {'tool': blender_version, 'pipeline': STATIC_PIPELINE_SHA256,
+               'inputs': {str(path.resolve()): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(files)}}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+
+# 缓存有效须同时满足依赖和实际交付字节一致。
+def conversion_cache_valid(target, fingerprint):
+    try:
+        cached = json.loads(target.with_suffix('.conversion.json').read_text())
+        return cached['fingerprint'] == fingerprint and cached['sha256'] == hashlib.sha256(target.read_bytes()).hexdigest()
+    except (OSError, ValueError, KeyError):
+        return False
+
+
+# 只有转换完成并读取真实输出后记录缓存。
+def save_conversion_cache(target, fingerprint):
+    target.with_suffix('.conversion.json').write_text(json.dumps({'fingerprint': fingerprint, 'sha256': hashlib.sha256(target.read_bytes()).hexdigest()}))
 
 
 # 同一模型的格式副本归为一项；不同命名的外观保持独立身份。
@@ -362,23 +394,35 @@ def convert_jobs(jobs):
 
 # 审核后的配置负责价格和空间，模型边界只提供实际占地尺寸。
 def import_records(records, policy, blender=None):
-    library = ROOT / '.local/3d-sources/provider-prepared/library'
-    staging = ROOT / '.local/3d-sources/provider-prepared'
+    library = write_root() / '.local/3d-sources/provider-prepared/library'
+    staging = write_root() / '.local/3d-sources/provider-prepared'
     staging.mkdir(parents=True, exist_ok=True)
     assets, definitions, jobs = [], [], []
     conversions = []
     converted = {}
+    conversion_keys = {}
+    blender_version = subprocess.run([blender, '--version'], capture_output=True, text=True, check=True).stdout if blender and any(Path(item.get('source', '')).suffix.lower() not in ('.glb', '.gltf') and item['status'] == 'included' for item in records) else 'unavailable'
     for record in records:
         source = ROOT / record['source']
         if record['status'] == 'included' and source.suffix.lower() not in ('.glb', '.gltf'):
-            target = staging / ('converted-' + hashlib.sha256(source.read_bytes()).hexdigest()[:24] + '.glb')
+            fingerprint = conversion_fingerprint(source, blender_version, ROOT / record['directory'])
+            target = staging / ('converted-' + fingerprint[:24] + '.glb')
+            conversion_keys[target] = fingerprint
             converted[str(source)] = target
-            if not target.exists():
+            if not conversion_cache_valid(target, fingerprint):
+                target.unlink(missing_ok=True)
                 conversions.append({'source': str(source), 'target': str(target)})
     if conversions and blender:
         conversion_file = staging / 'conversion-jobs.json'
         conversion_file.write_text(json.dumps(conversions))
         subprocess.run([blender, '--background', '--factory-startup', '--python', str(Path(__file__).resolve()), '--', '--convert-jobs', str(conversion_file)], check=True, cwd=ROOT)
+    for target, fingerprint in conversion_keys.items():
+        if target.exists():
+            try:
+                read_gltf(target)
+                save_conversion_cache(target, fingerprint)
+            except (OSError, ValueError, struct.error, KeyError, TypeError):
+                target.unlink(missing_ok=True)
     for record in records:
         if record['status'] != 'included':
             continue
@@ -464,7 +508,7 @@ def merge_catalog(path, incoming, key, collection=None):
 
 # 源码只交付本轮最终版本；历史安装目录仍由运行时保留，不删除用户持久素材。
 def prune_generated_versions(valid_keys):
-    builtin = ROOT / 'internal/assets/builtin'
+    builtin = write_root() / 'internal/assets/builtin'
     generated = re.compile(r'^(?:kaykit|kenney)-.+-[0-9a-f]{6}-[0-9a-f]{8}(?:-thumb)?$')
     catalog_path = builtin / 'catalog.json'
     entries = json.loads(catalog_path.read_text())
@@ -494,8 +538,8 @@ def validate_selection(records, configuration):
 # 仅调整本次选入模型的米制比例，完整库的旧版本及未选入记录保持可追溯。
 def resize_selection(records, assets, definitions, configuration):
     chosen = validate_selection(records, configuration)
-    library = ROOT / '.local/3d-sources/provider-prepared/library'
-    staging = ROOT / '.local/3d-sources/provider-prepared/selected-scale'
+    library = write_root() / '.local/3d-sources/provider-prepared/library'
+    staging = write_root() / '.local/3d-sources/provider-prepared/selected-scale'
     staging.mkdir(parents=True, exist_ok=True)
     for record in records:
         selection = chosen.get((record['provider'], record['pack_key'], record['model_id']))
@@ -537,8 +581,8 @@ def resize_selection(records, assets, definitions, configuration):
 # 已整理的完整模型留在本地库，正式包只复制本次精选的不可变版本。
 def publish_selection(records, assets, definitions, configuration, catalog_output=None):
     chosen = validate_selection(records, configuration)
-    builtin = ROOT/'internal/assets/builtin'
-    library = ROOT/'.local/3d-sources/provider-prepared/library'
+    builtin = write_root()/'internal/assets/builtin'
+    library = write_root()/'.local/3d-sources/provider-prepared/library'
     library.mkdir(parents=True, exist_ok=True)
     by_asset = {asset['key']: asset for asset in assets}
     by_definition = {item['item_key']: item for item in definitions}
@@ -562,8 +606,8 @@ def publish_selection(records, assets, definitions, configuration, catalog_outpu
         selection = chosen.get(identity)
         record['selected'] = selection is not None
         record['selection_reason'] = selection['reason'] if selection else configuration['unselected_reason']
-        record['library_model_path'] = str((library/(record['model_asset_key']+'.glb')).relative_to(ROOT))
-        record['library_thumbnail_path'] = str((library/(record['thumbnail_asset_key']+'.png')).relative_to(ROOT))
+        record['library_model_path'] = str((library/(record['model_asset_key']+'.glb')).relative_to(write_root()))
+        record['library_thumbnail_path'] = str((library/(record['thumbnail_asset_key']+'.png')).relative_to(write_root()))
         record['category'] = selection['category'] if selection else by_asset[record['model_asset_key']]['category']
         record['name'] = selection['name'] if selection else record['model_id']
         record.pop('published_model_asset_key', None)
@@ -583,17 +627,17 @@ def publish_selection(records, assets, definitions, configuration, catalog_outpu
         published_definitions.append(definition)
         record.update(published_model_asset_key=model_key, published_thumbnail_asset_key=thumbnail_key)
     if catalog_output is not None:
-        # 并行加工只输出待合并片段，不写共享目录或清除其他工作进程的资源。
+        # 附加片段与完整候选一并写入隔离输出，不触碰来源正式目录。
+        catalog_output = write_root() / catalog_output.name
         catalog_output.parent.mkdir(parents=True, exist_ok=True)
         pattern = re.compile(r'^(?:kaykit|kenney)-.+-[0-9a-f]{6}-[0-9a-f]{8}(?:-thumb)?$')
         current = json.loads((builtin / 'catalog.json').read_text())
         selected_keys = {asset['key'] for asset in published_assets}
         retired = [asset['key'] for asset in current if pattern.fullmatch(asset['key']) and asset['key'] not in selected_keys]
         catalog_output.write_text(json.dumps({'assets': published_assets, 'definitions': published_definitions, 'retired_asset_keys': retired}, ensure_ascii=False, indent=2) + '\n')
-        return published_assets
     merge_catalog(builtin/'catalog.json', published_assets, 'key')
     # 旧的23件定义没有provider标记，完整保留；本次来源物件只发布精选项。
-    scene_path = ROOT/'internal/island/spatial-scene.json'
+    scene_path = write_root()/'internal/island/spatial-scene.json'
     scene = json.loads(scene_path.read_text())
     scene['catalog'] = [item for item in scene['catalog'] if item.get('provider') not in ('kaykit', 'kenney')]+published_definitions
     scene_path.write_text(json.dumps(scene, ensure_ascii=False, indent=2)+'\n')
@@ -604,7 +648,7 @@ def publish_selection(records, assets, definitions, configuration, catalog_outpu
 # CSV由完整模型清单和本次精选配置导出，避免人工维护第二份选择事实。
 def export_library_csv(records, configuration):
     fields = list(configuration['csv_headers'])
-    with (ROOT/'internal/assets/provider-object-library.csv').open('w', newline='', encoding='utf-8-sig') as output:
+    with (write_root()/'internal/assets/provider-object-library.csv').open('w', newline='', encoding='utf-8-sig') as output:
         writer = csv.writer(output, lineterminator='\n')
         writer.writerow([configuration['csv_headers'][field] for field in fields])
         for record in records:
@@ -614,7 +658,9 @@ def export_library_csv(records, configuration):
 
 # 未审核条目也写入报告，确保包内模型总数可以逐项核对。
 def main():
+    global OUTPUT_ROOT
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=ROOT / '.local/asset-pipeline/static')
     parser.add_argument('--manifest', type=Path, default=ROOT / 'internal/assets/provider-pack-manifest.json')
     parser.add_argument('--policy', type=Path, default=ROOT / 'scripts/provider-static-policy.json')
     parser.add_argument('--inventory-only', action='store_true')
@@ -624,14 +670,38 @@ def main():
     parser.add_argument('--resize-selection-only', action='store_true')
     parser.add_argument('--catalog-output', type=Path)
     options = parser.parse_args()
+    helper_spec = importlib.util.spec_from_file_location('static_candidate', Path(__file__).with_name('asset-pipeline-candidate.py'))
+    helper = importlib.util.module_from_spec(helper_spec)
+    helper_spec.loader.exec_module(helper)
+    OUTPUT_ROOT = options.output.resolve()
+    helper.validate_candidate_output(ROOT, OUTPUT_ROOT)
+    if (OUTPUT_ROOT / 'candidate.json').exists():
+        raise ValueError('candidate output already finalized; choose a new output directory')
+    baseline = helper.capture_baseline(ROOT)
+    for relative in ['internal/assets/builtin/catalog.json', 'internal/island/spatial-scene.json']:
+        destination = OUTPUT_ROOT / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if (ROOT / relative).exists():
+            shutil.copyfile(ROOT / relative, destination)
+    if options.catalog_output is not None:
+        options.catalog_output = OUTPUT_ROOT / options.catalog_output.name
+    policy_paths = [options.policy] if options.policy.exists() else []
+    default_policy = ROOT / 'scripts/provider-static-policy.json'
+    if options.policy.resolve() == default_policy.resolve():
+        policy_paths.extend(path for path in [default_policy.with_name('provider-static-policy-kaykit.json'), default_policy.with_name('provider-static-policy-kenney.json')] if path.exists())
+    elif not options.policy.exists():
+        raise FileNotFoundError(options.policy)
+    dependency_paths = [Path(__file__), options.manifest, *policy_paths]
+    if not options.inventory_only:
+        dependency_paths.append(options.selection)
+    dependencies = helper.capture_dependencies(ROOT, dependency_paths)
     packages = json.loads(options.manifest.read_text())
-    policy = json.loads(options.policy.read_text()) if options.policy.exists() else {'packs': {}}
-    for provider in ('kaykit', 'kenney'):
-        fragment = options.policy.with_name('provider-static-policy-' + provider + '.json')
-        if fragment.exists():
-            policy['packs'].update(json.loads(fragment.read_text())['packs'])
+    policy = {'packs': {}}
+    for path in policy_paths:
+        policy['packs'].update(json.loads(path.read_text())['packs'])
     if options.publish_selection_only or options.resize_selection_only:
         previous = json.loads((ROOT/'internal/assets/provider-asset-manifest.json').read_text())
+        dependencies.extend(helper.capture_dependencies(ROOT, [ROOT/'internal/assets/provider-asset-manifest.json']))
         records, assets = previous['items'], previous['assets']
         definitions = previous.get('definitions')
         if definitions is None:
@@ -639,25 +709,81 @@ def main():
             definitions = [item for item in json.loads((ROOT/'internal/island/spatial-scene.json').read_text())['catalog'] if item['item_key'] in prepared_keys]
     else:
         records = inventory(packages, policy)
+        source_paths = {ROOT / record['source'] for record in records if record['status'] == 'included'}
+        dependency_paths = set(source_paths)
+        for source in source_paths:
+            try:
+                dependency_paths.update(helper.source_dependencies(source))
+            except (OSError, ValueError, struct.error):
+                # 保留损坏主文件指纹，实际加工负责逐项失败，不能中断其他来源。
+                pass
+            if source.suffix.lower() not in ('.gltf', '.glb'):
+                record = next(item for item in records if ROOT / item['source'] == source)
+                dependency_paths.update(path for path in (ROOT / record['directory']).rglob('*') if path.is_file() and path.suffix.lower() in ['.mtl', '.png', '.jpg', '.jpeg', '.tga', '.bmp', '.tif', '.tiff', '.dds', '.webp'])
+        for record in records:
+            if record['status'] == 'included':
+                preview = official_thumbnail(ROOT / record['directory'], record['model_id'])
+                if preview is not None:
+                    dependency_paths.add(preview)
+        dependencies.extend(helper.capture_dependencies(ROOT, sorted(path for path in dependency_paths if path.is_file())))
         assets, definitions = ([], []) if options.inventory_only else import_records(records, policy, options.blender)
+    if options.publish_selection_only or options.resize_selection_only:
+        library = write_root() / '.local/3d-sources/provider-prepared/library'
+        for record in records:
+            if record['status'] != 'prepared':
+                continue
+            for field, suffix in [('model_asset_key', '.glb'), ('thumbnail_asset_key', '.png')]:
+                filename = record[field] + suffix
+                target = library / filename
+                if not target.exists():
+                    source = ROOT / '.local/3d-sources/provider-prepared/library' / filename
+                    if not source.exists():
+                        source = ROOT / 'internal/assets/builtin' / filename
+                    dependencies.extend(helper.capture_dependencies(ROOT, [source]))
+                    write_immutable(target, source.read_bytes())
     published_assets = []
+    failures = []
     if not options.inventory_only:
         configuration = json.loads(options.selection.read_text())
-        if options.resize_selection_only or all('source_scale' in item for item in configuration['items']):
-            resize_selection(records, assets, definitions, configuration)
-        published_assets = publish_selection(records, assets, definitions, configuration, options.catalog_output)
+        # 批内任一加工失败时保留成功库文件，先写完整报告，不构建半套发布目录。
+        if not any(item['status'] == 'failed' for item in records):
+            try:
+                if options.resize_selection_only or all('source_scale' in item for item in configuration['items']):
+                    resize_selection(records, assets, definitions, configuration)
+                published_assets = publish_selection(records, assets, definitions, configuration, options.catalog_output)
+            except (ValueError, OSError) as error:
+                failures.append({'stage': 'selection', 'reason': str(error)})
         export_library_csv(records, configuration)
-        for filename in ('provider-character-manifest.json', 'provider-animation-manifest.json'):
-            other_manifest = ROOT/'internal/assets'/filename
-            if other_manifest.exists() and options.catalog_output is None:
-                merge_catalog(ROOT/'internal/assets/builtin/catalog.json', json.loads(other_manifest.read_text()).get('assets', []), 'key')
     counts = {}
     for item in records:
         counts[item['status']] = counts.get(item['status'], 0) + 1
-    report = {'snapshot_at': packages['snapshot_at'], 'scope': 'reviewed-standalone-3d-decorations', 'counts': counts, 'assets': assets, 'definitions': definitions, 'selected_assets': published_assets, 'selection': {'selected': sum(item.get('selected', False) for item in records), 'library_only': sum(item['status'] == 'prepared' and not item.get('selected', False) for item in records)}, 'items': records}
-    (ROOT/'internal/assets/provider-asset-manifest.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    report = {'snapshot_at': packages['snapshot_at'], 'scope': 'reviewed-standalone-3d-decorations', 'counts': counts, 'assets': assets, 'definitions': definitions, 'selected_assets': published_assets, 'selection': {'selected': sum(item.get('selected', False) for item in records), 'library_only': sum(item['status'] == 'prepared' and not item.get('selected', False) for item in records)}, 'items': records, 'failures': failures}
+    (write_root()/'internal/assets/provider-asset-manifest.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    if not options.inventory_only and not counts.get('failed') and not failures:
+        alias_script = Path(__file__).with_name('update-spatial-thumbnail-aliases.py')
+        alias_spec = importlib.util.spec_from_file_location('provider_aliases', alias_script)
+        alias_module = importlib.util.module_from_spec(alias_spec)
+        alias_spec.loader.exec_module(alias_module)
+        dependencies.extend(helper.capture_dependencies(ROOT, [alias_script]))
+        previous_path = ROOT / 'internal/island/spatial-thumbnail-aliases.json'
+        previous = json.loads(previous_path.read_text()) if previous_path.exists() else {}
+        if previous_path.exists():
+            dependencies.extend(helper.capture_dependencies(ROOT, [previous_path]))
+        history = []
+        for relative in ['internal/assets/provider-asset-manifest.json', 'internal/island/spatial-scene.json']:
+            path = ROOT / relative
+            if path.exists():
+                dependencies.extend(helper.capture_dependencies(ROOT, [path]))
+                history.append((relative, path.read_bytes()))
+        candidate_manifest = write_root() / 'internal/assets/provider-asset-manifest.json'
+        history.append(('candidate/internal/assets/provider-asset-manifest.json', candidate_manifest.read_bytes()))
+        scene = json.loads((write_root() / 'internal/island/spatial-scene.json').read_text())
+        current = {item['item_key']: item['thumbnail_asset_key'] for item in scene['catalog']}
+        aliases = alias_module.build_aliases(current, previous, history)
+        (write_root() / 'internal/island/spatial-thumbnail-aliases.json').write_text(json.dumps(aliases, ensure_ascii=False, indent=2) + '\n')
+        helper.finalize_candidate(ROOT, OUTPUT_ROOT, 'provider', baseline=baseline, dependencies=dependencies)
     print(json.dumps(counts, ensure_ascii=False))
-    return int(bool(counts.get('failed')))
+    return int(bool(counts.get('failed') or failures))
 
 
 if __name__ == '__main__':

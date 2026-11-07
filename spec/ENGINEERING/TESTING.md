@@ -19,8 +19,32 @@ source:
 - scripts/preview-gltf-assets.py
 - scripts/render-gltf-previews.py
 - scripts/import-provider-assets.py
-- scripts/verify-kenney-character-appearance.py
+- scripts/prepare-modular-characters.py
+- scripts/asset-pipeline.py
+- scripts/asset-pipeline-candidate.py
+- scripts/asset-pipeline-rules.json
+- scripts/render-tiny-treats-previews.py
+- scripts/provider-character-binding.py
+- scripts/modular-character-sources.json
+- scripts/verify-modular-character-appearance.py
+- scripts/verify-modular-character-arms.py
+- scripts/modular-character-body-shaping.py
+- scripts/modular-character-clothing-fit.py
+- scripts/modular-character-cuff-opening.py
 tests:
+- scripts/asset-pipeline.test.py
+- scripts/asset-pipeline-candidate.test.py
+- scripts/render-tiny-treats-previews.test.py
+- scripts/prepare-modular-characters.test.py
+- scripts/verify-modular-character-appearance.test.py
+- scripts/verify-modular-character-arms.test.py
+- scripts/modular-character-arm-fit-blender-test.py
+- scripts/modular-character-body-shaping-blender-test.py
+- scripts/modular-character-clothing-fit-blender-test.py
+- scripts/modular-character-clothing-fit-coverage-blender-test.py
+- scripts/modular-character-cuff-opening-blender-test.py
+- scripts/modular-character-hand-clothing-blender-test.py
+- scripts/legacy-character-clothing-blender-test.py
 - scripts/check-spec.test.mjs
 - scripts/inspect-glb.test.mjs
 - scripts/p0-character-assets.test.mjs
@@ -28,8 +52,8 @@ tests:
 - internal/assets/camp_assets_test.go
 - internal/assets/provider_assets_test.go
 - scripts/provider-character-assets.test.mjs
+- scripts/modular-character-assets.test.mjs
 - web/e2e/provider-character.spec.ts
-- web/e2e/kenney-character.spec.ts
 - web/src/features/character/character3d-runtime-assets.test.ts
 - web/e2e/island-3d.spec.ts
 - web/e2e/spatial-occupancy-recovery.spec.ts
@@ -37,14 +61,6 @@ tests:
 - scripts/preview-gltf-assets.test.py
 - scripts/render-gltf-previews.test.py
 - scripts/import-provider-assets.test.py
-- scripts/prepare-kenney-characters.test.py
-- scripts/verify-kenney-character-appearance.test.py
-- scripts/kenney-character-binding-blender-test.py
-- scripts/kenney-head-semantics-blender-test.py
-- scripts/kenney-head-envelope-blender-test.py
-- scripts/kenney-prototype-waist-blender-test.py
-- scripts/kenney-headwear-compatibility-blender-test.py
-- scripts/kenney-character-face-assets-blender-test.py
 ---
 # 测试与验证
 
@@ -91,7 +107,15 @@ tests:
 
 业务修改先写能失败的目标测试，再实现并运行所需检查。纯文档迁移通常只运行 `check:spec`，无需完整 `verify`。Vite 构建只证明可打包，TypeScript 与 OpenAPI 检查有各自职责。
 
+`npm run test:asset-pipeline` 只使用临时仓库、JSON、小文件和子进程验证流程，包括来源类型声明、候选依赖、检查缺失、证据过期、正式基线漂移、精确字节应用及强制退出恢复。它不读取或验证正式素材。动作工具的 `--fixtures-only` 仅运行临时序列化 GLB 的批次测试，实际交付检查类另行选择。
+
+分类检查标准由 `scripts/asset-pipeline-rules.json` 定义，稳定语义仍以商店、营地专题为准。自动格式通过、渲染产生图片、画面复核通过、正式应用和运行回归是独立事实。每项专项结论绑定候选、规则和证据字节，并覆盖计划中的实际资产或组合；未执行不得汇总为通过。上装需要肩肘腕、拳端和躯干局部视角，脸型需要无头饰画面，动作需要名称与采样帧，不能只记录一个无动作标识的时间百分比。源设计中的开襟、露指和分体护甲不能按统一封闭规则判断；来源丢件、错误遮盖与错误绑定仍须失败。 混合管线应验证规则只覆盖适用资产，并验证动画使用实际片段采样、无兼容身体的穿戴不会被过滤免检。证据导入应验证分批覆盖合并、自动警告报告保留、运行注册表变化及格式扩展名不匹配拒绝应用；恢复应验证源外链或任一声明产物改变后重建。
+
 素材工具的安装、报告与预览入口见[运行手册](OPERATIONS.md#素材工具环境检查与预览)。`npm test` 和 `verify` 包含无需 Blender 的 Python 工具测试，需要先运行 `uv sync --locked`；真实 Blender 专项按需单独执行，没有 Blender 时会标记跳过，不能记为真实渲染通过。预览调度测试使用独立进程替身及实际 PNG 验证缓存、输入变动、部分失败和恢复；真实 Blender 专项才证明模型能被导入并生成四视图。增量加工测试使用序列化 GLB/glTF、实际外链文件和暂存字节，验证依赖变化、缓存损坏及失败后重建；它不代表已重新加工全部候选。
+
+身体连接需要在最终 GLB 和实际动作上检查部件重叠，不能只比较原有共享顶点。膝部专项入口是 `scripts/modular-character-skeleton-knee-blender-test.py`；披肩专项入口是 `scripts/modular-character-back-fit-blender-test.py`，以实际闭面射线区分穿透与来源开口。手端镜头被另一只手或前臂遮挡时应保留这一事实，并补充能够看见目标拳端的视角，不能把腕口内侧图记为闭合拳端已通过。
+
+最终读取模式不能再次执行修形。人形腰髋入口 `scripts/modular-character-human-waist-fit-blender-test.py` 使用独立 `--baseline-input` 核对原腰口，骷髅腰部入口 `scripts/modular-character-skeleton-waist-fit-blender-test.py` 使用独立 `--seam-reference-model` 核对分区配对，不能拿最终模型与自身比较。颈部入口 `scripts/modular-character-head-fit-blender-test.py` 分别检查支撑的上下接口；兜帽入口 `scripts/modular-character-hood-fit-blender-test.py` 可检查全部兼容脸型。腰带主带、开放边缘和附挂扣袋需要区分，身体位于饰件后方不能直接算成闭面穿透。
 
 Playwright 用独立 API、前端端口和临时数据库，不复用日常开发服务；配置入口是 `playwright.config.ts`。首次运行前执行 `npx playwright install chromium webkit`。端口冲突时使用隔离配置，不停止未知服务或复用其数据。
 
@@ -137,7 +161,29 @@ node scripts/verify-3d-release.mjs /absolute/path/to/release
 
 制作工具的失败与恢复使用隔离目录及真实子进程检查退出码、清单状态和旧文件保留；人物入口还使用真实 Blender 复现 PNG 重复生成及不可覆写边界。动作分批恢复以不同目标骨架验证逐来源重算和旧身份保留。
 
-人物来源适配分别验证源模型语义、交付 GLB 与正式浏览器流程。实际加载器测试读取正式 GLB，验证多材质节点、全部人物的默认装和正反向混搭；测试仅替换图片解码，因此不证明图片和 GPU 显示。Blender 检查使用真实面片、材质与蒙皮，确认眼、嘴和下颚不被发型替换，并保留缺脸模型作为反例；平面头型的正面射线不能代替立体眼窝、鼻梁的视觉判断。四向换装及动作采样证明对应人物、组合和采样帧，不能据此声称全部人物与全部动作的每一帧都检查过。`kenney-character.spec.ts` 在临时账户中购买五类结构的代表人物，验证共用服装、反向复用、保存后重开以及实际模型请求；画面仍需查看截图。
+人物来源适配分别验证源模型语义、交付 GLB 与正式浏览器流程。实际加载器测试读取正式 GLB，验证两种基础身体的默认装，以及形象、头部、上装、下装、鞋子和背部的混穿；测试仅替换图片解码，因此不证明图片和 GPU 显示。真实几何检查应确认换形象不改变身体和手脚，帽子不包含脸部，衣物不带入来源皮肤或骨骼，披风和箭袋可以独立选择。中箭需验证头部绑定、帽子替换与卸下，而非切换战损角色。
+
+逐件四向检查从当前目录枚举非空穿戴，在两种基础身体上分别只替换对应槽；脸型卸下头饰检查，防止帽子或胡须掩盖缺口。报告记录实际组合、源 GLB 哈希、逐项失败和总览图。原生衣物完整性还须回到原包核对：腰带和腕环不能因身体分区而截断，开襟衣片也不能按腰线拆碎。网格非空和文件存在不能代替这些检查。
+
+袖子和护臂还须以肩、肘、前臂、腕和手的局部画面检查，躯干包络或全身缩图不能证明这些部位完整显示。衣物外表面被基础皮肤遮住时，即使原生面全部保留，仍然不合格。几何检查须区分内外壁，并对变形后的外表面取样；显示和隐藏身体的同相机对照可用于定位遮挡，修复后仍应在身体正常显示时验收。
+
+闭合衣身还须使用居中的正、背近景，完整覆盖胸腹、背腰和下摆。躯干诊断图可隐藏全部基础身体节点，以区分衣物本身的缺块与身体外穿；验收主图仍显示实际身体。
+
+同侧手臂的检查须恢复跨身体节点的完整骨组件，避免开放骨面把骨间空隙误判为内部。检查用的区域封口只参与内外判断，穿入深度仍来自真实表面；胸口或另一条手臂的自然遮挡不计入同侧失败，肩胸交界另用近景检查。数值通过后仍须核对外壁露肤和腕口接缝，闭合手套还应沿手轴查看拳端，不能把正常露指口与外壁穿肤混为一谈。
+
+基础身体简化须另外检查肩、肘、腕和腰部在实际蒙皮动作中的接合，以及手掌、拇指与既有道具的配合。裸身外形不能沿用旧衣袖和手套轮廓，也不能通过过度缩小身体消除穿插。原款手套、护手须逐源核对实际衣物面已归入上装，并排除切分腕部时补出的人工封口；仅验证上装非空不能证明手部完整。
+
+新增的髋、膝骨关节须分别检查真实体积接合，分区共享顶点一致不能证明两个独立骨部件仍相连。[髋部检查](../../scripts/modular-character-skeleton-hip-blender-test.py) 使用实际交付动作，分别验证修补时的来源属性保护及导出后无适配重读的接合；[膝部检查](../../scripts/modular-character-skeleton-knee-blender-test.py) 另行核对新增股骨与原小腿。腰背位置场须同时作用于躯干、腿和手臂分区中的来源骨面，肋骨按位置拆入手臂节点的部分也不能漏掉；局部穿衣数值通过后仍须检查裸身轮廓。
+
+[手部来源提取检查](../../scripts/modular-character-hand-clothing-blender-test.py) 在衣物适配之前调用实际制作函数，逐三角比较源位置、UV、材质和原蒙皮，并检查裸手与骨骼被排除。成品经过已声明的矩阵、重绑或细分后，源坐标与原权重会改变；成品使用 [衣物适配检查](../../scripts/modular-character-clothing-fit-blender-test.py)、[动作穿入检查](../../scripts/modular-character-arm-fit-blender-test.py)、[闭拳覆盖检查](../../scripts/modular-character-clothing-fit-coverage-blender-test.py) 及真实画面分别验收，不能把来源提取检查当作最终 GLB 的完整性结论。
+
+[衣物适配接口](../../scripts/modular-character-clothing-fit.py) 的可选 `arm_surface_fit` 在原有矩阵和绑定完成后执行：只对声明的源肩帽范围细分，再按X下降、Z上升的权重贴合同一轮实际身体的同侧肩臂表面，并用相同权重混合目标三角的真实蒙皮。可选 `strength` 同时乘到位移和蒙皮混合量，默认1，须为大于0且不超过1的有限数值；略低于1可避免不同源点完全投影到同一点，仍须检查正源域子面的实际几何面积。参考通过已有的纯数值 `hand_surface.arm_surface` 传入。真实来源回归检查原面覆盖、UV插值、远端和其他组件保持、肩部权重以及缺失参考和无效范围；接口正确仍须结合最终动作、颈部遮挡与实际画面验收。
+
+矩阵适配中的 `transform_weight.z_bounds` 使用两个不同的有限高度，按给定端点从完全生效过渡到零。端点方向可反转，位置和法线须使用同一渐变方向；真实 Blender 平面回归以有限差分核对法线，并检查区间外的截断与原方向兼容。
+
+原本封闭的护臂可以在制作阶段为手臂开通内孔，保留可见外壁、口沿、UV与材质。去除的内部端盖、新增内壁和内衬分别记录；闭合拳套保留闭掌，屈腕时还须保持原款应有的覆盖，不能因刚体分区留下新的裸腕缝。
+
+四向画面及动作采样只证明对应身体、组合和采样帧，不能据此声称每个组合与每个动作的所有帧都检查过。浏览器验证应实际购买骷髅及独立穿戴、混搭保存后重开，并检查模型请求与 shader 错误；画面仍需查看截图。Kenney 人物的历史测试结果不作为当前六槽目录的验证证据。
 
 独立场景检查分别验证数据库与浏览器边界：真实 SQLite 的独立连接竞争证明同一实例只能占用一处，迁移检查保留旧布局顺序和版本；浏览器检查购买解锁、无房活动、收起搬运、各场景草稿及结果未知恢复。房屋通路允许派生的分数厘米矩形，用户保存坐标仍为整数；支撑面以实际 GLB 的楼板射线核对，同时采样门廊侧边和倒角，再以实际执行器验证插值及移动房屋后的局部坐标转换。不能用门洞中心线或通路包围范围代替整个平台的高度。
 

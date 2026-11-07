@@ -453,14 +453,14 @@ describe('背包、四槽形象与独立称号入口',()=>{
   });
   it('外观保存直接发布共享快照，任务、留言DOM和读取次数保持不变',async()=>{
     const server=installServer(true),original=server.getMockImplementation()!;
-    server.mockImplementation(async(input,init)=>String(input).endsWith('/appearance')&&init?.method==='PUT'?Response.json({...appearanceFixture(2),hair_purchase_id:'hair-purchase'}):original(input,init));
+    server.mockImplementation(async(input,init)=>String(input).endsWith('/appearance')&&init?.method==='PUT'?Response.json({...appearanceFixture(2),head_purchase_id:'head-purchase'}):original(input,init));
     render(<IslandApp/>);fireEvent.change(await screen.findByLabelText(familyContent.input),{target:{value:'换装前的留言'}});
     const message=screen.getByLabelText(familyContent.input),task=screen.getByRole('button',{name:/阅读/});
     const reads=server.mock.calls.filter(([path])=>String(path).endsWith('/camp')).length;
     fireEvent.click(screen.getByRole('button',{name:characterContent.appearance}));const dialog=await screen.findByRole('dialog',{name:appearanceContent.title});
-    fireEvent.click(await within(dialog).findByRole('radio',{name:'发型新款'}));fireEvent.click(within(dialog).getByRole('button',{name:appearanceContent.save}));
+    fireEvent.click(await within(dialog).findByRole('radio',{name:'头部新款'}));fireEvent.click(within(dialog).getByRole('button',{name:appearanceContent.save}));
     await within(dialog).findByText(appearanceContent.saved);fireEvent.click(within(dialog).getByRole('button',{name:content.common.close}));
-    expect(within(screen.getByRole('region',{name:characterContent.label})).getByTestId('app-character-preview')).toHaveTextContent('hair-purchase');
+    expect(within(screen.getByRole('region',{name:characterContent.label})).getByTestId('app-character-preview')).toHaveTextContent('head-purchase');
     expect(screen.getByLabelText(familyContent.input)).toBe(message);expect(message).toHaveValue('换装前的留言');expect(screen.getByRole('button',{name:/阅读/})).toBe(task);
     expect(server.mock.calls.filter(([path])=>String(path).endsWith('/camp'))).toHaveLength(reads);
   });
@@ -506,4 +506,41 @@ it('普通页面与管理界面共用全局钱包，营地隐藏，返回后保�
   expect(document.querySelectorAll('.global-wallet')).toHaveLength(1);
   await unlock();
   expect(document.querySelectorAll('.global-wallet')).toHaveLength(1);
+});
+
+it('换账户隔离草稿和未知打卡，原账户重登仍可恢复', async () => {
+  const server = installServer(true);
+  const original = server.getMockImplementation()!;
+  let currentAccount = testSession.account;
+  server.mockImplementation(async (input, init) => {
+    const path = String(input);
+    if (path.endsWith('/groups')) return Response.json({ groups: [], current_group: null, members: [] });
+    if (path.endsWith('/auth/login')) {
+      await original(input, init);
+      const username = JSON.parse(String(init?.body)).username;
+      currentAccount = username === 'second-user' ? { ...testSession.account, id: 2, username, display_name: '第二位小朋友' } : testSession.account;
+      return Response.json({ ...testSession, account: currentAccount, csrf_token: `csrf-${currentAccount.id}` });
+    }
+    if (path.endsWith('/camp')) return Response.json({ ...campFixture, account: currentAccount });
+    return original(input, init);
+  });
+  render(<IslandApp />);
+  fireEvent.change(await screen.findByLabelText(familyContent.input), { target: { value: '只属于第一位小朋友的草稿' } });
+  fireEvent.click(await screen.findByRole('button', { name: /阅读.*金币/ }));
+  fireEvent.click(screen.getByRole('button', { name: checkinContent.checkin }));
+  await screen.findByText(checkinContent.unknownResult);
+  fireEvent.click(screen.getByRole('button', { name: checkinContent.close }));
+  expect(screen.getByText(checkinContent.pendingBanner)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: content.account.logout }));
+  fireEvent.change(await screen.findByLabelText(content.account.username), { target: { value: 'second-user' } });
+  fireEvent.change(screen.getByLabelText(content.account.loginPassword), { target: { value: 'Island-Test-2026' } });
+  fireEvent.click(screen.getByRole('button', { name: content.account.login }));
+  expect(await screen.findByLabelText(familyContent.input)).toHaveValue('');
+  expect(screen.queryByText(checkinContent.pendingBanner)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: content.account.logout }));
+  fireEvent.change(await screen.findByLabelText(content.account.username), { target: { value: testSession.account.username } });
+  fireEvent.change(screen.getByLabelText(content.account.loginPassword), { target: { value: 'Island-Test-2026' } });
+  fireEvent.click(screen.getByRole('button', { name: content.account.login }));
+  expect(await screen.findByLabelText(familyContent.input)).toHaveValue('只属于第一位小朋友的草稿');
+  expect(screen.getByText(checkinContent.pendingBanner)).toBeInTheDocument();
 });

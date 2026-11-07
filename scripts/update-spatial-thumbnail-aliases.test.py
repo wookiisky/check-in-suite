@@ -4,6 +4,8 @@ import importlib.util
 import json
 from pathlib import Path
 import unittest
+import tempfile
+from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location('spatial_aliases', Path(__file__).with_name('update-spatial-thumbnail-aliases.py'))
 MODULE = importlib.util.module_from_spec(SPEC)
@@ -30,6 +32,23 @@ class SpatialThumbnailAliasesTest(unittest.TestCase):
         self.assertEqual(result['aliases'], {})
         with self.assertRaises(ValueError):
             MODULE.build_aliases({'chair': 'new-chair', 'table': 'new-table'}, {'aliases': {'shared-old': 'chair'}}, [('conflicting', json.dumps({'items': [{'item_key': 'table', 'thumbnail_asset_key': 'shared-old'}]}).encode())])
+
+
+    # 独立工具默认只写候选文件，并以正式历史映射作为起点。
+    def test_cli_defaults_to_candidate_and_preserves_official_history(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(MODULE, 'ROOT', Path(directory)):
+            root = Path(directory)
+            (root/'internal/island').mkdir(parents=True)
+            (root/'internal/assets').mkdir(parents=True)
+            official = root/'internal/island/spatial-thumbnail-aliases.json'
+            official.write_text(json.dumps({'aliases': {'oldest': 'chair'}, 'sources': []}))
+            (root/'internal/island/spatial-scene.json').write_text(json.dumps({'catalog': [{'item_key': 'chair', 'thumbnail_asset_key': 'new'}]}))
+            (root/'internal/assets/provider-asset-manifest.json').write_text(json.dumps({'definitions': [{'item_key': 'chair', 'thumbnail_asset_key': 'old'}]}))
+            before = official.read_bytes()
+            MODULE.main([])
+            self.assertEqual(official.read_bytes(), before)
+            result = json.loads((root/'.local/asset-pipeline/aliases/spatial-thumbnail-aliases.json').read_text())
+            self.assertEqual(result['aliases'], {'old': 'chair', 'oldest': 'chair'})
 
 
 if __name__ == '__main__':

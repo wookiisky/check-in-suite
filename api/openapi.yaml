@@ -2,10 +2,82 @@ openapi: "3.1.0"
 info:
   title: "成长营地服务接口"
   version: "0.2.0"
-  description: "已批准的首版接口契约；接口语义见spec/SYSTEM/HTTP_API.md，验证边界见spec/ENGINEERING/TESTING.md。单账户、同源Cookie认证；写请求自动判断同源并校验CSRF。未知字段拒绝，整数不超过JavaScript安全范围。"
+  description: "已批准的首版接口契约；接口语义见spec/SYSTEM/HTTP_API.md，验证边界见spec/ENGINEERING/TESTING.md。多账户、同组只读共享、同源Cookie认证；写请求自动判断同源并校验CSRF。未知字段拒绝，整数不超过JavaScript安全范围。"
 servers: [{"url": "/"}]
 security: [{"sessionCookie": []}]
 paths:
+  /api/v1/groups:
+    get:
+      operationId: getGroups
+      summary: 读取已有组、当前组与同组成员
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupState'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/groups/join:
+    post:
+      operationId: joinGroup
+      summary: 以自己的管理密码加入任意已有组
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupState'
+        default:
+          $ref: '#/components/responses/Error'
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinGroupRequest'
+      description: 每人最多加入一个组；已在其他组时须先退出。不设邀请、审批或组角色。每次操作均校验本账户的管理密码，已有管理授权不能代替该校验。
+  /api/v1/groups/leave:
+    post:
+      operationId: leaveGroup
+      summary: 以自己的管理密码退出当前组
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupState'
+        default:
+          $ref: '#/components/responses/Error'
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRequest'
+      description: 只移除自己的组关系，保留所有个人数据；退出后后续请求不能再读取原组成员数据。
+  /api/v1/group-today:
+    get:
+      operationId: getGroupToday
+      summary: 只读查看本人或同组成员今日全部安排任务及完成次数
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberToday'
+        default:
+          $ref: '#/components/responses/Error'
+      parameters:
+        - $ref: '#/components/parameters/ReadAccountID'
   "/api/v1/island/scenes":
     get:
       operationId: "listSpatialScenes"
@@ -119,7 +191,7 @@ paths:
   "/api/v1/account/login-password":
     post:
       operationId: "changeLoginPassword"
-      summary: "修改密码并撤销全部会话"
+      summary: "修改密码并撤销本账户全部会话"
       x-management-required: true
       parameters: [{"$ref": "#/components/parameters/CSRF"}]
       requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasswordChange"}}}}
@@ -130,7 +202,7 @@ paths:
   "/api/v1/account/management-password":
     post:
       operationId: "changeManagementPassword"
-      summary: "修改密码并撤销全部会话"
+      summary: "修改密码并撤销本账户全部会话"
       x-management-required: true
       parameters: [{"$ref": "#/components/parameters/CSRF"}]
       requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasswordChange"}}}}
@@ -150,6 +222,7 @@ paths:
       operationId: "listCheckins"
       summary: "按所属日期稳定分页读取有效记录"
       parameters:
+        - {"$ref": "#/components/parameters/ReadAccountID"}
         - {"name": "start_date", "in": "query", "required": true, "schema": {"type": "string", "format": "date"}}
         - {"name": "end_date", "in": "query", "required": true, "schema": {"type": "string", "format": "date"}}
         - {"name": "cursor", "in": "query", "required": false, "schema": {"type": "string"}}
@@ -216,7 +289,7 @@ paths:
     get:
       operationId: "getCalendar"
       summary: "读取每月有效记录摘要"
-      parameters: [{"name": "month", "in": "query", "required": true, "schema": {"type": "string", "pattern": "^\\d{4}-\\d{2}$"}}]
+      parameters: [{"$ref": "#/components/parameters/ReadAccountID"}, {"name": "month", "in": "query", "required": true, "schema": {"type": "string", "pattern": "^\\d{4}-\\d{2}$"}}]
       responses:
         "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CalendarResponse"}}}}
         default: {"$ref": "#/components/responses/Error"}
@@ -225,6 +298,7 @@ paths:
       operationId: "getStats"
       summary: "按稳定任务标识统计有效次数"
       parameters:
+        - {"$ref": "#/components/parameters/ReadAccountID"}
         - {"name": "start_date", "in": "query", "required": true, "schema": {"type": "string", "format": "date"}}
         - {"name": "end_date", "in": "query", "required": true, "schema": {"type": "string", "format": "date"}}
       description: "含两端，最多366天，结束日期不能晚于服务端今天。"
@@ -586,6 +660,7 @@ paths:
 components:
   securitySchemes: {"sessionCookie": {"type": "apiKey", "in": "cookie", "name": "island_session"}}
   parameters:
+    ReadAccountID: {"name": "account_id", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1, "maximum": 9007199254740991}, "description": "省略时读取本人；指定他人时在同一读取事务中检查双方仍属于同一组。可读取全部有效历史，不改变登录账户或授予写权限。"}
     CSRF: {"name": "X-CSRF-Token", "in": "header", "required": true, "schema": {"type": "string"}}
     IdempotencyKey:
       name: "Idempotency-Key"
@@ -598,6 +673,110 @@ components:
       description: "结构化错误：400输入；401未登录；403授权或CSRF；404不存在；409版本/幂等/业务冲突；422日期或媒体；429限速；503忙或存储不可用。"
       content: {"application/json": {"schema": {"$ref": "#/components/schemas/ApiError"}}}
   schemas:
+    Group:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        name:
+          type: string
+    GroupMember:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - display_name
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        display_name:
+          type: string
+    GroupState:
+      type: object
+      additionalProperties: false
+      required:
+        - groups
+        - current_group
+        - members
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        current_group:
+          anyOf:
+            - $ref: '#/components/schemas/Group'
+            - type: 'null'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupMember'
+    JoinGroupRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - group_id
+        - password
+      properties:
+        group_id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+    MemberTodayTask:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - icon_key
+        - daily_limit
+        - completed
+        - remaining
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        icon_key:
+          type: string
+        daily_limit:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        completed:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        remaining:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+    MemberToday:
+      type: object
+      additionalProperties: false
+      required:
+        - today
+        - tasks
+      properties:
+        today:
+          type: string
+          format: date
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberTodayTask'
     HealthResponse:
       type: "object"
       additionalProperties: false
@@ -628,7 +807,7 @@ components:
       additionalProperties: false
       required: ["id", "username", "display_name", "version", "preferences"]
       properties:
-        id: {"type": "integer", "minimum": 1, "maximum": 1}
+        id: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         username: {"type": "string"}
         display_name: {"type": "string", "minLength": 1, "maxLength": 40}
         version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
@@ -1306,14 +1485,16 @@ components:
         next_cursor: {"anyOf": [{"type": "string"}, {"type": "null"}]}
     CharacterSlot:
       type: "string"
-      enum: ["hair", "upper", "lower", "shoes"]
-      description: "三维人物的四个独立穿戴部位。"
+      enum: ["face", "head", "upper", "lower", "shoes", "back"]
+      description: "三维人物的六个独立穿戴部位：形象、头部、上装、下装、鞋子和背部。"
     CharacterSelection:
       type: "object"
       additionalProperties: false
-      required: ["hair", "upper", "lower", "shoes"]
+      required: ["face", "head", "upper", "lower", "shoes", "back"]
       properties:
-        hair: {"type": "string", "minLength": 1}
+        face: {"type": "string", "minLength": 1}
+        back: {"type": "string", "minLength": 1}
+        head: {"type": "string", "minLength": 1}
         upper: {"type": "string", "minLength": 1}
         lower: {"type": "string", "minLength": 1}
         shoes: {"type": "string", "minLength": 1}
@@ -1351,7 +1532,8 @@ components:
       additionalProperties: false
       required: ["wearable_key", "name", "slot", "character_key", "rig_key", "model_asset_key", "model_url", "thumbnail_asset_key", "thumbnail_url", "nodes", "covers"]
       properties:
-        empty: {"type": "boolean", "description": "仅用于明确的无发型定义；此时 hair 槽 nodes 与 covers 为空，不能单独作为商品出售。"}
+        regions: {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string", "minLength": 1}}, "description": "可被其他穿戴部件覆盖的子区域，例如形象的头皮。"}
+        empty: {"type": "boolean", "description": "明确不穿戴的默认定义，其 nodes 与 covers 为空，不能单独作为商品出售；形象不可为空。"}
         body_key: {"type": "string", "description": "统一身体比例和绑定姿势的兼容身份。"}
         name: {"type": "string", "minLength": 1, "description": "资源目录中维护的显示名称。"}
         wearable_key: {"type": "string", "minLength": 1}
@@ -1362,7 +1544,7 @@ components:
         model_url: {"type": "string", "minLength": 1}
         thumbnail_asset_key: {"type": "string", "minLength": 1}
         thumbnail_url: {"type": "string", "minLength": 1}
-        nodes: {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "实际网格节点；仅明确 empty 的无发型定义可为空。"}
+        nodes: {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "实际网格节点；仅明确 empty 的不穿戴定义可为空。"}
         covers: {"type": "array", "items": {"type": "string", "minLength": 1}}
     AppearanceOwnedItem:
       type: "object"
@@ -1381,36 +1563,44 @@ components:
     AppearanceState:
       type: "object"
       additionalProperties: false
-      required: ["version", "character_key", "hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "characters", "wearables", "inventory"]
+      required: ["version", "character_key", "face_purchase_id", "head_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "back_purchase_id", "characters", "wearables", "inventory"]
       properties:
         preview_animations: {"type": "array", "items": {"$ref": "#/components/schemas/CharacterAnimation"}, "description": "统一骨架共用的原始动作目录，只返回一份，选中动作后才加载模型。"}
-        hair_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
-        upper_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
-        lower_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
-        shoes_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
+        face_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        back_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        head_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        upper_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        lower_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        shoes_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
         default_character_key: {"type": "string", "minLength": 1, "description": "无需购买的初始角色身份。"}
         character_inventory: {"type": "array", "items": {"$ref": "#/components/schemas/AppearanceOwnedCharacter"}, "description": "完整角色永久所有权，不受订单分页影响。"}
         version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         character_key: {"type": "string", "minLength": 1}
-        hair_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
+        face_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
+        back_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
+        head_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
         upper_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
         lower_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
         shoes_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
         characters: {"type": "array", "items": {"$ref": "#/components/schemas/CharacterDefinition"}}
         wearables: {"type": "array", "items": {"$ref": "#/components/schemas/CharacterWearable"}}
-        inventory: {"type": "array", "items": {"$ref": "#/components/schemas/AppearanceOwnedItem"}, "description": "全部服装权益；角色订单展开四件默认服装，因此同一 purchase_id 可对应多个槽位，须结合服装定义的 slot 解析。不受订单列表分页影响。"}
+        inventory: {"type": "array", "items": {"$ref": "#/components/schemas/AppearanceOwnedItem"}, "description": "全部独立穿戴商品订单，不展开身体订单；不受订单列表分页影响。"}
     AppearanceSave:
       type: "object"
       additionalProperties: false
-      required: ["expected_version", "character_key", "hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"]
+      required: ["expected_version", "character_key", "face_purchase_id", "head_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "back_purchase_id"]
       properties:
-        hair_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
-        upper_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
-        lower_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
-        shoes_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择系统免费初始角色在该槽的默认服装，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认服装。"}
+        face_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        back_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        head_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        upper_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        lower_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
+        shoes_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
         expected_version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         character_key: {"type": "string", "minLength": 1}
-        hair_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "null 恢复该部位免费默认装备；缺省或空字符串无效。"}
+        face_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "null 恢复该部位免费默认装备；缺省或空字符串无效。"}
+        back_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "null 恢复该部位免费默认装备；缺省或空字符串无效。"}
+        head_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "null 恢复该部位免费默认装备；缺省或空字符串无效。"}
         upper_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "null 恢复该部位免费默认装备；缺省或空字符串无效。"}
         lower_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "null 恢复该部位免费默认装备；缺省或空字符串无效。"}
         shoes_purchase_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "null 恢复该部位免费默认装备；缺省或空字符串无效。"}

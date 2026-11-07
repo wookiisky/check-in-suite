@@ -87,6 +87,7 @@ func productFacets(items []Product) *ProductFacets {
 
 // ListProductsPage limits browser payloads while preserving the full separate appearance inventory.
 func (s *Service) ListProductsPage(ctx context.Context, principal account.Principal, includeInactive bool, input ProductQuery) (ProductList, error) {
+	accountID := principal.AccountID
 	result := ProductList{Items: []Product{}}
 	input.Search = strings.ToLower(strings.TrimSpace(input.Search))
 	input.Provider = strings.ToLower(input.Provider)
@@ -99,7 +100,7 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if input.Group != "" && input.Group != "appearance" {
 		return result, core.Invalid("group", "INVALID_VALUE")
 	}
-	if input.Slot != "" && input.Slot != "hair" && input.Slot != "upper" && input.Slot != "lower" && input.Slot != "shoes" {
+	if input.Slot != "" && input.Slot != "face" && input.Slot != "back" && input.Slot != "head" && input.Slot != "upper" && input.Slot != "lower" && input.Slot != "shoes" {
 		return result, core.Invalid("slot", "INVALID_VALUE")
 	}
 	expected := productCursor{Type: input.Type, Group: input.Group, Slot: input.Slot, Search: input.Search, Provider: input.Provider, PackKey: input.PackKey, IncludeInactive: includeInactive}
@@ -124,8 +125,8 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if err := account.Authorize(ctx, tx, principal, includeInactive, s.Now()); err != nil {
 		return result, err
 	}
-	query := "SELECT " + productColumns + " FROM products p WHERE p.deleted_at IS NULL"
-	args := []any{}
+	query := "SELECT " + productColumns + " FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL"
+	args := []any{accountID}
 	if !includeInactive {
 		query += " AND p.enabled=1"
 	}
@@ -177,10 +178,10 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if readErr != nil {
 		return result, readErr
 	}
-	if err := applyProductOwnership(ctx, tx, result.Items); err != nil {
+	if err := applyProductOwnership(ctx, tx, accountID, result.Items); err != nil {
 		return result, err
 	}
-	result.Facets, err = visibleProductFacets(ctx, tx, includeInactive)
+	result.Facets, err = visibleProductFacets(ctx, tx, accountID, includeInactive)
 	if err != nil {
 		return result, err
 	}
@@ -191,12 +192,12 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 }
 
 // visibleProductFacets reads only distinct source identities instead of every product description.
-func visibleProductFacets(ctx context.Context, tx *sql.Tx, includeInactive bool) (*ProductFacets, error) {
-	query := "SELECT DISTINCT asset_key,character_key FROM products WHERE deleted_at IS NULL"
+func visibleProductFacets(ctx context.Context, tx *sql.Tx, accountID int64, includeInactive bool) (*ProductFacets, error) {
+	query := "SELECT DISTINCT asset_key,character_key FROM products WHERE account_id=? AND deleted_at IS NULL"
 	if !includeInactive {
 		query += " AND enabled=1"
 	}
-	rows, err := tx.QueryContext(ctx, query)
+	rows, err := tx.QueryContext(ctx, query, accountID)
 	if err != nil {
 		return nil, err
 	}

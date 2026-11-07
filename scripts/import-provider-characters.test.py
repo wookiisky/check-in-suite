@@ -1,6 +1,5 @@
-"""人物加工在真实 GLB 上校验骨架、四槽与脸发分离；不使用模拟网格证明兼容。"""
+"""KayKit预处理只写本地工作区，验证失败恢复与源文件的不可覆写边界。"""
 import importlib.util
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -8,6 +7,7 @@ import subprocess
 import struct
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / 'scripts/import-provider-characters.py'
@@ -15,31 +15,10 @@ MODULE = ROOT / 'scripts/import-provider-characters.py'
 
 # 读取交付容器中的实际JSON，而非仅检查旁边的配置。
 def read_glb(path):
-    import struct
     data = path.read_bytes()
     assert data[:4] == b'glTF'
     length = struct.unpack_from('<I', data, 12)[0]
     return json.loads(data[20:20 + length])
-
-
-# 从实际顶点缓冲计算固定脸范围，防止完整头皮留在无法被发型覆盖的网格里。
-def mesh_bounds(path, name):
-    data = path.read_bytes()
-    document = read_glb(path)
-    length = struct.unpack_from('<I', data, 12)[0]
-    binary = data[28+length:]
-    names = {name} if isinstance(name, str) else set(name)
-    points = []
-    for node in document['nodes']:
-        if node.get('name') not in names:
-            continue
-        for primitive in document['meshes'][node['mesh']]['primitives']:
-            accessor = document['accessors'][primitive['attributes']['POSITION']]
-            view = document['bufferViews'][accessor['bufferView']]
-            start = view.get('byteOffset', 0)+accessor.get('byteOffset', 0)
-            points.extend(struct.unpack_from('<fff', binary, start+i*view.get('byteStride', 12))
-                          for i in range(accessor['count']))
-    return [(min(point[axis] for point in points), max(point[axis] for point in points)) for axis in range(3)]
 
 
 class ProviderCharacterDeliveryTest(unittest.TestCase):
@@ -60,7 +39,7 @@ class ProviderCharacterDeliveryTest(unittest.TestCase):
         specification = importlib.util.spec_from_file_location('provider_characters', MODULE)
         module = importlib.util.module_from_spec(specification)
         specification.loader.exec_module(module)
-        for character_key in ['kenney-space-kit-astronautA', 'kenney-space-kit-astronautB', 'Character-' + 'x' * 140]:
+        for character_key in ['kaykit-adventurers-Knight', 'kaykit-skeletons-Warrior', 'Character-' + 'x' * 140]:
             asset_key = module.asset_version(character_key, b'actual-model')
             for suffix in ['', '-thumbnail', '-hair', '-upper', '-lower', '-shoes']:
                 self.assertRegex(asset_key + suffix, r'^[a-z][a-z0-9-]{0,95}$')
@@ -69,81 +48,105 @@ class ProviderCharacterDeliveryTest(unittest.TestCase):
     # 配置中的脸发拆分必须是逐角色标注，而不是运行时猜测颜色。
     def test_sources_declare_head_selection(self):
         sources = json.loads((ROOT/'scripts/provider-character-sources.json').read_text())['sources']
-        self.assertGreaterEqual(len(sources), 10)
+        self.assertTrue(sources)
         for source in sources:
             self.assertTrue(source['head_nodes'])
             self.assertTrue(source.get('hair_uv_regions') or source.get('hair_head_above') or source.get('hair_kind'))
 
-    # 同源多格式不产生重复人物，每个导入角色必须交付共用身体与全部四槽。
-    def test_actual_delivered_characters(self):
-        manifest = json.loads((ROOT/'internal/assets/provider-character-manifest.json').read_text())
-        entries = manifest['characters']
-        self.assertGreaterEqual(len(entries), 10)
-        keys = set()
-        for entry in entries:
-            self.assertEqual(entry['status'], 'imported', entry)
-            definition = entry['definition']
-            self.assertNotIn(definition['character_key'], keys)
-            keys.add(definition['character_key'])
-            self.assertEqual(definition['body_key'], 'kaykit-medium-body-v1')
-            self.assertLess(entry['binding_error'], 0.00001)
-            self.assertEqual(set(definition['defaults']), {'hair','upper','lower','shoes'})
-            document = read_glb(ROOT/'internal/assets/builtin'/(definition['model_asset_key']+'.glb'))
-            names = {node.get('name') for node in document['nodes'] if 'mesh' in node}
-            self.assertIn('body_head', names)
-            self.assertIn('body_hands', names)
-            for wearable in entry['wearables']:
-                self.assertTrue(set(wearable['nodes']) <= names)
-                self.assertEqual(wearable['body_key'], definition['body_key'])
-                self.assertEqual(wearable['rig_key'], definition['rig_key'])
-            self.assertTrue(entry['face_hair_disjoint'])
+    # 预处理不允许恢复已退出的Kenney人物，也不再包含战损角色。
+    def test_preprocessing_sources_only_include_normal_kaykit_inputs(self):
+        specification = importlib.util.spec_from_file_location('provider_characters', MODULE)
+        module = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(module)
+        configuration, base = module.preprocessing_configuration()
+        self.assertTrue(configuration['sources'])
+        self.assertTrue(all(source['provider'] == 'kaykit' for source in configuration['sources']))
+        self.assertFalse(any(source.get('source_geometry', {}).get('battleworn_variant')
+                             for source in configuration['sources']))
+        self.assertEqual(base['character_key'], 'kaykit-medium-v1')
 
-    # 曾穿出共用发型的完整头壳必须分区，完整脸和头皮共同遵守标准头部包络。
-    def test_bald_heads_partition_standard_head_envelope(self):
-        directory = ROOT/'internal/assets/builtin'
-        canonical = mesh_bounds(directory/'character-medium-v1.glb', 'body_head')
-        envelope = mesh_bounds(directory/'character-medium-v1.glb', ['body_head', 'body_scalp'])
-        manifest = json.loads((ROOT/'internal/assets/provider-character-manifest.json').read_text())
-        keys = {'kaykit-adventurers-barbarian', 'kaykit-skeletons-mage', 'kaykit-skeletons-minion',
-                'kaykit-skeletons-rogue', 'kaykit-skeletons-warrior'}
-        entries = {entry['definition']['character_key']: entry for entry in manifest['characters']}
-        self.assertTrue(keys <= entries.keys())
-        for key in sorted(keys):
-            with self.subTest(character=key):
-                definition = entries[key]['definition']
-                model = directory/(definition['model_asset_key']+'.glb')
-                bounds = mesh_bounds(model, 'body_head')
-                self.assertLessEqual(bounds[1][1], canonical[1][1]+0.00001)
-                self.assertGreater(bounds[1][1]-bounds[1][0], 0.5)
-                actual = mesh_bounds(model, ['body_head', 'body_scalp'])
-                for standard_axis, actual_axis in zip(envelope, actual):
-                    self.assertGreaterEqual(actual_axis[0], standard_axis[0]-0.00001)
-                    self.assertLessEqual(actual_axis[1], standard_axis[1]+0.00001)
-                document = read_glb(model)
-                head = next(node for node in document['nodes'] if node.get('name') == 'body_head')
-                materials = {document['materials'][primitive['material']]['name'].split('.')[0]
-                             for primitive in document['meshes'][head['mesh']]['primitives']}
-                if key.startswith('kaykit-skeletons-'):
-                    self.assertIn('Glow', materials, '眼睛必须留在固定脸中')
-
-    # 在真实 Blender 中只检查指定人物，且证据加工不能改写正式交付文件。
-    @unittest.skipUnless(os.environ.get('BLENDER_PATH'), '设置 BLENDER_PATH 后执行真实 Blender 小样')
-    def test_evidence_sample_preserves_delivery(self):
-        manifest = json.loads((ROOT/'internal/assets/provider-character-manifest.json').read_text())
-        key = manifest['characters'][0]['definition']['character_key']
-        paths = [ROOT/'internal/character/character-catalog.json',
-                 ROOT/'internal/assets/provider-character-manifest.json',
-                 *sorted((ROOT/'internal/assets/builtin').glob('*'))]
-        before = {path: hashlib.sha256(path.read_bytes()).digest() for path in paths if path.is_file()}
+    # 统一入口使用 --output，旧 --output-directory 仍映射到同一候选参数。
+    def test_output_alias_keeps_normalization_in_candidate_workspace(self):
+        specification = importlib.util.spec_from_file_location('provider_characters', MODULE)
+        module = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(module)
         with tempfile.TemporaryDirectory() as directory:
-            result = subprocess.run([os.environ['BLENDER_PATH'], '--background', '--factory-startup',
-                                     '--python', str(MODULE), '--', '--evidence', '--only', key,
-                                     '--evidence-output', directory], cwd=ROOT,
-                                    capture_output=True, text=True, timeout=180)
-            self.assertEqual(result.returncode, 0, result.stdout+'\n'+result.stderr)
-            self.assertEqual(sorted(path.name for path in Path(directory).glob('*.png')),
-                             [key+'-shared-outfit.png', key+'-source.png'])
-        self.assertEqual(before, {path: hashlib.sha256(path.read_bytes()).digest() for path in before})
+            with patch.object(module, 'import_characters', return_value=0) as build:
+                self.assertEqual(module.main(['--output', directory]), 0)
+                self.assertEqual(build.call_args.args[0].output_directory, Path(directory))
+                self.assertIsNone(build.call_args.args[0].waist_clearance)
+                module.main(['--output-directory', directory])
+                self.assertEqual(build.call_args.args[0].output_directory, Path(directory))
+                reference = Path(directory)/'body.glb'
+                module.main(['--output', directory, '--waist-reference', str(reference), '--waist-clearance', '.034'])
+                self.assertEqual(build.call_args.args[0].waist_reference, reference)
+                self.assertEqual(build.call_args.args[0].waist_clearance, .034)
+
+    # 恢复必须同时核对真实输入与已输出字节，不能只检查文件存在。
+    def test_normalization_resume_requires_input_and_output_proof(self):
+        specification = importlib.util.spec_from_file_location('provider_characters', MODULE)
+        module = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / 'model.glb'
+            output.write_bytes(b'fixture')
+            entry = {'definition': {'model_asset_key': 'model'}, 'processing_fingerprint': 'current', 'output_hashes': {'model.glb': module.hashlib.sha256(output.read_bytes()).hexdigest()}}
+            self.assertTrue(module.normalization_outputs_current(entry, root, 'current'))
+            self.assertFalse(module.normalization_outputs_current(entry, root, 'changed'))
+            output.write_bytes(b'damaged')
+            self.assertFalse(module.normalization_outputs_current(entry, root, 'current'))
+            self.assertFalse(module.normalization_outputs_current({}, root, 'current'))
+
+    # 外链及配置变化参与输入证明，不依赖 Blender 才能判定恢复条件。
+    def test_normalization_fingerprint_tracks_external_dependencies(self):
+        specification = importlib.util.spec_from_file_location('provider_characters', MODULE)
+        module = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root/'source.gltf'
+            buffer = root/'mesh.bin'
+            canonical = root/'canonical.gltf'
+            source.write_text(json.dumps({'buffers': [{'uri': 'mesh.bin'}]}))
+            buffer.write_bytes(b'first')
+            canonical.write_text('{}')
+            config = {'canonical_model': str(canonical)}
+            before = module.normalization_fingerprint(config, source)
+            self.assertEqual(before, module.normalization_fingerprint(config, source))
+            buffer.write_bytes(b'second')
+            self.assertNotEqual(before, module.normalization_fingerprint(config, source))
+            self.assertNotEqual(before, module.normalization_fingerprint({**config, 'scale': 2}, source))
+
+    # 显式裸腰参考的实际字节和外链也影响恢复，不能只记录声明的sha。
+    def test_normalization_fingerprint_tracks_actual_waist_reference(self):
+        specification = importlib.util.spec_from_file_location('provider_characters', MODULE)
+        module = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, canonical, reference = [root/name for name in ['source.gltf', 'canonical.gltf', 'waist.gltf']]
+            source.write_text('{}')
+            canonical.write_text('{}')
+            reference.write_text(json.dumps({'buffers': [{'uri':'waist.bin'}]}))
+            buffer = root/'waist.bin'
+            buffer.write_bytes(b'first waist')
+            config = {'canonical_model':str(canonical), 'waist_reference':{'path':str(reference),'sha256':'declared'}}
+            before = module.normalization_fingerprint(config, source)
+            config['waist_clearance'] = .034
+            self.assertNotEqual(before, module.normalization_fingerprint(config, source))
+            config.pop('waist_clearance')
+            buffer.write_bytes(b'changed waist')
+            self.assertNotEqual(before, module.normalization_fingerprint(config, source))
+
+    # 不用启动Blender也能核对默认输出与正式资产隔离。
+    def test_default_workspace_is_local_and_does_not_reuse_production_paths(self):
+        specification = importlib.util.spec_from_file_location('provider_characters', MODULE)
+        module = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(module)
+        self.assertEqual(module.DEFAULT_WORKSPACE, ROOT/'.local/3d-sources/modular-character-inputs')
+        self.assertTrue(module.BUILTIN.is_relative_to(module.DEFAULT_WORKSPACE))
+        self.assertTrue(module.MANIFEST.is_relative_to(module.DEFAULT_WORKSPACE))
 
 
 @unittest.skipUnless(os.environ.get('BLENDER_PATH'), '设置 BLENDER_PATH 后验证真实 Blender CLI')
@@ -156,9 +159,11 @@ class ProviderCharacterCLITest(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
-        for name in ['scripts', 'internal/assets/builtin', 'internal/character']:
+        for name in ['scripts', 'internal/assets/builtin', 'internal/character', '.local/3d-sources/modular-character-inputs/prepared']:
             (self.root/name).mkdir(parents=True)
         shutil.copy2(MODULE, self.root/'scripts/import-provider-characters.py')
+        for name in ['asset-pipeline-candidate.py', 'provider-character-binding.py', 'provider-character-clothing-components.py']:
+            shutil.copy2(ROOT/'scripts'/name, self.root/'scripts'/name)
         self.configuration = json.loads((ROOT/'scripts/provider-character-sources.json').read_text())
         self.source = self.configuration['sources'][0]
         self.configuration['sources'] = [self.source]
@@ -170,11 +175,15 @@ class ProviderCharacterCLITest(unittest.TestCase):
             directory.symlink_to(ROOT/pack['directory'], target_is_directory=True)
         canonical = self.root/self.configuration['canonical_model']
         shutil.copy2(ROOT/self.configuration['canonical_model'], canonical)
+        self.workspace = self.root/'.local/3d-sources/modular-character-inputs'
         self.previous_entry = {'status': 'imported', 'definition': {'character_key': 'previous', 'model_asset_key': canonical.stem}, 'wearables': []}
-        self.write('internal/assets/provider-character-manifest.json', {'characters': [self.previous_entry], 'assets': [], 'complete': True, 'status': 'complete'})
+        self.write('.local/3d-sources/modular-character-inputs/normalization-manifest.json', {'characters': [self.previous_entry], 'assets': [], 'complete': True, 'status': 'complete'})
         self.write('internal/assets/provider-pack-manifest.json', self.pack_manifest)
         self.write('internal/character/character-catalog.json', json.loads((ROOT/'internal/character/character-catalog.json').read_text()))
         self.write('scripts/provider-character-sources.json', self.configuration)
+        shutil.copy2(canonical, self.workspace/'prepared'/canonical.name)
+        self.production_paths = [self.root/'internal/character/character-catalog.json', canonical]
+        self.production_before = {path: path.read_bytes() for path in self.production_paths}
 
     # 序列化配置和清单到独立临时库。
     def write(self, path, value):
@@ -183,7 +192,8 @@ class ProviderCharacterCLITest(unittest.TestCase):
     # 执行交付使用的真实Blender，不以mock退出码替代CLI行为。
     def run_cli(self, *arguments):
         result = subprocess.run([os.environ['BLENDER_PATH'], '--background', '--factory-startup', '--python-exit-code', '1', '--python', str(self.root/'scripts/import-provider-characters.py'), '--', *arguments], cwd=self.root, capture_output=True, text=True, timeout=180)
-        manifest = json.loads((self.root/'internal/assets/provider-character-manifest.json').read_text())
+        manifest = json.loads((self.workspace/'normalization-manifest.json').read_text())
+        self.assertEqual(self.production_before, {path: path.read_bytes() for path in self.production_paths})
         return result, manifest
 
     # 失败后必须非零；修复并重试清除失败，但不能自动继承旧画面验收。
@@ -206,7 +216,7 @@ class ProviderCharacterCLITest(unittest.TestCase):
         entries = {item['definition']['character_key']: item for item in manifest['characters']}
         self.assertEqual(entries['previous'], self.previous_entry)
         self.assertIn(self.key, entries)
-        model = self.root/'internal/assets/builtin'/(entries[self.key]['definition']['model_asset_key']+'.glb')
+        model = self.workspace/'prepared'/(entries[self.key]['definition']['model_asset_key']+'.glb')
         self.assertEqual(read_glb(model)['asset']['version'], '2.0')
 
     # 同身份同字节允许重用，GLB或PNG已有不同字节时都失败并保留原文件。
@@ -216,7 +226,7 @@ class ProviderCharacterCLITest(unittest.TestCase):
         result, manifest = self.run_cli('--only', self.key, '--force')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         entry = next(item for item in manifest['characters'] if item['definition']['character_key'] == self.key)
-        directory = self.root/'internal/assets/builtin'
+        directory = self.workspace/'prepared'
         paths = [directory/(entry['definition']['model_asset_key']+'.glb'), directory/(entry['definition']['thumbnail_asset_key']+'.png')]
         before = {path: path.read_bytes() for path in paths}
         result, _ = self.run_cli('--only', self.key, '--force')
@@ -239,13 +249,13 @@ class ProviderCharacterCLITest(unittest.TestCase):
         result, manifest = self.run_cli('--only', self.key)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         entry = next(item for item in manifest['characters'] if item['definition']['character_key'] == self.key)
-        directory = self.root/'internal/assets/builtin'
+        directory = self.workspace/'prepared'
         paths = [directory/(entry['definition']['model_asset_key']+'.glb'), directory/(entry['definition']['thumbnail_asset_key']+'.png'), directory/(entry['wearables'][0]['thumbnail_asset_key']+'.png')]
         before = {path: path.read_bytes() for path in paths}
         for path in paths:
             with self.subTest(resource=path.name):
                 manifest.update(complete=True, status='complete')
-                self.write('internal/assets/provider-character-manifest.json', manifest)
+                self.write('.local/3d-sources/modular-character-inputs/normalization-manifest.json', manifest)
                 path.unlink()
                 result, manifest = self.run_cli('--only', self.key)
                 self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
@@ -276,21 +286,34 @@ class ProviderCharacterCLITest(unittest.TestCase):
         self.assertEqual({item['character_key'] for item in manifest['failures']}, {'first', 'second'})
         self.assertEqual(manifest['characters'], [self.previous_entry])
 
-    # 没有实际重加工时可以保留此前明确完成的状态和有效字节。
+    # 从实际制作生成依赖与产物证明，跳过时保留验收，重加工后重新待验收。
     def test_skipping_completed_sources_preserves_validation(self):
-        self.configuration['sources'] = [{'key': 'previous'}]
+        self.source.setdefault('normalization', {})['head_envelope_verified'] = True
         self.write('scripts/provider-character-sources.json', self.configuration)
-        canonical = self.root/self.configuration['canonical_model']
-        before = canonical.read_bytes()
-        result, manifest = self.run_cli('--only', 'previous')
+        result, manifest = self.run_cli('--only', self.key)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertTrue(manifest['complete'])
-        self.assertEqual(manifest['status'], 'complete')
-        self.assertEqual(canonical.read_bytes(), before)
+        entry = next(item for item in manifest['characters'] if item['definition']['character_key'] == self.key)
+        self.assertTrue(entry['processing_fingerprint'])
+        self.assertTrue(entry['output_hashes'])
+        before = {name: (self.workspace/'prepared'/name).read_bytes() for name in entry['output_hashes']}
+        manifest.update(complete=True, status='complete')
+        self.write('.local/3d-sources/modular-character-inputs/normalization-manifest.json', manifest)
+        result, skipped = self.run_cli('--only', self.key)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertTrue(skipped['complete'])
+        self.assertEqual(skipped['status'], 'complete')
+        self.assertEqual(manifest, skipped)
+        self.assertEqual(before, {name: (self.workspace/'prepared'/name).read_bytes() for name in before})
+        # 强制重新制作会令旧画面验收失效，即使生成的字节相同。
+        result, rebuilt = self.run_cli('--only', self.key, '--force')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertFalse(rebuilt['complete'])
+        self.assertEqual(rebuilt['status'], 'pending-validation')
+        self.assertEqual(before, {name: (self.workspace/'prepared'/name).read_bytes() for name in before})
 
     # 拼错选择范围必须失败，且不能改写旧清单或目录。
     def test_unknown_only_is_nonzero_and_preserves_manifests(self):
-        paths = [self.root/'internal/assets/provider-character-manifest.json', self.root/'internal/character/character-catalog.json']
+        paths = [self.workspace/'normalization-manifest.json', self.root/'internal/character/character-catalog.json']
         before = {path: path.read_bytes() for path in paths}
         result, _ = self.run_cli('--only', 'unknown-character')
         self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)

@@ -26,11 +26,11 @@ const (
 
 // Service uses the shared database and credential authority without owning their lifecycle.
 type Service struct {
-	DB               *sql.DB                                      // Application's one connection pool.
-	Config           config.Config                                // Confirmed input limits.
-	Accounts         *account.Service                             // Password verification and session authority.
-	Now              func() time.Time                             // Fixed once after acquiring a write transaction.
-	verifyManagement func(context.Context, string) (int64, error) // Slow credential boundary, replaceable by same-package tests.
+	DB               *sql.DB                                             // Application's one connection pool.
+	Config           config.Config                                       // Confirmed input limits.
+	Accounts         *account.Service                                    // Password verification and session authority.
+	Now              func() time.Time                                    // Fixed once after acquiring a write transaction.
+	verifyManagement func(context.Context, int64, string) (int64, error) // Slow credential boundary, replaceable by same-package tests.
 }
 
 // New builds the shop without creating sample products or modifying schema.

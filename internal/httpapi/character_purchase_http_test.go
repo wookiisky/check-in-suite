@@ -8,7 +8,7 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/shop"
 )
 
-// 真实序列化与路由必须保留角色成交身份，并允许该订单的四件衣物跨角色保存。
+// 真实序列化与路由必须保留角色成交身份，且身体订单不能充当独立穿戴商品。
 func TestCharacterPurchaseAndSharedOutfitHTTP(t *testing.T) {
 	_, request := shopHTTPRequest(t)
 	var body character.Definition
@@ -45,18 +45,22 @@ func TestCharacterPurchaseAndSharedOutfitHTTP(t *testing.T) {
 	if response.Code != 201 || json.Unmarshal(response.Body.Bytes(), &result) != nil || result.Purchase.CharacterKey != body.Key {
 		t.Fatalf("purchase: %d %s", response.Code, response.Body)
 	}
-	command = appearanceHTTPRequest(1, character.DefaultCharacterKey)
-	for _, field := range []string{"hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"} {
-		command[field] = result.Purchase.ID
-	}
+	command = appearanceHTTPRequest(1, body.Key)
 	response = request("PUT", "/api/v1/appearance", appearanceHTTPBody(t, command), "")
 	var saved shop.AppearanceState
-	if response.Code != 200 || json.Unmarshal(response.Body.Bytes(), &saved) != nil || saved.Version != 2 || saved.DefaultCharacterKey != character.DefaultCharacterKey || len(saved.Inventory) != 4 || len(saved.CharacterInventory) != 1 {
-		t.Fatalf("shared outfit: %d %s", response.Code, response.Body)
+	if response.Code != 200 || json.Unmarshal(response.Body.Bytes(), &saved) != nil || saved.Version != 2 || len(saved.Inventory) != 0 || len(saved.CharacterInventory) != 1 {
+		t.Fatalf("body purchase: %d %s", response.Code, response.Body)
 	}
+	invalid := appearanceHTTPRequest(2, body.Key)
+	invalid["head_purchase_id"] = result.Purchase.ID
+	response = request("PUT", "/api/v1/appearance", appearanceHTTPBody(t, invalid), "")
+	if response.Code != 422 {
+		t.Fatalf("body order accepted as garment: %d %s", response.Code, response.Body)
+	}
+
 	initial, _ := character.Get(character.DefaultCharacterKey)
 	command = appearanceHTTPRequest(2, body.Key)
-	command["hair_free_wearable_key"] = initial.Defaults.Hair
+	command["head_free_wearable_key"] = initial.Defaults.Head
 	command["upper_free_wearable_key"] = initial.Defaults.Upper
 	command["lower_free_wearable_key"] = initial.Defaults.Lower
 	command["shoes_free_wearable_key"] = initial.Defaults.Shoes
@@ -65,7 +69,7 @@ func TestCharacterPurchaseAndSharedOutfitHTTP(t *testing.T) {
 		t.Fatalf("initial free clothes cannot be shared: %d %s", response.Code, response.Body)
 	}
 	response = request("GET", "/api/v1/appearance", "", "")
-	if response.Code != 200 || json.Unmarshal(response.Body.Bytes(), &saved) != nil || saved.HairFreeWearableKey == nil || *saved.HairFreeWearableKey != initial.Defaults.Hair {
+	if response.Code != 200 || json.Unmarshal(response.Body.Bytes(), &saved) != nil || saved.HeadFreeWearableKey == nil || *saved.HeadFreeWearableKey != initial.Defaults.Head {
 		t.Fatalf("free clothes not retained: %d %s", response.Code, response.Body)
 	}
 

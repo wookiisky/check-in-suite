@@ -10,8 +10,8 @@ import (
 )
 
 // purchaseFacets supplies all owned source options without loading order descriptions or model bytes.
-func purchaseFacets(ctx context.Context, tx *sql.Tx) (*ProductFacets, error) {
-	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT asset_key_snapshot,character_key_snapshot,item_key_snapshot FROM purchases`)
+func purchaseFacets(ctx context.Context, tx *sql.Tx, accountID int64) (*ProductFacets, error) {
+	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT asset_key_snapshot,character_key_snapshot,item_key_snapshot FROM purchases WHERE account_id=?`, accountID)
 	if err != nil {
 		return nil, err
 	}

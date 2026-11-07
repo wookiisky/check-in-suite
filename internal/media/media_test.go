@@ -89,7 +89,7 @@ func TestAttachmentReplacement(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := Replace(ctx, tx, References{}, References{PhotoID: &first.ID}, fixtureTime, s.Config.MediaOrphanTTL); err != nil {
+	if err := Replace(ctx, tx, p.AccountID, References{}, References{PhotoID: &first.ID}, fixtureTime, s.Config.MediaOrphanTTL); err != nil {
 		t.Fatal(err)
 	}
 	if err := tx.Commit(); err != nil {
@@ -102,7 +102,7 @@ func TestAttachmentReplacement(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = Replace(ctx, tx, References{PhotoID: &first.ID}, References{PhotoID: &second.ID, AudioID: &second.ID}, fixtureTime, s.Config.MediaOrphanTTL)
+	err = Replace(ctx, tx, p.AccountID, References{PhotoID: &first.ID}, References{PhotoID: &second.ID, AudioID: &second.ID}, fixtureTime, s.Config.MediaOrphanTTL)
 	mediaCode(t, err, "INVALID_MEDIA")
 	tx.Rollback()
 	var state string
@@ -113,7 +113,7 @@ func TestAttachmentReplacement(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := Replace(ctx, tx, References{PhotoID: &first.ID}, References{PhotoID: &first.ID}, fixtureTime.Add(48*time.Hour), s.Config.MediaOrphanTTL); err != nil {
+	if err := Replace(ctx, tx, p.AccountID, References{PhotoID: &first.ID}, References{PhotoID: &first.ID}, fixtureTime.Add(48*time.Hour), s.Config.MediaOrphanTTL); err != nil {
 		t.Fatal(err)
 	}
 	tx.Rollback()

@@ -1,6 +1,6 @@
 # 成长营地
 
-面向一个小朋友和家庭的日常打卡应用，使用 Go、React / TypeScript、SQLite 和本机私有媒体目录。小朋友完成任务获得金币与钻石，购买装扮和家庭奖励，也可以建设营地、获得成就；家长使用同一账户的管理密码维护配置和纠正记录。
+面向小朋友和家庭的日常打卡应用，使用 Go、React / TypeScript、SQLite 和本机私有媒体目录。小朋友完成任务获得金币与钻石，购买装扮和家庭奖励，也可以建设营地、获得成就；每个小朋友使用独立账户，家长通过该账户的管理密码维护配置和纠正记录。同组成员可以只读查看彼此的打卡情况和统计。
 
 行为规则、设计原因和源码入口统一维护在 [Spec 索引](spec/00_INDEX.md)。部署和故障处置见 [运行手册](spec/ENGINEERING/OPERATIONS.md)，测试选择及环境限制见 [测试指南](spec/ENGINEERING/TESTING.md)。
 
@@ -18,14 +18,22 @@ npm start
 
 打开 <http://127.0.0.1:5173>。`npm start` 与 `npm run dev` 都启动正式应用的 API 和前端开发服务；按 Ctrl+C 停止。默认 API 监听 `127.0.0.1:8080`，Vite 代理 API 和健康检查请求。
 
-`init` 交互读取用户名、姓名、登录密码和管理密码，密码不回显，已有账户时拒绝重复初始化。正常初始化没有示例成绩和订单；基础素材与营地由应用提供。网页可修改姓名和两种密码，忘记密码时在本机使用：
+`init` 每次创建一个独立账户，交互读取用户名、姓名、登录密码和管理密码，密码不回显；用户名重复时拒绝创建。再次运行同一命令可以创建其他账户。正常初始化没有示例成绩和订单；基础素材与营地由应用提供。网页可修改姓名和两种密码，忘记密码时在本机使用：
 
 ```sh
-go run ./cmd/island reset-password -kind login -config config/app.example.yaml
-go run ./cmd/island reset-password -kind management -config config/app.example.yaml
+go run ./cmd/island reset-password -username 用户名 -kind login -config config/app.example.yaml
+go run ./cmd/island reset-password -username 用户名 -kind management -config config/app.example.yaml
 ```
 
-修改或重置任一密码会撤销全部会话。账户及授权边界见 [账户专题](spec/FEATURES/ACCOUNT.md)。
+修改或重置任一密码只撤销该账户的全部会话。多个账户时，重置密码必须用 `-username` 指定账户；只有一个账户时可以省略。账户及授权边界见 [账户专题](spec/FEATURES/ACCOUNT.md)。
+
+组由服务器维护者创建，命令交互读取组名：
+
+```sh
+go run ./cmd/island create-group -config config/app.example.yaml
+```
+
+网页管理中的组设置可选择已有组，加入和退出每次都要输入自己的管理密码。每人最多加入一个组，不需要组主批准；同组成员可查看全部有效历史记录及其文字、照片、录音，并查看今日任务完成情况、月历和统计。任务、钱包、购买和营地仍归各自账户所有。
 
 默认配置为 [config/app.example.yaml](config/app.example.yaml)，数据写入被 Git 忽略的 `.local/`。相对路径以启动时的工作目录为基准；SQLite 应放在本机磁盘。服务启动只校验结构。项目尚未上线，破坏性结构更新后重置开发数据库并重新导入测试数据，见下方命令；阶段约定见 [迁移与兼容](spec/SYSTEM/STORAGE.md#迁移与兼容)。
 

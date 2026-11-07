@@ -32,15 +32,15 @@ type Event struct {
 }
 
 // Get reads the balance from the caller's existing transaction snapshot.
-func Get(ctx context.Context, tx *sql.Tx) (Balance, error) {
+func Get(ctx context.Context, tx *sql.Tx, accountID int64) (Balance, error) {
 	var b Balance
-	err := tx.QueryRowContext(ctx, "SELECT coins,diamonds,version FROM wallets WHERE account_id=1").Scan(&b.Coins, &b.Diamonds, &b.Version)
+	err := tx.QueryRowContext(ctx, "SELECT coins,diamonds,version FROM wallets WHERE account_id=?", accountID).Scan(&b.Coins, &b.Diamonds, &b.Version)
 	return b, err
 }
 
 // Apply writes one immutable event and advances both currencies without overflowing JSON integers.
-func Apply(ctx context.Context, tx *sql.Tx, event Event) (Balance, error) {
-	b, err := Get(ctx, tx)
+func Apply(ctx context.Context, tx *sql.Tx, accountID int64, event Event) (Balance, error) {
+	b, err := Get(ctx, tx, accountID)
 	if err != nil {
 		return b, err
 	}
@@ -58,10 +58,10 @@ func Apply(ctx context.Context, tx *sql.Tx, event Event) (Balance, error) {
 	} else {
 		checkinID = event.ResourceID
 	}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO wallet_entries(id,account_id,event_type,checkin_id,purchase_id,coin_delta,diamond_delta,created_at) VALUES(?,1,?,?,?,?,?,?)", core.ID(), event.Type, checkinID, purchaseID, event.Coins, event.Diamonds, event.At.UnixMilli()); err != nil {
+	if _, err = tx.ExecContext(ctx, "INSERT INTO wallet_entries(id,account_id,event_type,checkin_id,purchase_id,coin_delta,diamond_delta,created_at) VALUES(?,?,?,?,?,?,?,?)", core.ID(), accountID, event.Type, checkinID, purchaseID, event.Coins, event.Diamonds, event.At.UnixMilli()); err != nil {
 		return b, err
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE wallets SET coins=?,diamonds=?,version=version+1 WHERE account_id=1", coins, diamonds); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE wallets SET coins=?,diamonds=?,version=version+1 WHERE account_id=?", coins, diamonds, accountID); err != nil {
 		return b, err
 	}
 	return Balance{Coins: coins, Diamonds: diamonds, Version: b.Version + 1}, nil

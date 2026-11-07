@@ -1,8 +1,8 @@
 """用已核实源件整理首批营地GLB与实际模型缩略图；在Blender中执行。"""
-import bpy,json,math,hashlib,shutil
+import bpy,json,math,hashlib,shutil,argparse,sys,importlib.util
 from pathlib import Path
 from mathutils import Vector,Matrix
-ROOT=Path(__file__).resolve().parents[1];DIRECTORY=ROOT/'.local/3d-sources/p3-prepared';BUILTIN=ROOT/'internal/assets/builtin'
+ROOT=Path(__file__).resolve().parents[1];OUTPUT=ROOT/'.local/asset-pipeline/camp';DIRECTORY=OUTPUT/'work';BUILTIN=OUTPUT/'internal/assets/builtin'
 
 # 把源模型的世界变换烘焙进网格，再按明确的首件尺寸整理。
 def import_part(part):
@@ -74,6 +74,12 @@ def authored_model(kind):
   meshes.append(obj)
  return meshes
 
+# 来源许可文件既用于元数据生成，也必须进入候选依赖。
+def source_metadata_path(part):
+ pack = next(name for name in ['furniture', 'nature', 'survival'] if '/kenney-' + name + '/' in part['source'])
+ return ROOT / '.local/3d-sources' / ('kenney-' + pack) / 'source.json'
+
+
 # 本地候选不写生产目录；占地向外取整，不能以模型中心代替完整边界。
 def prepare(item):
  bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -96,11 +102,10 @@ def prepare(item):
   if part.get('provenance'):
    source_records.append({**part,**part['provenance'],'source_file_sha256':hashlib.sha256((ROOT/part['source']).read_bytes()).hexdigest()})
   else:
-   pack=next(name for name in ['furniture','nature','survival'] if '/kenney-'+name+'/' in part['source'])
-   source_meta=json.loads((ROOT/'.local/3d-sources'/('kenney-'+pack)/'source.json').read_text())
+   source_meta=json.loads(source_metadata_path(part).read_text())
    source_records.append(dict(**part,provider='Kenney',license='CC0-1.0',source_url=source_meta['url'],source_archive_sha256=source_meta['archive_sha256'],source_file_sha256=hashlib.sha256((ROOT/part['source']).read_bytes()).hexdigest()))
  width=math.ceil((gltf[0][1]-gltf[0][0])*100);depth=math.ceil((gltf[2][1]-gltf[2][0])*100)
- record={**{key:value for key,value in item.items() if key!='parts'},'sources':source_records,'model_file':str(model.relative_to(ROOT)),'thumbnail_file':str(thumbnail.relative_to(ROOT)),'model_url_plan':'/api/v1/assets/'+item['key'],'thumbnail_key_plan':item['key']+'-thumbnail','runtime_transform':{'scale':[1,1,1],'anchor_m':[0,0,0],'rotation_y_degrees':0},'bounds_m':gltf,'dimensions_m':[b-a for a,b in gltf],'placement_cm':{'width':width+10,'depth':depth+10,'full_model_width':width,'full_model_depth':depth},'walk_obstacle_cm':{'min_x':math.floor(gltf[0][0]*100),'max_x':math.ceil(gltf[0][1]*100),'min_z':math.floor(gltf[2][0]*100),'max_z':math.ceil(gltf[2][1]*100)} if item['walk_obstacle'] else None,'model_sha256':hashlib.sha256(model.read_bytes()).hexdigest(),'thumbnail_sha256':hashlib.sha256(thumbnail.read_bytes()).hexdigest(),'interactive':None,'composition_to_anchor_m':[shift.x,shift.z,-shift.y]}
+ record={**{key:value for key,value in item.items() if key!='parts'},'sources':source_records,'model_file':str(model.relative_to(OUTPUT)),'thumbnail_file':str(thumbnail.relative_to(OUTPUT)),'model_url_plan':'/api/v1/assets/'+item['key'],'thumbnail_key_plan':item['key']+'-thumbnail','runtime_transform':{'scale':[1,1,1],'anchor_m':[0,0,0],'rotation_y_degrees':0},'bounds_m':gltf,'dimensions_m':[b-a for a,b in gltf],'placement_cm':{'width':width+10,'depth':depth+10,'full_model_width':width,'full_model_depth':depth},'walk_obstacle_cm':{'min_x':math.floor(gltf[0][0]*100),'max_x':math.ceil(gltf[0][1]*100),'min_z':math.floor(gltf[2][0]*100),'max_z':math.ceil(gltf[2][1]*100)} if item['walk_obstacle'] else None,'model_sha256':hashlib.sha256(model.read_bytes()).hexdigest(),'thumbnail_sha256':hashlib.sha256(thumbnail.read_bytes()).hexdigest(),'interactive':None,'composition_to_anchor_m':[shift.x,shift.z,-shift.y]}
  if item['key']=='camp-tree-v1':
   points=[vertex.co for obj in meshes for vertex in obj.data.vertices if vertex.co.z<.7]
   record['walk_obstacle_cm']={'min_x':math.floor(min(v.x for v in points)*100),'max_x':math.ceil(max(v.x for v in points)*100),'min_z':math.floor(-max(v.y for v in points)*100),'max_z':math.ceil(-min(v.y for v in points)*100)}
@@ -144,18 +149,62 @@ def house_thumbnail(config):
  for offset in [-2,0,2]:
   part('camp-wall-v1',[offset,.1,-3],90);part('camp-doorway-v1' if offset==0 else 'camp-wall-v1',[offset,.1,3],90);part('camp-wall-v1',[3,.1,offset]);part('camp-wall-v1',[-3,.1,offset])
  part('camp-roof-v1',[0,2.5,0],scale=(3.04,1,3.04));path=BUILTIN/(config['key']+'.png');render_thumbnail(meshes,path)
- return {**config,'file':str(path.relative_to(ROOT)),'source_model_keys':['camp-floor-v1','camp-wall-v1','camp-doorway-v1','camp-roof-v1'],'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+ return {**config,'file':str(path.relative_to(OUTPUT)),'source_model_keys':['camp-floor-v1','camp-wall-v1','camp-doorway-v1','camp-roof-v1'],'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
 
-# 首次注册的名称、许可和源变换来自配置；后续内容变化须使用新资源身份。
-if __name__=='__main__':
- config=json.loads((ROOT/'internal/assets/camp-source-manifest.json').read_text());DIRECTORY.mkdir(parents=True,exist_ok=True);(DIRECTORY/'thumbnails').mkdir(exist_ok=True);(DIRECTORY/'evidence').mkdir(exist_ok=True)
- records=[prepare(item) for item in config['items']];entries=[]
+# 原始配置只读，所有产物与目录变更在同一候选中完成。
+def main(arguments=None):
+ global OUTPUT, DIRECTORY, BUILTIN
+ parser = argparse.ArgumentParser(description=__doc__)
+ parser.add_argument('--output', type=Path, default=OUTPUT)
+ if arguments is None:
+  arguments = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
+ args = parser.parse_args(arguments)
+ specification = importlib.util.spec_from_file_location('camp_candidate', Path(__file__).with_name('asset-pipeline-candidate.py'))
+ helper = importlib.util.module_from_spec(specification)
+ specification.loader.exec_module(helper)
+ OUTPUT = helper.validate_candidate_output(ROOT, args.output)
+ if (OUTPUT / 'candidate.json').exists():
+  raise ValueError('candidate output already finalized; choose a new output directory')
+ DIRECTORY = OUTPUT / 'work'
+ BUILTIN = OUTPUT / 'internal/assets/builtin'
+ BUILTIN.mkdir(parents=True, exist_ok=True)
+ baseline = helper.capture_baseline(ROOT)
+ config_path = ROOT / 'internal/assets/camp-source-manifest.json'
+ config = json.loads(config_path.read_text())
+ for directory in [DIRECTORY, DIRECTORY / 'thumbnails', DIRECTORY / 'evidence']:
+  directory.mkdir(parents=True, exist_ok=True)
+ dependency_paths = [Path(__file__), config_path]
+ dependency_paths.extend(ROOT / part['source'] for item in config['items'] for part in item['parts'])
+ dependency_paths.extend(ROOT / entry['source'] for entry in config['extra_assets'])
+ dependency_paths.extend(source_metadata_path(part) for item in config['items'] for part in item['parts'] if not part.get('provenance'))
+ if any(item['key'] in ['camp-reading-desk-v1', 'camp-bench-v1'] for item in config['items']):
+  dependency_paths.append(ROOT / '.local/3d-sources/living-actions/living.glb')
+ dependency_paths = [path for source in dependency_paths for path in helper.source_dependencies(source)]
+ dependencies = helper.capture_dependencies(ROOT, dependency_paths)
+ records = [prepare(item) for item in config['items']]
+ entries = []
  for item in records:
-  source=item['sources'][0];url=source.get('source_url','project:check-in-suite/scripts/prepare-camp-assets.py');license=source.get('license','project-owned');key=item['key']
-  entries.append(dict(key=key,name=item['name'],kind='model',url='/api/v1/assets/'+key,format='glb',source_url=url,license=license))
-  if item.get('thumbnail',True):entries.append(dict(key=key+'-thumbnail',name=item['name'],kind='island',url='/api/v1/assets/'+key+'-thumbnail',format='png',source_url=url,license=license,**({'free':True} if item.get('free') else {})))
+  source = item['sources'][0]
+  url = source.get('source_url', 'project:check-in-suite/scripts/prepare-camp-assets.py')
+  license = source.get('license', 'project-owned')
+  key = item['key']
+  entries.append(dict(key=key, name=item['name'], kind='model', url='/api/v1/assets/' + key, format='glb', source_url=url, license=license))
+  if item.get('thumbnail', True):
+   entries.append(dict(key=key + '-thumbnail', name=item['name'], kind='island', url='/api/v1/assets/' + key + '-thumbnail', format='png', source_url=url, license=license, **({'free': True} if item.get('free') else {})))
  for extra in config['extra_assets']:
-  path=BUILTIN/(extra['key']+'.glb');shutil.copyfile(ROOT/extra['source'],path);entries.append({key:value for key,value in extra.items() if key!='source'}|dict(url='/api/v1/assets/'+extra['key'],format='glb'))
- house=house_thumbnail(config['house_thumbnail']);entries.append({key:value for key,value in config['house_thumbnail'].items()}|dict(url='/api/v1/assets/'+house['key'],format='png'))
- registry=BUILTIN/'catalog.json';catalog=json.loads(registry.read_text());keys={item['key'] for item in entries};catalog=[item for item in catalog if item['key'] not in keys]+entries;registry.write_text(json.dumps(catalog,ensure_ascii=False,indent=2)+'\n')
- (ROOT/'internal/assets/camp-asset-metadata.json').write_text(json.dumps(dict(items=records,house_thumbnail=house,extra_assets=config['extra_assets']),ensure_ascii=False,indent=2)+'\n')
+  path = BUILTIN / (extra['key'] + '.glb')
+  shutil.copyfile(ROOT / extra['source'], path)
+  entries.append({key: value for key, value in extra.items() if key != 'source'} | dict(url='/api/v1/assets/' + extra['key'], format='glb'))
+ house = house_thumbnail(config['house_thumbnail'])
+ entries.append({**config['house_thumbnail'], 'url': '/api/v1/assets/' + house['key'], 'format': 'png'})
+ catalog = json.loads((ROOT / 'internal/assets/builtin/catalog.json').read_text())
+ keys = {item['key'] for item in entries}
+ catalog = [item for item in catalog if item['key'] not in keys] + entries
+ (BUILTIN / 'catalog.json').write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n')
+ metadata = dict(items=records, house_thumbnail=house, extra_assets=config['extra_assets'])
+ (OUTPUT / 'internal/assets/camp-asset-metadata.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\n')
+ helper.finalize_candidate(ROOT, OUTPUT, 'camp', baseline=baseline, dependencies=dependencies)
+
+
+if __name__ == '__main__':
+ main()

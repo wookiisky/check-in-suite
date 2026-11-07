@@ -128,7 +128,7 @@ func TestExpirationAndFailureCooldown(t *testing.T) {
 	_, err = s.Authenticate(ctx, token)
 	assertCode(t, err, "SESSION_REQUIRED")
 	for i := 0; i < 10; i++ {
-		s.failedAttempt("login")
+		s.failedAttempt("login:" + tokenHash("island"))
 	}
 	_, _, err = s.Login(ctx, "island", "login password")
 	assertCode(t, err, "TOO_MANY_ATTEMPTS")

@@ -125,7 +125,18 @@ func (app *App) Authenticate(r *http.Request) (account.Principal, error) {
 	if err != nil || cookie.Value == "" {
 		return account.Principal{}, &core.Error{Status: 401, Code: "SESSION_REQUIRED"}
 	}
-	return app.Accounts.Authenticate(r.Context(), cookie.Value)
+	principal, err := app.Accounts.Authenticate(r.Context(), cookie.Value)
+	if err != nil {
+		return account.Principal{}, err
+	}
+	// A shared browser cookie may have changed in another tab; bind reads to the page's session.
+	if r.Method == http.MethodGet || r.Method == http.MethodHead {
+		expected := r.Header.Get("X-CSRF-Token")
+		if expected != "" && subtle.ConstantTimeCompare([]byte(expected), []byte(principal.CSRFToken)) != 1 {
+			return account.Principal{}, core.Fail(401, "SESSION_REQUIRED")
+		}
+	}
+	return principal, nil
 }
 
 // MutationGuard checks both the configured origin and the session-bound CSRF value.

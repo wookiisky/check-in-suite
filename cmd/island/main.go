@@ -56,19 +56,21 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 		}
 		return printVersion(output)
 	}
-	if len(args) == 0 || (args[0] != "serve" && args[0] != "migrate" && args[0] != "init" && args[0] != "reset-password" && args[0] != "seed-demo" && args[0] != "reset-demo" && args[0] != "db-status") {
+	if len(args) == 0 || (args[0] != "serve" && args[0] != "migrate" && args[0] != "init" && args[0] != "create-group" && args[0] != "reset-password" && args[0] != "seed-demo" && args[0] != "reset-demo" && args[0] != "db-status") {
 		return errors.New(content.Text("usage"))
 	}
 	flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	configuration := flags.String("config", "config/app.example.yaml", "configuration file")
 	kind := ""
+	username := ""
 	format := "json"
 	if args[0] == "db-status" {
 		flags.StringVar(&format, "format", "json", "output format")
 	}
 	if args[0] == "reset-password" {
 		flags.StringVar(&kind, "kind", "", "credential type")
+		flags.StringVar(&username, "username", "", "target account username")
 	}
 	if err := flags.Parse(args[1:]); err != nil {
 		return errors.New(content.Text("usage"))
@@ -118,8 +120,8 @@ func runWithIO(ctx context.Context, args []string, input io.Reader, output io.Wr
 		return json.NewEncoder(output).Encode(result)
 	}
 	accounts := account.New(db, cfg)
-	if args[0] == "init" || args[0] == "reset-password" {
-		return maintain(ctx, args[0], kind, accounts, input, output)
+	if args[0] == "init" || args[0] == "create-group" || args[0] == "reset-password" {
+		return maintain(ctx, args[0], kind, username, accounts, input, output)
 	}
 	for _, directory := range []string{cfg.MediaDirectory, cfg.TempDirectory} {
 		if err := os.MkdirAll(directory, 0700); err != nil {

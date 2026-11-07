@@ -43,7 +43,9 @@ INSERT INTO accounts(id,username,display_name,login_password_hash,management_pas
 INSERT INTO wallets(account_id,coins,diamonds,version) VALUES(1,93,4,3);
 INSERT INTO products(id,type,name,asset_key,character_key,coin_price,diamond_price,enabled,created_at,updated_at) VALUES('kept-offer','character','保留角色','old-art','kept-character',7,0,1,1,1);
 INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,character_key_snapshot) VALUES('kept-purchase','kept-offer','character','旧名字','旧说明','old-art',7,0,'owned',1,'kept-character');
-INSERT INTO appearance_state(id,version,character_key,hair_purchase_id,upper_free_wearable_key) VALUES(1,4,'kept-character','kept-purchase','upper-free');
+INSERT INTO products(id,type,name,asset_key,wearable_key,coin_price,diamond_price,enabled,created_at,updated_at) VALUES('kept-head-offer','wearable','头饰','head-art','head-kept',0,0,1,1,1);
+INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,wearable_key_snapshot) VALUES('kept-head-purchase','kept-head-offer','wearable','头饰','','head-art',0,0,'owned',1,'head-kept');
+INSERT INTO appearance_state(id,version,character_key,head_purchase_id,face_free_wearable_key,upper_free_wearable_key,back_free_wearable_key) VALUES(1,4,'kept-character','kept-head-purchase','face-free','upper-free','back-free');
 INSERT INTO wallet_entries(id,account_id,event_type,purchase_id,coin_delta,diamond_delta,created_at) VALUES('kept-ledger',1,'purchase_debit','kept-purchase',-7,0,1);
 INSERT INTO island_spatial_state(id,version,scene_key,environment_key,placements) VALUES(1,8,'seaside-v1','dusk','[{"instance_id":"base:house3d","item_key":"camp-house-v1","space":"outdoor","x_cm":100,"z_cm":-200,"rotation":0},{"instance_id":"a-chair","item_key":"chair-v1","space":"indoor","x_cm":25,"z_cm":75,"rotation":1}]');
 `)
@@ -55,11 +57,11 @@ INSERT INTO island_spatial_state(id,version,scene_key,environment_key,placements
 			t.Fatal(err)
 		}
 	}
-	var name, character, hair, free, ledger, scene, environment, instance, item, space string
+	var name, character, head, faceFree, free, backFree, ledger, scene, environment, instance, item, space string
 	var appearanceVersion, coins, diamonds, walletVersion, sceneVersion, x, z, rotation int
-	err = db.QueryRowContext(ctx, `SELECT p.name_snapshot,p.character_key_snapshot,a.hair_purchase_id,a.upper_free_wearable_key,a.version,w.purchase_id FROM purchases p JOIN appearance_state a ON a.hair_purchase_id=p.id JOIN wallet_entries w ON w.purchase_id=p.id`).Scan(&name, &character, &hair, &free, &appearanceVersion, &ledger)
-	if err != nil || name != "旧名字" || character != "kept-character" || hair != "kept-purchase" || free != "upper-free" || appearanceVersion != 4 || ledger != hair {
-		t.Fatalf("成交或外观改变: %q %q %q %q %d %q err=%v", name, character, hair, free, appearanceVersion, ledger, err)
+	err = db.QueryRowContext(ctx, `SELECT p.name_snapshot,p.character_key_snapshot,a.head_purchase_id,a.face_free_wearable_key,a.upper_free_wearable_key,a.back_free_wearable_key,a.version,w.purchase_id FROM purchases p JOIN appearance_state a ON a.character_key=p.character_key_snapshot JOIN wallet_entries w ON w.purchase_id=p.id`).Scan(&name, &character, &head, &faceFree, &free, &backFree, &appearanceVersion, &ledger)
+	if err != nil || name != "旧名字" || character != "kept-character" || head != "kept-head-purchase" || faceFree != "face-free" || free != "upper-free" || backFree != "back-free" || appearanceVersion != 4 || ledger != "kept-purchase" {
+		t.Fatalf("成交或外观改变: %q %q %q %q %q %q %d %q err=%v", name, character, head, faceFree, free, backFree, appearanceVersion, ledger, err)
 	}
 	err = db.QueryRowContext(ctx, "SELECT coins,diamonds,version FROM wallets WHERE account_id=1").Scan(&coins, &diamonds, &walletVersion)
 	if err != nil || coins != 93 || diamonds != 4 || walletVersion != 3 {

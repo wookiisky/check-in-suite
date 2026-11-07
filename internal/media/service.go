@@ -61,9 +61,9 @@ func (s *Service) Open(ctx context.Context, p account.Principal, id string) (Med
 	}
 	var m Media
 	var key, state string
-	var created int64
+	var ownerID, created int64
 	var unreferenced sql.NullInt64
-	err = tx.QueryRowContext(ctx, `SELECT id,storage_key,kind,mime_type,size_bytes,duration_ms,width,height,state,created_at,unreferenced_at FROM media_files WHERE id=?`, id).Scan(&m.ID, &key, &m.Kind, &m.MIMEType, &m.SizeBytes, &m.DurationMS, &m.Width, &m.Height, &state, &created, &unreferenced)
+	err = tx.QueryRowContext(ctx, `SELECT id,account_id,storage_key,kind,mime_type,size_bytes,duration_ms,width,height,state,created_at,unreferenced_at FROM media_files WHERE id=?`, id).Scan(&m.ID, &ownerID, &key, &m.Kind, &m.MIMEType, &m.SizeBytes, &m.DurationMS, &m.Width, &m.Height, &state, &created, &unreferenced)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Media{}, nil, core.Fail(404, "MEDIA_UNAVAILABLE")
 	}
@@ -73,9 +73,22 @@ func (s *Service) Open(ctx context.Context, p account.Principal, id string) (Med
 	if unreferenced.Valid || (state != "attached" && (state != "ready" || created <= s.Now().Add(-s.Config.MediaOrphanTTL).UnixMilli())) {
 		return Media{}, nil, core.Fail(404, "MEDIA_UNAVAILABLE")
 	}
+	// Only an effective attachment can be shared; unsubmitted uploads remain private previews.
+	if ownerID != p.AccountID {
+		if state != "attached" {
+			return Media{}, nil, core.Fail(404, "MEDIA_UNAVAILABLE")
+		}
+		if err := account.AuthorizeRead(ctx, tx, p, ownerID, s.Now()); err != nil {
+			var failure *core.Error
+			if errors.As(err, &failure) && (failure.Status == 403 || failure.Status == 404) {
+				return Media{}, nil, core.Fail(404, "MEDIA_UNAVAILABLE")
+			}
+			return Media{}, nil, err
+		}
+	}
 	if state == "attached" {
 		var count int
-		if err := tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM checkins WHERE deleted_at IS NULL AND (photo_media_id=? OR audio_media_id=?)", id, id).Scan(&count); err != nil {
+		if err := tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM checkins WHERE account_id=? AND deleted_at IS NULL AND (photo_media_id=? OR audio_media_id=?)", ownerID, id, id).Scan(&count); err != nil {
 			return Media{}, nil, err
 		}
 		if count != 1 {
@@ -108,7 +121,7 @@ func (s *Service) Cancel(ctx context.Context, p account.Principal, id string) er
 		return err
 	}
 	var state string
-	err = tx.QueryRowContext(ctx, "SELECT state FROM media_files WHERE id=?", id).Scan(&state)
+	err = tx.QueryRowContext(ctx, "SELECT state FROM media_files WHERE account_id=? AND id=?", p.AccountID, id).Scan(&state)
 	if errors.Is(err, sql.ErrNoRows) {
 		return core.Fail(404, "MEDIA_UNAVAILABLE")
 	}
@@ -118,7 +131,7 @@ func (s *Service) Cancel(ctx context.Context, p account.Principal, id string) er
 	if state == "attached" {
 		return core.Fail(409, "MEDIA_ATTACHED")
 	}
-	if _, err := tx.ExecContext(ctx, "UPDATE media_files SET unreferenced_at=COALESCE(unreferenced_at,?) WHERE id=? AND state='ready'", s.Now().UnixMilli(), id); err != nil {
+	if _, err := tx.ExecContext(ctx, "UPDATE media_files SET unreferenced_at=COALESCE(unreferenced_at,?) WHERE account_id=? AND id=? AND state='ready'", s.Now().UnixMilli(), p.AccountID, id); err != nil {
 		return err
 	}
 	return tx.Commit()

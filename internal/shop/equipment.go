@@ -10,14 +10,14 @@ import (
 )
 
 // ReadEquipment reads the title in the caller's consistent snapshot.
-func ReadEquipment(ctx context.Context, tx *sql.Tx) (Equipment, error) {
+func ReadEquipment(ctx context.Context, tx *sql.Tx, accountID int64) (Equipment, error) {
 	result := Equipment{}
 	var purchaseID *string
-	if err := tx.QueryRowContext(ctx, "SELECT title_purchase_id FROM accounts WHERE id=1").Scan(&purchaseID); err != nil {
+	if err := tx.QueryRowContext(ctx, "SELECT title_purchase_id FROM accounts WHERE id=?", accountID).Scan(&purchaseID); err != nil {
 		return result, err
 	}
 	if purchaseID != nil {
-		item, err := readPurchase(ctx, tx, *purchaseID)
+		item, err := readPurchase(ctx, tx, accountID, *purchaseID)
 		if err != nil {
 			return result, err
 		}
@@ -28,6 +28,7 @@ func ReadEquipment(ctx context.Context, tx *sql.Tx) (Equipment, error) {
 
 // Equipment authorizes and reads the title independently from the character appearance.
 func (s *Service) Equipment(ctx context.Context, p account.Principal) (Equipment, error) {
+	accountID := p.AccountID
 	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return Equipment{}, err
@@ -36,7 +37,7 @@ func (s *Service) Equipment(ctx context.Context, p account.Principal) (Equipment
 	if err = account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
 		return Equipment{}, err
 	}
-	result, err := ReadEquipment(ctx, tx)
+	result, err := ReadEquipment(ctx, tx, accountID)
 	if err != nil {
 		return Equipment{}, err
 	}
@@ -45,6 +46,7 @@ func (s *Service) Equipment(ctx context.Context, p account.Principal) (Equipment
 
 // SetTitle equips an owned title or clears it without changing the appearance or profile version.
 func (s *Service) SetTitle(ctx context.Context, p account.Principal, purchaseID *string) (Equipment, error) {
+	accountID := p.AccountID
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return Equipment{}, err
@@ -58,7 +60,7 @@ func (s *Service) SetTitle(ctx context.Context, p account.Principal, purchaseID 
 		if strings.TrimSpace(*purchaseID) == "" {
 			return Equipment{}, core.Invalid("purchase_id", "INVALID_VALUE")
 		}
-		item, err := readPurchase(ctx, tx, *purchaseID)
+		item, err := readPurchase(ctx, tx, accountID, *purchaseID)
 		if err != nil {
 			return Equipment{}, err
 		}
@@ -66,10 +68,10 @@ func (s *Service) SetTitle(ctx context.Context, p account.Principal, purchaseID 
 			return Equipment{}, core.Fail(422, "INVALID_EQUIPMENT")
 		}
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE accounts SET title_purchase_id=?,updated_at=? WHERE id=1", purchaseID, now.UnixMilli()); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE accounts SET title_purchase_id=?,updated_at=? WHERE id=?", purchaseID, now.UnixMilli(), accountID); err != nil {
 		return Equipment{}, err
 	}
-	result, err := ReadEquipment(ctx, tx)
+	result, err := ReadEquipment(ctx, tx, accountID)
 	if err != nil {
 		return Equipment{}, err
 	}

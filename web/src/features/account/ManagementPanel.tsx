@@ -5,6 +5,7 @@ import type { ApiClient } from '../../api/client';
 import type { Account, Session } from '../../api/types';
 import { FieldError, FormFeedback } from '../../components/FormFeedback';
 import content from '../../content/zh-CN.json';
+import { GroupManagement } from '../groups/GroupManagement';
 
 // 父页面只需知道是否有草稿或请求，不接触姓名和密码的输入内容。
 export interface AccountFormState {
@@ -22,8 +23,9 @@ export function ManagementPanel({ client, session, onAccount, onPasswordChanged,
   const [latestName, setLatestName] = useState<string | null>(null);
   const [loginState, setLoginState] = useState<AccountFormState>({ dirty: false, pending: false });
   const [managementState, setManagementState] = useState<AccountFormState>({ dirty: false, pending: false });
-  const dirty = name !== session.account.display_name || loginState.dirty || managementState.dirty;
-  const pending = busy || loginState.pending || managementState.pending;
+  const [groupState, setGroupState] = useState<AccountFormState>({ dirty: false, pending: false });
+  const dirty = name !== session.account.display_name || loginState.dirty || managementState.dirty || groupState.dirty;
+  const pending = busy || loginState.pending || managementState.pending || groupState.pending;
   useEffect(() => { onFormStateChange({ dirty, pending }); }, [dirty, pending, onFormStateChange]);
   // 刷新和关闭标签页由浏览器确认，敏感输入只保留在当前表单。
   useEffect(() => {
@@ -68,6 +70,7 @@ export function ManagementPanel({ client, session, onAccount, onPasswordChanged,
         <button type="submit" disabled={busy || needsRefresh}>{busy ? content.common.saving : latestName !== null ? content.account.confirmNameDraft : content.account.saveName}</button>
       </form>
     </section>
+    <GroupManagement client={client} onFormStateChange={setGroupState} />
     <PasswordForm kind="login" client={client} onChanged={onPasswordChanged} onStateChange={setLoginState} />
     <PasswordForm kind="management" client={client} onChanged={onPasswordChanged} onStateChange={setManagementState} />
   </div>;

@@ -13,7 +13,7 @@ var catalogJSON []byte
 // catalogContent groups the two immutable definition collections.
 type catalogContent struct {
 	Characters []Definition `json:"characters"` // 身体定义。
-	Wearables  []Wearable   `json:"wearables"`  // 四槽部件定义。
+	Wearables  []Wearable   `json:"wearables"`  // 六槽部件定义。
 }
 
 // readCatalog returns fresh data so callers cannot change another request's definitions.

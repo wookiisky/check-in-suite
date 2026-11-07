@@ -1,0 +1,256 @@
+{
+  "version": 2,
+  "types": {
+    "static": {
+      "required": [
+        "integrity",
+        "gltf",
+        "source-components",
+        "placement",
+        "visual"
+      ]
+    },
+    "scene": {
+      "required": [
+        "integrity",
+        "gltf",
+        "source-components",
+        "walk-surfaces",
+        "cutaway",
+        "visual"
+      ]
+    },
+    "body": {
+      "required": [
+        "integrity",
+        "gltf",
+        "source-components",
+        "rig",
+        "body-seams",
+        "visual"
+      ]
+    },
+    "wearable": {
+      "required": [
+        "integrity",
+        "gltf",
+        "source-components",
+        "rig",
+        "coverage",
+        "visual"
+      ]
+    },
+    "animation": {
+      "required": [
+        "integrity",
+        "gltf",
+        "rig",
+        "motion",
+        "visual"
+      ]
+    },
+    "source-character": {
+      "required": [
+        "integrity",
+        "gltf",
+        "source-components",
+        "rig",
+        "visual"
+      ]
+    },
+    "metadata": {
+      "required": [
+        "integrity"
+      ]
+    },
+    "image": {
+      "required": [
+        "integrity",
+        "visual"
+      ]
+    },
+    "environment": {
+      "required": [
+        "integrity",
+        "source-components",
+        "placement",
+        "walk-surfaces",
+        "visual"
+      ]
+    }
+  },
+  "pipelines": {
+    "provider": {
+      "script": "import-provider-assets.py",
+      "runtime": "python",
+      "types": [
+        "static"
+      ],
+      "forward_blender": true,
+      "resume": true
+    },
+    "camp": {
+      "script": "prepare-camp-assets.py",
+      "runtime": "blender",
+      "types": [
+        "static"
+      ]
+    },
+    "tiny-treats": {
+      "script": "prepare-tiny-treats.py",
+      "runtime": "blender",
+      "types": [
+        "static",
+        "scene",
+        "environment"
+      ],
+      "stages": {
+        "previews": {
+          "script": "render-tiny-treats-previews.py",
+          "runtime": "blender",
+          "output_aliases": [
+            "--directory"
+          ]
+        }
+      }
+    },
+    "resources": {
+      "script": "prepare-3d-resources.py",
+      "runtime": "python",
+      "types": [
+        "static",
+        "animation"
+      ]
+    },
+    "characters": {
+      "script": "prepare-modular-characters.py",
+      "runtime": "blender",
+      "types": [
+        "body",
+        "wearable"
+      ]
+    },
+    "animations": {
+      "script": "import-provider-animations.py",
+      "runtime": "python",
+      "types": [
+        "animation"
+      ],
+      "resume": true,
+      "resume_argument": true
+    }
+  },
+  "sampling": {
+    "views": [
+      "front",
+      "back",
+      "left",
+      "right"
+    ],
+    "motion_samples": [
+      0,
+      0.35,
+      0.7,
+      1
+    ],
+    "wearable_slots": [
+      "face",
+      "head",
+      "upper",
+      "lower",
+      "shoes",
+      "back"
+    ],
+    "note": "采样只证明列出的帧；局部视角、动作与源设计例外需登记在证据中。",
+    "poses": [
+      {
+        "motion": "rest",
+        "frame": 0
+      },
+      {
+        "motion": "idle",
+        "frame": 13
+      },
+      {
+        "motion": "cheer",
+        "frame": 11
+      },
+      {
+        "motion": "cheer",
+        "frame": 21
+      },
+      {
+        "motion": "cheer",
+        "frame": 31
+      },
+      {
+        "motion": "read",
+        "frame": 24
+      },
+      {
+        "motion": "read",
+        "frame": 48
+      },
+      {
+        "motion": "read",
+        "frame": 72
+      }
+    ],
+    "motions": [
+      "walk",
+      "cheer",
+      "read"
+    ],
+    "local_views": {
+      "body": [
+        "shoulder",
+        "elbow",
+        "wrist",
+        "waist",
+        "palm"
+      ],
+      "face": [
+        "bare-face"
+      ],
+      "head": [
+        "scalp"
+      ],
+      "upper": [
+        "shoulder",
+        "elbow",
+        "wrist",
+        "hand-end",
+        "torso-front",
+        "torso-back"
+      ],
+      "lower": [
+        "waist",
+        "hem"
+      ],
+      "shoes": [
+        "sole",
+        "ankle"
+      ],
+      "back": [
+        "back-binding"
+      ]
+    }
+  },
+  "messages": {
+    "description": "离线素材流程：清点、候选构建、检查与正式应用。",
+    "failure": "素材流程失败：{error}"
+  },
+  "runtime_catalogs": [
+    "internal/assets/builtin/catalog.json",
+    "internal/character/character-catalog.json",
+    "internal/character/preview-animation-catalog.json",
+    "internal/island/spatial-scene.json",
+    "internal/island/spatial-houses.json",
+    "internal/island/spatial-scenes.json",
+    "internal/island/spatial-thumbnail-aliases.json"
+  ],
+  "asset_kind_types": {
+    "animation": "animation",
+    "character": "body"
+  }
+}

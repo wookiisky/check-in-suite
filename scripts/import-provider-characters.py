@@ -1,17 +1,22 @@
-"""在 Blender 中把已标注人形整理为同一 Medium 身体、骨架与四槽；原始包不进入发布。"""
+"""仅预处理KayKit源模型到本地工作区；六槽正式资源由prepare-modular-characters.py制作。"""
 import argparse
 import copy
 import hashlib
+import importlib.util
 import json
 import math
 from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-BUILTIN = ROOT / 'internal/assets/builtin'
-MANIFEST = ROOT / 'internal/assets/provider-character-manifest.json'
+DEFAULT_WORKSPACE = ROOT / '.local/3d-sources/modular-character-inputs'
+BUILTIN = DEFAULT_WORKSPACE / 'prepared'
+MANIFEST = DEFAULT_WORKSPACE / 'normalization-manifest.json'
 CONFIGURATION = ROOT / 'scripts/provider-character-sources.json'
 THUMBNAIL_RECIPE = 'metadata-free-cycles-preview-v1'  # 日期等元数据不参与交付缩略图。
+_clothing_spec = importlib.util.spec_from_file_location('provider_clothing_components', ROOT/'scripts/provider-character-clothing-components.py')
+CLOTHING_COMPONENTS = importlib.util.module_from_spec(_clothing_spec)
+_clothing_spec.loader.exec_module(CLOTHING_COMPONENTS)
 
 
 # 同一版本的不同字节必须由新身份交付，已有文件保持原样。
@@ -57,20 +62,100 @@ def resolve_source(spec, packs):
     return matches[0], pack
 
 
+# 只恢复正常KayKit源；新版正式目录不能反向成为四槽预处理的输入契约。
+def preprocessing_configuration():
+    config = json.loads(CONFIGURATION.read_text())
+    extra = ROOT/'scripts/legacy-kaykit-character-sources.json'
+    if extra.exists():
+        config['sources'].extend(json.loads(extra.read_text())['sources'])
+    if any(source.get('provider', 'kaykit') != 'kaykit' for source in config['sources']):
+        raise ValueError('preprocessing only supports KayKit sources')
+    config['sources'] = [source for source in config['sources']
+                         if not source.get('source_geometry', {}).get('battleworn_variant')]
+    recipe = ROOT/'scripts/modular-character-sources.json'
+    if recipe.exists():
+        base = json.loads(recipe.read_text())['canonical']
+        snapshot = DEFAULT_WORKSPACE/'canonical.glb'
+        original = ROOT/'web/public/models/p0/character/modular.glb'
+        if snapshot.exists() or original.exists():
+            config['canonical_model'] = str((snapshot if snapshot.exists() else original).relative_to(ROOT))
+    else:
+        base = json.loads((ROOT/'internal/character/character-catalog.json').read_text())['characters'][0]
+    return config, base
+
+
+# 原包已审核的白骨和暗色骨缝属于身体，其余材质保留为原生衣物。
+def legacy_body_face(source, face):
+    return CLOTHING_COMPONENTS.legacy_body_face(source, face)
+
+
+# 腰带和衣片按完整连通件归槽，不能按腰线切断衣物或把衣扣单独搬走。
+def native_torso_face_slots(source, waist, accessory_top):
+    return CLOTHING_COMPONENTS.native_torso_face_slots(source, waist, accessory_top)
+
+
+# 输入与制作实现共同决定是否能恢复，外链贴图和缓冲同样参与指纹。
+def normalization_fingerprint(config, source):
+    helper_spec = importlib.util.spec_from_file_location('normalization_dependencies', Path(__file__).with_name('asset-pipeline-candidate.py'))
+    helper = importlib.util.module_from_spec(helper_spec)
+    helper_spec.loader.exec_module(helper)
+    paths = [Path(__file__), Path(__file__).with_name('provider-character-binding.py'),
+             Path(__file__).with_name('provider-character-clothing-components.py'), Path(__file__).with_name('asset-pipeline-candidate.py')]
+    paths.extend(helper.source_dependencies(source))
+    paths.extend(helper.source_dependencies(ROOT / config['canonical_model']))
+    references = [config.get('waist_reference')]
+    references.extend(item.get('torso_clothing_fit', {}).get('waist_reference') for item in config.get('sources', []))
+    for reference in references:
+        if reference:
+            paths.extend(helper.source_dependencies(ROOT/reference['path']))
+    paths = list(dict.fromkeys(paths))
+    blender = sys.modules.get('bpy')
+    descriptor = {'config': config, 'dependencies': helper.capture_dependencies(ROOT, paths),
+                  'python': sys.version, 'blender': blender.app.version_string if blender else None}
+    return hashlib.sha256(json.dumps(descriptor, sort_keys=True).encode()).hexdigest()
+
+
+# 只有输入指纹和全部产物字节均匹配，已完成项才允许跳过。
+def normalization_outputs_current(entry, directory, fingerprint):
+    outputs = entry.get('output_hashes', {})
+    declarations = [entry.get('definition', {}), *entry.get('wearables', [])]
+    expected = {item[field] + '.' + suffix for item in declarations
+                for field, suffix in [('model_asset_key', 'glb'), ('thumbnail_asset_key', 'png')] if item.get(field)}
+    if entry.get('processing_fingerprint') != fingerprint or not expected or set(outputs) != expected:
+        return False
+    return all((directory / name).is_file() and hashlib.sha256((directory / name).read_bytes()).hexdigest() == digest
+               for name, digest in outputs.items())
+
+
 # 仅由 Blender 调用；Python 标准库检查可导入上述路径和版本函数。
 def import_characters(options):
+    helper_spec = importlib.util.spec_from_file_location('normalization_output', Path(__file__).with_name('asset-pipeline-candidate.py'))
+    helper = importlib.util.module_from_spec(helper_spec)
+    helper_spec.loader.exec_module(helper)
+    workspace = helper.validate_candidate_output(ROOT, options.output_directory)
     import bpy
     import bmesh
     from mathutils import Matrix, Vector
     from mathutils.bvhtree import BVHTree
 
-    config = json.loads(CONFIGURATION.read_text())
+    global BUILTIN, MANIFEST
+    BUILTIN, MANIFEST = workspace/'prepared', workspace/'normalization-manifest.json'
+    BUILTIN.mkdir(parents=True, exist_ok=True)
+    config, base = preprocessing_configuration()
+    if getattr(options, 'waist_reference', None):
+        path = options.waist_reference.expanduser().resolve()
+        name = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+        reference = {'path': name, 'sha256': helper.file_hash(path)}
+        config['waist_reference'] = reference
+        for source in config['sources']:
+            if source.get('native_waist_accessory_top') is not None and source.get('torso_clothing_fit'):
+                source['torso_clothing_fit']['waist_reference'] = reference
+    if getattr(options, 'waist_clearance', None) is not None:
+        config['waist_clearance'] = options.waist_clearance
+        for source in config['sources']:
+            if source.get('native_waist_accessory_top') is not None and source.get('torso_clothing_fit'):
+                source['torso_clothing_fit']['waist_clearance'] = options.waist_clearance
     sources = config['sources']
-    for extra in ['kenney-character-sources.json', 'legacy-kaykit-character-sources.json']:
-        file = ROOT/'scripts'/extra
-        if file.exists():
-            extra_configuration=json.loads(file.read_text())
-            sources.extend([{**extra_configuration.get('profiles',{}).get(source.get('profile'),{}),**source} for source in extra_configuration['sources']])
     source_specs={source['key']:source for source in sources}
     if options.evidence:
         sources=[]
@@ -83,7 +168,6 @@ def import_characters(options):
         raise ValueError('unknown character source: ' + ', '.join(sorted(unknown)))
     failures = {item['character_key']: item for item in previous.get('failures', [])}
     processed = False
-    base = json.loads((ROOT/'internal/character/character-catalog.json').read_text())['characters'][0]
     seams = config['seams']
 
     # 分批保留未选记录；加工成功不替代结构与画面验收。
@@ -95,7 +179,9 @@ def import_characters(options):
             result.update(complete=False,status='incomplete')
         elif processed or not previous.get('complete', False):
             result.update(complete=False,status='pending-validation')
-        MANIFEST.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+        temporary_manifest = MANIFEST.with_suffix('.json.tmp')
+        temporary_manifest.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+        temporary_manifest.replace(MANIFEST)
 
     # 真实网格范围用于缩略图构图和统一身体证据。
     def bounds(objects):
@@ -200,7 +286,7 @@ def import_characters(options):
     def render(objects, path, immutable=False):
         destination = path
         if immutable:
-            path = ROOT/'.local/3d-sources/provider-character-work'/(path.stem+'-render.png')
+            path = workspace/'work'/(path.stem+'-render.png')
             path.parent.mkdir(parents=True, exist_ok=True)
             path.unlink(missing_ok=True)
         all_meshes = [obj for obj in bpy.data.objects if obj.type == 'MESH']
@@ -261,16 +347,13 @@ def import_characters(options):
     for spec in sources:
         if options.only and spec['key'] not in options.only:
             continue
-        if not options.force and spec['key'] in entries and spec['key'] not in failures:
-            entry = entries[spec['key']]
-            declarations = [entry['definition'], *entry['wearables']]
-            outputs = [(item.get('model_asset_key'), 'glb') for item in declarations]
-            outputs += [(item.get('thumbnail_asset_key'), 'png') for item in declarations]
-            # 已有记录不能替代实际文件；缺失项在本次运行直接重建。
-            if all(not key or (BUILTIN/(key+'.'+extension)).is_file() for key, extension in outputs):
-                continue
-        processed = True
         try:
+            source, pack = resolve_source(spec, packs)
+            fingerprint = normalization_fingerprint({**config, 'canonical_definition': base}, source)
+            if not options.force and spec['key'] in entries and spec['key'] not in failures:
+                if normalization_outputs_current(entries[spec['key']], BUILTIN, fingerprint):
+                    continue
+            processed = True
             if spec.get('normalization',{}).get('head_envelope_verified') is False:
                 raise ValueError('head envelope and shared hairstyle geometry are not verified; source stays pending')
             source, pack = resolve_source(spec, packs)
@@ -307,22 +390,6 @@ def import_characters(options):
                 source_rig.animation_data_clear()
                 source_rig.data.pose_position = 'REST'
             bpy.context.view_layer.update()
-            adapter = None
-            if spec.get('head_adapter') == 'kenney-reviewed-heads-v1':
-                import importlib.util
-                adapter_spec = importlib.util.spec_from_file_location('kenney_reviewed_heads', ROOT/'scripts/kenney-character-heads.py')
-                adapter = importlib.util.module_from_spec(adapter_spec)
-                adapter_spec.loader.exec_module(adapter)
-                if spec.get('texture_relative_path'):
-                    # FBX不携带每个外观的PNG，明确应用所选皮肤，不能沿用透明的空材质。
-                    texture_path = ROOT/pack['directory']/spec['texture_relative_path']
-                    material = adapter.head_texture_material(bpy, spec['key']+'_skin', texture_path, True)
-                    for obj in imported:
-                        if obj.type == 'MESH':
-                            obj.data.materials.clear()
-                            obj.data.materials.append(material)
-                            for polygon in obj.data.polygons:
-                                polygon.material_index = 0
             support_material=spec.get('support_material')
             if support_material:
                 source_meshes={obj.name:obj for obj in imported if obj.type=='MESH'}
@@ -337,7 +404,6 @@ def import_characters(options):
                         polygon.material_index=0
             normalization_evidence={}
             if source_rig is None or spec.get('normalization',{}).get('strategy'):
-                import importlib.util
                 module_spec=importlib.util.spec_from_file_location('provider_character_binding',ROOT/'scripts/provider-character-binding.py')
                 binding=importlib.util.module_from_spec(module_spec)
                 module_spec.loader.exec_module(binding)
@@ -350,19 +416,6 @@ def import_characters(options):
                 for obj in parts.values():
                     rigid_bone = 'head' if obj.name in spec.get('hair_nodes',[]) else 'chest' if obj.name in spec.get('upper_nodes',[]) else None
                     normalize_mesh(obj, source_rig, rig, spec.get('bone_map',{}),rigid_bone)
-            if adapter is not None:
-                fixed, source_hair, separation = adapter.prepare_head_parts(bpy, bmesh, parts, spec)
-                if spec.get('head_envelope_method') == 'canonical-scalp-envelope':
-                    # 平面方头只使用标准头皮的连续外壳，耳鼻凸点不能扩散成整个脸的尖角。
-                    envelope_points = [vertex.co.copy() for vertex in canonical_parts['body_scalp'].data.vertices]
-                    scalp_low = min(point.z for point in envelope_points)
-                    scalp_high = max(point.z for point in envelope_points)
-                    for point in envelope_points:
-                        point.z = canonical_head_bounds[2][0] + (point.z-scalp_low)/(scalp_high-scalp_low)*(canonical_head_bounds[2][1]-canonical_head_bounds[2][0])
-                    normalization_evidence['head_envelope'] = adapter.fit_head_envelope(bmesh, fixed, source_hair, canonical_head_bounds, envelope_points)
-                parts.update({obj.name: obj for obj in fixed + source_hair})
-                spec = {**spec, 'head_nodes': [obj.name for obj in fixed], 'scalp_source_nodes': [obj.name for obj in fixed], 'hair_nodes': spec.get('hair_nodes', []) + [obj.name for obj in source_hair]}
-                normalization_evidence['head_separation'] = separation
             source_head_bounds=None
             if spec.get('partition_scalp'):
                 source_head=[parts[name] for name in spec['head_nodes']]
@@ -370,8 +423,7 @@ def import_characters(options):
                 # 只收回超出标准头部的范围，不放大较小脸型，也不改变骨架与身体。
                 for axis,((low,high),(standard_low,standard_high)) in enumerate(zip(source_head_bounds,canonical_head_bounds)):
                     target_low,target_high=max(low,standard_low),min(high,standard_high)
-                    adjusted_head = source_head + ([parts[name] for name in spec.get('hair_nodes', [])] if spec.get('head_adapter') else [])
-                    for obj in adjusted_head:
+                    for obj in source_head:
                         for vertex in obj.data.vertices:
                             vertex.co[axis]=target_low+(vertex.co[axis]-low)*(target_high-target_low)/(high-low)
             for name in ['body_head','body_hands']:
@@ -396,16 +448,13 @@ def import_characters(options):
                     face = select_faces(original,'face_'+name,lambda face,uv:True)
                     hair = select_faces(original,'hair_'+name,lambda face,uv:False)
                 if name in spec.get('scalp_source_nodes',[]):
-                    upper_scalp=clip(select_faces(face,'upper_scalp_'+name,lambda polygon,layer:True),2,canonical_face_top,True,cap=adapter is None)
+                    upper_scalp=clip(select_faces(face,'upper_scalp_'+name,lambda polygon,layer:True),2,canonical_face_top,True,cap=True)
                     if upper_scalp.data.polygons:
                         scalp_parts.append(upper_scalp)
-                    clip(face,2,canonical_face_top,False,cap=adapter is None)
+                    clip(face,2,canonical_face_top,False,cap=True)
                     # 根据标准脸和头皮的真实表面转移分区，耳朵与脸不会被整球代替。
                     def fixed_face(polygon, layer):
                         center=polygon.calc_center_median()
-                        if spec.get('head_envelope_method') == 'canonical-scalp-envelope':
-                            # 贴图脸没有独立眼耳几何，投影后的前半壳必须保留，不按球面距离隐藏整张脸。
-                            return center.z<=canonical_face_top and center.y<=(canonical_head_bounds[1][0]+canonical_head_bounds[1][1])/2
                         return center.z<=canonical_face_top and head_surfaces[0].find_nearest(center)[3]<=head_surfaces[1].find_nearest(center)[3]
                     if spec.get('fixed_face_depth_fraction') is not None:
                         # 无耳方头的粗大侧面须在前脸边界切开，不能按整面中心把后脑留作固定脸。
@@ -426,23 +475,32 @@ def import_characters(options):
                 keep.remove(support)
                 bpy.data.objects.remove(support,do_unlink=True)
                 keep.append(join(scalp_parts,'body_scalp'))
-            if spec.get('headwear_root_attachment'):
-                normalization_evidence['headwear_root_attachment'] = adapter.attach_headwear_roots(hair_parts, head_surfaces[1], spec['headwear_root_attachment'])
             hair = join(hair_parts,'hair_provider') if any(len(obj.data.polygons) for obj in hair_parts) else None
             upper_parts, lower_parts, shoes_parts, hands = [],[],[],[]
+            native_parts = {'upper': [], 'lower': []}
+            preserve_native = spec.get('native_waist_accessory_top') is not None
             body_names = spec.get('body_nodes',[prefix+'_Body'])
             for name in body_names:
-                upper = select_faces(parts[name],'upper_torso',lambda face,uv:True)
+                source_part = parts[name]
+                if preserve_native:
+                    slots = native_torso_face_slots(source_part, seams['waist'], spec['native_waist_accessory_top'])
+                    for slot, indices in slots.items():
+                        if indices:
+                            native_parts[slot].append(select_faces(source_part, slot + '_native_torso', lambda face, uv: face.index in indices))
+                upper = select_faces(source_part,'upper_torso',lambda face,uv:not preserve_native or legacy_body_face(source_part, face))
                 shape_seam(upper,seams['waist'],.30,.24)
                 upper_parts.append(clip(upper,2,seams['waist'],True))
-                lower = select_faces(parts[name],'lower_hips',lambda face,uv:True)
+                lower = select_faces(source_part,'lower_hips',lambda face,uv:not preserve_native or legacy_body_face(source_part, face))
                 shape_seam(lower,seams['waist'],.30,.24)
                 lower_parts.append(clip(lower,2,seams['waist'],False))
             for side,sign in [('Left',1),('Right',-1)]:
                 for name in spec.get(('left' if sign>0 else 'right')+'_arm_nodes',[prefix+'_Arm'+side]):
-                    arm = select_faces(parts[name],'upper_arm_'+side,lambda face,uv:True)
+                    source_part = parts[name]
+                    if preserve_native:
+                        native_parts['upper'].append(select_faces(source_part, 'upper_native_arm_' + side, lambda face, uv: not legacy_body_face(source_part, face)))
+                    arm = select_faces(source_part,'upper_arm_'+side,lambda face,uv:not preserve_native or legacy_body_face(source_part, face))
                     upper_parts.append(clip(arm,0,sign*seams['wrist'],sign<0))
-                    hand = select_faces(parts[name],'hand_'+side,lambda face,uv:True)
+                    hand = select_faces(source_part,'hand_'+side,lambda face,uv:not preserve_native or legacy_body_face(source_part, face))
                     hands.append(clip(hand,0,sign*seams['wrist'],sign>0))
                 for name in spec.get(('left' if sign>0 else 'right')+'_leg_nodes',[prefix+'_Leg'+side]):
                     leg = select_faces(parts[name],'lower_leg_'+side,lambda face,uv:True)
@@ -451,11 +509,15 @@ def import_characters(options):
                     shoe = select_faces(parts[name],'shoe_'+side,lambda face,uv:True)
                     shape_seam(shoe,seams['ankle'],.10,.105,sign*.17)
                     shoes_parts.append(clip(shoe,2,seams['ankle'],False))
+            native = {slot: join(objects, slot + '_native') for slot, objects in native_parts.items() if any(obj.data.polygons for obj in objects)}
+            # 预处理整套展示复用衣物副本，正式拆分只读取独立的原生节点。
+            if 'upper' in native:
+                upper_parts.append(select_faces(native['upper'], 'upper_preview_clothing', lambda face, uv: True))
             upper_parts.extend(parts[name] for name in spec.get('upper_nodes',[]))
             fallback=spec.get('default_wearables',{})
             prepared = {'hair':hair,'upper':join(upper_parts,'upper_provider'),'lower':canonical_parts['lower_rogue'] if 'lower' in fallback else join(lower_parts,'lower_provider'),'shoes':canonical_parts['shoes_rogue'] if 'shoes' in fallback else join(shoes_parts,'shoes_provider')}
             hand = join(hands,'body_hands')
-            deliver = keep+[head,hand]+[obj for obj in prepared.values() if obj is not None]
+            deliver = keep+[head,hand]+[obj for obj in prepared.values() if obj is not None]+list(native.values())
             for obj in list(bpy.data.objects):
                 if obj.type == 'MESH' and obj not in deliver:
                     bpy.data.objects.remove(obj,do_unlink=True)
@@ -468,7 +530,7 @@ def import_characters(options):
                 if any(sum(group.weight for group in vertex.groups)<.999 for vertex in obj.data.vertices):
                     raise ValueError(f'incomplete normalized weights {obj.name}')
             binding_error = max(abs(a-b) for bone in rig.data.bones for row_a,row_b in zip(bone.matrix_local,canonical_matrices[bone.name]) for a,b in zip(row_a,row_b))
-            temporary = ROOT/'.local/3d-sources/provider-character-work'/f"{spec['key']}.glb"
+            temporary = workspace/'work'/f"{spec['key']}.glb"
             temporary.parent.mkdir(parents=True,exist_ok=True)
             bpy.ops.object.select_all(action='DESELECT')
             for obj in deliver+[rig]:
@@ -477,6 +539,7 @@ def import_characters(options):
             bpy.ops.export_scene.gltf(filepath=str(temporary),export_format='GLB',use_selection=True,export_animations=False,export_skins=True,export_def_bones=False)
             model_key = asset_version(spec['key'],temporary.read_bytes(),{**spec,'thumbnail_recipe':THUMBNAIL_RECIPE})
             write_immutable(BUILTIN/(model_key+'.glb'),temporary.read_bytes())
+            write_immutable(workspace/(spec['key']+'.glb'),temporary.read_bytes())
             url = '/api/v1/assets/'+model_key
             definition=copy.deepcopy(base)
             definition.update(character_key=spec['key'],body_key=config['body_key'],name=spec['name'],provider=spec['provider'],pack_key=spec['pack_key'],rig_key=config['rig_key'],model_asset_key=model_key,model_url=url)
@@ -500,12 +563,10 @@ def import_characters(options):
             thumbnail_key=model_key+'-thumbnail'
             # 支撑身体只展示未被默认衣服覆盖的固定头与手，避免服装内部身体穿出。
             default_covers=set(region for wearable in wearables for region in wearable['covers'])
-            known_wearables=json.loads((ROOT/'internal/character/character-catalog.json').read_text())['wearables']
-            for existing in known_wearables:
-                if existing['wearable_key'] in fallback.values():
-                    default_covers.update(existing['covers'])
+            for slot in fallback:
+                default_covers.update({'lower': ['legs'], 'shoes': ['feet']}[slot])
             visible_support=[obj for obj in keep if obj.name.removeprefix('body_') not in default_covers]
-            render([head,hand]+visible_support+[obj for obj in prepared.values() if obj is not None],BUILTIN/(thumbnail_key+'.png'),immutable=True)
+            render([head,hand]+visible_support+[obj for obj in prepared.values() if obj is not None]+([native['lower']] if 'lower' in native else []),BUILTIN/(thumbnail_key+'.png'),immutable=True)
             definition.update(thumbnail_asset_key=thumbnail_key,thumbnail_url='/api/v1/assets/'+thumbnail_key)
             assets[thumbnail_key]={**model_asset,'key':thumbnail_key,'name':spec['name'],'kind':'character','url':definition['thumbnail_url'],'format':'png'}
             entry={'status':'imported','provider':spec['provider'],'pack_key':spec['pack_key'],'source':str(source.relative_to(ROOT)),'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'source_archive_sha256':pack['archive_sha256'],'definition':definition,'wearables':wearables,'binding_error':binding_error,'face_hair_disjoint':face_hair_disjoint,'bones':sorted(canonical_names),'mesh_counts':{obj.name:len(obj.data.polygons) for obj in deliver},'seams':seams,'coordinate_system':'+Y up in GLB, meters before shared scale','normalization':normalization_evidence or {'method':'Per-vertex weighted source bind to canonical rest matrices, shared seam geometry and target inverse bind matrices.'},'augmentation':spec.get('normalization',{}).get('augmentation',[]),'support_material':spec.get('support_material')}
@@ -513,9 +574,15 @@ def import_characters(options):
                 entry['scalp_partition']={'source_bounds':source_head_bounds,'standard_head_bounds':canonical_head_bounds,'scalp_node':'body_scalp','source_nodes':spec['scalp_source_nodes'],'method':'Source cranial faces partitioned by nearest canonical face/scalp surfaces; eyes and jaw remain fixed; complete source head fitted within standard envelope.'}
                 if spec.get('fixed_face_depth_fraction') is not None:
                     entry['scalp_partition'].update(method='Front slab and complete eyes remain fixed; the original side and rear cranial shell becomes coverable scalp, with exact plane cuts and no geometric projection.', fixed_face_depth_fraction=spec['fixed_face_depth_fraction'], fixed_face_plane_y=front_limit)
-                if spec.get('head_envelope_method') == 'canonical-scalp-envelope':
-                    entry['scalp_partition']['method'] = 'Planar source head projected onto canonical scalp extended to complete head height; front half below the canonical face top remains fixed, rear and upper shell become coverable scalp.'
-                    entry['scalp_partition']['fixed_face_plane_y'] = (canonical_head_bounds[1][0]+canonical_head_bounds[1][1])/2
+            if native:
+                entry['native_clothing'] = {'nodes': {slot: obj.name for slot, obj in native.items()}, 'faces': {slot: len(obj.data.polygons) for slot, obj in native.items()}, 'waist_accessory_top': spec['native_waist_accessory_top'], 'method': 'Whole garment components retained before body-only seam cuts; source skin weights retained.'}
+            declarations = [entry['definition'], *entry['wearables']]
+            output_names = {item[field] + '.' + suffix for item in declarations
+                            for field, suffix in [('model_asset_key', 'glb'), ('thumbnail_asset_key', 'png')] if item.get(field)}
+            if normalization_fingerprint({**config, 'canonical_definition': base}, source) != fingerprint:
+                raise ValueError('normalization inputs changed during build')
+            entry['processing_fingerprint'] = fingerprint
+            entry['output_hashes'] = {name: hashlib.sha256((BUILTIN/name).read_bytes()).hexdigest() for name in sorted(output_names)}
             entries[spec['key']]=entry
             failures.pop(spec['key'], None)
             print('CHARACTER_IMPORTED',spec['key'],model_key,flush=True)
@@ -580,21 +647,23 @@ def import_characters(options):
         print('CHARACTER_EVIDENCE',len(evidence_entries),str(evidence_directory),flush=True)
         return 0
     save_progress()
-    catalog=json.loads((ROOT/'internal/character/character-catalog.json').read_text())
-    original_characters=[definition for definition in catalog['characters'] if definition['character_key'] not in entries]
-    original_wearables=[wearable for wearable in catalog['wearables'] if wearable['character_key'] not in entries]
-    catalog['characters']=original_characters+[entry['definition'] for entry in entries.values()]
-    catalog['wearables']=original_wearables+[wearable for entry in entries.values() for wearable in entry['wearables']]
-    (ROOT/'internal/character/character-catalog.json').write_text(json.dumps(catalog,ensure_ascii=False,indent=2)+'\n')
     print('CHARACTER_SUMMARY',json.dumps({'imported':len(entries),'failed':len(failures)}),flush=True)
     return int(bool(failures))
 
 
-if __name__ == '__main__':
+# 统一流程可直接调用 CLI，来源标准化仍使用独立候选工作目录。
+def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output-directory', '--output', dest='output_directory', type=Path, default=DEFAULT_WORKSPACE)
     parser.add_argument('--only',action='append',default=[])
     parser.add_argument('--force',action='store_true')
+    parser.add_argument('--waist-reference',type=Path)
+    parser.add_argument('--waist-clearance',type=float)
     parser.add_argument('--evidence',action='store_true')
     parser.add_argument('--evidence-output',type=Path,default=ROOT/'.local/3d-sources/provider-character-work/evidence')
-    arguments=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else sys.argv[1:]
-    raise SystemExit(import_characters(parser.parse_args(arguments)))
+    arguments = argv if argv is not None else (sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else sys.argv[1:])
+    return import_characters(parser.parse_args(arguments))
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

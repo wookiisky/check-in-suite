@@ -18,7 +18,7 @@ type References struct {
 
 // Replace validates the complete change before changing state inside the caller's record transaction.
 // Previous references must come from that record, not from a client-supplied ownership claim.
-func Replace(ctx context.Context, tx *sql.Tx, previous, next References, now time.Time, retention time.Duration) error {
+func Replace(ctx context.Context, tx *sql.Tx, accountID int64, previous, next References, now time.Time, retention time.Duration) error {
 	old := []*string{previous.PhotoID, previous.AudioID}
 	updated := []*string{next.PhotoID, next.AudioID}
 	kinds := []string{"photo", "audio"}
@@ -29,7 +29,7 @@ func Replace(ctx context.Context, tx *sql.Tx, previous, next References, now tim
 		var kind, state string
 		var created int64
 		var unreferenced sql.NullInt64
-		err := tx.QueryRowContext(ctx, "SELECT kind,state,created_at,unreferenced_at FROM media_files WHERE id=?", *id).Scan(&kind, &state, &created, &unreferenced)
+		err := tx.QueryRowContext(ctx, "SELECT kind,state,created_at,unreferenced_at FROM media_files WHERE account_id=? AND id=?", accountID, *id).Scan(&kind, &state, &created, &unreferenced)
 		if errors.Is(err, sql.ErrNoRows) {
 			return core.Fail(422, "INVALID_MEDIA")
 		}
@@ -50,14 +50,14 @@ func Replace(ctx context.Context, tx *sql.Tx, previous, next References, now tim
 	}
 	for i, id := range old {
 		if id != nil && (updated[i] == nil || *id != *updated[i]) {
-			if _, err := tx.ExecContext(ctx, "UPDATE media_files SET state='ready',unreferenced_at=? WHERE id=? AND state='attached'", now.UnixMilli(), *id); err != nil {
+			if _, err := tx.ExecContext(ctx, "UPDATE media_files SET state='ready',unreferenced_at=? WHERE account_id=? AND id=? AND state='attached'", now.UnixMilli(), accountID, *id); err != nil {
 				return err
 			}
 		}
 	}
 	for i, id := range updated {
 		if id != nil && (old[i] == nil || *id != *old[i]) {
-			if _, err := tx.ExecContext(ctx, "UPDATE media_files SET state='attached' WHERE id=?", *id); err != nil {
+			if _, err := tx.ExecContext(ctx, "UPDATE media_files SET state='attached' WHERE account_id=? AND id=?", accountID, *id); err != nil {
 				return err
 			}
 		}

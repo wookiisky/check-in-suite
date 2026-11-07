@@ -1,4 +1,4 @@
-// Package account owns the single household account and revocable authorization.
+// Package account owns the independent household accounts and revocable authorization.
 package account
 
 import (
@@ -11,6 +11,7 @@ import (
 
 // Principal carries session identity, never a browser-supplied authorization flag.
 type Principal struct {
+	AccountID         int64  // Account owning the authenticated session.
 	SessionID         string // Persisted random session identifier.
 	CredentialVersion int64  // Credential version observed during authentication.
 	CSRFToken         string // Independent request forgery token.
@@ -32,7 +33,7 @@ type PreferencesPatch struct {
 
 // Account is the public profile; credential and equipment versions are separate.
 type Account struct {
-	ID          int64       `json:"id"`           // The only account ID is one.
+	ID          int64       `json:"id"`           // Stable account identity.
 	Username    string      `json:"username"`     // Immutable login identifier.
 	DisplayName string      `json:"display_name"` // Household-editable display name.
 	Version     int64       `json:"version"`      // Optimistic version for profile edits only.
@@ -59,7 +60,7 @@ type Service struct {
 	hash     func(string) (string, error) // Password derivation, sharing the verification work limit.
 	work     chan struct{}                // One expensive password calculation per application service.
 	mu       sync.Mutex                   // Protects the small fixed set of authentication rate buckets.
-	attempts map[string]attemptWindow     // Fixed login and management failure windows.
+	attempts map[string]attemptWindow     // Account-scoped authentication failure windows.
 }
 
 // attemptWindow tracks authentication failures without storing supplied passwords or names.

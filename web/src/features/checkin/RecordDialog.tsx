@@ -21,13 +21,14 @@ interface RecordDialogProps {
   record: Checkin; // 选中的记录快照。
   today: string; // 服务端今天。
   management?: boolean; // 管理页明确使用管理路由。
+  readOnly?: boolean; // 同组成员详情不提供任何修改或草稿恢复入口。
   onClose: () => void; // 返回记录列表。
   onSaved: (message: string, record?: Checkin, created?: boolean) => void; // 写成功后重新读取。
   onCorrect?: (record: Checkin) => void; // 删除成功后带入补录草稿。
 }
 
 /** 详情与普通编辑不展示奖励，只有删除确认显示回收金额。 */
-export function RecordDialog({ client, session, record: initialRecord, today, management = false, onClose, onSaved, onCorrect }: RecordDialogProps) {
+export function RecordDialog({ client, session, record: initialRecord, today, management = false, readOnly = false, onClose, onSaved, onCorrect }: RecordDialogProps) {
   const publishWallet = useWalletSync();
   const [record, setRecord] = useState(initialRecord);
   const pendingEdit = getPendingEdit(client, record.id);
@@ -35,8 +36,8 @@ export function RecordDialog({ client, session, record: initialRecord, today, ma
   const [mode, setMode] = useState<'detail' | 'edit' | 'delete' | 'correct'>('detail');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
-  const editable = management || (record.business_date === today && record.can_edit);
-  const deletable = management || (record.business_date === today && record.can_delete);
+  const editable = !readOnly && (management || (record.business_date === today && record.can_edit));
+  const deletable = !readOnly && (management || (record.business_date === today && record.can_delete));
   const task: Task = { id: record.task_id, category_id: null, name: record.task_name_snapshot, icon_key: record.task_icon_snapshot, coin_reward: record.coin_reward_snapshot, diamond_reward: record.diamond_reward_snapshot, daily_limit: 1, weekdays: [], enabled: false, unlock_activities: [], version: 1 };
 
   // 删除具有重复成功语义，失败保留原版本以安全重试。
@@ -74,7 +75,7 @@ export function RecordDialog({ client, session, record: initialRecord, today, ma
         {record.photo_media_id && <img className="checkin-photo" src={`/api/v1/media/${record.photo_media_id}`} alt={content.attachmentPhoto} />}
         {record.audio_media_id && <audio aria-label={content.attachmentAudio} controls src={`/api/v1/media/${record.audio_media_id}`} />}
         {management && <p className="checkin-rewards"><CurrencyAmount currency="coins" amount={record.coin_reward_snapshot} /><CurrencyAmount currency="diamonds" amount={record.diamond_reward_snapshot} /></p>}
-        {editable ? <div className="checkin-actions"><button onClick={() => setMode('edit')}>{content.edit}</button>{deletable && <button className="secondary" onClick={() => setMode('delete')}>{content.delete}</button>}{management && onCorrect && <button className="secondary" onClick={() => setMode('correct')}>{content.correctRecord}</button>}</div> : <>{(pendingEdit || draft) && <button onClick={() => setMode('edit')}>{pendingEdit ? content.recover : content.continueDraft}</button>}</>}
+        {editable ? <div className="checkin-actions"><button onClick={() => setMode('edit')}>{content.edit}</button>{deletable && <button className="secondary" onClick={() => setMode('delete')}>{content.delete}</button>}{management && onCorrect && <button className="secondary" onClick={() => setMode('correct')}>{content.correctRecord}</button>}</div> : <>{!readOnly && (pendingEdit || draft) && <button onClick={() => setMode('edit')}>{pendingEdit ? content.recover : content.continueDraft}</button>}</>}
       </> : <>
         <p>{mode === 'correct' ? content.correctWarning : content.deleteWarning}</p>
         <p className="checkin-rewards"><CurrencyAmount currency="coins" amount={`−${record.coin_reward_snapshot}`} /><CurrencyAmount currency="diamonds" amount={`−${record.diamond_reward_snapshot}`} /></p>

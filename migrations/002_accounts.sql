@@ -1,5 +1,12 @@
+CREATE TABLE groups (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE CHECK (length(trim(name)) > 0)
+) STRICT;
+
 CREATE TABLE accounts (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
+    id INTEGER PRIMARY KEY,
+    group_id INTEGER REFERENCES groups(id),
+    group_version INTEGER NOT NULL DEFAULT 1 CHECK(group_version > 0),
     username TEXT NOT NULL UNIQUE CHECK (length(trim(username)) > 0),
     display_name TEXT NOT NULL CHECK (length(trim(display_name)) > 0),
     login_password_hash TEXT NOT NULL,

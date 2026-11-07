@@ -40,8 +40,8 @@ func scanRecord(row scanner) (Record, error) {
 }
 
 // recordByID includes deleted facts only so old commands can be recovered without resurrection.
-func recordByID(ctx context.Context, tx *sql.Tx, id string) (Record, error) {
-	r, err := scanRecord(tx.QueryRowContext(ctx, "SELECT "+recordColumns+" FROM checkins WHERE id=?", id))
+func recordByID(ctx context.Context, tx *sql.Tx, accountID int64, id string) (Record, error) {
+	r, err := scanRecord(tx.QueryRowContext(ctx, "SELECT "+recordColumns+" FROM checkins WHERE account_id=? AND id=?", accountID, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		err = core.Fail(404, "NOT_FOUND")
 	}
@@ -74,7 +74,7 @@ func (s *Service) Create(ctx context.Context, p account.Principal, management bo
 	if err != nil {
 		return result, err
 	}
-	saved, err := idempotency.Lookup(ctx, tx, operation, key, hash)
+	saved, err := idempotency.Lookup(ctx, tx, p.AccountID, operation, key, hash)
 	if err != nil {
 		return result, err
 	}
@@ -83,7 +83,7 @@ func (s *Service) Create(ctx context.Context, p account.Principal, management bo
 		if err = json.Unmarshal(saved.JSON, &original); err != nil {
 			return result, err
 		}
-		current, err := recordByID(ctx, tx, original.CheckinID)
+		current, err := recordByID(ctx, tx, p.AccountID, original.CheckinID)
 		return CreateResult{Checkin: withActions(current, core.Today(now)), Wallet: original.Wallet, TaskRemaining: original.TaskRemaining, Today: original.Today}, err
 	}
 	if err := core.Text("text", in.Text, 0, s.Config.Limits.TextMax); err != nil {
@@ -105,7 +105,7 @@ func (s *Service) Create(ctx context.Context, p account.Principal, management bo
 	if date > today {
 		return result, core.Fail(422, "FUTURE_DATE")
 	}
-	task, err := taskByID(ctx, tx, in.TaskID)
+	task, err := taskByID(ctx, tx, p.AccountID, in.TaskID)
 	if err != nil {
 		return result, err
 	}
@@ -125,37 +125,37 @@ func (s *Service) Create(ctx context.Context, p account.Principal, management bo
 		return result, core.Fail(409, "TASK_UNAVAILABLE")
 	}
 	var used int64
-	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM checkins WHERE task_id=? AND business_date=? AND deleted_at IS NULL", task.ID, date).Scan(&used); err != nil {
+	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM checkins WHERE account_id=? AND task_id=? AND business_date=? AND deleted_at IS NULL", p.AccountID, task.ID, date).Scan(&used); err != nil {
 		return result, err
 	}
 	if used >= task.DailyLimit {
 		return result, core.Fail(409, "DAILY_LIMIT_REACHED")
 	}
-	if err := media.Replace(ctx, tx, media.References{}, media.References{PhotoID: in.PhotoMediaID, AudioID: in.AudioMediaID}, now, s.Config.MediaOrphanTTL); err != nil {
+	if err := media.Replace(ctx, tx, p.AccountID, media.References{}, media.References{PhotoID: in.PhotoMediaID, AudioID: in.AudioMediaID}, now, s.Config.MediaOrphanTTL); err != nil {
 		return result, err
 	}
 	id := core.ID()
-	_, err = tx.ExecContext(ctx, "INSERT INTO checkins(id,task_id,business_date,task_name_snapshot,task_icon_snapshot,coin_reward_snapshot,diamond_reward_snapshot,text,photo_media_id,audio_media_id,source,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", id, task.ID, date, task.Name, task.IconKey, task.CoinReward, task.DiamondReward, in.Text, in.PhotoMediaID, in.AudioMediaID, source, now.UnixMilli(), now.UnixMilli())
+	_, err = tx.ExecContext(ctx, "INSERT INTO checkins(account_id,id,task_id,business_date,task_name_snapshot,task_icon_snapshot,coin_reward_snapshot,diamond_reward_snapshot,text,photo_media_id,audio_media_id,source,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", p.AccountID, id, task.ID, date, task.Name, task.IconKey, task.CoinReward, task.DiamondReward, in.Text, in.PhotoMediaID, in.AudioMediaID, source, now.UnixMilli(), now.UnixMilli())
 	if err != nil {
 		return result, err
 	}
-	balance, err := wallet.Apply(ctx, tx, wallet.Event{Type: wallet.CheckinGrant, ResourceID: id, Coins: task.CoinReward, Diamonds: task.DiamondReward, At: now})
+	balance, err := wallet.Apply(ctx, tx, p.AccountID, wallet.Event{Type: wallet.CheckinGrant, ResourceID: id, Coins: task.CoinReward, Diamonds: task.DiamondReward, At: now})
 	if err != nil {
 		return result, err
 	}
 	if err = achievement.ExtendInitialSchedule(ctx, tx, task.ID, date); err != nil {
 		return result, err
 	}
-	if err = achievement.Reconcile(ctx, tx, now); err != nil {
+	if err = achievement.Reconcile(ctx, tx, p.AccountID, now); err != nil {
 		return result, err
 	}
-	record, err := recordByID(ctx, tx, id)
+	record, err := recordByID(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
 	result = CreateResult{Checkin: withActions(record, today), Wallet: balance, TaskRemaining: task.DailyLimit - used - 1, Today: today}
 	original := receipt{CheckinID: id, Wallet: balance, TaskRemaining: result.TaskRemaining, Today: today}
-	if err = idempotency.Save(ctx, tx, operation, key, hash, id, 201, original, now); err != nil {
+	if err = idempotency.Save(ctx, tx, p.AccountID, operation, key, hash, id, 201, original, now); err != nil {
 		return result, err
 	}
 	if err = tx.Commit(); err != nil {
@@ -187,7 +187,7 @@ func (s *Service) Edit(ctx context.Context, p account.Principal, management bool
 		return result, err
 	}
 	defer tx.Rollback()
-	result, err = recordByID(ctx, tx, id)
+	result, err = recordByID(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
@@ -197,14 +197,14 @@ func (s *Service) Edit(ctx context.Context, p account.Principal, management bool
 	if result.Deleted {
 		return result, core.Fail(404, "NOT_FOUND")
 	}
-	if err := media.Replace(ctx, tx, media.References{PhotoID: result.PhotoMediaID, AudioID: result.AudioMediaID}, media.References{PhotoID: in.PhotoMediaID, AudioID: in.AudioMediaID}, now, s.Config.MediaOrphanTTL); err != nil {
+	if err := media.Replace(ctx, tx, p.AccountID, media.References{PhotoID: result.PhotoMediaID, AudioID: result.AudioMediaID}, media.References{PhotoID: in.PhotoMediaID, AudioID: in.AudioMediaID}, now, s.Config.MediaOrphanTTL); err != nil {
 		return result, err
 	}
-	_, err = tx.ExecContext(ctx, "UPDATE checkins SET text=?,photo_media_id=?,audio_media_id=?,version=version+1,updated_at=? WHERE id=?", in.Text, in.PhotoMediaID, in.AudioMediaID, now.UnixMilli(), id)
+	_, err = tx.ExecContext(ctx, "UPDATE checkins SET text=?,photo_media_id=?,audio_media_id=?,version=version+1,updated_at=? WHERE account_id=? AND id=?", in.Text, in.PhotoMediaID, in.AudioMediaID, now.UnixMilli(), p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
-	result, err = recordByID(ctx, tx, id)
+	result, err = recordByID(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
@@ -219,30 +219,30 @@ func (s *Service) Delete(ctx context.Context, p account.Principal, management bo
 		return result, err
 	}
 	defer tx.Rollback()
-	record, err := recordByID(ctx, tx, id)
+	record, err := recordByID(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
 	// Recover a committed deletion across midnight; date checks constrain new changes only.
 	if record.Deleted {
-		result.Wallet, err = wallet.Get(ctx, tx)
+		result.Wallet, err = wallet.Get(ctx, tx, p.AccountID)
 		return result, err
 	}
 	if err := recordAccess(record, management, version, now); err != nil {
 		return result, err
 	}
-	if err := media.Replace(ctx, tx, media.References{PhotoID: record.PhotoMediaID, AudioID: record.AudioMediaID}, media.References{}, now, s.Config.MediaOrphanTTL); err != nil {
+	if err := media.Replace(ctx, tx, p.AccountID, media.References{PhotoID: record.PhotoMediaID, AudioID: record.AudioMediaID}, media.References{}, now, s.Config.MediaOrphanTTL); err != nil {
 		return result, err
 	}
-	_, err = tx.ExecContext(ctx, "UPDATE checkins SET text='',photo_media_id=NULL,audio_media_id=NULL,deleted_at=?,updated_at=?,version=version+1 WHERE id=?", now.UnixMilli(), now.UnixMilli(), id)
+	_, err = tx.ExecContext(ctx, "UPDATE checkins SET text='',photo_media_id=NULL,audio_media_id=NULL,deleted_at=?,updated_at=?,version=version+1 WHERE account_id=? AND id=?", now.UnixMilli(), now.UnixMilli(), p.AccountID, id)
 	if err != nil {
 		return result, err
 	}
-	result.Wallet, err = wallet.Apply(ctx, tx, wallet.Event{Type: wallet.CheckinRevoke, ResourceID: id, Coins: -record.CoinRewardSnapshot, Diamonds: -record.DiamondRewardSnapshot, At: now})
+	result.Wallet, err = wallet.Apply(ctx, tx, p.AccountID, wallet.Event{Type: wallet.CheckinRevoke, ResourceID: id, Coins: -record.CoinRewardSnapshot, Diamonds: -record.DiamondRewardSnapshot, At: now})
 	if err != nil {
 		return result, err
 	}
-	if err = achievement.Reconcile(ctx, tx, now); err != nil {
+	if err = achievement.Reconcile(ctx, tx, p.AccountID, now); err != nil {
 		return result, err
 	}
 	if err = tx.Commit(); err != nil {

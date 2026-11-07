@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ApiClient } from '../../api/client';
+import { ApiFailure, type ApiClient } from '../../api/client';
 import { monthEnd, shiftDate, weekStart } from '../../api/dates';
 import type { Session } from '../../api/types';
 import type { components } from '../../api/schema';
@@ -23,8 +23,9 @@ function shiftMonth(month: string, offset: number): string {
 }
 
 // 月历摘要和当日分页分别加载，查询失败不会把旧筛选内容当成新结果。
-export function CalendarPage({ client, session }: { client: Pick<ApiClient, 'request'> & Partial<Pick<ApiClient, 'now'>>; session: Session }) {
+export function CalendarPage({ client, session, accountID = session.account.id, onAccessDenied }: { client: Pick<ApiClient, 'request'> & Partial<Pick<ApiClient, 'now'>>; session: Session; accountID?: number; onAccessDenied?: () => void }) {
   const today = useBusinessToday(client, session);
+  const memberQuery = accountID === session.account.id ? '' : `&account_id=${accountID}`;
   const [month, setMonth] = useState(today.slice(0, 7));
   const [calendar, setCalendar] = useState<Calendar | null>(null);
   const [calendarError, setCalendarError] = useState<unknown>(null);
@@ -40,16 +41,21 @@ export function CalendarPage({ client, session }: { client: Pick<ApiClient, 'req
   const detailRequest = useRef<AbortController | null>(null);
   const dateRef = useRef(selectedDate);
   dateRef.current = selectedDate;
+  useEffect(() => { setRecord(null); setSelectedDate(null); setRecords([]); setNextCursor(null); setNotice(''); }, [accountID]);
 
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setCalendar(null); setCalendarError(null);
-    client.request<Calendar>(`/calendar?month=${month}`, { signal: controller.signal })
+    client.request<Calendar>(`/calendar?month=${month}${memberQuery}`, { signal: controller.signal })
       .then((value) => { if (!controller.signal.aborted) setCalendar(value); })
-      .catch((reason: unknown) => { if (!controller.signal.aborted) setCalendarError(reason); })
+      .catch((reason: unknown) => {
+        if (controller.signal.aborted) return;
+        if (accountID !== session.account.id && reason instanceof ApiFailure && (reason.status === 403 || reason.status === 404)) { onAccessDenied?.(); return; }
+        setCalendarError(reason);
+      })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [client, month, refresh, today]);
+  }, [client, month, refresh, today, accountID, session.account.id, memberQuery, onAccessDenied]);
 
   // 分页追加前确认仍是同一个日期，关闭详情会取消所有在途读取。
   async function loadRecords(date: string, cursor: string | null = null) {
@@ -59,18 +65,22 @@ export function CalendarPage({ client, session }: { client: Pick<ApiClient, 'req
     setRecordsLoading(true); setRecordsError(null);
     if (!cursor) { setRecords([]); setNextCursor(null); }
     try {
-      const result = await client.request<CheckinPage>(`/checkins?start_date=${date}&end_date=${date}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`, { signal: controller.signal });
+      const result = await client.request<CheckinPage>(`/checkins?start_date=${date}&end_date=${date}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}${memberQuery}`, { signal: controller.signal });
       if (controller.signal.aborted || dateRef.current !== date) return;
       setRecords((old) => cursor ? [...old, ...result.items.filter((item) => !old.some((existing) => existing.id === item.id))] : result.items);
       setNextCursor(result.next_cursor);
-    } catch (reason) { if (!controller.signal.aborted) setRecordsError(reason); }
+    } catch (reason) {
+      if (controller.signal.aborted) return;
+      if (accountID !== session.account.id && reason instanceof ApiFailure && (reason.status === 403 || reason.status === 404)) { setRecords([]); setNextCursor(null); setRecord(null); onAccessDenied?.(); return; }
+      setRecordsError(reason);
+    }
     finally { if (!controller.signal.aborted) setRecordsLoading(false); }
   }
   useEffect(() => {
     if (selectedDate) void loadRecords(selectedDate);
     return () => detailRequest.current?.abort();
   // loadRecords is intentionally driven only by date, writes and the business midnight.
-  }, [selectedDate, client, refresh, today]);
+  }, [selectedDate, client, refresh, today, accountID, memberQuery, onAccessDenied]);
 
   const first = `${month}-01`;
   const last = monthEnd(first);
@@ -98,6 +108,6 @@ export function CalendarPage({ client, session }: { client: Pick<ApiClient, 'req
       {!recordsLoading && !recordsError && records.length === 0 && !nextCursor && <p>{content.empty}</p>}
       {recordsLoading && <p role="status">{content.loading}</p>}{nextCursor && <button className="secondary" disabled={recordsLoading} onClick={() => void loadRecords(selectedDate, nextCursor)}>{content.loadMore}</button>}
     </div></Modal>}
-    {record && <RecordDialog client={client} session={session} record={record} today={today} onClose={() => setRecord(null)} onSaved={(message) => { setNotice(message); setRefresh((value) => value + 1); }} />}
+    {record && <RecordDialog client={client} session={session} record={record} today={today} readOnly={accountID !== session.account.id} onClose={() => setRecord(null)} onSaved={(message) => { setNotice(message); setRefresh((value) => value + 1); }} />}
   </section>;
 }

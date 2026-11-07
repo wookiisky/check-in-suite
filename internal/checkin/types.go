@@ -1,4 +1,4 @@
-// Package checkin owns household task configuration and immutable reward snapshots.
+// Package checkin owns each account's task configuration and immutable reward snapshots.
 package checkin
 
 import (
@@ -78,13 +78,13 @@ type Record struct {
 	TaskIconSnapshot      string  `json:"task_icon_snapshot"`      // Persistent asset identity.
 	CoinRewardSnapshot    int64   `json:"coin_reward_snapshot"`    // Original grant and revocation basis.
 	DiamondRewardSnapshot int64   `json:"diamond_reward_snapshot"` // Original grant and revocation basis.
-	Text                  string  `json:"text"`                    // Mutable private content, cleared on deletion.
+	Text                  string  `json:"text"`                    // Mutable content, shared read-only within a group and cleared on deletion.
 	PhotoMediaID          *string `json:"photo_media_id"`          // Optional exclusive photograph.
 	AudioMediaID          *string `json:"audio_media_id"`          // Optional exclusive audio recording.
 	Source                string  `json:"source"`                  // today or backfill.
 	Deleted               bool    `json:"deleted"`                 // Allows old command recovery to report subsequent deletion.
-	CanEdit               bool    `json:"can_edit"`                // Ordinary entry may edit only effective records belonging to today.
-	CanDelete             bool    `json:"can_delete"`              // Ordinary entry may delete only effective records belonging to today.
+	CanEdit               bool    `json:"can_edit"`                // Only the owner may edit effective records belonging to today.
+	CanDelete             bool    `json:"can_delete"`              // Only the owner may delete effective records belonging to today.
 	Version               int64   `json:"version"`                 // Content version.
 	CreatedAt             string  `json:"created_at"`              // Actual creation instant, including backfills.
 	UpdatedAt             string  `json:"updated_at"`              // Last content mutation.
@@ -138,7 +138,7 @@ type Camp struct {
 	Tasks             []AvailableTask           `json:"tasks"`               // Eligible tasks with remaining allowance.
 	Categories        []Category                `json:"categories"`          // Current category choices.
 	Wallet            wallet.Balance            `json:"wallet"`              // Same-snapshot spendable balance.
-	Account           account.Account           `json:"account"`             // Same-snapshot household profile and preferences.
+	Account           account.Account           `json:"account"`             // Same-snapshot current account profile and preferences.
 	HasScheduledTasks bool                      `json:"has_scheduled_tasks"` // Distinguishes no schedule from all completed.
 	Equipment         shop.Equipment            `json:"equipment"`           // Same-snapshot equipped ownership.
 	Achievements      []achievement.Achievement `json:"achievements"`        // Same-snapshot equipped earned badges.

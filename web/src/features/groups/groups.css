@@ -1,0 +1,8 @@
+.group-browse { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-block-end: 20px; }
+.group-browse label { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.group-browse select { min-height: 56px; max-width: 100%; }
+.group-browse p { flex-basis: 100%; margin: 0; }
+.group-member-tasks { list-style: none; padding: 0; display: grid; gap: 16px; }
+.group-member-tasks li { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.group-member-tasks li > span { flex-basis: 100%; }
+@media (max-width: 600px) { .group-browse, .group-browse label { align-items: stretch; } .group-browse label, .group-browse select { width: 100%; } }

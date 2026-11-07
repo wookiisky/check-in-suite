@@ -38,9 +38,10 @@ func scanAchievement(row rowScanner) (Achievement, error) {
 }
 
 // readAchievements reads bound identities and their retained names in the same transaction.
-func readAchievements(ctx context.Context, tx *sql.Tx, where string, args ...any) ([]Achievement, error) {
+func readAchievements(ctx context.Context, tx *sql.Tx, accountID int64, where string, args ...any) ([]Achievement, error) {
 	items := []Achievement{}
-	rows, err := tx.QueryContext(ctx, "SELECT "+achievementColumns+" FROM achievements "+where+" ORDER BY created_at,id", args...)
+	args = append([]any{accountID}, args...)
+	rows, err := tx.QueryContext(ctx, "SELECT "+achievementColumns+" FROM achievements WHERE account_id=? "+where+" ORDER BY created_at,id", args...)
 	if err != nil {
 		return items, err
 	}
@@ -60,7 +61,7 @@ func readAchievements(ctx context.Context, tx *sql.Tx, where string, args ...any
 	for index := range items {
 		if items[index].CategoryID != nil {
 			category := &CategoryOption{}
-			err = tx.QueryRowContext(ctx, "SELECT id,name,deleted_at IS NOT NULL FROM categories WHERE id=?", *items[index].CategoryID).Scan(&category.ID, &category.Name, &category.Deleted)
+			err = tx.QueryRowContext(ctx, "SELECT id,name,deleted_at IS NOT NULL FROM categories WHERE account_id=? AND id=?", accountID, *items[index].CategoryID).Scan(&category.ID, &category.Name, &category.Deleted)
 			if err != nil {
 				return items, err
 			}
@@ -68,7 +69,7 @@ func readAchievements(ctx context.Context, tx *sql.Tx, where string, args ...any
 		}
 		rows, err = tx.QueryContext(ctx, `SELECT t.id,t.name,t.category_id,t.deleted_at IS NOT NULL
 			FROM achievement_tasks a JOIN tasks t ON t.id=a.task_id
-			WHERE a.achievement_id=? ORDER BY t.id`, items[index].ID)
+			WHERE t.account_id=? AND a.achievement_id=? ORDER BY t.id`, accountID, items[index].ID)
 		if err != nil {
 			return items, err
 		}
@@ -91,8 +92,8 @@ func readAchievements(ctx context.Context, tx *sql.Tx, where string, args ...any
 }
 
 // readAchievement includes archived definitions for creation replay and retained equipment.
-func readAchievement(ctx context.Context, tx *sql.Tx, id string) (Achievement, error) {
-	items, err := readAchievements(ctx, tx, "WHERE id=?", id)
+func readAchievement(ctx context.Context, tx *sql.Tx, accountID int64, id string) (Achievement, error) {
+	items, err := readAchievements(ctx, tx, accountID, "AND id=?", id)
 	if err != nil {
 		return Achievement{}, err
 	}
@@ -113,11 +114,11 @@ func (s *Service) List(ctx context.Context, p account.Principal, management bool
 	if err = account.Authorize(ctx, tx, p, management, s.Now()); err != nil {
 		return result, err
 	}
-	where := "WHERE (enabled=1 AND deleted_at IS NULL) OR qualified=1"
+	where := "AND ((enabled=1 AND deleted_at IS NULL) OR qualified=1)"
 	if management {
-		where = "WHERE deleted_at IS NULL OR qualified=1"
+		where = "AND (deleted_at IS NULL OR qualified=1)"
 	}
-	result.Items, err = readAchievements(ctx, tx, where)
+	result.Items, err = readAchievements(ctx, tx, p.AccountID, where)
 	if err != nil {
 		return result, err
 	}
@@ -125,8 +126,8 @@ func (s *Service) List(ctx context.Context, p account.Principal, management bool
 }
 
 // ReadEquipped shares the camp transaction so qualification and badge display cannot disagree.
-func ReadEquipped(ctx context.Context, tx *sql.Tx) ([]Achievement, error) {
-	return readAchievements(ctx, tx, "WHERE qualified=1 AND equipped=1")
+func ReadEquipped(ctx context.Context, tx *sql.Tx, accountID int64) ([]Achievement, error) {
+	return readAchievements(ctx, tx, accountID, "AND qualified=1 AND equipped=1")
 }
 
 // Options lists retained selection identities under current management authorization.
@@ -140,7 +141,7 @@ func (s *Service) Options(ctx context.Context, p account.Principal) (OptionsResu
 	if err = account.Authorize(ctx, tx, p, true, s.Now()); err != nil {
 		return result, err
 	}
-	rows, err := tx.QueryContext(ctx, "SELECT id,name,deleted_at IS NOT NULL FROM categories ORDER BY name,id")
+	rows, err := tx.QueryContext(ctx, "SELECT id,name,deleted_at IS NOT NULL FROM categories WHERE account_id=? ORDER BY name,id", p.AccountID)
 	if err != nil {
 		return result, err
 	}
@@ -157,7 +158,7 @@ func (s *Service) Options(ctx context.Context, p account.Principal) (OptionsResu
 	if err != nil {
 		return result, err
 	}
-	rows, err = tx.QueryContext(ctx, "SELECT id,name,category_id,deleted_at IS NOT NULL FROM tasks ORDER BY name,id")
+	rows, err = tx.QueryContext(ctx, "SELECT id,name,category_id,deleted_at IS NOT NULL FROM tasks WHERE account_id=? ORDER BY name,id", p.AccountID)
 	if err != nil {
 		return result, err
 	}
@@ -178,9 +179,9 @@ func (s *Service) Options(ctx context.Context, p account.Principal) (OptionsResu
 }
 
 // exists checks stable references without requiring historical entities to remain active.
-func exists(ctx context.Context, tx *sql.Tx, query string, id, field string) error {
+func exists(ctx context.Context, tx *sql.Tx, accountID int64, query string, id, field string) error {
 	var found string
-	err := tx.QueryRowContext(ctx, query, id).Scan(&found)
+	err := tx.QueryRowContext(ctx, query, accountID, id).Scan(&found)
 	if errors.Is(err, sql.ErrNoRows) {
 		return core.Invalid(field, "INVALID_VALUE")
 	}

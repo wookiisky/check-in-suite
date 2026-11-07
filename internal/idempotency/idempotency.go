@@ -36,14 +36,14 @@ func Hash(operation string, input any) (string, error) {
 }
 
 // Lookup must run after authorization and before mutable business validation.
-func Lookup(ctx context.Context, tx *sql.Tx, operation, key, hash string) (*Result, error) {
+func Lookup(ctx context.Context, tx *sql.Tx, accountID int64, operation, key, hash string) (*Result, error) {
 	if strings.TrimSpace(key) == "" || len(key) > 128 {
 		return nil, core.Invalid("idempotency_key", "INVALID_IDEMPOTENCY_KEY")
 	}
 	var savedHash string
 	var r Result
 	var raw string
-	err := tx.QueryRowContext(ctx, "SELECT request_hash,resource_id,http_status,response_json FROM idempotency_requests WHERE account_id=1 AND operation=? AND key=?", operation, key).Scan(&savedHash, &r.ResourceID, &r.Status, &raw)
+	err := tx.QueryRowContext(ctx, "SELECT request_hash,resource_id,http_status,response_json FROM idempotency_requests WHERE account_id=? AND operation=? AND key=?", accountID, operation, key).Scan(&savedHash, &r.ResourceID, &r.Status, &raw)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -58,11 +58,11 @@ func Lookup(ctx context.Context, tx *sql.Tx, operation, key, hash string) (*Resu
 }
 
 // Save participates in the caller's transaction so an uncommitted command cannot replay success.
-func Save(ctx context.Context, tx *sql.Tx, operation, key, hash, id string, status int, result any, now time.Time) error {
+func Save(ctx context.Context, tx *sql.Tx, accountID int64, operation, key, hash, id string, status int, result any, now time.Time) error {
 	data, err := json.Marshal(result)
 	if err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, "INSERT INTO idempotency_requests(account_id,operation,key,request_hash,resource_id,http_status,response_json,created_at) VALUES(1,?,?,?,?,?,?,?)", operation, key, hash, id, status, string(data), now.UnixMilli())
+	_, err = tx.ExecContext(ctx, "INSERT INTO idempotency_requests(account_id,operation,key,request_hash,resource_id,http_status,response_json,created_at) VALUES(?,?,?,?,?,?,?,?)", accountID, operation, key, hash, id, status, string(data), now.UnixMilli())
 	return err
 }

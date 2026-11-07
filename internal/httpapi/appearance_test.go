@@ -3,6 +3,8 @@ package httpapi
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/wookiisky/check-in-suite/internal/character"
+	"github.com/wookiisky/check-in-suite/internal/shop"
 	"net/http"
 	"strings"
 	"testing"
@@ -10,9 +12,11 @@ import (
 
 // appearanceHTTPState reads the wire contract without substituting service return values.
 type appearanceHTTPState struct {
+	FacePurchaseID  *string `json:"face_purchase_id"`  // 形象实例。
+	BackPurchaseID  *string `json:"back_purchase_id"`  // 背部实例。
 	Version         int64   `json:"version"`           // 独立外观版本。
 	CharacterKey    string  `json:"character_key"`     // 当前身体定义。
-	HairPurchaseID  *string `json:"hair_purchase_id"`  // 空值恢复默认发型。
+	HeadPurchaseID  *string `json:"head_purchase_id"`  // 空值恢复默认发型。
 	UpperPurchaseID *string `json:"upper_purchase_id"` // 已拥有上衣实例。
 	LowerPurchaseID *string `json:"lower_purchase_id"` // 已拥有下装实例。
 	ShoesPurchaseID *string `json:"shoes_purchase_id"` // 已拥有鞋子实例。
@@ -23,8 +27,9 @@ type appearanceHTTPState struct {
 		} `json:"defaults"` // 免费默认装束。
 	} `json:"characters"` // 已安装人物目录。
 	Wearables []struct {
+		Empty        bool   `json:"empty"`               // 无穿戴默认定义，不是可购买商品。
 		Key          string `json:"wearable_key"`        // 稳定服装定义。
-		Slot         string `json:"slot"`                // 新四槽部位。
+		Slot         string `json:"slot"`                // 六槽部位。
 		ThumbnailKey string `json:"thumbnail_asset_key"` // 商品展示图片。
 	} `json:"wearables"` // 可用服装目录。
 	Inventory []struct {
@@ -33,9 +38,9 @@ type appearanceHTTPState struct {
 	} `json:"inventory"` // 不受订单分页限制的服装库存。
 }
 
-// appearanceHTTPRequest submits all four slots; omission has a different meaning from null.
+// appearanceHTTPRequest submits all six slots; omission has a different meaning from null.
 func appearanceHTTPRequest(version int64, character string) map[string]any {
-	return map[string]any{"expected_version": version, "character_key": character, "hair_purchase_id": nil, "upper_purchase_id": nil, "lower_purchase_id": nil, "shoes_purchase_id": nil}
+	return map[string]any{"expected_version": version, "character_key": character, "face_purchase_id": nil, "back_purchase_id": nil, "head_purchase_id": nil, "upper_purchase_id": nil, "lower_purchase_id": nil, "shoes_purchase_id": nil}
 }
 
 // appearanceHTTPBody preserves explicit nulls in the actual serialized request.
@@ -63,7 +68,7 @@ func TestAppearanceHTTPRequiredFieldsAndAuthorization(t *testing.T) {
 	if err := json.Unmarshal(initialResponse.Body.Bytes(), &fields); err != nil {
 		t.Fatal(err)
 	}
-	for _, field := range []string{"hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"} {
+	for _, field := range []string{"face_purchase_id", "head_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "back_purchase_id"} {
 		if string(fields[field]) != "null" {
 			t.Fatalf("default %s must be explicit null: %s", field, initialResponse.Body)
 		}
@@ -71,7 +76,7 @@ func TestAppearanceHTTPRequiredFieldsAndAuthorization(t *testing.T) {
 	if string(fields["inventory"]) != "[]" {
 		t.Fatalf("empty inventory must be an array: %s", initialResponse.Body)
 	}
-	for _, field := range []string{"expected_version", "character_key", "hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"} {
+	for _, field := range []string{"expected_version", "character_key", "face_purchase_id", "head_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "back_purchase_id"} {
 		body := appearanceHTTPRequest(initial.Version, initial.CharacterKey)
 		delete(body, field)
 		response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, body), "")
@@ -79,7 +84,7 @@ func TestAppearanceHTTPRequiredFieldsAndAuthorization(t *testing.T) {
 			t.Fatalf("missing %s accepted: %d %s", field, response.Code, response.Body)
 		}
 	}
-	for _, field := range []string{"character_key", "hair_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id"} {
+	for _, field := range []string{"character_key", "face_purchase_id", "head_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "back_purchase_id"} {
 		body := appearanceHTTPRequest(initial.Version, initial.CharacterKey)
 		body[field] = ""
 		response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, body), "")
@@ -88,7 +93,7 @@ func TestAppearanceHTTPRequiredFieldsAndAuthorization(t *testing.T) {
 		}
 	}
 	for _, invalid := range []string{
-		`null`, `[]`, `{"expected_version":null,"character_key":"x","hair_purchase_id":null,"upper_purchase_id":null,"lower_purchase_id":null,"shoes_purchase_id":null}`,
+		`null`, `[]`, `{"expected_version":null,"character_key":"x","head_purchase_id":null,"upper_purchase_id":null,"lower_purchase_id":null,"shoes_purchase_id":null}`,
 		strings.TrimSuffix(appearanceHTTPBody(t, appearanceHTTPRequest(initial.Version, initial.CharacterKey)), "}") + `,"unknown":true}`,
 	} {
 		if response := request(http.MethodPut, "/api/v1/appearance", invalid, ""); response.Code != http.StatusBadRequest {
@@ -128,8 +133,12 @@ func TestAppearanceHTTPOwnedWearable(t *testing.T) {
 		t.Fatalf("initial: %d %s", initialResponse.Code, initialResponse.Body)
 	}
 	var wearableKey, thumbnailKey string
+	defaults := map[string]bool{}
+	for _, body := range initial.Characters {
+		defaults[body.Defaults.Upper] = true
+	}
 	for _, item := range initial.Wearables {
-		if item.Slot == "upper" && item.Key != initial.Characters[0].Defaults.Upper {
+		if item.Slot == "upper" && !item.Empty && !defaults[item.Key] {
 			wearableKey, thumbnailKey = item.Key, item.ThumbnailKey
 			break
 		}
@@ -163,7 +172,7 @@ func TestAppearanceHTTPOwnedWearable(t *testing.T) {
 		t.Fatalf("owned upper: %d %s", saved.Code, saved.Body)
 	}
 	invalid := appearanceHTTPRequest(state.Version, initial.CharacterKey)
-	invalid["hair_purchase_id"] = purchase.Purchase.ID
+	invalid["head_purchase_id"] = purchase.Purchase.ID
 	if response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, invalid), ""); response.Code != http.StatusBadRequest && response.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("wrong slot accepted: %d %s", response.Code, response.Body)
 	}
@@ -193,8 +202,68 @@ func TestAppearanceHTTPOwnedWearable(t *testing.T) {
 		t.Fatalf("buy title: %d %s", titleBought.Code, titleBought.Body)
 	}
 	invalid = appearanceHTTPRequest(afterDelete.Version, initial.CharacterKey)
-	invalid["hair_purchase_id"] = titlePurchase.Purchase.ID
+	invalid["head_purchase_id"] = titlePurchase.Purchase.ID
 	if response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, invalid), ""); response.Code != http.StatusBadRequest && response.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("title purchase accepted by character appearance: %d %s", response.Code, response.Body)
+	}
+}
+
+// 实际HTTP购买与整套保存分别保留形象、头部和背部，且各字段缺省与错误槽位均被拒绝。
+func TestAppearanceHTTPSixSlotOwnedSelections(t *testing.T) {
+	_, request := shopHTTPRequest(t)
+	initialResponse := request(http.MethodGet, "/api/v1/appearance", "", "")
+	var initial shop.AppearanceState
+	if initialResponse.Code != http.StatusOK || json.Unmarshal(initialResponse.Body.Bytes(), &initial) != nil {
+		t.Fatalf("initial: %d %s", initialResponse.Code, initialResponse.Body)
+	}
+	defaults := map[string]bool{}
+	for _, body := range initial.Characters {
+		for _, slot := range character.Slots() {
+			defaults[body.Defaults.ForSlot(slot)] = true
+		}
+	}
+	command := appearanceHTTPRequest(initial.Version, initial.CharacterKey)
+	walletVersion := int64(1)
+	for _, slot := range []character.Slot{character.SlotFace, character.SlotHead, character.SlotBack} {
+		var wearable character.Wearable
+		for _, candidate := range initial.Wearables {
+			if candidate.Slot == slot && !candidate.Empty && !defaults[candidate.Key] {
+				wearable = candidate
+				break
+			}
+		}
+		if wearable.Key == "" {
+			t.Fatalf("no independent %s product", slot)
+		}
+		input := shop.ProductInput{Type: shop.TypeWearable, Name: wearable.Name, AssetKey: wearable.ThumbnailAssetKey, WearableKey: wearable.Key, Enabled: true}
+		payload, _ := json.Marshal(input)
+		response := request(http.MethodPost, "/api/v1/management/products", string(payload), "six-slot-create-"+string(slot))
+		var product shop.Product
+		if response.Code != http.StatusCreated || json.Unmarshal(response.Body.Bytes(), &product) != nil {
+			t.Fatalf("create: %d %s", response.Code, response.Body)
+		}
+		payload, _ = json.Marshal(shop.BuyInput{ProductID: product.ID, ExpectedProductVersion: product.Version, ExpectedWalletVersion: walletVersion})
+		response = request(http.MethodPost, "/api/v1/purchases", string(payload), "six-slot-buy-"+string(slot))
+		var purchase shop.PurchaseResult
+		if response.Code != http.StatusCreated || json.Unmarshal(response.Body.Bytes(), &purchase) != nil {
+			t.Fatalf("purchase: %d %s", response.Code, response.Body)
+		}
+		command[string(slot)+"_purchase_id"] = purchase.Purchase.ID
+		walletVersion = purchase.Wallet.Version
+	}
+	response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, command), "")
+	var saved shop.AppearanceState
+	if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &saved) != nil || saved.FacePurchaseID == nil || saved.HeadPurchaseID == nil || saved.BackPurchaseID == nil || len(saved.Inventory) != 3 {
+		t.Fatalf("six slots: %d %s", response.Code, response.Body)
+	}
+	invalid := appearanceHTTPRequest(saved.Version, saved.CharacterKey)
+	invalid["face_purchase_id"] = *saved.BackPurchaseID
+	response = request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, invalid), "")
+	if response.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("wrong slot: %d %s", response.Code, response.Body)
+	}
+	response = request(http.MethodGet, "/api/v1/appearance", "", "")
+	if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &saved) != nil || saved.Version != 2 {
+		t.Fatalf("failed save was committed: %d %s", response.Code, response.Body)
 	}
 }

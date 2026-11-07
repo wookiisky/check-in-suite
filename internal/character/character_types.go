@@ -1,21 +1,25 @@
-// Package character owns the immutable 3D body, rig and four-slot wearable catalog.
+// Package character owns the immutable 3D body, rig and six-slot wearable catalog.
 package character
 
 // Slot identifies one independently replaceable part of the shared character.
 type Slot string
 
 const (
-	SlotHair            Slot = "hair"                  // 发型。
+	SlotFace            Slot = "face"                  // 形象。
+	SlotHead            Slot = "head"                  // 头部。
+	SlotBack            Slot = "back"                  // 背部。
 	SlotUpper           Slot = "upper"                 // 上衣。
 	SlotLower           Slot = "lower"                 // 下装。
 	SlotShoes           Slot = "shoes"                 // 鞋子。
 	DefaultCharacterKey      = "kaykit-medium-v1"      // 首批统一体型的稳定身份。
-	DefaultBodyKey           = "kaykit-medium-body-v1" // 统一身体比例、骨架绑定姿势及四槽接缝的规格。
+	DefaultBodyKey           = "kaykit-medium-body-v1" // 统一身体比例、骨架绑定姿势及六槽接缝的规格。
 )
 
-// Selection names the resolved definitions for the four required slots.
+// Selection names the resolved definitions for the six required slots.
 type Selection struct {
-	Hair  string `json:"hair"`  // 发型定义。
+	Face  string `json:"face"`  // 形象定义。
+	Head  string `json:"head"`  // 头部定义。
+	Back  string `json:"back"`  // 背部定义。
 	Upper string `json:"upper"` // 上衣定义。
 	Lower string `json:"lower"` // 下装定义。
 	Shoes string `json:"shoes"` // 鞋子定义。
@@ -50,19 +54,43 @@ type Definition struct {
 
 // Wearable describes geometry, body coverage and compatibility independently from ownership.
 type Wearable struct {
-	Empty             bool     `json:"empty,omitempty"`     // 仅明确无发型默认项允许没有网格。
-	Key               string   `json:"wearable_key"`        // 穿戴定义身份。
-	BodyKey           string   `json:"body_key"`            // 适配身体规格，不以角色外观身份限制共用。
-	Provider          string   `json:"provider,omitempty"`  // 素材官方来源。
-	PackKey           string   `json:"pack_key,omitempty"`  // 来源素材包稳定身份。
-	Name              string   `json:"name"`                // 目录提供的服装显示名称。
-	Slot              Slot     `json:"slot"`                // 唯一所属部位。
-	CharacterKey      string   `json:"character_key"`       // 兼容身体身份。
-	RigKey            string   `json:"rig_key"`             // 兼容骨架和绑定姿势。
-	ModelAssetKey     string   `json:"model_asset_key"`     // 穿戴模型资源身份。
-	ModelURL          string   `json:"model_url"`           // 同源 GLB。
-	ThumbnailAssetKey string   `json:"thumbnail_asset_key"` // 实际模型渲染的缩略图身份。
-	ThumbnailURL      string   `json:"thumbnail_url"`       // 同源缩略图路径。
-	Nodes             []string `json:"nodes"`               // 该部件的实际网格。
-	Covers            []string `json:"covers"`              // 显示时隐藏的身体区域。
+	Regions           map[string][]string `json:"regions,omitempty"`   // 可被其他穿戴部件覆盖的子区域，例如形象的头皮。
+	Empty             bool                `json:"empty,omitempty"`     // 明确不穿戴的默认项允许没有网格，形象必须有几何。
+	Key               string              `json:"wearable_key"`        // 穿戴定义身份。
+	BodyKey           string              `json:"body_key"`            // 适配身体规格，不以角色外观身份限制共用。
+	Provider          string              `json:"provider,omitempty"`  // 素材官方来源。
+	PackKey           string              `json:"pack_key,omitempty"`  // 来源素材包稳定身份。
+	Name              string              `json:"name"`                // 目录提供的服装显示名称。
+	Slot              Slot                `json:"slot"`                // 唯一所属部位。
+	CharacterKey      string              `json:"character_key"`       // 兼容身体身份。
+	RigKey            string              `json:"rig_key"`             // 兼容骨架和绑定姿势。
+	ModelAssetKey     string              `json:"model_asset_key"`     // 穿戴模型资源身份。
+	ModelURL          string              `json:"model_url"`           // 同源 GLB。
+	ThumbnailAssetKey string              `json:"thumbnail_asset_key"` // 实际模型渲染的缩略图身份。
+	ThumbnailURL      string              `json:"thumbnail_url"`       // 同源缩略图路径。
+	Nodes             []string            `json:"nodes"`               // 该部件的实际网格。
+	Covers            []string            `json:"covers"`              // 显示时隐藏的身体区域。
+}
+
+// Slots returns the complete order used for appearance validation and defaults.
+func Slots() []Slot { return []Slot{SlotFace, SlotHead, SlotUpper, SlotLower, SlotShoes, SlotBack} }
+
+// ForSlot resolves a declared default without deriving identities from names.
+func (selection Selection) ForSlot(slot Slot) string {
+	switch slot {
+	case SlotFace:
+		return selection.Face
+	case SlotHead:
+		return selection.Head
+	case SlotUpper:
+		return selection.Upper
+	case SlotLower:
+		return selection.Lower
+	case SlotShoes:
+		return selection.Shoes
+	case SlotBack:
+		return selection.Back
+	default:
+		return ""
+	}
 }

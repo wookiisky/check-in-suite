@@ -97,6 +97,47 @@
           "scalp"
         ],
         "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      },
+      "native_waist_accessory_top": 0.81,
+      "torso_clothing_fit": {
+        "clearance": 0.024,
+        "minimum_height": 0.6,
+        "reference": {
+          "path": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-minion.glb",
+          "sha256": "13be0b44a3e5f92e305ac49e801a0b51a144f413c01e1823293edd9252a78d4a",
+          "node": "upper_provider",
+          "bone_uv_region": [
+            0.125,
+            0.25,
+            0.5,
+            0.75
+          ],
+          "max_abs_x": 0.33
+        }
+      },
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "character_skeleton_archer_head"
+      ],
+      "rigid_hand_clothing": {
+        "materials": [
+          "BrownDark"
+        ],
+        "reference": {
+          "path": ".local/3d-sources/modular-character-inputs/kaykit-adventurers-mage.glb",
+          "sha256": "e4347fc1fe9a6304acb8e875337fb89725b2374c7caa5f2fea8779a481af1fab",
+          "node": "body_hands",
+          "uv_regions": [
+            [
+              0.875,
+              1,
+              0.25,
+              0.5
+            ]
+          ]
+        },
+        "clearance": 0.003,
+        "palm_max_z": 0.28
       }
     },
     {
@@ -283,7 +324,24 @@
       "partition_scalp": true,
       "scalp_source_nodes": [
         "character_skeleton_mage_head"
-      ]
+      ],
+      "native_waist_accessory_top": 0.81,
+      "torso_clothing_fit": {
+        "clearance": 0.024,
+        "minimum_height": 0.6,
+        "reference": {
+          "path": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-minion.glb",
+          "sha256": "13be0b44a3e5f92e305ac49e801a0b51a144f413c01e1823293edd9252a78d4a",
+          "node": "upper_provider",
+          "bone_uv_region": [
+            0.125,
+            0.25,
+            0.5,
+            0.75
+          ],
+          "max_abs_x": 0.33
+        }
+      }
     },
     {
       "provider": "kaykit",
@@ -466,6 +524,27 @@
           "scalp"
         ],
         "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
+      },
+      "native_waist_accessory_top": 0.81,
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "character_skeleton_minion_head"
+      ],
+      "torso_clothing_fit": {
+        "clearance": 0.024,
+        "minimum_height": 0.6,
+        "reference": {
+          "path": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-minion.glb",
+          "sha256": "13be0b44a3e5f92e305ac49e801a0b51a144f413c01e1823293edd9252a78d4a",
+          "node": "upper_provider",
+          "bone_uv_region": [
+            0.125,
+            0.25,
+            0.5,
+            0.75
+          ],
+          "max_abs_x": 0.33
+        }
       }
     },
     {
@@ -642,7 +721,28 @@
           "scalp"
         ],
         "reason": "源头骨实体面的已核实White材质用于标准支撑头皮，避免无发型时暴露旧人物棕色。"
-      }
+      },
+      "native_waist_accessory_top": 0.81,
+      "torso_clothing_fit": {
+        "clearance": 0.024,
+        "minimum_height": 0.6,
+        "reference": {
+          "path": ".local/3d-sources/modular-character-inputs/kaykit-skeletons-minion.glb",
+          "sha256": "13be0b44a3e5f92e305ac49e801a0b51a144f413c01e1823293edd9252a78d4a",
+          "node": "upper_provider",
+          "bone_uv_region": [
+            0.125,
+            0.25,
+            0.5,
+            0.75
+          ],
+          "max_abs_x": 0.33
+        }
+      },
+      "partition_scalp": true,
+      "scalp_source_nodes": [
+        "character_skeleton_warrior_head"
+      ]
     },
     {
       "provider": "kaykit",

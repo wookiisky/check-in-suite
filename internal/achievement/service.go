@@ -25,7 +25,7 @@ func normalize(input *Input) {
 }
 
 // validate accepts only explicit metric/scope combinations and retained real references.
-func (s *Service) validate(ctx context.Context, tx *sql.Tx, input Input) error {
+func (s *Service) validate(ctx context.Context, tx *sql.Tx, accountID int64, input Input) error {
 	if err := core.Text("name", input.Name, 1, s.Config.Limits.NameMax); err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (s *Service) validate(ctx context.Context, tx *sql.Tx, input Input) error {
 		if input.CategoryID == nil || len(input.TaskIDs) != 0 {
 			return core.Invalid("category_id", "INVALID_VALUE")
 		}
-		if err := exists(ctx, tx, "SELECT id FROM categories WHERE id=?", *input.CategoryID, "category_id"); err != nil {
+		if err := exists(ctx, tx, accountID, "SELECT id FROM categories WHERE account_id=? AND id=?", *input.CategoryID, "category_id"); err != nil {
 			return err
 		}
 	case "tasks":
@@ -58,7 +58,7 @@ func (s *Service) validate(ctx context.Context, tx *sql.Tx, input Input) error {
 			return core.Invalid("task_ids", "REQUIRED")
 		}
 		for _, id := range input.TaskIDs {
-			if err := exists(ctx, tx, "SELECT id FROM tasks WHERE id=?", id, "task_ids"); err != nil {
+			if err := exists(ctx, tx, accountID, "SELECT id FROM tasks WHERE account_id=? AND id=?", id, "task_ids"); err != nil {
 				return err
 			}
 		}
@@ -97,31 +97,31 @@ func (s *Service) Create(ctx context.Context, p account.Principal, key string, i
 	if err != nil {
 		return Achievement{}, err
 	}
-	saved, err := idempotency.Lookup(ctx, tx, "achievement.create", key, hash)
+	saved, err := idempotency.Lookup(ctx, tx, p.AccountID, "achievement.create", key, hash)
 	if err != nil {
 		return Achievement{}, err
 	}
 	if saved != nil {
-		return readAchievement(ctx, tx, saved.ResourceID)
+		return readAchievement(ctx, tx, p.AccountID, saved.ResourceID)
 	}
-	if err = s.validate(ctx, tx, input); err != nil {
+	if err = s.validate(ctx, tx, p.AccountID, input); err != nil {
 		return Achievement{}, err
 	}
 	id := core.ID()
-	_, err = tx.ExecContext(ctx, `INSERT INTO achievements(id,name,asset_key,metric,scope,category_id,target,window_days,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)`, id, input.Name, input.AssetKey, input.Metric, input.Scope, input.CategoryID, input.Target, input.WindowDays, input.Enabled, now.UnixMilli(), now.UnixMilli())
+	_, err = tx.ExecContext(ctx, `INSERT INTO achievements(account_id,id,name,asset_key,metric,scope,category_id,target,window_days,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, p.AccountID, id, input.Name, input.AssetKey, input.Metric, input.Scope, input.CategoryID, input.Target, input.WindowDays, input.Enabled, now.UnixMilli(), now.UnixMilli())
 	if err != nil {
 		return Achievement{}, err
 	}
 	if err = replaceTasks(ctx, tx, id, input.TaskIDs); err != nil {
 		return Achievement{}, err
 	}
-	if err = Reconcile(ctx, tx, now); err != nil {
+	if err = Reconcile(ctx, tx, p.AccountID, now); err != nil {
 		return Achievement{}, err
 	}
-	if err = idempotency.Save(ctx, tx, "achievement.create", key, hash, id, 201, json.RawMessage(`{}`), now); err != nil {
+	if err = idempotency.Save(ctx, tx, p.AccountID, "achievement.create", key, hash, id, 201, json.RawMessage(`{}`), now); err != nil {
 		return Achievement{}, err
 	}
-	item, err := readAchievement(ctx, tx, id)
+	item, err := readAchievement(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return item, err
 	}
@@ -140,7 +140,7 @@ func (s *Service) Update(ctx context.Context, p account.Principal, id string, in
 	if err = account.Authorize(ctx, tx, p, true, now); err != nil {
 		return Achievement{}, err
 	}
-	current, err := readAchievement(ctx, tx, id)
+	current, err := readAchievement(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return current, err
 	}
@@ -150,20 +150,20 @@ func (s *Service) Update(ctx context.Context, p account.Principal, id string, in
 	if current.Version != input.ExpectedVersion {
 		return Achievement{}, core.VersionConflict(current.Version)
 	}
-	if err = s.validate(ctx, tx, input.Input); err != nil {
+	if err = s.validate(ctx, tx, p.AccountID, input.Input); err != nil {
 		return Achievement{}, err
 	}
-	_, err = tx.ExecContext(ctx, `UPDATE achievements SET name=?,asset_key=?,metric=?,scope=?,category_id=?,target=?,window_days=?,enabled=?,version=version+1,updated_at=? WHERE id=?`, input.Name, input.AssetKey, input.Metric, input.Scope, input.CategoryID, input.Target, input.WindowDays, input.Enabled, now.UnixMilli(), id)
+	_, err = tx.ExecContext(ctx, `UPDATE achievements SET name=?,asset_key=?,metric=?,scope=?,category_id=?,target=?,window_days=?,enabled=?,version=version+1,updated_at=? WHERE account_id=? AND id=?`, input.Name, input.AssetKey, input.Metric, input.Scope, input.CategoryID, input.Target, input.WindowDays, input.Enabled, now.UnixMilli(), p.AccountID, id)
 	if err != nil {
 		return Achievement{}, err
 	}
 	if err = replaceTasks(ctx, tx, id, input.TaskIDs); err != nil {
 		return Achievement{}, err
 	}
-	if err = Reconcile(ctx, tx, now); err != nil {
+	if err = Reconcile(ctx, tx, p.AccountID, now); err != nil {
 		return Achievement{}, err
 	}
-	item, err := readAchievement(ctx, tx, id)
+	item, err := readAchievement(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return item, err
 	}
@@ -181,7 +181,7 @@ func (s *Service) Delete(ctx context.Context, p account.Principal, id string, ve
 	if err = account.Authorize(ctx, tx, p, true, now); err != nil {
 		return err
 	}
-	item, err := readAchievement(ctx, tx, id)
+	item, err := readAchievement(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func (s *Service) Delete(ctx context.Context, p account.Principal, id string, ve
 	if item.Version != version {
 		return core.VersionConflict(item.Version)
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE achievements SET enabled=0,deleted_at=?,updated_at=?,version=version+1 WHERE id=?", now.UnixMilli(), now.UnixMilli(), id); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE achievements SET enabled=0,deleted_at=?,updated_at=?,version=version+1 WHERE account_id=? AND id=?", now.UnixMilli(), now.UnixMilli(), p.AccountID, id); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -207,14 +207,14 @@ func (s *Service) SetEquipped(ctx context.Context, p account.Principal, id strin
 	if err = account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
 		return Achievement{}, err
 	}
-	item, err := readAchievement(ctx, tx, id)
+	item, err := readAchievement(ctx, tx, p.AccountID, id)
 	if err != nil {
 		return item, err
 	}
 	if equipped && !item.Qualified {
 		return Achievement{}, core.Fail(409, "ACHIEVEMENT_NOT_EARNED")
 	}
-	if _, err = tx.ExecContext(ctx, "UPDATE achievements SET equipped=? WHERE id=?", equipped, id); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE achievements SET equipped=? WHERE account_id=? AND id=?", equipped, p.AccountID, id); err != nil {
 		return Achievement{}, err
 	}
 	item.Equipped = equipped

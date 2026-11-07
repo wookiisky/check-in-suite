@@ -15,13 +15,20 @@ source:
 - cmd/island/database_reset.go
 - internal/demo/settings.json
 - scripts/prepare-3d-resources.py
+- scripts/asset-pipeline.py
+- scripts/asset-pipeline-candidate.py
+- scripts/asset-pipeline-rules.json
 - scripts/prepare-camp-assets.py
+- scripts/render-tiny-treats-previews.py
 - scripts/fetch-provider-assets.py
 - scripts/import-provider-assets.py
 - scripts/update-spatial-thumbnail-aliases.py
 - scripts/import-provider-characters.py
-- scripts/prepare-kenney-characters.py
-- scripts/verify-kenney-character-appearance.py
+- scripts/prepare-modular-characters.py
+- scripts/provider-character-binding.py
+- scripts/modular-character-evidence.json
+- scripts/verify-modular-character-appearance.py
+- scripts/modular-character-sources.json
 - scripts/import-provider-animations.py
 - scripts/update-tiny-treats-walk-surfaces.py
 - scripts/check-gltf-assets.mjs
@@ -93,16 +100,25 @@ SHA256SUMS              # 包含 release.json 的文件校验清单
 
 正式人物、服装缩略图、建筑和离线动作同样嵌入二进制，并在启动时通过原有受控素材安装流程进入 `assets_directory`。GLB 使用单文件同源读取，模型和动画不会作为管理页图片选项返回。资源的身份、元数据或内容变化必须采用新的版本标识，不能覆盖持久目录中的同名资源。
 
-首批资源以已经验收的样片文件为输入。只整理 GLB 时使用 Python；需要重绘八张透明服装缩略图时显式指定全局安装的 Blender。以下示例使用本机 macOS 的安装路径，其他电脑按实际位置调整：
+正式人物使用六槽制作入口，基础身体与衣物分别输出；原始包和标准化预处理件位于本地来源目录，不进入发行包。以下示例使用本机 macOS 的 Blender 安装路径，其他电脑按实际位置调整：
 
 ```sh
-python3 scripts/prepare-3d-resources.py
-python3 scripts/prepare-3d-resources.py --blender /Applications/Blender.app/Contents/MacOS/Blender
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python-exit-code 1 --python scripts/prepare-modular-characters.py --
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python-exit-code 1 --python scripts/legacy-character-clothing-blender-test.py --
 go test ./internal/character ./internal/assets
 go test ./internal/httpapi -run 'TestGraphicsAssetsHTTP'
+npm run test:assets
 ```
 
-该脚本复制已经整理的人物及动作，将 Kenney 建筑的纹理写入 GLB，并从交付人物模型渲染缩略图；它不生成新服装，也不自动适配新骨架。模型与服装定义由 `internal/character/character-catalog.json` 管理，文件格式、显示名称、来源及许可由受控素材目录管理。模型与动作的来源和权利分别登记，原始 FBX 与加工工程仍留在 `.local/3d-sources/`。
+标准化预处理件缺失时，先从配方对应的原始 KayKit 包恢复；预处理入口只写本地工作区，不更新正式目录：
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python-exit-code 1 --python scripts/import-provider-characters.py -- --output-directory .local/3d-sources/modular-character-inputs-v3-complete
+```
+
+`scripts/modular-character-sources.json` 声明人物来源与拆分配方，模型和六槽定义由 `internal/character/character-catalog.json` 管理。人形和骷髅是基础身体，职业不再进入角色目录；脸与头皮属于形象，帽子和头发属于头部，披风和箭袋属于背部。中箭只制作头部插箭，使用来源包中的独立箭模型，不把整个战损头骨当成头饰。身体、脸、衣物与缩略图分别保留来源依据，新字节和元数据使用新资源身份。
+
+原有 `scripts/prepare-3d-resources.py` 不再负责生成正式人物，避免重新引入旧四槽目录。模型与动作的来源和权利分别登记，原始 FBX 与加工工程仍留在 `.local/3d-sources/`。
 
 家具与户外模型使用 `scripts/prepare-camp-assets.py` 整理，来源包分别放在 `.local/3d-sources/kenney-furniture/`、`kenney-nature/`、`kenney-survival/`。生活动作与书本工程保存在 `.local/3d-sources/living-actions/`，Mixamo 原始动作位于 `.local/3d-sources/mixamo/`。正式模型的实际边界、地面锚点、来源与加工参数分别登记在 `internal/assets/camp-source-manifest.json`、`camp-asset-metadata.json` 和 `camp-living-source.json`；座姿的靠近点与根位置由共享场景目录使用，不在浏览器按模型名称猜测。
 
@@ -110,15 +126,29 @@ go test ./internal/httpapi -run 'TestGraphicsAssetsHTTP'
 
 `scripts/import-provider-assets.py` 根据按来源维护的审核配置整理完整物件。完整物件库与本次选入清单分开：未选入物件和制作工程保留在本地，发行包只包含本次使用的 GLB、PNG 与元数据。源条目及范围排除、准备失败、本次选择均保留在 `internal/assets/provider-asset-manifest.json`，不能只检查商品总数就认定清单无遗漏。
 
-合并新的正式物件目录后，运行 `uv run --locked python scripts/update-spatial-thumbnail-aliases.py`，保留并补充历史缩略图到稳定物品的明确映射。运行时只嵌入紧凑的 `internal/island/spatial-thumbnail-aliases.json`；旧发布记录与加工历史的来源指针和校验值保留在该文件中，不依靠名称或前缀猜测身份。启动初始化据此刷新旧报价的资源引用，同时保留管理配置和成交事实。
+Provider 构建候选时同步保留并补充历史缩略图到稳定物品的明确映射。独立的 `uv run --locked python scripts/update-spatial-thumbnail-aliases.py` 默认只输出本地候选文件，可用显式参数选择其他输入与输出。运行时只嵌入紧凑的 `internal/island/spatial-thumbnail-aliases.json`；旧发布记录与加工历史的来源指针和校验值保留在该文件中，不依靠名称或前缀猜测身份。启动初始化据此刷新旧报价的资源引用，同时保留管理配置和成交事实。
 
-人物由 `scripts/import-provider-characters.py` 在 Blender 中整理，标准身体、骨架、切面和逐源选择由专用配置提供。没有原始下肢或骨架的源人物须明确记录补充身体与离线绑定，不能声称其源包已有这些部件。`internal/assets/provider-character-manifest.json` 记录已加工人物和恢复检查点；尚未适配或未通过画面检查的人物不进入正式可选目录。原始动作单独由 `scripts/import-provider-animations.py` 处理，并在 `provider-animation-manifest.json` 中记录已完成范围与剩余范围；预览按需加载，不能让正式人物页面下载全部原始动作。
+人物加工记录由 `internal/assets/provider-character-manifest.json` 保存。源模型中的裸露皮肤与骨骼要归回基础身体，职业衣物单独输出；原始骷髅缺少或被衣物替代的局部身体需要补齐，不能只隐藏衣服就宣称已得到完整裸身。身体分区的腰线、腕线和踝线不能裁掉原生腰带、衣摆及护腕，衣物保留自然边界和蒙皮。重复外观按实际几何与材质去重，没有原生裤鞋的旧版骷髅不重复生成补配商品，但仍须保留其原生腰带和腕环。补全后外观变得相同时，配方明确保留已存在的穿戴身份并共用资源，不再新增重复报价；这不修改已有商品名称和订单事实。
 
-恢复已有批次的画面检查时，可在全局 Blender 后台运行人物脚本并传入 `--evidence`，通过 `--only` 选择人物、`--evidence-output` 指定独立输出目录。此入口只读取已整理人物并生成来源对照与共用服装画面，不改写正式人物目录、清单或模型；省略 `--only` 时检查已加工的完整批次。
+完整衣片和胸甲还须适配两种基础身体的实际表面，不能仅靠固定方盒缩放认定兼容。开襟衣物保留原开口与壳厚，并在静止和动作采样中核对主体、肩部与袖根是否露出；不能用隐藏整个躯干来掩盖衣甲陷入身体的问题。
 
-恢复来源后，先运行 `uv run --locked python scripts/kenney-character-heads.py` 生成逐源审核的脸部与头发贴图。Kenney 人物再用 `uv run --locked python scripts/prepare-kenney-characters.py --only 人物身份` 在独立工作区试加工；显式 `--all` 才处理全量。试加工会在该工作区放行头型检查，清单始终标为未正式完成，不能据此直接发布。正式配置的头型验证状态必须来自实际画面和结构检查。静态源节点的动作须清除；FBX 皮肤使用逐源指定的纹理。平面头型按标准头皮表面拟合，已有立体眼鼻和下颚的头型保留原几何，并将头部深度限制在共用头皮范围内，避免遮住共用胡须。原型人物的躯干含有低于裤腰的几何，部位拟合须保留源腿顶与衣摆的衔接，不能把整个躯干范围直接线性拉伸。
+形象需要包含完整裸脸和头皮，摘下胡须后也须保留嘴和下颌，头饰不能包含来源脸部。各穿戴的覆盖区域通过配方明确传给渲染器，帽子覆盖头皮时不影响眼鼻嘴；眉毛、胡须和围领不遮盖头皮。封闭鞋型覆盖基础脚掌，卸鞋后恢复基础脚部；默认裸头与穿帽、穿鞋与卸鞋都要检查。背部与上装分别制作，验证披风、箭袋是否跟随同一骨架。素材名称直接描述颜色、形状及实际包含的物件，不以来源职业或“旧版”代替外形。实际混穿与动作检查应绑定输出文件和组合，不能沿用旧人物的历史画面结果。
 
-换装证据由 `scripts/verify-kenney-character-appearance.py` 在后台 Blender 中生成。传入 `--workspace`、可重复的 `--only` 和独立的 `--output`，可比较原套装、光头、共用头发、胡须、头盔与动作；`--reverse` 将来源服装穿到标准人物上。每项证据绑定模型哈希、服装选择、动作片段和采样帧，四向图沿用统一取景。默认工作区为 `.local/kenney-characters/workspace`，复查正式资源时用 `--workspace .`。几何、脸部和来源语义的 Blender 检查脚本与普通 Python 测试分开执行，依赖原包时须先恢复清单对应的本地来源。
+Kenney 人物的制作与验证入口已退出正式流程，建筑、家具和动物摆设仍使用各自的静态物件流程。原始下载包可以保留用于来源核对，不能因为保留原包就重新上架人物。
+
+只读四向混穿入口使用当前正式 GLB，不更新模型、商品或清单。组合由 `scripts/modular-character-evidence.json` 声明，结果写入 `.local/modular-character-work/evidence/`：
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python-exit-code 1 --python scripts/verify-modular-character-appearance.py --
+```
+
+逐件核对当前目录时，使用锁定的 Python 环境调度 Blender，并生成分页四向总览图。`--only` 可重复传入穿戴身份以复核单件，`--motion walk`、`--motion cheer` 用于增加动作采样；结果只写入指定检查目录：
+
+```sh
+uv run --locked python scripts/verify-modular-character-appearance.py --all-wearables --size 256 --page-size 6 --output .local/modular-character-work/review-v2
+```
+
+原始动作由 `scripts/import-provider-animations.py` 单独处理，并在 `provider-animation-manifest.json` 中记录已完成范围与剩余范围；预览按需加载，不能让正式人物页面下载全部原始动作。
 
 除了 Go 素材检查，`npm run test:assets` 会逐个读取正式人物与服装的实际 GLB，核对身体分区范围、骨骼层级、逆绑定矩阵和蒙皮权重。这证明当前交付数据满足结构约束，仍需结合真实换装画面检查头饰、接缝和遮挡。资源获取、静态整理、人物整理与动作整理的 Python 检查各位于相应脚本旁，可单独执行；制作需要 Blender，正式运行不依赖制作工具。
 
@@ -129,6 +159,58 @@ go test ./internal/httpapi -run 'TestGraphicsAssetsHTTP'
 动作来源按 `scripts/provider-animation-sources.json` 中的审核批次处理，不按骨名扫描结果自动纳入非人形资源。导入脚本的 `--list` 查看批次，`--batch` 或 `--only` 选择范围，`--all` 处理全部审核来源；`--first-medium` 保留首批复现入口。增量执行核对来源与产物哈希，保留已完成记录；失败保留原因并返回非零。新加工在同一来源族内合并实际目标骨架和曲线相同的输出，来源记录仍分别保留；共享元数据登记该族的官方出处与许可，逐条来源登记实际素材包。原始水平根位移留在本地源文件，正式动作移除导航方向的根位移，垂直动作与身体摇摆继续保留。恢复时逐来源核对其实际使用的目标骨架，不能因第一批已更新全局检查点而跳过其他旧批次；缺少该依据的旧记录重新加工。去重和新资源身份包含来源族元数据、实际输出骨架与动作，目标骨架变化而曲线数值相同时也不能覆盖旧资源。当前动作列表只包含成功来源正在引用的定义；待处理批次不会把旧骨架动作留在当前列表，历史资源和文件继续保留。
 
 Tiny Treats 房屋与景物由 `scripts/prepare-tiny-treats.py` 整理，来源与产物清单为 `internal/assets/tiny-treats-manifest.json`。普通 Python 使用 `--fetch-only` 获取审核过的免费源包；制作时在后台 Blender 中执行该脚本并传 `--only all`。`scripts/tiny-treats-blender-test.py` 在实际 GLB 上核对门洞、墙体和地板，`scripts/render-tiny-treats-previews.py` 生成四向外观与剖墙。原包、工程及中间产物保留在 `.local/3d-sources/tiny-treats/`，正式包只安装选入 GLB、PNG 和元数据。已有房屋无需重导出模型即可补齐支撑面：执行 `/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python-exit-code 1 --python scripts/update-tiny-treats-walk-surfaces.py`，再运行实际 GLB 检查。该入口只更新房型配置和清单，可用 `--models`、`--configuration`、`--manifest` 指向隔离路径。
+
+### 素材分类、候选与应用
+
+素材制作统一由 `npm run assets:pipeline --` 调度，操作为 `inventory`、`build`、`check` 和 `apply`。`inventory` 展示加工类型、入口及检查标准，不扫描或加工素材。加工类型由审核配置显式声明，不能从商品名称、来源前缀或商品的建筑分类猜测。静态建筑摆设采用完整物件流程；可进入房屋采用场景流程。动物摆设仍属于静态物件。来源人物标准化保留独立前置入口，其 `--output` 是 `--output-directory` 的别名。
+
+来源人物标准化把已声明的完整腰部配饰与上装分别适配。`import-provider-characters.py --waist-reference GLB --waist-clearance 数值` 为下装指定实际裸腰和所需松量，参考只读取 `body_torso`、`body_legs`，不替换上装的参考与参数。参考文件、实际外链和显式参数参与加工指纹。制作新裸腰后应重新核对腰带内口和动作，不能继续用染成肤色的原裤壳撑大下装；新来源写独立版本目录，保留已有来源和验收字节。
+
+制作配方的 `clothing_fit` 按穿戴键显式复用矩阵、渐变和蒙皮适配，披肩也可使用同一入口；旧上装的 `upper_clothing_fit` 保留为兼容入口。`back_clothing_fit` 表示衣物领背的局部空间场，可用于上装后背或披肩，不按业务槽位猜测几何范围。前后方向由现有轴向过渡端点及有符号偏移明确给出，既有正向设置保持原结果。
+
+各制作入口的 `--output` 统一表示候选根，默认位于 `.local/asset-pipeline/`；模型及目录按 `internal/...` 镜像输出。`build` 默认要求空候选目录，避免不同批次混用。Provider 和动作入口允许对未完成目录显式使用 `build --resume`；动作入口还会核对原正式基线，已完成候选拒绝覆盖。其他入口仍使用新目录重建。直接调用脚本同样不更新正式目录。来源文件与正式目录只读，后续应用单独执行。旧的 `--catalog-output` 只在候选内输出目录片段。原始模型、配方、工具代码与实际外链文件属于加工依赖，任何一项变化后不能继续沿用旧验收。恢复时也须核对源文件的外链依赖和全部已声明产物；仅文件存在不足以复用。动作批次分别记录本次选择完成与全库待办，未选批次的过期记录不进入当前有效列表。
+
+以下为后续显式执行的命令示例；修改流程代码本身不执行这些步骤：
+
+```sh
+npm run assets:pipeline -- inventory
+npm run assets:pipeline -- build --pipeline characters --output .local/asset-pipeline/review-characters
+npm run assets:pipeline -- check --output .local/asset-pipeline/review-characters
+```
+
+Tiny Treats 的几何制作与后续预览分别执行。先构建指定房屋或景物，再对同一候选执行预览阶段：
+
+```sh
+npm run assets:pipeline -- build --pipeline tiny-treats --output .local/asset-pipeline/house-review -- --only cottage
+npm run assets:pipeline -- build --pipeline tiny-treats --stage previews --output .local/asset-pipeline/house-review
+```
+
+预览阶段只处理候选清单声明的房屋与场景，生成缩略图、剖墙证据及候选运行定义，保留先前几何来源与正式基线；重新生成清单后，旧检查结论自然失效。场景须在制作阶段显式用 `--scene` 选择；所需景物不足时记录缺口，不扩大加工范围。静态 Provider 候选同时生成历史缩略图映射，后续应用无需再运行会修改正式目录的补录命令。
+
+可构建入口见 `scripts/asset-pipeline-rules.json` 中的 `pipelines`。候选 `candidate.json` 登记生成文件、明确复用的正式文件、构建前正式基线、依赖哈希和阶段状态。候选缺少资源时，只能使用 `reused-assets.json` 中已声明且哈希一致的正式资源；不能自动回落到任意正式文件。辅助复用清单不进入正式资源目录。
+
+`check` 自动检查候选完整性、实际图片解码、合并后运行目录的引用闭包及实际生成的 GLB 格式，将分类检查计划写入 `checks.json`。检查按具体资产类型分配，混合管线中的墙体不承担动作检查，动画使用片段时间采样；房屋与固定景物分别采用场景、静态规则。人物按身体及兼容穿戴组合检查，不兼容穿戴、未知槽位和未分配模型均不能静默退出计划。来源组件、骨架、几何适配、场景通路和画面复核仍由现有专项工具或实际审查完成；未导入结论的必需项保持 `not_run`。Khronos 警告保持待复核，不能被总体零错误掩盖。`check --evidence 文件` 接收同一候选及规则哈希的专项结果；每条结果包含规则、状态、本次实际覆盖的案例列表，以及候选目录内证据文件的相对路径和实际哈希。同一规则可以分批导入，后续复核只替换相同案例，其他已完成案例继续保留；覆盖尚不完整时保持待复核。自动校验报告及其哈希始终保留，人工接受警告不能抹掉实际格式检查结果；`gltf` 复核记录还须提供 `automatic_sha256`，与该次 `gltf-check.json` 的哈希一致。检查器依赖或自动警告报告变化后，旧接受记录失效。检查器与实际读取的运行目录也参与证据核对。案例列表取自 `checks.json` 的 `plan`，不能用截图总数代替。全身及手臂画面入口均可传 `--sampling-plan scripts/asset-pipeline-rules.json`，以实际帧、时间和视角生成 `executed_coverage`。全身工具只证明对应视角，手臂工具只登记已实现的近景；肩、肘、腕等局部项目没有相机或专项结论时仍保留待办。渲染报告不是人工复核结论，不能直接作为 `visual: passed` 导入。格式错误不能通过外部结论豁免。
+
+验收记录的结构如下，实际哈希和覆盖内容须来自当批文件：
+
+```json
+{
+  "candidate_sha256": "候选清单哈希",
+  "rules_sha256": "规则文件哈希",
+  "results": [
+    {
+      "rule": "visual",
+      "status": "passed",
+      "coverage": ["来自当批计划的本次实际复核案例"],
+      "evidence": [{"path": "review/visual.json", "sha256": "证据文件哈希"}]
+    }
+  ]
+}
+```
+
+所有必需检查通过后，才可显式执行 `apply --output 候选目录`。应用重新核对候选、证据和受影响正式文件基线，使用已经验收的精确字节，不重新加工。候选清单按新旧资源目录的差集声明退役源码；应用先核对并归档到 `.local/asset-pipeline/retired/<候选摘要>/`，再将其移出编译目录。`.local/assets` 中已安装的历史资源保留，不改变商品所有权或订单。应用日志位于 `.local/asset-pipeline/application.json`，记录本批文件的精确旧字节和退役项；进程中断后使用 `apply --recover` 恢复，归档仍保留。恢复遇到其他人修改过的同一文件时拒绝覆盖，须先核对。锁仅覆盖应用过程，构建应使用独立目录。
+
+应用完成仅表示文件更新，`application_checks` 仍为 `not_run`。随后按受影响边界执行实际程序、浏览器及发行检查，结果另行记录；不能把候选检查冒充应用回归。通用入口不自动启动程序、购买商品或改写数据库。
 
 ### 素材工具环境、检查与预览
 
@@ -154,7 +236,7 @@ npm run assets:preview -- --input /absolute/path/house.glb --output .local/asset
 
 输出目录中的 `preview-manifest.json` 记录本次逐项结果、失败原因及总览图路径；`renderer.log` 保留最近一次实际批处理日志。`preview-cache.json` 保留曾处理条目，切换筛选后仍可复用。模型字节、显隐、比例、渲染设置、Blender 版本或渲染代码变化时重新生成；图片丢失、字节变化或缓存损坏也会重建。`--force` 只强制重画本次选择。单项失败保留已完成项并返回非零，下次只重试未成功项。使用不同输出目录可隔离不同批次，同一输出目录顺序使用。
 
-静态物件导入还在原有 `.local/3d-sources/provider-prepared/` 暂存目录使用 `.cache.json`。它核对源模型、实际缓冲和外链图片、加工参数及代码，并检查暂存产物和元数据；不一致或丢失时重新加工。缓存省去重复边界计算和封装，不跳过发布筛选、所有权规则或正式资源的不可变版本检查，也不自动推进人物与动画批次。
+静态物件导入在各自候选的 `.local/3d-sources/provider-prepared/` 暂存目录使用 `.cache.json`。它核对源模型、实际缓冲和外链图片、加工参数及代码，并检查暂存产物和元数据；不一致或丢失时重新加工。缓存省去重复边界计算和封装，不跳过发布筛选、所有权规则或正式资源的不可变版本检查，也不自动推进人物与动画批次。
 
 ### Codex 连接 Blender
 
@@ -264,7 +346,7 @@ sudo install -o root -g island -m 0640 /srv/island/current/deploy/app.production
 
 ## 空安装与账户初始化
 
-先在新数据库执行基础建表，再交互初始化唯一账户：
+先在新数据库执行基础建表，再交互创建账户：
 
 ```sh
 sudo -u island /srv/island/current/island version
@@ -272,9 +354,17 @@ sudo -u island /srv/island/current/island migrate -config /srv/island/config/app
 sudo -u island /srv/island/current/island init -config /srv/island/config/app.yaml
 ```
 
-初始化依次读取用户名、姓名、登录密码及确认、管理密码及确认。终端隐藏密码；密码不能放进命令参数。重复初始化会拒绝，初始余额为零，不导入演示任务、成绩、订单或浏览器数据。
+初始化依次读取用户名、姓名、登录密码及确认、管理密码及确认。终端隐藏密码；密码不能放进命令参数。再次执行 `init` 可创建其他用户名的账户；重复用户名会拒绝。各账户初始余额为零，不导入演示任务、成绩、订单或浏览器数据。
 
-两种密码默认 10–128 个 Unicode 码点。用户名初始化后不可修改；姓名与密码也可通过已解锁的网页管理界面维护。网页退出管理会撤销管理授权，再次进入需要重新输入管理密码；修改任一密码后所有登录会话失效。
+两种密码默认 10–128 个 Unicode 码点。用户名初始化后不可修改；姓名与密码也可通过已解锁的网页管理界面维护。网页退出管理会撤销管理授权，再次进入需要重新输入管理密码；修改任一密码后，该账户的全部登录会话失效，其他账户不受影响。
+
+组同样由服务器维护者创建，命令交互读取组名，重复名称会拒绝：
+
+```sh
+sudo -u island /srv/island/current/island create-group -config /srv/island/config/app.yaml
+```
+
+网页组设置提供已有组列表，加入、退出每次需要输入自己的管理密码。每人最多一组，加入任意已有组不需要其他成员批准。查看范围与退出规则见[账户与组](../FEATURES/ACCOUNT.md#组与成员查看)。新建账户会在同一事务中建立独立商品目录和空钱包；任一步失败都不创建账户，可排除故障后用原输入重新执行 `init`。
 
 ## HTTPS 与常驻进程
 
@@ -299,11 +389,11 @@ Caddy 的域名站点会启用自动 HTTPS；实际签发仍取决于域名解�
 拥有服务器维护权限的人可以重置指定密码：
 
 ```sh
-sudo -u island /srv/island/current/island reset-password -kind login -config /srv/island/config/app.yaml
-sudo -u island /srv/island/current/island reset-password -kind management -config /srv/island/config/app.yaml
+sudo -u island /srv/island/current/island reset-password -username 用户名 -kind login -config /srv/island/config/app.yaml
+sudo -u island /srv/island/current/island reset-password -username 用户名 -kind management -config /srv/island/config/app.yaml
 ```
 
-命令交互读取新密码及确认，并撤销全部会话。它不改变用户名、姓名、余额或业务记录。不提供邮件、短信或网页“忘记密码”入口。
+命令交互读取新密码及确认，并撤销指定账户的全部会话。多个账户时必须使用 `-username`；只有一个账户时可以省略。其他账户会话不受影响。它不改变用户名、姓名、余额或业务记录。不提供邮件、短信或网页“忘记密码”入口。
 
 ## 数据库迁移与不兼容处理
 

@@ -37,21 +37,21 @@ func TestCharacterPurchaseOwnershipAndSharedWardrobe(t *testing.T) {
 	if err := f.Service.DeleteProduct(ctx, f.Principal, product.ID, product.Version); err != nil {
 		t.Fatal(err)
 	}
-	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("hair", "barbarian"))).Purchase
-	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: input.CharacterKey, HairPurchaseID: &hair.ID})
-	if err != nil || saved.CharacterKey != input.CharacterKey || saved.HairPurchaseID == nil || *saved.HairPurchaseID != hair.ID {
+	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("head", "barbarian"))).Purchase
+	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: input.CharacterKey, HeadPurchaseID: &hair.ID})
+	if err != nil || saved.CharacterKey != input.CharacterKey || saved.HeadPurchaseID == nil || *saved.HeadPurchaseID != hair.ID {
 		t.Fatalf("shared outfit=%+v err=%v", saved, err)
 	}
 	if len(saved.CharacterInventory) != 1 || saved.CharacterInventory[0].CharacterKey != input.CharacterKey {
 		t.Fatalf("character inventory=%+v", saved.CharacterInventory)
 	}
-	mixed, mixErr := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: saved.Version, CharacterKey: character.DefaultCharacterKey, HairPurchaseID: &purchase.ID, UpperPurchaseID: &purchase.ID, LowerPurchaseID: &purchase.ID, ShoesPurchaseID: &purchase.ID})
-	if mixErr != nil || mixed.HairPurchaseID == nil || *mixed.HairPurchaseID != purchase.ID || mixed.UpperPurchaseID == nil || *mixed.UpperPurchaseID != purchase.ID {
-		t.Fatalf("character outfit cannot be shared: %+v %v", mixed, mixErr)
+	// 基础身体订单只解锁身体，不能充当任一独立穿戴商品的订单。
+	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: saved.Version, CharacterKey: character.DefaultCharacterKey, HeadPurchaseID: &purchase.ID})
+	requireShopCode(t, err, "INVALID_EQUIPMENT")
+	if len(saved.Inventory) != 1 {
+		t.Fatalf("body order expanded into clothing: %+v", saved.Inventory)
 	}
-	if len(mixed.Inventory) != 5 {
-		t.Fatalf("inventory should expand character into four slots: %+v", mixed.Inventory)
-	}
+
 	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: character.DefaultCharacterKey})
 	requireShopCode(t, err, "VERSION_CONFLICT")
 }
@@ -135,18 +135,9 @@ func TestCharacterProductRejectsInvalidIdentityAndRebinding(t *testing.T) {
 	}
 	product := createProduct(t, f, input)
 	buyProduct(t, f, product)
-	for _, body := range character.Definitions() {
-		if body.Key == character.DefaultCharacterKey || body.Key == input.CharacterKey {
-			continue
-		}
-		changed := input
-		changed.CharacterKey = body.Key
-		changed.AssetKey = body.ThumbnailAssetKey
-		_, err := f.Service.UpdateProduct(ctx, f.Principal, product.ID, shop.ProductUpdate{ProductInput: changed, ExpectedVersion: product.Version})
-		requireShopCode(t, err, "PRODUCT_ITEM_LOCKED")
-		return
-	}
-	t.Fatal("角色目录不足以验证售出后换绑")
+	changed := appearanceProduct("upper", "barbarian")
+	_, err := f.Service.UpdateProduct(ctx, f.Principal, product.ID, shop.ProductUpdate{ProductInput: changed, ExpectedVersion: product.Version})
+	requireShopCode(t, err, "PRODUCT_TYPE_LOCKED")
 }
 
 // 插入角色订单失败不能留下扣款、权益或幂等成功回执；原请求可在故障修复后恢复。
@@ -223,9 +214,9 @@ func TestCharacterCanWearInitialFreeOutfit(t *testing.T) {
 	role := catalogCharacterProduct(t)
 	roleOrder := buyProduct(t, f, createProduct(t, f, role)).Purchase
 	defaults, _ := character.Get(character.DefaultCharacterKey)
-	command := shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: role.CharacterKey, HairFreeWearableKey: &defaults.Defaults.Hair, UpperFreeWearableKey: &defaults.Defaults.Upper, LowerFreeWearableKey: &defaults.Defaults.Lower, ShoesFreeWearableKey: &defaults.Defaults.Shoes}
+	command := shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: role.CharacterKey, HeadFreeWearableKey: &defaults.Defaults.Head, UpperFreeWearableKey: &defaults.Defaults.Upper, LowerFreeWearableKey: &defaults.Defaults.Lower, ShoesFreeWearableKey: &defaults.Defaults.Shoes}
 	saved, err := f.Service.SaveAppearance(ctx, f.Principal, command)
-	if err != nil || saved.Version != 2 || saved.HairFreeWearableKey == nil || *saved.HairFreeWearableKey != defaults.Defaults.Hair || saved.HairPurchaseID != nil || saved.UpperPurchaseID != nil {
+	if err != nil || saved.Version != 2 || saved.HeadFreeWearableKey == nil || *saved.HeadFreeWearableKey != defaults.Defaults.Head || saved.HeadPurchaseID != nil || saved.UpperPurchaseID != nil {
 		t.Fatalf("free outfit=%+v err=%v", saved, err)
 	}
 	read, err := f.Service.Appearance(ctx, f.Principal)
@@ -236,24 +227,24 @@ func TestCharacterCanWearInitialFreeOutfit(t *testing.T) {
 	requireShopCode(t, err, "VERSION_CONFLICT")
 	invalid := command
 	invalid.ExpectedVersion = 2
-	invalid.HairPurchaseID = &roleOrder.ID
+	invalid.HeadPurchaseID = &roleOrder.ID
 	_, err = f.Service.SaveAppearance(ctx, f.Principal, invalid)
 	requireShopCode(t, err, "INVALID_EQUIPMENT")
 	paid := role.CharacterKey
 	for _, candidate := range character.Definitions() {
-		if candidate.Key != character.DefaultCharacterKey && candidate.Key != role.CharacterKey && candidate.Defaults.Hair != defaults.Defaults.Hair {
-			paid = candidate.Defaults.Hair
+		if candidate.Key != character.DefaultCharacterKey && candidate.Key != role.CharacterKey && candidate.Defaults.Head != defaults.Defaults.Head {
+			paid = candidate.Defaults.Head
 			break
 		}
 	}
 	invalid = command
 	invalid.ExpectedVersion = 2
-	invalid.HairFreeWearableKey = &paid
+	invalid.HeadFreeWearableKey = &paid
 	_, err = f.Service.SaveAppearance(ctx, f.Principal, invalid)
 	requireShopCode(t, err, "INVALID_EQUIPMENT")
 	invalid = command
 	invalid.ExpectedVersion = 2
-	invalid.HairFreeWearableKey = &defaults.Defaults.Upper
+	invalid.HeadFreeWearableKey = &defaults.Defaults.Upper
 	_, err = f.Service.SaveAppearance(ctx, f.Principal, invalid)
 	requireShopCode(t, err, "INVALID_EQUIPMENT")
 	invalid = command
@@ -264,11 +255,11 @@ func TestCharacterCanWearInitialFreeOutfit(t *testing.T) {
 	invalid = command
 	invalid.ExpectedVersion = 2
 	empty := ""
-	invalid.HairFreeWearableKey = &empty
+	invalid.HeadFreeWearableKey = &empty
 	_, err = f.Service.SaveAppearance(ctx, f.Principal, invalid)
 	requireShopCode(t, err, "INVALID_REQUEST")
 	after, err := f.Service.Appearance(ctx, f.Principal)
-	if err != nil || after.Version != 2 || after.HairFreeWearableKey == nil || *after.HairFreeWearableKey != defaults.Defaults.Hair {
+	if err != nil || after.Version != 2 || after.HeadFreeWearableKey == nil || *after.HeadFreeWearableKey != defaults.Defaults.Head {
 		t.Fatalf("invalid selection partially committed: %+v err=%v", after, err)
 	}
 	var count int
@@ -276,7 +267,7 @@ func TestCharacterCanWearInitialFreeOutfit(t *testing.T) {
 		t.Fatalf("free outfit manufactured order count=%d err=%v", count, err)
 	}
 	restored, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: role.CharacterKey})
-	if err != nil || restored.Version != 3 || restored.HairFreeWearableKey != nil || restored.UpperFreeWearableKey != nil || restored.LowerFreeWearableKey != nil || restored.ShoesFreeWearableKey != nil {
+	if err != nil || restored.Version != 3 || restored.HeadFreeWearableKey != nil || restored.UpperFreeWearableKey != nil || restored.LowerFreeWearableKey != nil || restored.ShoesFreeWearableKey != nil {
 		t.Fatalf("default role outfit not restored: %+v err=%v", restored, err)
 	}
 }

@@ -10,9 +10,9 @@ type Appearance = components['schemas']['AppearanceState'];
 test('真实购买服装后取消与整套保存同步共享人物', async ({ page }, testInfo) => {
   const errors: string[] = []; page.on('pageerror', (error) => errors.push(error.message));
   await openCharacterPreview(page);
-  const item = await ownedAlternativeUpper(page, `三维上衣-${testInfo.project.name}`);
+  const item = await ownedAlternativeUpper(page, `三维上装-${testInfo.project.name}`, 'kaykit-legacy-skeleton-mage-upper');
   const initial = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
-  const reset = { ...appearanceRequest(initial), upper_purchase_id: null };
+  const reset = { ...appearanceRequest(initial), upper_purchase_id: null, upper_free_wearable_key: null };
   expect((await appearanceAPI(page, '/appearance', 'PUT', reset)).ok()).toBe(true);
   await page.reload();
   await expect(page.getByTestId('character-render-status')).toHaveText(preview.status.ready);
@@ -41,23 +41,22 @@ test('真实购买服装后取消与整套保存同步共享人物', async ({ pa
 });
 
 test('模型读取失败保留HTML重试与返回入口', async ({ page }) => {
-  await page.route('**/api/v1/assets/character-medium-v1', (route) => route.abort());
-  await page.goto('/character-preview.html');
-  const account = (await import('../src/content/zh-CN.json', { with: { type: 'json' } })).default;
-  await page.getByLabel(account.account.username).fill('island-e2e');
-  await page.getByLabel(account.account.loginPassword).fill('Island-Test-2026');
-  await page.getByRole('button', { name: account.account.login, exact: true }).click();
+  await openCharacterPreview(page);
+  const state = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
+  const modelURL = state.characters.find((item) => item.character_key === state.character_key)!.model_url;
+  await page.route(`**${modelURL}`, (route) => route.abort());
+  await page.reload();
   await expect(page.getByTestId('character-render-status')).toHaveText(preview.status.error);
   await expect(page.getByRole('link', { name: preview.back })).toHaveAttribute('href', '/');
-  await page.unroute('**/api/v1/assets/character-medium-v1');
+  await page.unroute(`**${modelURL}`);
   await page.getByRole('button', { name: /重.*(试|载|加载)/ }).click();
   await expect(page.getByTestId('character-render-status')).toHaveText(preview.status.ready);
 });
 
 // 另一客户端推进版本后，编辑器必须保留草稿并由用户明确核对后再保存。
-test('真实外观冲突保留四槽草稿并允许核对当前版本', async ({ page }, testInfo) => {
+test('真实外观冲突保留六槽草稿并允许核对当前版本', async ({ page }, testInfo) => {
   await openCharacterPreview(page);
-  const item = await ownedAlternativeUpper(page, `冲突上衣-${testInfo.project.name}`);
+  const item = await ownedAlternativeUpper(page, `冲突上装-${testInfo.project.name}`, 'kaykit-legacy-skeleton-warrior-upper');
   const before = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
   const desired = before.upper_purchase_id === item.purchase_id ? null : item.purchase_id;
   const body = before.characters.find((value) => value.character_key === before.character_key)!;
@@ -79,12 +78,14 @@ test('真实外观冲突保留四槽草稿并允许核对当前版本', async ({
   const saved = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
   expect(saved.upper_purchase_id).toBe(desired);
   expect(saved.version).toBe(before.version + 2);
+  await expect(dialog.locator('.character3d-preview')).toHaveAttribute('data-character-status', 'ready');
+  await dialog.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('repaired-chest-armor.png') });
 });
 
 // 实际提交成功后丢弃响应，核对只能读取结果，不能再产生一次保存。
 test('保存响应丢失后核实真实结果并只发布已确认外观', async ({ page }, testInfo) => {
   await openCharacterPreview(page);
-  const item = await ownedAlternativeUpper(page, `恢复上衣-${testInfo.project.name}`);
+  const item = await ownedAlternativeUpper(page, `恢复上装-${testInfo.project.name}`);
   const before = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
   const desired = before.upper_purchase_id === item.purchase_id ? null : item.purchase_id;
   const body = before.characters.find((value) => value.character_key === before.character_key)!;

@@ -1,5 +1,5 @@
-import { Component, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import { Component, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import type { PointerEvent, ReactNode } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrthographicCamera, PCFShadowMap } from 'three';
 import { useGraphicsMotion } from '../../graphics/useGraphicsMotion';
@@ -18,6 +18,23 @@ export interface CharacterPreview3DProps {
   className?: string; // 宿主页面的布局样式。
   label?: string; // 该视图的可访问名称。
   attachments?: readonly CharacterAttachment[]; // 需要在预览中检查的活动道具。
+  rotatable?: boolean; // 仅装扮编辑器开放手动水平旋转。
+}
+
+// 一次主指针拖动先确定方向，纵向意图交还给页面滚动。
+interface PreviewDrag {
+  pointerId: number; // 捕获的主指针。
+  startX: number; // 判断拖动方向的起点。
+  startY: number; // 判断纵向滚动的起点。
+  lastX: number; // 上一帧横坐标。
+  width: number; // 一次完整水平拖动对应一周。
+  horizontal: boolean; // 超过阈值后锁定水平旋转。
+}
+
+// 角度保持在一周以内，不让连续拖动累积很大的弧度。
+function normalizeRotation(angle: number) {
+  const turn = 2 * Math.PI;
+  return (angle % turn + turn) % turn;
 }
 
 // WebGL 初始化或渲染崩溃不能让保存与关闭等 HTML 操作一起消失。
@@ -49,8 +66,12 @@ function PreviewEnvironment({ onError }: { onError: (error: unknown) => void }) 
 }
 
 // 所有业务页面复用单人物取景，但每个视图持有自己的 Canvas 与骨架实例。
-export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = false, onStatus, className = '', label = content.label, attachments }: CharacterPreview3DProps) {
+export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = false, onStatus, className = '', label = content.label, attachments, rotatable = false }: CharacterPreview3DProps) {
   const stopped = useGraphicsMotion(paused);
+  const hintID = useId();
+  const [rotation, setRotation] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const drag = useRef<PreviewDrag | null>(null);
   const statusCallback = useRef(onStatus);
   useLayoutEffect(() => { statusCallback.current = onStatus; }, [onStatus]);
   const [attempt, setAttempt] = useState(0);
@@ -64,14 +85,54 @@ export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = 
     if (fatal) setCanvasGeneration((value) => value + 1);
     setFatal(false); setStatus({ phase: 'loading' }); setAttempt((value) => value + 1);
   };
-  return <section className={`character3d-preview ${className}`} aria-label={label} data-appearance-version={snapshot.version} data-character-key={draft?.character_key ?? snapshot.character_key} data-character-status={status.phase} data-character-action={action}>
-    {!fatal && <CharacterCanvasBoundary key={canvasGeneration} onError={failed}>
-      <Canvas orthographic shadows={{ type: PCFShadowMap }} dpr={[1, 1.5]} frameloop={stopped ? 'demand' : 'always'} camera={{ near: 0.1, far: 50 }} fallback={<p>{content.unsupported}</p>}>
-        <PreviewEnvironment onError={failed} />
-        <CharacterModel3D snapshot={snapshot} {...(draft ? { draft } : {})} {...(attachments ? { attachments } : {})} action={action} paused={stopped} onStatus={changed} attempt={attempt} />
-      </Canvas>
-    </CharacterCanvasBoundary>}
-    {status.phase === 'loading' && <p className="character3d-notice" role="status">{content.loading}</p>}
-    {status.phase === 'error' && <div className="character3d-notice character3d-error" role="alert"><p>{content.error}</p><button type="button" onClick={retry}>{content.retry}</button></div>}
+
+  // 松手、取消和捕获丢失共用终止路径，避免后续移动继续转动人物。
+  function endDrag(event: PointerEvent<HTMLDivElement>) {
+    if (drag.current?.pointerId !== event.pointerId) return;
+    drag.current = null; setDragging(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
+  // HTML 重试按钮不参与拖动；浏览器仍可接管纵向滚动和双指缩放。
+  function beginDrag(event: PointerEvent<HTMLDivElement>) {
+    if (!rotatable || !event.isPrimary || event.button !== 0 || drag.current || (event.target instanceof Element && event.target.closest('button'))) return;
+    drag.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, lastX: event.clientX, width: event.currentTarget.getBoundingClientRect().width, horizontal: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  // 拖过整个预览宽度转一周，仅更新朝向，不触发换装或保存。
+  function moveDrag(event: PointerEvent<HTMLDivElement>) {
+    const current = drag.current;
+    if (!rotatable || !current || current.pointerId !== event.pointerId) return;
+    if (!current.horizontal) {
+      const dx = Math.abs(event.clientX - current.startX), dy = Math.abs(event.clientY - current.startY);
+      if (Math.max(dx, dy) < 6) return;
+      if (dy >= dx) { endDrag(event); return; }
+      current.horizontal = true; setDragging(true);
+    }
+    const delta = (event.clientX - current.lastX) / current.width * Math.PI * 2;
+    current.lastX = event.clientX;
+    setRotation((value) => normalizeRotation(value + delta));
+  }
+
+  return <section className={`character3d-preview ${rotatable ? 'character3d-rotatable' : ''} ${className}`} aria-label={label} aria-describedby={rotatable ? hintID : undefined} data-appearance-version={snapshot.version} data-character-key={draft?.character_key ?? snapshot.character_key} data-character-status={status.phase} data-character-action={action} data-character-rotation={rotatable ? rotation : 0}>
+    <div className={`character3d-stage ${dragging ? 'character3d-dragging' : ''}`} onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}>
+      {!fatal && <CharacterCanvasBoundary key={canvasGeneration} onError={failed}>
+        <Canvas orthographic shadows={{ type: PCFShadowMap }} dpr={[1, 1.5]} frameloop={stopped ? 'demand' : 'always'} camera={{ near: 0.1, far: 50 }} style={rotatable ? { touchAction: 'pan-y pinch-zoom' } : {}} fallback={<p>{content.unsupported}</p>}>
+          <PreviewEnvironment onError={failed} />
+          <CharacterModel3D snapshot={snapshot} {...(draft ? { draft } : {})} {...(attachments ? { attachments } : {})} rotation={rotatable ? rotation : 0} action={action} paused={stopped} onStatus={changed} attempt={attempt} />
+        </Canvas>
+      </CharacterCanvasBoundary>}
+      {status.phase === 'loading' && <p className="character3d-notice" role="status">{content.loading}</p>}
+      {status.phase === 'error' && <div className="character3d-notice character3d-error" role="alert"><p>{content.error}</p><button type="button" onClick={retry}>{content.retry}</button></div>}
+    </div>
+    {rotatable && <div className="character3d-rotation-controls">
+      <p id={hintID}>{content.rotation.hint}</p>
+      <div className="character3d-rotation-buttons">
+        <button type="button" onClick={() => setRotation((value) => normalizeRotation(value - Math.PI / 4))}>{content.rotation.left}</button>
+        <button type="button" onClick={() => setRotation(0)}>{content.rotation.reset}</button>
+        <button type="button" onClick={() => setRotation((value) => normalizeRotation(value + Math.PI / 4))}>{content.rotation.right}</button>
+      </div>
+    </div>}
   </section>;
 }

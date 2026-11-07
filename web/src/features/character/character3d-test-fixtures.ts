@@ -3,7 +3,7 @@ import type { components } from '../../api/schema';
 import type { GLTFSource } from '../../graphics/gltf-resources';
 
 // 测试使用真实 Three 蒙皮对象，网络顺序由独立 deferred 控制。
-export function characterSource(names = ['face', 'body', 'hair-a', 'hair-b', 'upper-a', 'upper-b', 'lower-a', 'lower-b', 'shoes-a', 'shoes-b']): GLTFSource {
+export function characterSource(names = ['face', 'body', 'face-a', 'face-b', 'back-a', 'back-b', 'head-a', 'head-b', 'upper-a', 'upper-b', 'lower-a', 'lower-b', 'shoes-a', 'shoes-b']): GLTFSource {
   const scene = new Group();
   const bone = new Bone(); bone.name = 'root'; scene.add(bone);
   const geometry = new BoxGeometry();
@@ -32,12 +32,12 @@ export function activityBookSource(): GLTFSource {
   scene.add(book); return { scene, animations: [] };
 }
 
-// 四槽定义和所有权是服务响应，不依赖商品名称或 key 前缀。
+// 六槽定义和所有权是服务响应，不依赖商品名称或 key 前缀。
 export function appearanceFixture(): components['schemas']['AppearanceState'] {
-  const slots = ['hair', 'upper', 'lower', 'shoes'] as const;
+  const slots = ['face', 'head', 'upper', 'lower', 'shoes', 'back'] as const;
   return {
-    version: 1, character_key: 'body', hair_purchase_id: null, upper_purchase_id: null, lower_purchase_id: null, shoes_purchase_id: null,
-    characters: [{ name: '测试人物', character_key: 'body', rig_key: 'rig', model_asset_key: 'base', model_url: '/base.glb', scale: 1, fixed_nodes: ['face'], body_regions: { torso: ['body'] }, defaults: { hair: 'hair-a', upper: 'upper-a', lower: 'lower-a', shoes: 'shoes-a' }, animations: { idle: { clip: 'Stand', asset_key: 'base', url: '/base.glb' } } }],
+    version: 1, character_key: 'body', face_purchase_id: null, back_purchase_id: null, head_purchase_id: null, upper_purchase_id: null, lower_purchase_id: null, shoes_purchase_id: null,
+    characters: [{ name: '测试人物', character_key: 'body', rig_key: 'rig', model_asset_key: 'base', model_url: '/base.glb', scale: 1, fixed_nodes: ['face'], body_regions: { torso: ['body'] }, defaults: { face: 'face-a', back: 'back-a', head: 'head-a', upper: 'upper-a', lower: 'lower-a', shoes: 'shoes-a' }, animations: { idle: { clip: 'Stand', asset_key: 'base', url: '/base.glb' } } }],
     wearables: slots.flatMap((slot) => ['a', 'b'].map((variant) => ({ name: `${slot}/${variant}`, wearable_key: `${slot}-${variant}`, slot, character_key: 'body', rig_key: 'rig', model_asset_key: 'base', model_url: '/base.glb', thumbnail_asset_key: `${slot}-${variant}`, thumbnail_url: '/thumbnail.png', nodes: [`${slot}-${variant}`], covers: slot === 'upper' && variant === 'a' ? ['torso'] : [] }))),
     inventory: slots.map((slot) => ({ purchase_id: `purchase-${slot}`, wearable_key: `${slot}-b` })),
   };

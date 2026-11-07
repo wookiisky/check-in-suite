@@ -13,9 +13,9 @@ import (
 )
 
 // readAppearanceSelection supplies free defaults until the first explicit save.
-func readAppearanceSelection(ctx context.Context, tx *sql.Tx) (AppearanceState, error) {
+func readAppearanceSelection(ctx context.Context, tx *sql.Tx, accountID int64) (AppearanceState, error) {
 	result := AppearanceState{Version: 1, CharacterKey: character.DefaultCharacterKey, DefaultCharacterKey: character.DefaultCharacterKey}
-	err := tx.QueryRowContext(ctx, "SELECT version,character_key,hair_purchase_id,upper_purchase_id,lower_purchase_id,shoes_purchase_id,hair_free_wearable_key,upper_free_wearable_key,lower_free_wearable_key,shoes_free_wearable_key FROM appearance_state WHERE id=1").Scan(&result.Version, &result.CharacterKey, &result.HairPurchaseID, &result.UpperPurchaseID, &result.LowerPurchaseID, &result.ShoesPurchaseID, &result.HairFreeWearableKey, &result.UpperFreeWearableKey, &result.LowerFreeWearableKey, &result.ShoesFreeWearableKey)
+	err := tx.QueryRowContext(ctx, "SELECT version,character_key,face_purchase_id,head_purchase_id,upper_purchase_id,lower_purchase_id,shoes_purchase_id,back_purchase_id,face_free_wearable_key,head_free_wearable_key,upper_free_wearable_key,lower_free_wearable_key,shoes_free_wearable_key,back_free_wearable_key FROM appearance_state WHERE id=?", accountID).Scan(&result.Version, &result.CharacterKey, &result.FacePurchaseID, &result.HeadPurchaseID, &result.UpperPurchaseID, &result.LowerPurchaseID, &result.ShoesPurchaseID, &result.BackPurchaseID, &result.FaceFreeWearableKey, &result.HeadFreeWearableKey, &result.UpperFreeWearableKey, &result.LowerFreeWearableKey, &result.ShoesFreeWearableKey, &result.BackFreeWearableKey)
 	if errors.Is(err, sql.ErrNoRows) {
 		return result, nil
 	}
@@ -23,8 +23,8 @@ func readAppearanceSelection(ctx context.Context, tx *sql.Tx) (AppearanceState, 
 }
 
 // readAppearance keeps the selected outfit and complete wardrobe in one database snapshot.
-func readAppearance(ctx context.Context, tx *sql.Tx) (AppearanceState, error) {
-	result, err := readAppearanceSelection(ctx, tx)
+func readAppearance(ctx context.Context, tx *sql.Tx, accountID int64) (AppearanceState, error) {
+	result, err := readAppearanceSelection(ctx, tx, accountID)
 	if err != nil {
 		return result, err
 	}
@@ -32,7 +32,7 @@ func readAppearance(ctx context.Context, tx *sql.Tx) (AppearanceState, error) {
 	result.PreviewAnimations = character.PreviewAnimations()
 	result.Inventory = []AppearanceOwnedItem{}
 	result.CharacterInventory = []AppearanceOwnedCharacter{}
-	rows, err := tx.QueryContext(ctx, "SELECT id,wearable_key_snapshot,character_key_snapshot,type_snapshot FROM purchases WHERE type_snapshot IN (?,?) AND status=? ORDER BY created_at,id", TypeWearable, TypeCharacter, StatusOwned)
+	rows, err := tx.QueryContext(ctx, "SELECT id,wearable_key_snapshot,character_key_snapshot,type_snapshot FROM purchases WHERE account_id=? AND type_snapshot IN (?,?) AND status=? ORDER BY created_at,id", accountID, TypeWearable, TypeCharacter, StatusOwned)
 	if err != nil {
 		return result, err
 	}
@@ -45,11 +45,6 @@ func readAppearance(ctx context.Context, tx *sql.Tx) (AppearanceState, error) {
 		}
 		if kind == TypeCharacter {
 			result.CharacterInventory = append(result.CharacterInventory, AppearanceOwnedCharacter{PurchaseID: item.PurchaseID, CharacterKey: bodyKey})
-			if definition, ok := character.Get(bodyKey); ok {
-				for _, wearableKey := range []string{definition.Defaults.Hair, definition.Defaults.Upper, definition.Defaults.Lower, definition.Defaults.Shoes} {
-					result.Inventory = append(result.Inventory, AppearanceOwnedItem{PurchaseID: item.PurchaseID, WearableKey: wearableKey})
-				}
-			}
 		} else {
 			result.Inventory = append(result.Inventory, item)
 		}
@@ -59,6 +54,7 @@ func readAppearance(ctx context.Context, tx *sql.Tx) (AppearanceState, error) {
 
 // Appearance authorizes and reads the saved outfit without changing account or layout versions.
 func (s *Service) Appearance(ctx context.Context, p account.Principal) (AppearanceState, error) {
+	accountID := p.AccountID
 	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return AppearanceState{}, err
@@ -67,7 +63,7 @@ func (s *Service) Appearance(ctx context.Context, p account.Principal) (Appearan
 	if err = account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
 		return AppearanceState{}, err
 	}
-	result, err := readAppearance(ctx, tx)
+	result, err := readAppearance(ctx, tx, accountID)
 	if err != nil {
 		return AppearanceState{}, err
 	}
@@ -75,20 +71,34 @@ func (s *Service) Appearance(ctx context.Context, p account.Principal) (Appearan
 }
 
 // validateAppearance checks ownership and compatibility independently from the live product offer.
-func validateAppearance(ctx context.Context, tx *sql.Tx, input SaveAppearanceInput) error {
+func validateAppearance(ctx context.Context, tx *sql.Tx, accountID int64, input SaveAppearanceInput) error {
 	body, ok := character.Get(input.CharacterKey)
 	if !ok {
 		return core.Invalid("character_key", "INVALID_VALUE")
 	}
-	if body.Key != character.DefaultCharacterKey {
-		var owned bool
-		if err := tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM purchases WHERE type_snapshot=? AND character_key_snapshot=? AND status=?)", TypeCharacter, body.Key, StatusOwned).Scan(&owned); err != nil {
+	// 默认部件权益属于已取得的基础身体，不把角色订单伪装成衣物订单。
+	ownedBodies := map[string]bool{character.DefaultCharacterKey: true}
+	rows, err := tx.QueryContext(ctx, "SELECT character_key_snapshot FROM purchases WHERE account_id=? AND type_snapshot=? AND status=?", accountID, TypeCharacter, StatusOwned)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		var key string
+		if err := rows.Scan(&key); err != nil {
+			rows.Close()
 			return err
 		}
-		if !owned {
-			return core.Fail(422, "INVALID_EQUIPMENT")
-		}
+		ownedBodies[key] = true
 	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return err
+	}
+	if !ownedBodies[body.Key] {
+		return core.Fail(422, "INVALID_EQUIPMENT")
+	}
+
 	for _, slot := range []struct {
 		key        character.Slot // Required body attachment.
 		field      string         // Request field used for an empty identifier error.
@@ -96,18 +106,26 @@ func validateAppearance(ctx context.Context, tx *sql.Tx, input SaveAppearanceInp
 		freeField  string         // Optional initial free garment request field.
 		freeKey    *string        // Only a default garment of the initial free character can be shared.
 	}{
-		{character.SlotHair, "hair_purchase_id", input.HairPurchaseID, "hair_free_wearable_key", input.HairFreeWearableKey},
+		{character.SlotFace, "face_purchase_id", input.FacePurchaseID, "face_free_wearable_key", input.FaceFreeWearableKey},
+		{character.SlotHead, "head_purchase_id", input.HeadPurchaseID, "head_free_wearable_key", input.HeadFreeWearableKey},
 		{character.SlotUpper, "upper_purchase_id", input.UpperPurchaseID, "upper_free_wearable_key", input.UpperFreeWearableKey},
 		{character.SlotLower, "lower_purchase_id", input.LowerPurchaseID, "lower_free_wearable_key", input.LowerFreeWearableKey},
 		{character.SlotShoes, "shoes_purchase_id", input.ShoesPurchaseID, "shoes_free_wearable_key", input.ShoesFreeWearableKey},
+		{character.SlotBack, "back_purchase_id", input.BackPurchaseID, "back_free_wearable_key", input.BackFreeWearableKey},
 	} {
 		if slot.freeKey != nil {
 			if strings.TrimSpace(*slot.freeKey) == "" {
 				return core.Invalid(slot.freeField, "INVALID_VALUE")
 			}
-			free, ok := character.Get(character.DefaultCharacterKey)
 			wearable, found := character.GetWearable(*slot.freeKey)
-			if slot.purchaseID != nil || !ok || !found || defaultWearableKey(free.Defaults, slot.key) != *slot.freeKey || wearable.Slot != slot.key || !compatibleBody(wearable, body) || wearable.RigKey != body.RigKey {
+			entitled := false
+			for _, source := range character.Definitions() {
+				if ownedBodies[source.Key] && source.Defaults.ForSlot(slot.key) == *slot.freeKey {
+					entitled = true
+					break
+				}
+			}
+			if slot.purchaseID != nil || !entitled || !found || wearable.Slot != slot.key || !compatibleBody(wearable, body) || wearable.RigKey != body.RigKey {
 				return core.Fail(422, "INVALID_EQUIPMENT")
 			}
 			continue
@@ -118,26 +136,23 @@ func validateAppearance(ctx context.Context, tx *sql.Tx, input SaveAppearanceInp
 		if strings.TrimSpace(*slot.purchaseID) == "" {
 			return core.Invalid(slot.field, "INVALID_VALUE")
 		}
-		purchase, err := readPurchase(ctx, tx, *slot.purchaseID)
+		purchase, err := readPurchase(ctx, tx, accountID, *slot.purchaseID)
 		if err != nil {
 			return err
 		}
 		wearableKey := purchase.WearableKey
-		if purchase.TypeSnapshot == TypeCharacter {
-			if definition, ok := character.Get(purchase.CharacterKey); ok {
-				wearableKey = defaultWearableKey(definition.Defaults, slot.key)
-			}
-		}
+
 		wearable, found := character.GetWearable(wearableKey)
-		if purchase.Status != StatusOwned || (purchase.TypeSnapshot != TypeWearable && purchase.TypeSnapshot != TypeCharacter) || !found || wearable.Slot != slot.key || !compatibleBody(wearable, body) || wearable.RigKey != body.RigKey {
+		if purchase.Status != StatusOwned || purchase.TypeSnapshot != TypeWearable || !found || wearable.Slot != slot.key || !compatibleBody(wearable, body) || wearable.RigKey != body.RigKey {
 			return core.Fail(422, "INVALID_EQUIPMENT")
 		}
 	}
 	return nil
 }
 
-// SaveAppearance atomically replaces the body and all four slots after a version check.
+// SaveAppearance atomically replaces the body and all six slots after a version check.
 func (s *Service) SaveAppearance(ctx context.Context, p account.Principal, input SaveAppearanceInput) (AppearanceState, error) {
+	accountID := p.AccountID
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return AppearanceState{}, err
@@ -150,26 +165,26 @@ func (s *Service) SaveAppearance(ctx context.Context, p account.Principal, input
 	if input.ExpectedVersion < 1 || input.ExpectedVersion > core.MaxInteger {
 		return AppearanceState{}, core.Invalid("expected_version", "INVALID_VALUE")
 	}
-	current, err := readAppearanceSelection(ctx, tx)
+	current, err := readAppearanceSelection(ctx, tx, accountID)
 	if err != nil {
 		return AppearanceState{}, err
 	}
 	if current.Version != input.ExpectedVersion {
 		return AppearanceState{}, core.VersionConflict(current.Version)
 	}
-	if err = validateAppearance(ctx, tx, input); err != nil {
+	if err = validateAppearance(ctx, tx, accountID, input); err != nil {
 		return AppearanceState{}, err
 	}
 	version, err := core.Add(current.Version, 1)
 	if err != nil {
 		return AppearanceState{}, err
 	}
-	_, err = tx.ExecContext(ctx, `INSERT INTO appearance_state(id,version,character_key,hair_purchase_id,upper_purchase_id,lower_purchase_id,shoes_purchase_id,hair_free_wearable_key,upper_free_wearable_key,lower_free_wearable_key,shoes_free_wearable_key) VALUES(1,?,?,?,?,?,?,?,?,?,?)
-        ON CONFLICT(id) DO UPDATE SET version=excluded.version,character_key=excluded.character_key,hair_purchase_id=excluded.hair_purchase_id,upper_purchase_id=excluded.upper_purchase_id,lower_purchase_id=excluded.lower_purchase_id,shoes_purchase_id=excluded.shoes_purchase_id,hair_free_wearable_key=excluded.hair_free_wearable_key,upper_free_wearable_key=excluded.upper_free_wearable_key,lower_free_wearable_key=excluded.lower_free_wearable_key,shoes_free_wearable_key=excluded.shoes_free_wearable_key`, version, input.CharacterKey, input.HairPurchaseID, input.UpperPurchaseID, input.LowerPurchaseID, input.ShoesPurchaseID, input.HairFreeWearableKey, input.UpperFreeWearableKey, input.LowerFreeWearableKey, input.ShoesFreeWearableKey)
+	_, err = tx.ExecContext(ctx, `INSERT INTO appearance_state(id,version,character_key,face_purchase_id,head_purchase_id,upper_purchase_id,lower_purchase_id,shoes_purchase_id,back_purchase_id,face_free_wearable_key,head_free_wearable_key,upper_free_wearable_key,lower_free_wearable_key,shoes_free_wearable_key,back_free_wearable_key) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(id) DO UPDATE SET version=excluded.version,character_key=excluded.character_key,face_purchase_id=excluded.face_purchase_id,head_purchase_id=excluded.head_purchase_id,upper_purchase_id=excluded.upper_purchase_id,lower_purchase_id=excluded.lower_purchase_id,shoes_purchase_id=excluded.shoes_purchase_id,back_purchase_id=excluded.back_purchase_id,face_free_wearable_key=excluded.face_free_wearable_key,head_free_wearable_key=excluded.head_free_wearable_key,upper_free_wearable_key=excluded.upper_free_wearable_key,lower_free_wearable_key=excluded.lower_free_wearable_key,shoes_free_wearable_key=excluded.shoes_free_wearable_key,back_free_wearable_key=excluded.back_free_wearable_key`, accountID, version, input.CharacterKey, input.FacePurchaseID, input.HeadPurchaseID, input.UpperPurchaseID, input.LowerPurchaseID, input.ShoesPurchaseID, input.BackPurchaseID, input.FaceFreeWearableKey, input.HeadFreeWearableKey, input.UpperFreeWearableKey, input.LowerFreeWearableKey, input.ShoesFreeWearableKey, input.BackFreeWearableKey)
 	if err != nil {
 		return AppearanceState{}, err
 	}
-	result, err := readAppearance(ctx, tx)
+	result, err := readAppearance(ctx, tx, accountID)
 	if err != nil {
 		return AppearanceState{}, err
 	}
@@ -192,19 +207,4 @@ func compatibleBody(wearable character.Wearable, body character.Definition) bool
 		return garmentBody == body.BodyKey
 	}
 	return wearable.CharacterKey == body.Key
-}
-
-// defaultWearableKey resolves a declared slot without guessing a garment's identity from its name.
-func defaultWearableKey(selection character.Selection, slot character.Slot) string {
-	switch slot {
-	case character.SlotHair:
-		return selection.Hair
-	case character.SlotUpper:
-		return selection.Upper
-	case character.SlotLower:
-		return selection.Lower
-	case character.SlotShoes:
-		return selection.Shoes
-	}
-	return ""
 }

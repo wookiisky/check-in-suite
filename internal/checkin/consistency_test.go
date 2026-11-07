@@ -33,7 +33,7 @@ func TestNegativeBalanceRetainsPurchase(t *testing.T) {
 	if _, err = tx.ExecContext(ctx, "INSERT INTO products(id,type,name,asset_key,coin_price,diamond_price,enabled,created_at,updated_at) VALUES('product','reward','奖励','gift-v1',8,0,1,0,0); INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at) VALUES('purchase','product','reward','奖励','','gift-v1',8,0,'pending',0)"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = wallet.Apply(ctx, tx, wallet.Event{Type: wallet.PurchaseDebit, ResourceID: "purchase", Coins: -8, At: f.s.Now()}); err != nil {
+	if _, err = wallet.Apply(ctx, tx, f.p.AccountID, wallet.Event{Type: wallet.PurchaseDebit, ResourceID: "purchase", Coins: -8, At: f.s.Now()}); err != nil {
 		t.Fatal(err)
 	}
 	if err = tx.Commit(); err != nil {

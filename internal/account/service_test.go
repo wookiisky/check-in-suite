@@ -45,7 +45,7 @@ func TestAccountLifecycle(t *testing.T) {
 	if err := s.Initialize(ctx, "island", "小朋友", "login password", "manage password"); err != nil {
 		t.Fatal(err)
 	}
-	assertCode(t, s.Initialize(ctx, "other", "名字", "login password", "manage password"), "ACCOUNT_EXISTS")
+	assertCode(t, s.Initialize(ctx, "island", "名字", "login password", "manage password"), "ACCOUNT_EXISTS")
 	_, _, err := s.Login(ctx, "island", "wrong password")
 	assertCode(t, err, "INVALID_CREDENTIALS")
 	token, session, err := s.Login(ctx, "island", "login password")

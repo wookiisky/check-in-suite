@@ -79,6 +79,12 @@ export async function prepareCharacter(resolved: ResolvedAppearance, cache: Gltf
     const { root, mixer } = animated;
     root.scale.setScalar(definition.scale);
     const covered = new Set(wearables.flatMap((item) => item.covers));
+    // 部件可声明可遮盖区域；仅其他部件的覆盖生效，形象不会隐藏自己的头皮。
+    const selectedNodes = new Map(wearables.map((item) => {
+      const coveredByOthers = new Set(wearables.filter((other) => other !== item).flatMap((other) => other.covers));
+      const hidden = new Set(Object.entries(item.regions ?? {}).filter(([region]) => coveredByOthers.has(region)).flatMap(([, names]) => names));
+      return [item, item.nodes.filter((name) => !hidden.has(name))] as const;
+    }));
     const baseNames = new Set([...definition.fixed_nodes, ...Object.entries(definition.body_regions).filter(([region]) => !covered.has(region)).flatMap(([, names]) => names)]);
     for (const wearable of wearables) {
       const source = sources.get(wearable.model_url)!;
@@ -86,14 +92,14 @@ export async function prepareCharacter(resolved: ResolvedAppearance, cache: Gltf
         const meshes=meshesInNode(source.scene,name);
         if (!meshes.length||meshes.some(mesh=>!(mesh instanceof SkinnedMesh))) throw new Error(`CHARACTER_MESH_MISSING: ${name}`);
       }
-      if (wearable.model_url === definition.model_url) for (const name of wearable.nodes) baseNames.add(name);
+      if (wearable.model_url === definition.model_url) for (const name of selectedNodes.get(wearable)!) baseNames.add(name);
     }
     for (const name of baseNames) if (!meshesInNode(root,name).length) throw new Error(`CHARACTER_BODY_MISSING: ${name}`);
     const baseMeshes=new Set([...baseNames].flatMap(name=>meshesInNode(root,name)));
     root.traverse((node) => { if (node instanceof Mesh) node.visible = baseMeshes.has(node); });
     for (const url of new Set(wearables.map((item) => item.model_url))) {
       if (url === definition.model_url) continue;
-      attachWearables(root, sources.get(url)!, new Set(wearables.filter((item) => item.model_url === url).flatMap((item) => item.nodes)));
+      attachWearables(root, sources.get(url)!, new Set(wearables.filter((item) => item.model_url === url).flatMap((item) => selectedNodes.get(item)!)));
     }
     for (const [index, attachment] of attachments.entries()) {
       const bone = root.getObjectByName(attachment.bone);

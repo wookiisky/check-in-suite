@@ -27,7 +27,7 @@ describe('两级商品分类', () => {
     const definition = definitions.find((item) => item.slot === 'upper')!;
     const garment = { ...product, type: 'wearable' as const, wearable_key: definition.wearable_key };
     expect(matchesCategory(garment, { group: 'appearance', category: 'upper' }, definitions)).toBe(true);
-    expect(matchesCategory(garment, { group: 'appearance', category: 'hair' }, definitions)).toBe(false);
+    expect(matchesCategory(garment, { group: 'appearance', category: 'head' }, definitions)).toBe(false);
     expect(matchesCategory({ ...garment, wearable_key: 'unknown-upper' }, { group: 'appearance', category: 'upper' }, definitions)).toBe(false);
     expect(matchesCategory({ ...purchase, type_snapshot: 'island', island_item_key: 'tree' }, { group: 'appearance', category: '' }, definitions)).toBe(false);
     expect(matchesCategory({ ...purchase, type_snapshot: 'island', island_item_key: 'tree' }, { group: 'island', category: '' }, definitions)).toBe(true);

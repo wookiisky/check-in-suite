@@ -24,6 +24,7 @@ describe('请求模块', () => {
 
   it.each([
     ['HISTORY_READ_ONLY', false],
+    ['GROUP_ACCESS_DENIED', false],
     ['MANAGEMENT_REQUIRED', true],
     ['CSRF_INVALID', true],
   ])('403 %s 保留业务错误并按实际授权含义处理', async (code, clearsAuthorization) => {
@@ -57,4 +58,14 @@ it('服务端时间只在真实响应时校准，之后随设备经过的时间�
     vi.advanceTimersByTime(2000);
     expect(client.now().toISOString()).toBe('2026-10-28T16:00:01.000Z');
   } finally { vi.useRealTimers(); }
+});
+
+it('只读请求也携带当前页面会话令牌，供服务端拒绝Cookie已切换的旧页面', async () => {
+  const request = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ items: [] }));
+  vi.stubGlobal('fetch', request);
+  const client = new ApiClient();
+  client.setCsrfToken('page-session-token');
+  await client.request('/checkins?start_date=2026-11-02&end_date=2026-11-02');
+  const headers = request.mock.calls[0]?.[1]?.headers as Headers;
+  expect(headers.get('X-CSRF-Token')).toBe('page-session-token');
 });

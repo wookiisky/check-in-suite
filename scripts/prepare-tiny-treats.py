@@ -265,20 +265,32 @@ def prepare_landscape(entry, output):
 # 制作清单保留源字节、许可和产物字节，正式发布目录由主集成人单独合并。
 def main():
     parser = argparse.ArgumentParser(description=CONTENT['description'])
-    parser.add_argument('--output', type=Path, default=ROOT / CONTENT['output_directory'])
+    parser.add_argument('--output', type=Path, default=ROOT / '.local/asset-pipeline/scene')
     parser.add_argument('--only', choices=['cottage', 'courtyard', 'landscape', 'all'], default='all')
     parser.add_argument('--fetch-only', action='store_true')
+    parser.add_argument('--scene', action='append', default=[], choices=[item['scene_key'] for item in json.loads(Path(__file__).with_name('tiny-treats-scenes.json').read_text())['scenes']])
     args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:])
     if args.fetch_only:
         fetch_sources()
         return
-    args.output.mkdir(parents=True, exist_ok=True)
-    manifest_path = args.output / 'tiny-treats-manifest.json'
+    specification = importlib.util.spec_from_file_location('scene_candidate', Path(__file__).with_name('asset-pipeline-candidate.py'))
+    helper = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(helper)
+    output = helper.validate_candidate_output(ROOT, args.output)
+    if (output / 'candidate.json').exists():
+        raise ValueError('candidate output already finalized; choose a new output directory')
+    baseline = helper.capture_baseline(ROOT)
+    models = output / 'internal/assets/builtin'
+    models.mkdir(parents=True, exist_ok=True)
+    manifest_path = output / 'internal/assets/tiny-treats-manifest.json'
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {'houses': [], 'assets': []}
+    manifest['scene_keys'] = list(dict.fromkeys(args.scene))
     manifest['source_packs'] = json.loads(((ROOT / CONTENT['source_root']).parent / 'pack-manifest.json').read_text())['packs']
+    dependencies = helper.capture_dependencies(ROOT, [Path(__file__), Path(__file__).with_name('tiny-treats-content.json'), ((ROOT / CONTENT['source_root']).parent / 'pack-manifest.json')])
     selected = CONTENT['houses'] if args.only == 'all' else [item for item in CONTENT['houses'] if args.only in item['house_key']]
     for variant in selected:
-        model, geometry = prepare_house(variant, args.output)
+        dependencies.extend(helper.capture_dependencies(ROOT, helper.source_dependencies(source_model('homely-house', 'house'))))
+        model, geometry = prepare_house(variant, models)
         manifest['houses'] = [item for item in manifest['houses'] if item['house_key'] != geometry['house_key']] + [geometry]
         entry = dict(key=variant['house_key'], name=variant['name'], pack_key='homely-house', kind='model', format='glb', url=geometry['model_url'], coin_price=variant['coin_price'], diamond_price=0)
         entry.update(source_sha256=hashlib.sha256(source_model('homely-house', 'house').read_bytes()).hexdigest())
@@ -288,11 +300,23 @@ def main():
         print('房屋制作完成', entry['key'], flush=True)
     if args.only in ('all', 'landscape'):
         for entry in CONTENT['landscape_models']:
-            model, footprint = prepare_landscape(entry, args.output)
+            dependencies.extend(helper.capture_dependencies(ROOT, helper.source_dependencies(source_model(entry['pack'], entry['source']))))
+            model, footprint = prepare_landscape(entry, models)
             asset = dict(key=entry['key'], name=entry['name'], pack_key=entry['pack'], provider='tiny-treats', kind='model', format='glb', url='/api/v1/assets/' + entry['key'], source_url=CONTENT['source_urls'][entry['pack']], license=CONTENT['license'], output_sha256=hashlib.sha256(model.read_bytes()).hexdigest(), obstacle_cm=entry['obstacle_cm'], footprint=footprint, blocks_placement=entry.get('blocks_placement', True))
             manifest['assets'] = [item for item in manifest['assets'] if item['key'] != asset['key']] + [asset]
             write_geometry_json(manifest_path, manifest)
             print('景物制作完成', asset['key'], flush=True)
+
+    # 只登记受控素材，不从制作清单生成商品、所有权或场景行为。
+    registry_path = ROOT / 'internal/assets/builtin/catalog.json'
+    catalog = json.loads(registry_path.read_text()) if registry_path.exists() else []
+    registered = {entry['key']: entry for entry in catalog}
+    fields = ['key', 'name', 'pack_key', 'provider', 'kind', 'format', 'url', 'source_url', 'license']
+    for asset in manifest['assets']:
+        if (models / (asset['key'] + '.' + asset['format'])).exists():
+            registered.setdefault(asset['key'], {key: asset[key] for key in fields if key in asset})
+    (models / 'catalog.json').write_text(json.dumps(list(registered.values()), ensure_ascii=False, indent=2) + '\n')
+    helper.finalize_candidate(ROOT, output, 'tiny-treats', baseline=baseline, dependencies=dependencies)
 
 
 if __name__ == '__main__':

@@ -8,6 +8,8 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/core"
@@ -30,7 +32,9 @@ func randomToken() (string, error) {
 
 // Login verifies outside the write transaction then refuses a concurrently replaced credential.
 func (s *Service) Login(ctx context.Context, username, password string) (string, Session, error) {
-	if err := s.checkAttempts("login"); err != nil {
+	username = strings.TrimSpace(username)
+	bucket := "login:" + tokenHash(username)
+	if err := s.checkAttempts(bucket); err != nil {
 		return "", Session{}, err
 	}
 	if err := core.Text("username", username, 1, s.Config.Limits.NameMax); err != nil {
@@ -40,11 +44,12 @@ func (s *Service) Login(ctx context.Context, username, password string) (string,
 		return "", Session{}, err
 	}
 	var hash, expectedUsername string
-	var version int64
-	err := s.passwordWork(ctx, "login", func() error {
-		err := s.DB.QueryRowContext(ctx, "SELECT username,login_password_hash,credential_version FROM accounts WHERE id=1").Scan(&expectedUsername, &hash, &version)
+	var version, accountID int64
+	err := s.passwordWork(ctx, bucket, func() error {
+		// Unknown usernames still perform the same password work using a real hash.
+		err := s.DB.QueryRowContext(ctx, "SELECT id,username,login_password_hash,credential_version FROM accounts ORDER BY username=? DESC,id LIMIT 1", username).Scan(&accountID, &expectedUsername, &hash, &version)
 		if errors.Is(err, sql.ErrNoRows) {
-			s.failedAttempt("login")
+			s.failedAttempt(bucket)
 			return core.Fail(401, "INVALID_CREDENTIALS")
 		}
 		if err != nil {
@@ -52,7 +57,7 @@ func (s *Service) Login(ctx context.Context, username, password string) (string,
 		}
 		valid := s.verify(hash, password)
 		if !valid || username != expectedUsername {
-			s.failedAttempt("login")
+			s.failedAttempt(bucket)
 			return core.Fail(401, "INVALID_CREDENTIALS")
 		}
 		return nil
@@ -74,18 +79,18 @@ func (s *Service) Login(ctx context.Context, username, password string) (string,
 	}
 	defer tx.Rollback()
 	var current int64
-	if err = tx.QueryRowContext(ctx, "SELECT credential_version FROM accounts WHERE id=1").Scan(&current); err != nil {
+	if err = tx.QueryRowContext(ctx, "SELECT credential_version FROM accounts WHERE id=?", accountID).Scan(&current); err != nil {
 		return "", Session{}, err
 	}
 	if current != version {
 		return "", Session{}, core.Fail(401, "INVALID_CREDENTIALS")
 	}
 	now := s.Now()
-	p := Principal{SessionID: core.ID(), CredentialVersion: version, CSRFToken: csrf}
+	p := Principal{AccountID: accountID, SessionID: core.ID(), CredentialVersion: version, CSRFToken: csrf}
 	if _, err = tx.ExecContext(ctx, "DELETE FROM sessions WHERE expires_at<=?", now.UnixMilli()); err != nil {
 		return "", Session{}, err
 	}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO sessions(id,account_id,token_hash,csrf_token,expires_at,credential_version,created_at) VALUES(?,1,?,?,?,?,?)", p.SessionID, tokenHash(token), csrf, now.Add(s.Config.SessionTTL).UnixMilli(), version, now.UnixMilli()); err != nil {
+	if _, err = tx.ExecContext(ctx, "INSERT INTO sessions(id,account_id,token_hash,csrf_token,expires_at,credential_version,created_at) VALUES(?,?,?,?,?,?,?)", p.SessionID, accountID, tokenHash(token), csrf, now.Add(s.Config.SessionTTL).UnixMilli(), version, now.UnixMilli()); err != nil {
 		return "", Session{}, err
 	}
 	session, err := s.sessionInTx(ctx, tx, p, now)
@@ -104,7 +109,7 @@ func (s *Service) Authenticate(ctx context.Context, token string) (Principal, er
 		return Principal{}, core.Fail(401, "SESSION_REQUIRED")
 	}
 	var p Principal
-	err := s.DB.QueryRowContext(ctx, "SELECT s.id,s.credential_version,s.csrf_token FROM sessions s JOIN accounts a ON a.id=s.account_id WHERE s.token_hash=? AND s.expires_at>? AND s.credential_version=a.credential_version", tokenHash(token), s.Now().UnixMilli()).Scan(&p.SessionID, &p.CredentialVersion, &p.CSRFToken)
+	err := s.DB.QueryRowContext(ctx, "SELECT s.id,s.account_id,s.credential_version,s.csrf_token FROM sessions s JOIN accounts a ON a.id=s.account_id WHERE s.token_hash=? AND s.expires_at>? AND s.credential_version=a.credential_version", tokenHash(token), s.Now().UnixMilli()).Scan(&p.SessionID, &p.AccountID, &p.CredentialVersion, &p.CSRFToken)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Principal{}, core.Fail(401, "SESSION_REQUIRED")
 	}
@@ -115,7 +120,7 @@ func (s *Service) Authenticate(ctx context.Context, token string) (Principal, er
 func Authorize(ctx context.Context, tx *sql.Tx, p Principal, management bool, now time.Time) error {
 	var credential int64
 	var expiry, managementExpiry sql.NullInt64
-	err := tx.QueryRowContext(ctx, "SELECT s.credential_version,s.expires_at,s.management_expires_at FROM sessions s JOIN accounts a ON a.id=s.account_id WHERE s.id=? AND s.credential_version=a.credential_version", p.SessionID).Scan(&credential, &expiry, &managementExpiry)
+	err := tx.QueryRowContext(ctx, "SELECT s.credential_version,s.expires_at,s.management_expires_at FROM sessions s JOIN accounts a ON a.id=s.account_id WHERE s.id=? AND s.account_id=? AND s.credential_version=a.credential_version", p.SessionID, p.AccountID).Scan(&credential, &expiry, &managementExpiry)
 	if errors.Is(err, sql.ErrNoRows) {
 		return core.Fail(401, "SESSION_REQUIRED")
 	}
@@ -154,7 +159,7 @@ func (s *Service) Session(ctx context.Context, p Principal) (Session, error) {
 
 // sessionInTx builds one session view without borrowing the database's only connection.
 func (s *Service) sessionInTx(ctx context.Context, tx *sql.Tx, p Principal, now time.Time) (Session, error) {
-	profile, err := readAccount(ctx, tx)
+	profile, err := readAccount(ctx, tx, p.AccountID)
 	if err != nil {
 		return Session{}, err
 	}
@@ -177,7 +182,7 @@ func (s *Service) Logout(ctx context.Context, p Principal) error {
 		return err
 	}
 	defer tx.Rollback()
-	if _, err = tx.ExecContext(ctx, "DELETE FROM sessions WHERE id=?", p.SessionID); err != nil {
+	if _, err = tx.ExecContext(ctx, "DELETE FROM sessions WHERE id=? AND account_id=?", p.SessionID, p.AccountID); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -186,14 +191,14 @@ func (s *Service) Logout(ctx context.Context, p Principal) error {
 // Unlock refuses an earlier password verification if lock or logout happened while it ran.
 func (s *Service) Unlock(ctx context.Context, p Principal, password string) (time.Time, error) {
 	var managementVersion int64
-	err := s.DB.QueryRowContext(ctx, "SELECT management_version FROM sessions WHERE id=?", p.SessionID).Scan(&managementVersion)
+	err := s.DB.QueryRowContext(ctx, "SELECT management_version FROM sessions WHERE id=? AND account_id=?", p.SessionID, p.AccountID).Scan(&managementVersion)
 	if errors.Is(err, sql.ErrNoRows) {
 		return time.Time{}, core.Fail(401, "SESSION_REQUIRED")
 	}
 	if err != nil {
 		return time.Time{}, err
 	}
-	credentialVersion, err := s.VerifyManagement(ctx, password)
+	credentialVersion, err := s.VerifyManagement(ctx, p.AccountID, password)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -210,7 +215,7 @@ func (s *Service) Unlock(ctx context.Context, p Principal, password string) (tim
 		return time.Time{}, core.Fail(401, "SESSION_REQUIRED")
 	}
 	var current int64
-	if err = tx.QueryRowContext(ctx, "SELECT management_version FROM sessions WHERE id=?", p.SessionID).Scan(&current); err != nil {
+	if err = tx.QueryRowContext(ctx, "SELECT management_version FROM sessions WHERE id=? AND account_id=?", p.SessionID, p.AccountID).Scan(&current); err != nil {
 		return time.Time{}, err
 	}
 	if current != managementVersion {
@@ -243,14 +248,23 @@ func (s *Service) Lock(ctx context.Context, p Principal) error {
 func (s *Service) checkAttempts(kind string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	window := s.attempts[kind]
-	if s.Now().Before(window.Until) && window.Count >= 10 {
+	now := s.Now()
+	for key, window := range s.attempts {
+		if !now.Before(window.Until) {
+			delete(s.attempts, key)
+		}
+	}
+	window, exists := s.attempts[kind]
+	if !exists && len(s.attempts) >= 1024 {
+		return core.Fail(429, "TOO_MANY_ATTEMPTS")
+	}
+	if now.Before(window.Until) && window.Count >= 10 {
 		return core.Fail(429, "TOO_MANY_ATTEMPTS")
 	}
 	return nil
 }
 
-// failedAttempt updates only a fixed login or management bucket, without retaining personal inputs.
+// failedAttempt records an account-scoped failure without retaining passwords or login names.
 func (s *Service) failedAttempt(kind string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -261,4 +275,9 @@ func (s *Service) failedAttempt(kind string) {
 	}
 	window.Count++
 	s.attempts[kind] = window
+}
+
+// passwordBucket separates independent users while sharing a credential kind budget.
+func passwordBucket(kind string, accountID int64) string {
+	return fmt.Sprintf("%s:%d", kind, accountID)
 }

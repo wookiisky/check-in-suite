@@ -10,6 +10,7 @@ import (
 
 // registerAccounts keeps route authority in the server, never in request fields.
 func (app *App) registerAccounts() {
+	app.registerGroups()
 	app.Mux.HandleFunc("POST /api/v1/auth/login", app.login)
 	app.Mux.HandleFunc("GET /api/v1/session", app.session)
 	app.Mux.HandleFunc("POST /api/v1/auth/logout", app.logout)

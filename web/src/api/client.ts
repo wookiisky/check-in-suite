@@ -47,7 +47,7 @@ export class ApiClient {
     const headers = new Headers({ Accept: 'application/json' });
     const isForm = options.body instanceof FormData;
     if (options.body !== undefined && !isForm) headers.set('Content-Type', 'application/json');
-    if (method !== 'GET' && this.csrfToken) headers.set('X-CSRF-Token', this.csrfToken);
+    if (this.csrfToken) headers.set('X-CSRF-Token', this.csrfToken);
     if (options.idempotencyKey) headers.set('Idempotency-Key', options.idempotencyKey);
     const init: RequestInit = { method, headers, credentials: 'same-origin', cache: 'no-store' };
     if (options.signal) init.signal = options.signal;
@@ -63,7 +63,7 @@ export class ApiClient {
       try { detail = await response.json(); }
       catch { detail = { code: 'INVALID_RESPONSE', field_errors: {}, request_id: '' }; }
       // 跨日只读是本次业务限制，不撤销已解锁的管理状态。
-      const authorizationDenied = response.status === 403 && detail.code !== 'HISTORY_READ_ONLY';
+      const authorizationDenied = response.status === 403 && detail.code !== 'HISTORY_READ_ONLY' && detail.code !== 'GROUP_ACCESS_DENIED';
       if (requestToken === this.csrfToken && ((response.status === 401 && path !== '/auth/login') || authorizationDenied)) {
         if (response.status === 401) this.csrfToken = '';
         this.onAuthorizationFailure(response.status);

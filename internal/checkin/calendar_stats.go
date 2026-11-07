@@ -42,6 +42,11 @@ type StatsResult struct {
 
 // Calendar summarizes a validated month without sending an unbounded list of record icons.
 func (s *Service) Calendar(ctx context.Context, p account.Principal, month string) (CalendarResult, error) {
+	return s.CalendarFor(ctx, p, p.AccountID, month)
+}
+
+// CalendarFor authorizes the selected member before reading monthly summaries.
+func (s *Service) CalendarFor(ctx context.Context, p account.Principal, targetID int64, month string) (CalendarResult, error) {
 	out := CalendarResult{Month: month, Days: []CalendarDay{}}
 	first, err := time.Parse("2006-01", month)
 	if err != nil || first.Format("2006-01") != month {
@@ -56,15 +61,15 @@ func (s *Service) Calendar(ctx context.Context, p account.Principal, month strin
 		return out, err
 	}
 	defer tx.Rollback()
-	if err := account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
+	if err := account.AuthorizeRead(ctx, tx, p, targetID, s.Now()); err != nil {
 		return out, err
 	}
 	rows, err := tx.QueryContext(ctx, `WITH ranked AS (
 		SELECT business_date,task_icon_snapshot,
 		COUNT(*) OVER (PARTITION BY business_date) AS total,
 		ROW_NUMBER() OVER (PARTITION BY business_date ORDER BY created_at,id) AS position
-		FROM checkins WHERE deleted_at IS NULL AND business_date BETWEEN ? AND ?
-	) SELECT business_date,total,task_icon_snapshot FROM ranked WHERE position<=3 ORDER BY business_date,position`, first.Format(time.DateOnly), last.Format(time.DateOnly))
+		FROM checkins WHERE account_id=? AND deleted_at IS NULL AND business_date BETWEEN ? AND ?
+	) SELECT business_date,total,task_icon_snapshot FROM ranked WHERE position<=3 ORDER BY business_date,position`, targetID, first.Format(time.DateOnly), last.Format(time.DateOnly))
 	if err != nil {
 		return out, err
 	}
@@ -95,6 +100,11 @@ func (s *Service) Calendar(ctx context.Context, p account.Principal, month strin
 
 // Stats validates dates against the server clock and reads every aggregate in one transaction.
 func (s *Service) Stats(ctx context.Context, p account.Principal, start, end string) (StatsResult, error) {
+	return s.StatsFor(ctx, p, p.AccountID, start, end)
+}
+
+// StatsFor rechecks membership and reads the selected account's inclusive-range totals.
+func (s *Service) StatsFor(ctx context.Context, p account.Principal, targetID int64, start, end string) (StatsResult, error) {
 	out := StatsResult{StartDate: start, EndDate: end, Items: []StatsItem{}}
 	first, err := core.ParseDate(start)
 	if err != nil {
@@ -113,13 +123,13 @@ func (s *Service) Stats(ctx context.Context, p account.Principal, start, end str
 	}
 	defer tx.Rollback()
 	now := s.Now()
-	if err := account.Authorize(ctx, tx, p, false, now); err != nil {
+	if err := account.AuthorizeRead(ctx, tx, p, targetID, now); err != nil {
 		return out, err
 	}
 	if end > core.Today(now) {
 		return out, core.Fail(422, "INVALID_DATE_RANGE")
 	}
-	out, err = readStatistics(ctx, tx, start, end)
+	out, err = readStatistics(ctx, tx, targetID, start, end)
 	if err != nil {
 		return out, err
 	}
@@ -127,12 +137,12 @@ func (s *Service) Stats(ctx context.Context, p account.Principal, start, end str
 }
 
 // readStatistics uses only its supplied read transaction, including the summary query.
-func readStatistics(ctx context.Context, tx *sql.Tx, start, end string) (StatsResult, error) {
+func readStatistics(ctx context.Context, tx *sql.Tx, accountID int64, start, end string) (StatsResult, error) {
 	out := StatsResult{StartDate: start, EndDate: end, Items: []StatsItem{}}
 	rows, err := tx.QueryContext(ctx, `SELECT c.task_id,COALESCE(t.name,MAX(c.task_name_snapshot)),COALESCE(t.icon_key,MAX(c.task_icon_snapshot)),COUNT(*)
-		FROM checkins c LEFT JOIN tasks t ON t.id=c.task_id
-		WHERE c.deleted_at IS NULL AND c.business_date BETWEEN ? AND ?
-		GROUP BY c.task_id ORDER BY COUNT(*) DESC,c.task_id`, start, end)
+		FROM checkins c LEFT JOIN tasks t ON t.id=c.task_id AND t.account_id=c.account_id
+		WHERE c.account_id=? AND c.deleted_at IS NULL AND c.business_date BETWEEN ? AND ?
+		GROUP BY c.task_id ORDER BY COUNT(*) DESC,c.task_id`, accountID, start, end)
 	if err != nil {
 		return out, err
 	}
@@ -150,6 +160,6 @@ func readStatistics(ctx context.Context, tx *sql.Tx, start, end string) (StatsRe
 	if err != nil {
 		return out, err
 	}
-	err = tx.QueryRowContext(ctx, "SELECT COUNT(DISTINCT business_date) FROM checkins WHERE deleted_at IS NULL AND business_date BETWEEN ? AND ?", start, end).Scan(&out.ActiveDays)
+	err = tx.QueryRowContext(ctx, "SELECT COUNT(DISTINCT business_date) FROM checkins WHERE account_id=? AND deleted_at IS NULL AND business_date BETWEEN ? AND ?", accountID, start, end).Scan(&out.ActiveDays)
 	return out, err
 }
