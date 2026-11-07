@@ -136,11 +136,9 @@ test('带眉头饰遮盖微笑脸的眉毛并保留完整头部', async () => {
   assert.ok(face.nodes.includes('face_scalp'));
 });
 
-// 从正式GLB的真实三角面检查鼻下前脸，不能以网格非空替代嘴和下颌完整性。
-test('独立脸型保留嘴部和下颌的实际表面', async () => {
-  const catalog = await readJSON('internal/character/character-catalog.json');
-  const face = catalog.wearables.find((entry) => entry.wearable_key === 'face-kaykit-adventurers-ranger');
-  const bytes = await readFile(new URL(`internal/assets/builtin/${face.model_asset_key}.glb`, root));
+// 读取正式模型的网格与访问器数据，用于检查实际出货的三角面。
+async function readWearableMesh(item) {
+  const bytes = await readFile(new URL(`internal/assets/builtin/${item.model_asset_key}.glb`, root));
   const length = bytes.readUInt32LE(12);
   const document = JSON.parse(bytes.subarray(20, 20 + length).toString());
   const binary = bytes.subarray(28 + length);
@@ -152,13 +150,44 @@ test('独立脸型保留嘴部和下颌的实际表面', async () => {
     const start = (view.byteOffset ?? 0) + (accessor.byteOffset ?? 0);
     return Array.from({ length: accessor.count }, (_, row) => Array.from({ length: width }, (_, column) => binary[method](start + row * (view.byteStride ?? width * size) + column * size)));
   };
-  const triangles = [];
-  for (const node of document.nodes.filter((entry) => face.nodes.includes(entry.name))) {
-    for (const primitive of document.meshes[node.mesh].primitives) {
-      const positions = scalars(primitive.attributes.POSITION, 3);
-      const indices = primitive.indices === undefined ? positions.map((_, index) => index) : scalars(primitive.indices, 1).flat();
-      for (let index = 0; index < indices.length; index += 3) triangles.push(indices.slice(index, index + 3).map((vertex) => positions[vertex]));
+  const primitives = document.nodes.filter((node) => item.nodes.includes(node.name))
+    .flatMap((node) => document.meshes[node.mesh].primitives);
+  return { primitives, scalars };
+}
+
+// BearHat 源节点有 1030 个三角面，胡须来自另一个节点的独立 UV 区域。
+test('棕色熊帽保留原帽网格，去除灰色胡须', async () => {
+  const catalog = await readJSON('internal/character/character-catalog.json');
+  const hat = catalog.wearables.find((item) => item.wearable_key === 'kaykit-adventurers-barbarian-head');
+  const { primitives, scalars } = await readWearableMesh(hat);
+  let triangleCount = 0;
+  let beardTriangleCount = 0;
+  for (const primitive of primitives) {
+    const coordinates = scalars(primitive.attributes.TEXCOORD_0, 2);
+    const indices = scalars(primitive.indices, 1).flat();
+    triangleCount += indices.length / 3;
+    for (let index = 0; index < indices.length; index += 3) {
+      const [a, b, c] = indices.slice(index, index + 3).map((vertex) => coordinates[vertex]);
+      const u = (a[0] + b[0] + c[0]) / 3;
+      const v = (a[1] + b[1] + c[1]) / 3;
+      // glTF 的 V 轴朝下，对应 Blender 的 0.75 至 1。
+      if (u >= 0.125 && u < 0.25 && v <= 0.25) beardTriangleCount++;
     }
+  }
+  assert.equal(beardTriangleCount, 0, '帽子仍包含胡须三角面');
+  assert.equal(triangleCount, 1030);
+});
+
+// 从正式GLB的真实三角面检查鼻下前脸，不能以网格非空替代嘴和下颌完整性。
+test('独立脸型保留嘴部和下颌的实际表面', async () => {
+  const catalog = await readJSON('internal/character/character-catalog.json');
+  const face = catalog.wearables.find((entry) => entry.wearable_key === 'face-kaykit-adventurers-ranger');
+  const { primitives, scalars } = await readWearableMesh(face);
+  const triangles = [];
+  for (const primitive of primitives) {
+    const positions = scalars(primitive.attributes.POSITION, 3);
+    const indices = primitive.indices === undefined ? positions.map((_, index) => index) : scalars(primitive.indices, 1).flat();
+    for (let index = 0; index < indices.length; index += 3) triangles.push(indices.slice(index, index + 3).map((vertex) => positions[vertex]));
   }
   for (const [x, y] of [[0, 1.33], [-0.05, 1.4], [0.05, 1.4]]) {
     const hits = triangles.flatMap(([a, b, c]) => {

@@ -7715,10 +7715,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-barbarian-9e69ad026631",
+    "key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
     "name": "kaykit-adventurers-barbarian",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9e69ad026631",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
     "format": "glb"
   },
   {
@@ -7726,10 +7726,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-barbarian-head-d70ecf29de73",
-    "name": "棕色熊帽与灰色胡须",
+    "key": "modular-kaykit-adventurers-barbarian-head-ab68dfaf3f3e",
+    "name": "棕色熊帽",
     "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-head-d70ecf29de73",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-head-ab68dfaf3f3e",
     "format": "png"
   },
   {

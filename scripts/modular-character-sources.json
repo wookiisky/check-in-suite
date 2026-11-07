@@ -1620,7 +1620,8 @@
         "pack_key": "kaykit-adventurers"
       },
       "normalized_sha256": "08ebdc25dc5e1921fdfb0dd043f226afcf2701b0563fce3a2395d32bd92629d1",
-      "complete_face_from_canonical": true
+      "complete_face_from_canonical": true,
+      "omit_source_head_hair": true
     },
     {
       "key": "kaykit-adventurers-mage",
@@ -2622,7 +2623,7 @@
     },
     "kaykit-adventurers-barbarian": {
       "face": "宽鼻圆脸",
-      "head": "棕色熊帽与灰色胡须",
+      "head": "棕色熊帽",
       "upper": "棕色毛边背带与灰色手套",
       "lower": "棕色毛边皮裙与黑色短裤",
       "shoes": "棕色绑带靴",

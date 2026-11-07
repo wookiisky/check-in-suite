@@ -771,7 +771,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-barbarian-head",
-      "name": "棕色熊帽与灰色胡须",
+      "name": "棕色熊帽",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -785,10 +785,10 @@
         "scalp",
         "brows"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-barbarian-9e69ad026631",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9e69ad026631",
-      "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-head-d70ecf29de73",
-      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-head-d70ecf29de73"
+      "model_asset_key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+      "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-head-ab68dfaf3f3e",
+      "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-head-ab68dfaf3f3e"
     },
     {
       "wearable_key": "kaykit-adventurers-barbarian-upper",
@@ -804,8 +804,8 @@
         "upper_hands"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-barbarian-9e69ad026631",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9e69ad026631",
+      "model_asset_key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
       "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-upper-09a9e829a7dc",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-upper-09a9e829a7dc"
     },
@@ -822,8 +822,8 @@
         "lower_outfit"
       ],
       "covers": [],
-      "model_asset_key": "modular-kaykit-adventurers-barbarian-9e69ad026631",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9e69ad026631",
+      "model_asset_key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
       "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-lower-4b7347008c1d",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-lower-4b7347008c1d"
     },
@@ -842,8 +842,8 @@
       "covers": [
         "feet"
       ],
-      "model_asset_key": "modular-kaykit-adventurers-barbarian-9e69ad026631",
-      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9e69ad026631",
+      "model_asset_key": "modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
+      "model_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-9429d6b3ffd3",
       "thumbnail_asset_key": "modular-kaykit-adventurers-barbarian-shoes-c3d0e2a4af27",
       "thumbnail_url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-shoes-c3d0e2a4af27"
     },

@@ -633,7 +633,16 @@ def prepare(options):
                 head_parts = [head, original_features, smile_beard]
                 head_regions = {'ranger_original_features': [original_features], 'ranger_smile_beard': [smile_beard]}
             else:
-                head = select(hair, 'head_provider', lambda face, layer: True)
+                excluded_regions = spec['hair_uv_regions'] if source.get('omit_source_head_hair') else ()
+
+                def keep_headwear(face, layer):
+                    if not excluded_regions:
+                        return True
+                    # 标准化头饰已合并原帽和源脸的附属网格；沿用当初拆分源脸的 UV 区域。
+                    uv = sum((loop[layer].uv for loop in face.loops), Vector((0, 0))) / len(face.loops)
+                    return not any(a <= uv.x < b and c <= uv.y <= d for a, b, c, d in excluded_regions)
+
+                head = select(hair, 'head_provider', keep_headwear)
                 if hood is not None:
                     head = join([head, hood], 'head_provider')
                 head_parts = [head]
