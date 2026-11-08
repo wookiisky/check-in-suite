@@ -6,6 +6,10 @@ import json
 from pathlib import Path
 import sys
 
+# Blender 执行脚本时不会把脚本目录加入模块搜索路径。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from character_catalog_source import load_character_catalog
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -35,7 +39,7 @@ def verify(options):
     import bpy
     from mathutils.bvhtree import BVHTree
 
-    catalog = json.loads(options.catalog.read_text())
+    catalog = load_character_catalog(options.catalog)
     body = next(item for item in catalog['characters'] if item['character_key']=='kaykit-skeleton-v1')
     model = options.model or options.assets/(body['model_asset_key']+'.glb')
     bpy.ops.wm.read_factory_settings(use_empty=True)

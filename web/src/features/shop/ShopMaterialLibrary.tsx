@@ -19,7 +19,7 @@ interface ShopMaterialLibraryProps {
   initialGroup: ShopGroup; // 从商品列表进入时沿用分组。
   initialCategory: string; // 从商品列表进入时沿用分类。
   createPending: boolean; // 已有结果未知的创建请求，须先核对。
-  onCreate: (material: ManagementMaterial) => void; // 打开固定素材的报价表单。
+  onCreate: (material: ManagementMaterial) => void; // 打开固定营地素材的报价表单。
 }
 
 // 只读取素材元数据，列表不会加载动作或模型文件。
@@ -70,16 +70,17 @@ export function ShopMaterialLibrary({ client, initialGroup, initialCategory, cre
           <label htmlFor={searchId}>{content.assetSearchLabel}</label>
           <input id={searchId} type="search" value={search} onChange={(event) => { setSearch(event.target.value); setLimit(batchSize); }} />
         </div>
+        {group === 'appearance' && <p>{content.appearanceMaterialHint}</p>}
         {materials.length === 0 && <p>{content.emptyMaterials}</p>}
         <div className="shop-grid shop-management-grid">
           {materials.slice(0, limit).map((material) => <article key={`${material.group}/${material.category}/${material.asset.key}`} className="shop-card shop-product-card shop-management-card shop-material-card">
             <h3>{material.asset.name}</h3>
             <ShopItemArtwork item={material.asset} className="shop-item-art shop-product-art" />
             <p>{shopCategoryName(group, material.category)}</p>
-            {material.saleable
-              ? <button type="button" className="secondary" disabled={createPending} aria-label={`${content.addProduct} ${material.asset.name}`}
-                onClick={(event) => { event.currentTarget.focus(); onCreate(material); }}>{content.addProduct}</button>
-              : <p>{content.materialNotForSale}</p>}
+            {material.group === 'camp' && material.saleable && <button type="button" className="secondary" disabled={createPending}
+              aria-label={`${content.addProduct} ${material.asset.name}`}
+              onClick={(event) => { event.currentTarget.focus(); onCreate(material); }}>{content.addProduct}</button>}
+            {!material.saleable && <p>{content.materialNotForSale}</p>}
           </article>)}
         </div>
         {materials.length > limit && <button type="button" className="secondary" onClick={() => setLimit((value) => value + batchSize)}>{content.moreAssets}</button>}

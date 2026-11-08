@@ -118,7 +118,7 @@ npm run test:assets
 
 `scripts/modular-character-sources.json` 声明人物来源与拆分配方，模型和六槽定义由 `internal/character/character-catalog.json` 管理。人形和骷髅是基础身体，职业不再进入角色目录；脸与头皮属于形象，帽子和头发属于头部，披风和箭袋属于背部。中箭只制作头部插箭，使用来源包中的独立箭模型，不把整个战损头骨当成头饰。身体、脸、衣物与缩略图分别保留来源依据，新字节和元数据使用新资源身份。
 
-可换色服装的制作配方指定独立材质与默认色，预设色来自 `internal/character/wearable-colors.json`。加工只替换布料的底色来源，缩略图使用默认配色。退役背部部件仍从原套装的上衣网格分离，以免披风或披肩重新混入上装。
+可换色穿戴的制作配方指定独立材质与默认色，预设色来自 `internal/character/wearable-colors.json`。原有纯色布料直接指定底色。带贴图的部件在 Blender 导出后按 `scripts/modular-character-dye-regions.json` 分配三角面，通过 `uv` 锁定的 Pillow 环境生成保留明暗的中性贴图。加工保留顶点属性、蒙皮及固定部件的原贴图，默认颜色以原素材渲染为参考，缩略图显示原配色。退役背部部件仍从原套装的上衣网格分离，以免披风或披肩重新混入上装。
 
 默认背心沿实际身体表面裁出圆领。领口沿左右对称的圆弧分段，切出的顶点沿原网格插值蒙皮权重。
 
@@ -163,6 +163,8 @@ uv run --locked python scripts/verify-modular-character-appearance.py --all-wear
 动作来源按 `scripts/provider-animation-sources.json` 中的审核批次处理，不按骨名扫描结果自动纳入非人形资源。导入脚本的 `--list` 查看批次，`--batch` 或 `--only` 选择范围，`--all` 处理全部审核来源；`--first-medium` 保留首批复现入口。增量执行核对来源与产物哈希，保留已完成记录；失败保留原因并返回非零。新加工在同一来源族内合并实际目标骨架和曲线相同的输出，来源记录仍分别保留；共享元数据登记该族的官方出处与许可，逐条来源登记实际素材包。原始水平根位移留在本地源文件，正式动作移除导航方向的根位移，垂直动作与身体摇摆继续保留。恢复时逐来源核对其实际使用的目标骨架，不能因第一批已更新全局检查点而跳过其他旧批次；缺少该依据的旧记录重新加工。去重和新资源身份包含来源族元数据、实际输出骨架与动作，目标骨架变化而曲线数值相同时也不能覆盖旧资源。当前动作列表只包含成功来源正在引用的定义；待处理批次不会把旧骨架动作留在当前列表，历史资源和文件继续保留。
 
 Tiny Treats 房屋与景物由 `scripts/prepare-tiny-treats.py` 整理，来源与产物清单为 `internal/assets/tiny-treats-manifest.json`。普通 Python 使用 `--fetch-only` 获取审核过的免费源包；制作时在后台 Blender 中执行该脚本并传 `--only all`。`scripts/tiny-treats-blender-test.py` 在实际 GLB 上核对门洞、墙体和地板，`scripts/render-tiny-treats-previews.py` 生成四向外观与剖墙。原包、工程及中间产物保留在 `.local/3d-sources/tiny-treats/`，正式包只安装选入 GLB、PNG 和元数据。已有房屋无需重导出模型即可补齐支撑面：执行 `/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python-exit-code 1 --python scripts/update-tiny-treats-walk-surfaces.py`，再运行实际 GLB 检查。该入口只更新房型配置和清单，可用 `--models`、`--configuration`、`--manifest` 指向隔离路径。
+
+装扮加工输出正式人物目录候选及版本素材引用。人物动作按骨架登记，阅读挂点和踢球触点与实际片段一起更新。可以先交付装扮素材，再发布新的动作绑定。商店的初始报价由商店种子提供。
 
 ### 素材分类、候选与应用
 

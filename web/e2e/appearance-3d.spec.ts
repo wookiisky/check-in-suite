@@ -12,7 +12,7 @@ test('真实购买服装后取消与整套保存同步共享人物', async ({ pa
   await openCharacterPreview(page);
   const item = await ownedAlternativeUpper(page, `三维上装-${testInfo.project.name}`, 'kaykit-legacy-skeleton-mage-upper');
   const initial = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
-  const reset = { ...appearanceRequest(initial), upper_purchase_id: null, upper_free_wearable_key: null };
+  const reset = { ...appearanceRequest(initial), upper_wearable_key: null };
   expect((await appearanceAPI(page, '/appearance', 'PUT', reset)).ok()).toBe(true);
   await page.reload();
   await expect(page.getByTestId('character-render-status')).toHaveText(preview.status.ready);
@@ -21,7 +21,7 @@ test('真实购买服装后取消与整套保存同步共享人物', async ({ pa
   await page.getByRole('button', { name: preview.edit, exact: true }).click();
   let dialog = page.getByRole('dialog');
   await dialog.getByRole('group', { name: appearance.slots.upper, exact: true }).getByRole('radio', { name: item.wearable.name, exact: true }).check();
-  expect((await (await appearanceAPI(page, '/appearance')).json() as Appearance).upper_purchase_id).toBeNull();
+  expect((await (await appearanceAPI(page, '/appearance')).json() as Appearance).upper_wearable_key).toBeNull();
   await dialog.getByRole('button', { name: appearance.cancel, exact: true }).click();
   await page.getByRole('button', { name: appearance.discard, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -31,7 +31,7 @@ test('真实购买服装后取消与整套保存同步共享人物', async ({ pa
   await dialog.getByRole('button', { name: appearance.save, exact: true }).click();
   await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
   const saved = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
-  expect(saved.upper_purchase_id).toBe(item.purchase_id);
+  expect(saved.upper_wearable_key).toBe(item.wearable_key);
   expect(saved.version).toBe(before.version + 1);
   await expect(page.getByTestId('character-saved-version')).toHaveText(`${preview.version} ${saved.version}`);
   expect(await originalCanvas?.evaluate((node) => node.isConnected)).toBe(true);
@@ -58,7 +58,7 @@ test('真实外观冲突保留六槽草稿并允许核对当前版本', async ({
   await openCharacterPreview(page);
   const item = await ownedAlternativeUpper(page, `冲突上装-${testInfo.project.name}`, 'kaykit-legacy-skeleton-warrior-upper');
   const before = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
-  const desired = before.upper_purchase_id === item.purchase_id ? null : item.purchase_id;
+  const desired = before.upper_wearable_key === item.wearable_key ? null : item.wearable_key;
   const body = before.characters.find((value) => value.character_key === before.character_key)!;
   const defaultUpper = before.wearables.find((value) => value.wearable_key === body.defaults.upper)!;
   const optionName = desired ? item.wearable.name : defaultUpper.name;
@@ -76,7 +76,7 @@ test('真实外观冲突保留六槽草稿并允许核对当前版本', async ({
   await dialog.getByRole('button', { name: appearance.save, exact: true }).click();
   await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
   const saved = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
-  expect(saved.upper_purchase_id).toBe(desired);
+  expect(saved.upper_wearable_key).toBe(desired);
   expect(saved.version).toBe(before.version + 2);
   await expect(dialog.locator('.character3d-preview')).toHaveAttribute('data-character-status', 'ready');
   await dialog.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('repaired-chest-armor.png') });
@@ -87,7 +87,7 @@ test('保存响应丢失后核实真实结果并只发布已确认外观', async
   await openCharacterPreview(page);
   const item = await ownedAlternativeUpper(page, `恢复上装-${testInfo.project.name}`);
   const before = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
-  const desired = before.upper_purchase_id === item.purchase_id ? null : item.purchase_id;
+  const desired = before.upper_wearable_key === item.wearable_key ? null : item.wearable_key;
   const body = before.characters.find((value) => value.character_key === before.character_key)!;
   const defaultUpper = before.wearables.find((value) => value.wearable_key === body.defaults.upper)!;
   const optionName = desired ? item.wearable.name : defaultUpper.name;
@@ -107,5 +107,5 @@ test('保存响应丢失后核实真实结果并只发布已确认外观', async
   await expect(page.getByTestId('character-saved-version')).toHaveText(`${preview.version} ${before.version + 1}`);
   const saved = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
   expect(saved.version).toBe(before.version + 1);
-  expect(saved.upper_purchase_id).toBe(desired);
+  expect(saved.upper_wearable_key).toBe(desired);
 });

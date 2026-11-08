@@ -12,6 +12,37 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
+# 发布衣物候选复用正式动作绑定，素材配方无须携带动画或售价。
+class ModularCatalogCandidateTest(unittest.TestCase):
+    def test_keeps_authored_bindings_and_sale_eligibility(self):
+        animation_sets = {'rig': {'read': {'clip': 'Read', 'asset_key': 'clip-v1', 'presentation': {}}}}
+        previous = {
+            'characters': [{'character_key': 'body', 'sellable': False}],
+            'wearables': [{'wearable_key': 'retired', 'sellable': False}],
+            'animation_sets': animation_sets,
+        }
+        bodies = [{'character_key': 'body', 'defaults': {'head': 'default'}}]
+        wearables = [{'wearable_key': 'retired'}, {'wearable_key': 'default'}, {'wearable_key': 'new'}]
+        candidate = MODULE.assemble_catalog(previous, bodies, wearables)
+        self.assertEqual(candidate['animation_sets'], animation_sets)
+        self.assertEqual([item['sellable'] for item in candidate['wearables']], [False, False, True])
+        self.assertFalse(candidate['characters'][0]['sellable'])
+        self.assertNotIn('animation', candidate['wearables'][2])
+
+    def test_rejects_removal_of_published_identities(self):
+        previous = {
+            'characters': [{'character_key': 'base-body', 'sellable': False, 'defaults': {}}],
+            'wearables': [{'wearable_key': 'old-wearable', 'sellable': False}],
+        }
+        for bodies, wearables, missing in [
+            ([], previous['wearables'], 'base-body'),
+            (previous['characters'], [], 'old-wearable'),
+        ]:
+            with self.subTest(missing=missing):
+                with self.assertRaisesRegex(ValueError, missing):
+                    MODULE.assemble_catalog(previous, bodies, wearables)
+
+
 # 发布身份包含字节与完整元数据，任何一个变化都不能覆写已交付身份。
 class ImmutableModularPublicationTest(unittest.TestCase):
     # 同像素但名称或许可改变，也需要新资源身份。

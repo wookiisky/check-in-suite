@@ -164,7 +164,7 @@ func (f productFixture) createInput() shop.ProductCreate {
 	return shop.ProductCreate{AssetKey: f.AssetKey, ProductTerms: f.terms()}
 }
 
-// createProduct creates a current managed product or explicitly seeds a historical quote.
+// createProduct configures a published dress-up offer, creates a camp quote, or seeds a historical type.
 func createProduct(t *testing.T, f shopFixture, input productFixture) shop.Product {
 	t.Helper()
 	if input.Type == shop.TypeTitle || input.Type == shop.TypeReward {
@@ -176,6 +176,9 @@ func createProduct(t *testing.T, f shopFixture, input productFixture) shop.Produ
 		}
 		return shop.Product{ID: id, Type: input.Type, Name: input.Name, AssetKey: input.AssetKey, Description: input.Description, CoinPrice: input.CoinPrice, DiamondPrice: input.DiamondPrice, Stock: input.Stock, Enabled: input.Enabled, Version: 1}
 	}
+	if input.Type == shop.TypeCharacter || input.Type == shop.TypeWearable {
+		return configureDressUpOffer(t, f, input)
+	}
 	p, err := f.Service.CreateProduct(context.Background(), f.Principal, core.ID(), input.createInput())
 	if err != nil {
 		t.Fatal(err)
@@ -184,6 +187,34 @@ func createProduct(t *testing.T, f shopFixture, input productFixture) shop.Produ
 		t.Fatalf("unexpected material binding: %+v, fixture=%+v", p, input)
 	}
 	return p
+}
+
+// configureDressUpOffer uses the same seed and edit paths as the management page.
+func configureDressUpOffer(t *testing.T, f shopFixture, input productFixture) shop.Product {
+	t.Helper()
+	ctx := context.Background()
+	seed := shop.SeedCharacterProducts
+	if input.Type == shop.TypeWearable {
+		seed = shop.SeedWearableProducts
+	}
+	if err := seed(ctx, f.DB, f.Now.UnixMilli()); err != nil {
+		t.Fatal(err)
+	}
+	offers, err := f.Service.ListProducts(ctx, f.Principal, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, offer := range offers.Items {
+		if offer.Type == input.Type && offer.CharacterKey == input.CharacterKey && offer.WearableKey == input.WearableKey {
+			product, err := f.Service.UpdateProduct(ctx, f.Principal, offer.ID, shop.ProductUpdate{ExpectedVersion: offer.Version, ProductTerms: input.terms()})
+			if err != nil {
+				t.Fatal(err)
+			}
+			return product
+		}
+	}
+	t.Fatalf("missing published dress-up offer: %+v", input)
+	return shop.Product{}
 }
 
 // retireHistoricalProduct recreates a prior soft deletion without restoring the removed management action.

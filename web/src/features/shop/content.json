@@ -90,6 +90,7 @@
   "materialLibrary": "素材库",
   "materialGroupLabel": "素材分类",
   "emptyMaterials": "这个分类暂时没有匹配的素材。",
+  "appearanceMaterialHint": "可售装扮由目录加入商品库，请到商品库编辑名称、价格和上架状态。",
   "materialNotForSale": "不可上架",
   "materialActivities": "营地动作关联",
   "emptyMaterialActivities": "暂时没有营地动作关联。",

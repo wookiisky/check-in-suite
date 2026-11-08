@@ -119,6 +119,8 @@ tests:
 
 衣物混搭使用 `scripts/modular-character-waist-seam-blender-test.py` 扫描最终 GLB 的各向腰线截面，候选使用 `--candidate`。扫描覆盖裤腰主环及相邻上衣下摆，厚度以接合方位的实际衣片为准。另用两种身体的实际动作和多视角画面复核露肤及穿插，原款开口单独判断。
 
+带贴图的换色先用 `uv run --locked python scripts/modular-character-dye-glb.test.py` 核对几何、蒙皮和固定材质。正式目录的染色材质和选区由 `npm run test:assets` 检查。用原色和高反差配色对照主体、固定配件和视角边缘，再用实际外观接口检查跨槽保存、重开和非法配色整套拒绝。
+
 Playwright 用独立 API、前端端口和临时数据库，不复用日常开发服务；配置入口是 `playwright.config.ts`。首次运行前执行 `npx playwright install chromium webkit`。端口冲突时使用隔离配置，不停止未知服务或复用其数据。
 
 较慢专项按需运行：

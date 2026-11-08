@@ -15,15 +15,14 @@ test('封闭鞋型覆盖基础脚掌，空鞋不覆盖身体', async () => {
   }
 });
 
-// 同一头骨在目录和报价中都只出现一次。
+// 同一头骨在目录中只有一个可售身份。
 test('同款绿眼骷髅只提供一件形象', async () => {
   const catalog = await readJSON('internal/character/character-catalog.json');
   const original = 'face-kaykit-legacy-skeleton-mage';
   const shared = 'face-kaykit-legacy-skeleton-minion';
   assert.ok(catalog.wearables.some((item) => item.wearable_key === shared));
   assert.ok(!catalog.wearables.some((item) => item.wearable_key === original));
-  const offers = await readJSON('internal/shop/wearable-products.json');
-  assert.deepEqual(offers.filter((item) => item.wearable_key.startsWith('face-')).map((item) => item.wearable_key),
+  assert.deepEqual(catalog.wearables.filter((item) => item.slot === 'face' && item.sellable).map((item) => item.wearable_key),
     [shared, 'face-kaykit-skeletons-mage']);
 });
 
@@ -102,12 +101,11 @@ test('骷髅身体保留真实骨骼，独立衣物已剥离来源身体', async
 });
 
 // 配方决定哪些部件出货，保留的原生部件应有真实网格。
-test('穿戴目录与报价遵守配方的槽位排除', async () => {
+test('穿戴目录遵守配方的槽位排除', async () => {
   const catalog = await readJSON('internal/character/character-catalog.json');
   const manifest = await readJSON('internal/assets/provider-character-manifest.json');
   const configuration = await readJSON('scripts/modular-character-sources.json');
-  const offers = await readJSON('internal/shop/wearable-products.json');
-  const published = new Set([...catalog.wearables, ...offers, ...manifest.wearable_evidence].map((item) => item.wearable_key));
+  const published = new Set([...catalog.wearables, ...manifest.wearable_evidence].map((item) => item.wearable_key));
   for (const source of configuration.sources) {
     for (const slot of source.excluded_slots ?? []) {
       const key = `${source.key}-${slot}`;
@@ -159,7 +157,7 @@ async function readWearableMesh(item) {
   };
   const primitives = document.nodes.filter((node) => item.nodes.includes(node.name))
     .flatMap((node) => document.meshes[node.mesh].primitives);
-  return { primitives, scalars };
+  return { document, primitives, scalars };
 }
 
 // 圆领应在中线附近逐渐升高，左右肩带保留完整高度。
@@ -192,7 +190,6 @@ test('背心实际网格保留对称圆领和两侧肩带', async () => {
 // 验证出货 GLB 的底色，确保染色材质仅属于目标布料。
 test('背心、披风和披肩以独立的无贴图材质提供预设换色', async () => {
   const { wearables } = await readJSON('internal/character/character-catalog.json');
-  const offers = await readJSON('internal/shop/wearable-products.json');
   const palette = await readJSON('internal/character/wearable-colors.json');
   const defaults = new Map([
     ['upper-human-tank-v1', 'ivory'],
@@ -200,11 +197,11 @@ test('背心、披风和披肩以独立的无贴图材质提供预设换色', as
     ['kaykit-skeletons-minion-back-cloak', 'brown'],
   ]);
   const toLinear = (channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-  const backs = [...wearables.filter((item) => item.slot === 'back'), ...offers];
+  const backs = wearables.filter((item) => item.slot === 'back');
   assert.deepEqual([...new Set(backs.map((item) => item.wearable_key).filter((key) => /-back-(cape|cloak)$/.test(key)))].sort(),
     [...defaults.keys()].slice(1).sort());
-  assert.deepEqual(wearables.filter((item) => item.dye_material).map((item) => item.wearable_key).sort(), [...defaults.keys()].sort());
-  for (const item of wearables.filter((item) => item.dye_material)) {
+  assert.deepEqual(wearables.filter((item) => item.dye_material === 'wearable_dye').map((item) => item.wearable_key).sort(), [...defaults.keys()].sort());
+  for (const item of wearables.filter((item) => defaults.has(item.wearable_key))) {
     assert.equal(item.default_color_key, defaults.get(item.wearable_key));
     const color = palette.find((entry) => entry.key === item.default_color_key);
     const bytes = await readFile(new URL(`internal/assets/builtin/${item.model_asset_key}.glb`, root));
@@ -223,6 +220,46 @@ test('背心、披风和披肩以独立的无贴图材质提供预设换色', as
         if (isCloth) assert.equal(primitive.attributes.COLOR_0, undefined, node.name);
       }
     }
+  }
+});
+
+// 按正式 GLB 的三角面核对染色选区，防止配件或同模型的其他穿戴串色。
+test('贴图换色只覆盖配方声明的网格和 UV 区域', async () => {
+  const { wearables } = await readJSON('internal/character/character-catalog.json');
+  const recipes = await readJSON('scripts/modular-character-dye-regions.json');
+  const textured = wearables.filter((item) => item.dye_material?.startsWith('dye_'));
+  assert.deepEqual(textured.map((item) => item.wearable_key).sort(), Object.keys(recipes).sort());
+
+  for (const item of textured) {
+    const { nodes, default_color } = recipes[item.wearable_key];
+    assert.equal(item.default_color_key, default_color, item.wearable_key);
+    const { document, scalars } = await readWearableMesh(item);
+    const materialIndex = document.materials.findIndex((material) => material.name === item.dye_material);
+    assert.notEqual(materialIndex, -1, item.wearable_key);
+    assert.ok(document.materials[materialIndex].pbrMetallicRoughness.baseColorTexture);
+    const dyedNodes = new Set();
+    for (const node of document.nodes.filter((entry) => entry.mesh !== undefined)) {
+      for (const primitive of document.meshes[node.mesh].primitives) {
+        const dyed = primitive.material === materialIndex;
+        const region = nodes[node.name];
+        if (!region) {
+          assert.equal(dyed, false, node.name);
+          continue;
+        }
+        if (dyed) dyedNodes.add(node.name);
+        const uv = scalars(primitive.attributes.TEXCOORD_0, 2);
+        const indices = scalars(primitive.indices, 1).flat();
+        for (let index = 0; index < indices.length; index += 3) {
+          const points = indices.slice(index, index + 3).map((vertex) => uv[vertex]);
+          const u = points.reduce((sum, point) => sum + point[0], 0) / 3;
+          const v = points.reduce((sum, point) => sum + point[1], 0) / 3;
+          const inside = v < (region.max_v ?? 1)
+            && region.tiles.some(([x, y]) => x === Math.floor(u * 8) && y === Math.floor(v * 4));
+          assert.equal(dyed, inside, `${item.wearable_key}/${node.name}/${index / 3}`);
+        }
+      }
+    }
+    assert.deepEqual([...dyedNodes].sort(), Object.keys(nodes).sort(), item.wearable_key);
   }
 });
 

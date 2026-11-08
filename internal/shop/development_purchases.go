@@ -42,7 +42,7 @@ func (s *Service) DevelopmentBuyAll(ctx context.Context, principal account.Princ
 	if readErr != nil {
 		return balance, readErr
 	}
-	if err := applyProductOwnership(ctx, tx, accountID, products, true); err != nil {
+	if err := applyProductOwnership(ctx, tx, accountID, products); err != nil {
 		return balance, err
 	}
 	balance, err = wallet.Get(ctx, tx, accountID)
@@ -56,7 +56,7 @@ func (s *Service) DevelopmentBuyAll(ctx context.Context, principal account.Princ
 		if product.Owned {
 			continue
 		}
-		identity := stableOwnershipIdentity(product, true)
+		identity := stableOwnershipIdentity(product)
 		if identity == (ownershipIdentity{}) {
 			identity.Product = product.ID
 		}

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
-	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/idempotency"
 	"github.com/wookiisky/check-in-suite/internal/island"
@@ -27,7 +26,7 @@ func scanPurchase(row rowScanner) (Purchase, error) {
 	var created int64
 	err := row.Scan(&p.ID, &p.ProductID, &p.TypeSnapshot, &p.NameSnapshot, &p.AssetKeySnapshot, &p.DescriptionSnapshot, &p.CoinPrice, &p.DiamondPrice, &p.Status, &redeemed, &p.Version, &created, &p.ItemKeySnapshot, &p.WearableKey, &p.CharacterKey, &p.SceneKey)
 	p.CreatedAt = core.Timestamp(created)
-	p.Provider, p.PackKey, p.PackName = purchaseSourceMetadata(p.AssetKeySnapshot, p.CharacterKey, p.ItemKeySnapshot)
+	p.Provider, p.PackKey, p.PackName = purchaseSourceMetadata(p.AssetKeySnapshot, p.CharacterKey, p.WearableKey, p.ItemKeySnapshot)
 	if spatial, found := island.SpatialFind(p.ItemKeySnapshot); found {
 		p.IslandItemKey = spatial.Key
 	}
@@ -94,7 +93,7 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 		}
 		return PurchaseResult{Purchase: purchase, Wallet: receipt.Wallet}, tx.Commit()
 	}
-	product, err := readProduct(ctx, tx, accountID, input.ProductID, false, input.RequireUnowned)
+	product, err := readProduct(ctx, tx, accountID, input.ProductID, false)
 	if err != nil {
 		return result, err
 	}
@@ -241,11 +240,8 @@ func (s *Service) ListPurchases(ctx context.Context, p account.Principal, input 
 		if input.PackKey != "" && item.PackKey != input.PackKey {
 			continue
 		}
-		if input.Slot != "" {
-			wearable, ok := character.GetWearable(item.WearableKey)
-			if !ok || string(wearable.Slot) != input.Slot {
-				continue
-			}
+		if input.Slot != "" && dressUpDisplays()[TypeWearable][item.WearableKey].Slot != input.Slot {
+			continue
 		}
 		result.Items = append(result.Items, item)
 		if len(result.Items) > input.Limit {

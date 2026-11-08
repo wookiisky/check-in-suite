@@ -15,7 +15,7 @@ import content from './content.json';
 
 type ProductDraft = Omit<ProductInput, 'asset_key'>;
 
-// 商品身份由素材库选定，表单只收集报价字段。
+// 目录装扮编辑现有报价，营地新增时由素材库确定商品身份。
 interface ProductEditorProps extends ShopProps {
   product: Product | null; // 有值时编辑既有报价。
   material?: ManagementMaterial; // 新建时已选的素材。恢复时从原命令读取素材。

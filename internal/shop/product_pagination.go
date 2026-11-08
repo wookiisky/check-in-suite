@@ -9,10 +9,7 @@ import (
 	"strings"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
-	"github.com/wookiisky/check-in-suite/internal/assets"
-	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/core"
-	"github.com/wookiisky/check-in-suite/internal/island"
 )
 
 // productCursor retains an immutable order boundary and the filters that produced it.
@@ -30,11 +27,11 @@ type productCursor struct {
 }
 
 // productMatches applies explicit metadata filters without deriving capability from display names.
-func productMatches(item Product, input ProductQuery, slots map[string]character.Slot) bool {
+func productMatches(item Product, input ProductQuery) bool {
 	if input.Type != "" && item.Type != input.Type {
 		return false
 	}
-	if input.Category != "" && shopProductCategory(item, slots) != input.Category {
+	if input.Category != "" && shopProductCategory(item) != input.Category {
 		return false
 	}
 	if input.Provider != "" && item.Provider != input.Provider {
@@ -46,11 +43,8 @@ func productMatches(item Product, input ProductQuery, slots map[string]character
 	if input.Search != "" && !strings.Contains(strings.ToLower(item.Name), input.Search) {
 		return false
 	}
-	if input.Slot != "" {
-		wearable, ok := character.GetWearable(item.WearableKey)
-		if !ok || string(wearable.Slot) != input.Slot {
-			return false
-		}
+	if input.Slot != "" && dressUpDisplays()[TypeWearable][item.WearableKey].Slot != input.Slot {
+		return false
 	}
 	return true
 }
@@ -133,7 +127,7 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if err := account.Authorize(ctx, tx, principal, includeInactive, s.Now()); err != nil {
 		return result, err
 	}
-	query := "SELECT " + productColumns + " FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL"
+	query := "SELECT " + productColumns + " FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL" + catalogOfferFilter
 	args := []any{accountID}
 	if !includeInactive {
 		query += " AND p.enabled=1"
@@ -156,19 +150,14 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if err != nil {
 		return result, err
 	}
-	slots := map[string]character.Slot{}
-	if input.Group == shopAppearance && input.Category != "" {
-		for _, wearable := range character.Wearables() {
-			slots[wearable.Key] = wearable.Slot
-		}
-	}
+
 	for rows.Next() {
 		item, err := scanProduct(rows)
 		if err != nil {
 			rows.Close()
 			return result, err
 		}
-		if !productMatches(item, input, slots) {
+		if !productMatches(item, input) {
 			continue
 		}
 		if len(result.Items) == input.Limit {
@@ -190,7 +179,7 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if readErr != nil {
 		return result, readErr
 	}
-	if err := applyProductOwnership(ctx, tx, accountID, result.Items, includeInactive); err != nil {
+	if err := applyProductOwnership(ctx, tx, accountID, result.Items); err != nil {
 		return result, err
 	}
 	result.Facets, result.CampCategories, err = visibleProductMetadata(ctx, tx, accountID, includeInactive, input.Group)
@@ -223,7 +212,7 @@ func productGroupFilter(group string, includeInactive bool) string {
 
 // visibleProductMetadata reads distinct source identities and camp categories independently of the page.
 func visibleProductMetadata(ctx context.Context, tx *sql.Tx, accountID int64, includeInactive bool, group string) (*ProductFacets, []string, error) {
-	query := "SELECT DISTINCT p.type,p.asset_key,p.character_key FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL"
+	query := "SELECT DISTINCT p.type,p.asset_key,p.character_key,p.wearable_key FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL" + catalogOfferFilter
 	if !includeInactive {
 		query += " AND p.enabled=1"
 	}
@@ -238,24 +227,13 @@ func visibleProductMetadata(ctx context.Context, tx *sql.Tx, accountID int64, in
 	items := []Product{}
 	categories := map[string]bool{TypeScene: true}
 	for rows.Next() {
-		var kind, assetKey, bodyKey string
-		if err := rows.Scan(&kind, &assetKey, &bodyKey); err != nil {
+		var item Product
+		if err := rows.Scan(&item.Type, &item.AssetKey, &item.CharacterKey, &item.WearableKey); err != nil {
 			return nil, nil, err
 		}
-		item := Product{Type: kind}
-		if asset, ok := assets.Get(assetKey); ok {
-			item.Provider, item.PackKey, item.PackName = asset.Provider, asset.PackKey, asset.PackName
-		}
-		if bodyKey != "" {
-			if body, ok := character.Get(bodyKey); ok {
-				item.Provider, item.PackKey = body.Provider, body.PackKey
-			}
-		}
+		applyProductCatalog(&item)
 		if group == shopCamp {
-			if definition, ok := island.SpatialForThumbnail(assetKey); ok {
-				item.IslandItemKey = definition.Key
-			}
-			categories[shopProductCategory(item, nil)] = true
+			categories[shopProductCategory(item)] = true
 		}
 		items = append(items, item)
 	}

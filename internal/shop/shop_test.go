@@ -153,7 +153,7 @@ func TestProductsAndRewards(t *testing.T) {
 func TestManagementCreationReplayRequiresFreshUnlock(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	input := catalogCharacterProduct(t).createInput()
+	input := productFixture{Name: "三维椅子", AssetKey: "camp-dining-chair-v1-thumbnail", Enabled: true}.createInput()
 	first, err := f.Service.CreateProduct(ctx, f.Principal, "managed-create", input)
 	if err != nil {
 		t.Fatal(err)
@@ -184,7 +184,7 @@ func TestTitleEquipmentOwnershipAndIndependentAppearance(t *testing.T) {
 	if err != nil || equipment.Title == nil || equipment.Title.ID != title.ID {
 		t.Fatalf("title=%+v %v", equipment, err)
 	}
-	if _, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HeadPurchaseID: &hair.ID}); err != nil {
+	if _, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HeadWearableKey: &hair.WearableKey}); err != nil {
 		t.Fatal(err)
 	}
 	equipment, err = f.Service.Equipment(ctx, f.Principal)
@@ -198,7 +198,7 @@ func TestTitleEquipmentOwnershipAndIndependentAppearance(t *testing.T) {
 		t.Fatalf("clear=%+v %v", equipment, err)
 	}
 	appearance, err := f.Service.Appearance(ctx, f.Principal)
-	if err != nil || appearance.HeadPurchaseID == nil || *appearance.HeadPurchaseID != hair.ID {
+	if err != nil || appearance.HeadWearableKey == nil || *appearance.HeadWearableKey != hair.WearableKey {
 		t.Fatalf("title changed appearance: %+v %v", appearance, err)
 	}
 	state, err := f.Accounts.Session(ctx, f.Principal)

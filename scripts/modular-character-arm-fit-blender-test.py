@@ -6,6 +6,10 @@ import json
 from pathlib import Path
 import sys
 
+# Blender 执行脚本时不会把脚本目录加入模块搜索路径。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from character_catalog_source import load_character_catalog
+
 ROOT = Path(__file__).resolve().parents[1]
 POSES = [('rest', 0), ('idle', 13), ('cheer', 11), ('cheer', 21),
          ('cheer', 31), ('read', 24), ('read', 48), ('read', 72)]
@@ -372,7 +376,7 @@ def verify(options):
     import bpy
 
     verify_containment_geometry()
-    catalog = json.loads(options.catalog.read_text())
+    catalog = load_character_catalog(options.catalog)
     wearables = [item for item in catalog['wearables'] if item['slot'] == 'upper' and not item.get('empty')]
     if options.only:
         missing = set(options.only) - {item['wearable_key'] for item in wearables}

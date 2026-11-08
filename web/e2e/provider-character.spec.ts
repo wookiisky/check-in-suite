@@ -15,10 +15,10 @@ type Product = components['schemas']['Product'];
 type Task = components['schemas']['Task'];
 type Camp = components['schemas']['CampResponse'];
 
-// 已有衣物的数量会影响页码，按真实分类和分页定位目标购买实例。
-async function ownedOption(editor: Locator, slot: CharacterSlot, purchaseID: string) {
+// 已有衣物的数量会影响页码，按真实分类和分页定位目标穿戴定义。
+async function ownedOption(editor: Locator, slot: CharacterSlot, wearableKey: string) {
   await editor.getByRole('tab', { name: appearance.slots[slot], exact: true }).click();
-  const option = editor.locator(`input[name="${slot}_purchase_id"][value="${purchaseID}"]`);
+  const option = editor.locator(`input[name="${slot}_wearable_key"][value="${wearableKey}"]`);
   const next = editor.getByRole('button', { name: pagination.next, exact: true });
   while (!await option.isVisible() && await next.isVisible() && await next.isEnabled()) await next.click();
   return option;
@@ -47,7 +47,7 @@ test('只提供人形与骷髅，职业部件独立混穿，中箭与帽子互�
   for (const wearable of dyeableBack) {
     expect(clothing.items.find((offer) => offer.wearable_key === wearable.wearable_key)?.name).toBe(wearable.name);
   }
-  const representativeKeys = { face: 'face-kaykit-skeletons-mage', head: 'kaykit-adventurers-knight-head', upper: 'kaykit-adventurers-knight-upper', lower: 'lower-barbarian-v1', shoes: 'shoes-barbarian-v1', back: 'kaykit-adventurers-knight-back-cape' };
+  const representativeKeys = { face: 'face-kaykit-skeletons-mage', head: 'kaykit-adventurers-mage-head', upper: 'kaykit-adventurers-knight-upper', lower: 'lower-barbarian-v1', shoes: 'shoes-barbarian-v1', back: 'kaykit-adventurers-knight-back-cape' };
   const selections = characterSlots.map((slot) => {
     const item = clothing.items.find((offer) => offer.wearable_key === representativeKeys[slot]);
     expect(item, `${slot}需要独立商品`).toBeDefined(); return item!;
@@ -75,37 +75,44 @@ test('只提供人形与骷髅，职业部件独立混穿，中箭与帽子互�
     await shopAPI(page, '/purchases', 'POST', { product_id: offer.id, expected_product_version: offer.version, expected_wallet_version: current.wallet.version });
   }
   const owned = await shopAPI<Appearance>(page, '/appearance');
-  expect(owned.inventory.some((item) => owned.character_inventory?.some((body) => body.purchase_id === item.purchase_id))).toBe(false);
-  const purchase = (offer: Product) => owned.inventory.find((item) => item.wearable_key === offer.wearable_key)!.purchase_id;
+  expect(owned.character_inventory?.some((body) => body.character_key === skeleton.character_key)).toBe(true);
+  const ownedKey = (offer: Product) => owned.inventory.find((item) => item.wearable_key === offer.wearable_key)!.wearable_key;
   try {
     await page.reload(); await openAppearance(page);
     const editor = page.locator('.appearance-page');
     await editor.getByRole('tab', { name: appearance.characterTitle, exact: true }).click();
     await editor.getByRole('radio', { name: skeleton.name, exact: true }).check();
-    for (const [index, slot] of characterSlots.entries()) await (await ownedOption(editor, slot, purchase(selections[index]!))).check();
-    await (await ownedOption(editor, 'head', purchase(arrow))).check();
+    for (const [index, slot] of characterSlots.entries()) await (await ownedOption(editor, slot, ownedKey(selections[index]!))).check();
+    await (await ownedOption(editor, 'head', ownedKey(arrow))).check();
     const save = editor.getByRole('button', { name: appearance.save, exact: true });
     await expect(save).toBeEnabled();
     await save.click();
     await expect(editor.getByText(appearance.saved, { exact: true })).toBeVisible();
     let saved = await shopAPI<Appearance>(page, '/appearance');
     expect(saved.character_key).toBe(skeleton.character_key);
-    expect(saved.head_purchase_id).toBe(purchase(arrow));
-    expect(saved.face_purchase_id).toBe(purchase(selections[0]!));
-    expect(saved.back_purchase_id).toBe(purchase(selections[5]!));
+    expect(saved.head_wearable_key).toBe(ownedKey(arrow));
+    expect(saved.face_wearable_key).toBe(ownedKey(selections[0]!));
+    expect(saved.back_wearable_key).toBe(ownedKey(selections[5]!));
     await editor.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('skeleton-six-slot-arrow.png') });
     await closeAppearance(page); await openAppearance(page);
-    await expect(await ownedOption(editor, 'head', purchase(arrow))).toBeChecked();
-    await (await ownedOption(editor, 'head', purchase(hat))).check();
-    await expect(await ownedOption(editor, 'head', purchase(arrow))).not.toBeChecked();
-    await expect(await ownedOption(editor, 'face', saved.face_purchase_id!)).toBeChecked();
-    await expect(await ownedOption(editor, 'back', saved.back_purchase_id!)).toBeChecked();
+    await expect(await ownedOption(editor, 'head', ownedKey(arrow))).toBeChecked();
+    await (await ownedOption(editor, 'head', ownedKey(hat))).check();
+    await expect(await ownedOption(editor, 'head', ownedKey(arrow))).not.toBeChecked();
+    const headColors = editor.getByRole('group', { name: appearance.slots.head, exact: true }).getByRole('group', { name: appearance.colorLabel, exact: true });
+    await expect(headColors.locator('input[value="purple"]')).toBeChecked();
+    await headColors.getByRole('radio', { name: '蓝', exact: true }).check();
+    await expect(await ownedOption(editor, 'face', saved.face_wearable_key!)).toBeChecked();
+    await expect(await ownedOption(editor, 'back', saved.back_wearable_key!)).toBeChecked();
     await expect(save).toBeEnabled();
     await save.click();
     await expect(editor.getByText(appearance.saved, { exact: true })).toBeVisible();
     saved = await shopAPI<Appearance>(page, '/appearance');
-    expect(saved.head_purchase_id).toBe(purchase(hat));
+    expect(saved.head_wearable_key).toBe(ownedKey(hat));
+    expect(saved.head_color_key).toBe('blue');
     await editor.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('skeleton-independent-face-hat-cape.png') });
+    await closeAppearance(page); await openAppearance(page);
+    await expect(await ownedOption(editor, 'head', ownedKey(hat))).toBeChecked();
+    await expect(headColors.getByRole('radio', { name: '蓝', exact: true })).toBeChecked();
     const human = owned.characters.find((item) => item.character_key === initial.default_character_key)!;
     await editor.getByRole('tab', { name: appearance.characterTitle, exact: true }).click();
     await editor.getByRole('radio', { name: human.name, exact: true }).check();
@@ -120,19 +127,20 @@ test('只提供人形与骷髅，职业部件独立混穿，中箭与帽子互�
     const emptyUpper = owned.wearables.find((item) => item.wearable_key === skeleton.defaults.upper && item.empty)!;
     await expect(upperOptions.getByRole('radio').first()).toHaveAccessibleName(emptyUpper.name);
     await expect(upperOptions.locator('label').first().locator('svg[aria-hidden="true"]')).toBeVisible();
-    for (const [index, slot] of characterSlots.entries()) if (slot !== 'head' && slot !== 'face') await (await ownedOption(editor, slot, purchase(selections[index]!))).check();
-    await (await ownedOption(editor, 'face', purchase(greenFace))).check();
+    for (const [index, slot] of characterSlots.entries()) if (slot !== 'head' && slot !== 'face') await (await ownedOption(editor, slot, ownedKey(selections[index]!))).check();
+    await (await ownedOption(editor, 'face', ownedKey(greenFace))).check();
     await expect(save).toBeEnabled();
     await save.click();
     await expect(editor.getByText(appearance.saved, { exact: true })).toBeVisible();
     saved = await shopAPI<Appearance>(page, '/appearance');
-    expect(saved.character_key).toBe(human.character_key); expect(saved.head_purchase_id).toBeNull();
-    expect(saved.face_purchase_id).toBe(purchase(greenFace)); expect(saved.back_purchase_id).toBe(purchase(selections[5]!));
+    expect(saved.character_key).toBe(human.character_key); expect(saved.head_wearable_key).toBeNull();
+    expect(saved.head_color_key).toBeNull();
+    expect(saved.face_wearable_key).toBe(ownedKey(greenFace)); expect(saved.back_wearable_key).toBe(ownedKey(selections[5]!));
     await editor.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('human-shared-clothes-bare-head.png') });
     expect(errors).toEqual([]);
   } finally {
     const current = await shopAPI<Appearance>(page, '/appearance');
-    await shopAPI(page, '/appearance', 'PUT', { ...appearanceRequest(initial), expected_version: current.version, ...Object.fromEntries(characterSlots.map((slot) => [`${slot}_free_wearable_key`, initial[`${slot}_free_wearable_key`] ?? null])) });
+    await shopAPI(page, '/appearance', 'PUT', { ...appearanceRequest(initial), expected_version: current.version });
   }
 });
 
@@ -170,7 +178,7 @@ test('独立人物检查按需播放原始动作，切换与返回待机不修�
   const after = await shopAPI<Appearance>(page, '/appearance');
   expect(after.version).toBe(state.version);
   expect(after.character_key).toBe(state.character_key);
-  expect(after.upper_purchase_id).toBe(state.upper_purchase_id);
+  expect(after.upper_wearable_key).toBe(state.upper_wearable_key);
   expect(errors).toEqual([]);
   expect(consoleErrors).toEqual([]);
 });

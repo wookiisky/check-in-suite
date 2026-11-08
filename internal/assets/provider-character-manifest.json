@@ -6,8 +6,8 @@
       "definition": {
         "character_key": "kaykit-medium-v1",
         "rig_key": "kaykit-adventurers-medium-v1",
-        "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
-        "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
+        "model_asset_key": "modular-human-body-v1-b306f9356ae4",
+        "model_url": "/api/v1/assets/modular-human-body-v1-b306f9356ae4",
         "scale": 0.8230534189366623,
         "fixed_nodes": [
           "body_hands"
@@ -40,134 +40,10 @@
           "shoes": "shoes-none-v1",
           "back": "back-none-v1"
         },
-        "animations": {
-          "idle": {
-            "clip": "Idle",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "walk": {
-            "clip": "Walking_A",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "run": {
-            "clip": "Running_A",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "sit": {
-            "clip": "Sit_Chair_Idle",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "cheer": {
-            "clip": "Cheer",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "exercise": {
-            "clip": "Exercise",
-            "asset_key": "character-exercise-v1",
-            "url": "/api/v1/assets/character-exercise-v1"
-          },
-          "read": {
-            "clip": "Read",
-            "asset_key": "character-living-v1",
-            "url": "/api/v1/assets/character-living-v1"
-          },
-          "play": {
-            "clip": "Play",
-            "asset_key": "character-living-v1",
-            "url": "/api/v1/assets/character-living-v1"
-          },
-          "rest": {
-            "clip": "Rest",
-            "asset_key": "character-living-v1",
-            "url": "/api/v1/assets/character-living-v1"
-          }
-        },
         "name": "基础人形",
         "body_key": "kaykit-medium-body-v1",
         "provider": "kaykit",
         "pack_key": "adventurers",
-        "preview_animations": [
-          {
-            "clip": "kaykit/kaykit-humanoid/Death_A",
-            "asset_key": "pa-f01f141a441215a4501ce8ed",
-            "url": "/api/v1/assets/pa-f01f141a441215a4501ce8ed"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Death_A_Pose",
-            "asset_key": "pa-bbf4da4e6e0b194feaf08875",
-            "url": "/api/v1/assets/pa-bbf4da4e6e0b194feaf08875"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Death_B",
-            "asset_key": "pa-ec52656bd7e1af73d4fbccae",
-            "url": "/api/v1/assets/pa-ec52656bd7e1af73d4fbccae"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Death_B_Pose",
-            "asset_key": "pa-548e58ec1e2a24c72fc6ef80",
-            "url": "/api/v1/assets/pa-548e58ec1e2a24c72fc6ef80"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Hit_A",
-            "asset_key": "pa-98bd8873527edbafdafdf611",
-            "url": "/api/v1/assets/pa-98bd8873527edbafdafdf611"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Hit_B",
-            "asset_key": "pa-74f77bdc9a81e81c57e01d65",
-            "url": "/api/v1/assets/pa-74f77bdc9a81e81c57e01d65"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Idle_A",
-            "asset_key": "pa-04a3bc9271e047f028319d51",
-            "url": "/api/v1/assets/pa-04a3bc9271e047f028319d51"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Idle_B",
-            "asset_key": "pa-872024c4a748990ee723e602",
-            "url": "/api/v1/assets/pa-872024c4a748990ee723e602"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Interact",
-            "asset_key": "pa-260c917f79c71a8399f531a0",
-            "url": "/api/v1/assets/pa-260c917f79c71a8399f531a0"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/PickUp",
-            "asset_key": "pa-383c081f67e4b3da27ffcf0c",
-            "url": "/api/v1/assets/pa-383c081f67e4b3da27ffcf0c"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Spawn_Air",
-            "asset_key": "pa-99cf8bf0f2c5a6bd1df4f438",
-            "url": "/api/v1/assets/pa-99cf8bf0f2c5a6bd1df4f438"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Spawn_Ground",
-            "asset_key": "pa-98a8c0c91bbc501eb57ad060",
-            "url": "/api/v1/assets/pa-98a8c0c91bbc501eb57ad060"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/T-Pose",
-            "asset_key": "pa-214305621324b6ada0949516",
-            "url": "/api/v1/assets/pa-214305621324b6ada0949516"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Throw",
-            "asset_key": "pa-9fd0bcbfe461b74facc84915",
-            "url": "/api/v1/assets/pa-9fd0bcbfe461b74facc84915"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Use_Item",
-            "asset_key": "pa-58011619c8ae5da95c8d1f96",
-            "url": "/api/v1/assets/pa-58011619c8ae5da95c8d1f96"
-          }
-        ],
         "thumbnail_asset_key": "modular-human-thumbnail-v1-2adddd36c065",
         "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-2adddd36c065"
       },
@@ -208,134 +84,10 @@
           "shoes": "shoes-none-v1",
           "back": "back-none-v1"
         },
-        "animations": {
-          "idle": {
-            "clip": "Idle",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "walk": {
-            "clip": "Walking_A",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "run": {
-            "clip": "Running_A",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "sit": {
-            "clip": "Sit_Chair_Idle",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "cheer": {
-            "clip": "Cheer",
-            "asset_key": "character-medium-v1",
-            "url": "/api/v1/assets/character-medium-v1"
-          },
-          "exercise": {
-            "clip": "Exercise",
-            "asset_key": "character-exercise-v1",
-            "url": "/api/v1/assets/character-exercise-v1"
-          },
-          "read": {
-            "clip": "Read",
-            "asset_key": "character-living-v1",
-            "url": "/api/v1/assets/character-living-v1"
-          },
-          "play": {
-            "clip": "Play",
-            "asset_key": "character-living-v1",
-            "url": "/api/v1/assets/character-living-v1"
-          },
-          "rest": {
-            "clip": "Rest",
-            "asset_key": "character-living-v1",
-            "url": "/api/v1/assets/character-living-v1"
-          }
-        },
         "name": "基础骷髅",
         "body_key": "kaykit-medium-body-v1",
         "provider": "kaykit",
         "pack_key": "kaykit-skeletons",
-        "preview_animations": [
-          {
-            "clip": "kaykit/kaykit-humanoid/Death_A",
-            "asset_key": "pa-f01f141a441215a4501ce8ed",
-            "url": "/api/v1/assets/pa-f01f141a441215a4501ce8ed"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Death_A_Pose",
-            "asset_key": "pa-bbf4da4e6e0b194feaf08875",
-            "url": "/api/v1/assets/pa-bbf4da4e6e0b194feaf08875"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Death_B",
-            "asset_key": "pa-ec52656bd7e1af73d4fbccae",
-            "url": "/api/v1/assets/pa-ec52656bd7e1af73d4fbccae"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Death_B_Pose",
-            "asset_key": "pa-548e58ec1e2a24c72fc6ef80",
-            "url": "/api/v1/assets/pa-548e58ec1e2a24c72fc6ef80"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Hit_A",
-            "asset_key": "pa-98bd8873527edbafdafdf611",
-            "url": "/api/v1/assets/pa-98bd8873527edbafdafdf611"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Hit_B",
-            "asset_key": "pa-74f77bdc9a81e81c57e01d65",
-            "url": "/api/v1/assets/pa-74f77bdc9a81e81c57e01d65"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Idle_A",
-            "asset_key": "pa-04a3bc9271e047f028319d51",
-            "url": "/api/v1/assets/pa-04a3bc9271e047f028319d51"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Idle_B",
-            "asset_key": "pa-872024c4a748990ee723e602",
-            "url": "/api/v1/assets/pa-872024c4a748990ee723e602"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Interact",
-            "asset_key": "pa-260c917f79c71a8399f531a0",
-            "url": "/api/v1/assets/pa-260c917f79c71a8399f531a0"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/PickUp",
-            "asset_key": "pa-383c081f67e4b3da27ffcf0c",
-            "url": "/api/v1/assets/pa-383c081f67e4b3da27ffcf0c"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Spawn_Air",
-            "asset_key": "pa-99cf8bf0f2c5a6bd1df4f438",
-            "url": "/api/v1/assets/pa-99cf8bf0f2c5a6bd1df4f438"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Spawn_Ground",
-            "asset_key": "pa-98a8c0c91bbc501eb57ad060",
-            "url": "/api/v1/assets/pa-98a8c0c91bbc501eb57ad060"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/T-Pose",
-            "asset_key": "pa-214305621324b6ada0949516",
-            "url": "/api/v1/assets/pa-214305621324b6ada0949516"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Throw",
-            "asset_key": "pa-9fd0bcbfe461b74facc84915",
-            "url": "/api/v1/assets/pa-9fd0bcbfe461b74facc84915"
-          },
-          {
-            "clip": "kaykit/kaykit-humanoid/Use_Item",
-            "asset_key": "pa-58011619c8ae5da95c8d1f96",
-            "url": "/api/v1/assets/pa-58011619c8ae5da95c8d1f96"
-          }
-        ],
         "thumbnail_asset_key": "modular-skeleton-thumbnail-v1-6ed192b02ab0",
         "thumbnail_url": "/api/v1/assets/modular-skeleton-thumbnail-v1-6ed192b02ab0"
       },
@@ -525,10 +277,10 @@
       "license": "CC0-1.0",
       "provider": "kaykit",
       "pack_key": "adventurers",
-      "key": "modular-human-body-v1-f1c3cb86fde5",
+      "key": "modular-human-body-v1-b306f9356ae4",
       "name": "human-body-v1",
       "kind": "model",
-      "url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
+      "url": "/api/v1/assets/modular-human-body-v1-b306f9356ae4",
       "format": "glb"
     },
     {
@@ -712,10 +464,10 @@
       "license": "CC0-1.0",
       "provider": "kaykit",
       "pack_key": "kaykit-adventurers",
-      "key": "modular-kaykit-adventurers-barbarian-683c6971a129",
+      "key": "modular-kaykit-adventurers-barbarian-2b615a1b7c88",
       "name": "kaykit-adventurers-barbarian",
       "kind": "model",
-      "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-683c6971a129",
+      "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-2b615a1b7c88",
       "format": "glb"
     },
     {
@@ -844,10 +596,10 @@
       "license": "CC0-1.0",
       "provider": "kaykit",
       "pack_key": "kaykit-adventurers",
-      "key": "modular-kaykit-adventurers-ranger-48eeedc1df85",
+      "key": "modular-kaykit-adventurers-ranger-1a5632a0200e",
       "name": "kaykit-adventurers-ranger",
       "kind": "model",
-      "url": "/api/v1/assets/modular-kaykit-adventurers-ranger-48eeedc1df85",
+      "url": "/api/v1/assets/modular-kaykit-adventurers-ranger-1a5632a0200e",
       "format": "glb"
     },
     {
@@ -1163,10 +915,10 @@
       "license": "CC0-1.0",
       "provider": "kaykit",
       "pack_key": "kaykit-adventurers",
-      "key": "modular-kaykit-adventurers-mage-86adf5fcd82e",
+      "key": "modular-kaykit-adventurers-mage-a996f7da0f34",
       "name": "kaykit-adventurers-mage",
       "kind": "model",
-      "url": "/api/v1/assets/modular-kaykit-adventurers-mage-86adf5fcd82e",
+      "url": "/api/v1/assets/modular-kaykit-adventurers-mage-a996f7da0f34",
       "format": "glb"
     },
     {
@@ -1207,10 +959,10 @@
       "license": "CC0-1.0",
       "provider": "kaykit",
       "pack_key": "kaykit-adventurers",
-      "key": "modular-kaykit-adventurers-rogue-283ffc57e962",
+      "key": "modular-kaykit-adventurers-rogue-f17692422312",
       "name": "kaykit-adventurers-rogue",
       "kind": "model",
-      "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-283ffc57e962",
+      "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-f17692422312",
       "format": "glb"
     },
     {
@@ -1218,10 +970,10 @@
       "license": "CC0-1.0",
       "provider": "kaykit",
       "pack_key": "kaykit-adventurers",
-      "key": "modular-kaykit-adventurers-rogue-hooded-40c173bdc575",
+      "key": "modular-kaykit-adventurers-rogue-hooded-51c880abaaa6",
       "name": "kaykit-adventurers-rogue-hooded",
       "kind": "model",
-      "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-40c173bdc575",
+      "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-51c880abaaa6",
       "format": "glb"
     },
     {
@@ -1262,10 +1014,10 @@
       "license": "CC0-1.0",
       "provider": "kaykit",
       "pack_key": "kaykit-skeletons",
-      "key": "modular-kaykit-skeletons-mage-0e9eaa4bdfba",
+      "key": "modular-kaykit-skeletons-mage-0950f8ac2044",
       "name": "kaykit-skeletons-mage",
       "kind": "model",
-      "url": "/api/v1/assets/modular-kaykit-skeletons-mage-0e9eaa4bdfba",
+      "url": "/api/v1/assets/modular-kaykit-skeletons-mage-0950f8ac2044",
       "format": "glb"
     },
     {

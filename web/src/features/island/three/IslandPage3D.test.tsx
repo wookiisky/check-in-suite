@@ -15,7 +15,7 @@ beforeEach(()=>{localStorage.clear();vi.stubGlobal('matchMedia',()=>({matches:fa
 afterEach(()=>vi.unstubAllGlobals());
 const renderedScene=vi.hoisted(()=>({current:null as unknown as SpatialScene3DProps}));
 vi.mock('./SpatialScene3D',()=>({SpatialScene3D:(props:SpatialScene3DProps)=>{renderedScene.current=props;return <div data-testid="scene-layout">{props.layout.environment_key}</div>;}}));
-const initial={version:1,scene_key:configuration.scene.scene_key,environment_key:'day',scene:configuration.scene,catalog:configuration.catalog,placements:configuration.default_placements,inventory:configuration.default_placements.map((p)=>({instance_id:p.instance_id,item_key:p.item_key}))} as SpatialIslandState;
+const initial={version:1,scene_key:configuration.scene.scene_key,environment_key:'day',scene:{...configuration.scene,activity_presentations:{}},catalog:configuration.catalog,placements:configuration.default_placements,inventory:configuration.default_placements.map((p)=>({instance_id:p.instance_id,item_key:p.item_key}))} as SpatialIslandState;
 
 // 组件边界使用真实草稿hook、请求错误及HTML离开流程，Canvas另由真实浏览器验证。
 function setup(failure?:ApiFailure,prepare?:(state:SpatialIslandState)=>void,initialSceneKey?:string){

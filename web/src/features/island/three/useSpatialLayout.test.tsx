@@ -5,7 +5,7 @@ import configuration from '../../../../../internal/island/spatial-scene.json';
 import type { SpatialIslandState } from './spatial-ui-types';
 import { useSpatialLayout } from './useSpatialLayout';
 
-const initial={version:1,scene_key:configuration.scene.scene_key,environment_key:'day',scene:configuration.scene,catalog:configuration.catalog,placements:configuration.default_placements,inventory:configuration.default_placements.map((p)=>({instance_id:p.instance_id,item_key:p.item_key}))} as SpatialIslandState;
+const initial={version:1,scene_key:configuration.scene.scene_key,environment_key:'day',scene:{...configuration.scene,activity_presentations:{}},catalog:configuration.catalog,placements:configuration.default_placements,inventory:configuration.default_placements.map((p)=>({instance_id:p.instance_id,item_key:p.item_key}))} as SpatialIslandState;
 function setup(failure?:ApiFailure){
   let latest=structuredClone(initial);
   const request=vi.fn(async(_path:string, options?:{method?:string;body?:unknown})=>{

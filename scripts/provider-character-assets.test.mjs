@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import { AnimationMixer, Matrix4, PropertyBinding, Vector3 } from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { inspectGLB } from './inspect-glb.mjs';
 
 const root = new URL('../', import.meta.url);
@@ -98,6 +100,70 @@ test('两个基础身体与六槽穿戴共用实际骨骼层级与逆绑定矩�
         next.matrix.forEach((value, index) => assert.ok(Math.abs(value - original.matrix[index]) < 0.00001, `${assetKey}/${bone}/bind[${index}]: ${value} != ${original.matrix[index]}`));
       }
     }
+  }
+});
+
+// 保留节点和原始动作数据，去掉只供渲染的纹理与网格，供 Node 中的真实播放器取样。
+async function loadRig({ document, binary }) {
+  const rig = { ...document, nodes: document.nodes.map(({ mesh, skin, ...node }) => node) };
+  for (const field of ['meshes', 'materials', 'textures', 'images', 'samplers', 'skins']) delete rig[field];
+  const json = Buffer.from(JSON.stringify(rig));
+  const paddedLength = Math.ceil(json.length / 4) * 4;
+  const bytes = Buffer.alloc(28 + paddedLength + binary.length, 0x20);
+  bytes.write('glTF', 0);
+  bytes.writeUInt32LE(2, 4);
+  bytes.writeUInt32LE(bytes.length, 8);
+  bytes.writeUInt32LE(paddedLength, 12);
+  bytes.write('JSON', 16);
+  json.copy(bytes, 20);
+  bytes.writeUInt32LE(binary.length, 20 + paddedLength);
+  bytes.write('BIN\0', 24 + paddedLength);
+  binary.copy(bytes, 28 + paddedLength);
+  return new GLTFLoader().parseAsync(bytes.buffer, '');
+}
+
+// 读取实际动作时长、骨骼与触球采样。活动配置不能把同名片段误绑到其他身体。
+test('共用动作绑定匹配两种正式身体、书本挂点和踢球采样', async () => {
+  const catalog = JSON.parse(await readFile(new URL('internal/character/character-catalog.json', root), 'utf8'));
+  const readModel = await modelReader();
+  for (const body of catalog.characters) {
+    assert.ok(!Object.hasOwn(body, 'animations'), '身体定义不应复制骨架动作');
+    const model = await readModel(body.model_asset_key);
+    const nodes = new Set(model.inspection.nodes.map(({ name }) => name));
+    const joints = new Set(model.inspection.skins.flatMap((skin) => skin.joints.map(({ name }) => PropertyBinding.sanitizeNodeName(name))));
+    const actions = catalog.animation_sets[body.rig_key];
+    for (const [key, action] of Object.entries(actions)) {
+      const source = await readModel(action.asset_key);
+      const clip = source.inspection.animations.find(({ name }) => name === action.clip);
+      assert.ok(clip?.duration > 0, key);
+      assert.ok(clip.targets.every(({ name }) => nodes.has(name)), key);
+      const attachment = action.presentation?.attachment;
+      if (attachment) {
+        assert.ok(joints.has(attachment.bone), key);
+        assert.equal(attachment.matrix.length, 16, key);
+        assert.ok(attachment.matrix.every(Number.isFinite), key);
+        assert.ok(Math.abs(new Matrix4().fromArray(attachment.matrix).determinant()) > 0.00001, key);
+        const book = await readModel(attachment.model_asset_key);
+        assert.equal(book.inspection.skins.length, 0);
+        assert.ok(book.inspection.meshes.length > 0);
+      }
+      const ball = action.presentation?.ball;
+      if (ball) {
+        assert.ok(ball.contact_seconds > 0 && ball.contact_seconds < clip.duration, key);
+        assert.ok(Math.abs(ball.period_seconds - clip.duration) < 0.0001, key);
+        const { scene } = await loadRig(model);
+        const { animations } = await loadRig(source);
+        const mixer = new AnimationMixer(scene);
+        mixer.clipAction(animations.find(({ name }) => name === clip.name)).play();
+        mixer.setTime(ball.contact_seconds);
+        scene.scale.setScalar(body.scale);
+        const toes = scene.getObjectByName('toesr').getWorldPosition(new Vector3());
+        const [x, y, z] = ball.contact_position;
+        assert.ok(Math.hypot(toes.x - x, toes.y - y) < 0.002, key);
+        assert.ok(z - toes.z > 0.12 && z - toes.z < 0.14, key);
+      }
+    }
+    assert.ok(actions.read.presentation.attachment && actions.exercise.presentation && actions.play.presentation.ball);
   }
 });
 

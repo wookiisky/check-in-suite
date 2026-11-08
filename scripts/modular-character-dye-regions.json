@@ -1,0 +1,53 @@
+{
+  "hair-barbarian-v1": {
+    "default_color": "gray",
+    "nodes": {"hair_barbarian": {"tiles": [[1, 0]]}}
+  },
+  "kaykit-adventurers-rogue-hooded-head": {
+    "default_color": "green",
+    "nodes": {"head_provider": {"tiles": [[0, 1], [1, 1]]}}
+  },
+  "kaykit-adventurers-mage-head": {
+    "default_color": "purple",
+    "default_srgb": "#746eaf",
+    "nodes": {"head_provider": {"tiles": [[1, 1]]}}
+  },
+  "hair-rogue-v1": {
+    "default_color": "brown",
+    "nodes": {"hair_rogue": {"tiles": [[1, 0]]}}
+  },
+  "kaykit-adventurers-ranger-head": {
+    "default_color": "brown",
+    "nodes": {
+      "head_provider": {"tiles": [[1, 0]]},
+      "ranger_original_features": {"tiles": [[1, 0]]},
+      "ranger_smile_beard": {"tiles": [[1, 0]]}
+    }
+  },
+  "kaykit-adventurers-rogue-head": {
+    "default_color": "brown",
+    "nodes": {"head_provider": {"tiles": [[1, 0]]}}
+  },
+  "kaykit-adventurers-mage-upper": {
+    "default_color": "purple",
+    "default_srgb": "#746eaf",
+    "nodes": {"upper_outfit001": {"tiles": [[0, 1]]}}
+  },
+  "kaykit-skeletons-mage-upper": {
+    "default_color": "red",
+    "nodes": {"upper_outfit001": {"tiles": [[2, 2]]}}
+  },
+  "kaykit-adventurers-mage-lower": {
+    "default_color": "purple",
+    "default_srgb": "#746eaf",
+    "nodes": {"lower_outfit": {"tiles": [[0, 1]]}}
+  },
+  "shoes-rogue-v1": {
+    "default_color": "brown",
+    "nodes": {"shoes_rogue": {"tiles": [[3, 2]]}}
+  },
+  "kaykit-adventurers-barbarian-shoes": {
+    "default_color": "brown",
+    "nodes": {"shoes_outfit": {"tiles": [[3, 2]], "max_v": 0.625}}
+  }
+}

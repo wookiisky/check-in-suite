@@ -105,7 +105,7 @@ test('管理工作区紧凑布局、七个页签和键盘切换', async ({ page 
     { name: content.navigation.categories, ready: page.getByRole('button', { name: checkin.newCategory, exact: true }) },
     { name: content.navigation.tasks, ready: page.getByRole('button', { name: checkin.newTask, exact: true }) },
     { name: content.navigation.records, ready: page.getByLabel(checkin.date, { exact: true }) },
-    { name: content.navigation.products, ready: page.getByRole('button', { name: shop.addProduct, exact: true }) },
+    { name: content.navigation.products, ready: page.getByRole('tab', { name: shop.productLibrary, exact: true }) },
     { name: content.navigation.achievementManagement, ready: page.getByRole('button', { name: achievement.new, exact: true }) },
     { name: family.sounds, ready: page.getByLabel(family.music, { exact: true }) },
   ];

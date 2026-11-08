@@ -17,7 +17,6 @@
   "previewLabel": "当前草稿的人物预览",
   "colorLabel": "颜色",
   "partWithColor": "{name} · {color}",
-  "additionalInstance": "{name} · {number}",
   "emptyOwned": "还没有这个部位的其他装扮，默认款仍可使用。",
   "unavailableCharacter": "这个人物定义暂时不可用，请重新读取外观。",
   "unavailablePart": "暂不可用",

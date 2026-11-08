@@ -8,10 +8,12 @@ import re
 import shutil
 from pathlib import Path
 import struct
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / 'scripts/modular-character-sources.json'
+CATALOG = ROOT / 'internal/character/character-catalog.json'
 BUILTIN = ROOT / 'internal/assets/builtin'
 WORK = ROOT / '.local/modular-character-work'
 
@@ -53,6 +55,24 @@ def body_surface(source_key, material_name, uv):
 # 配方中的可读名称外化，脚本只处理部位和稳定身份。
 def load_recipe(path=None):
     return json.loads((path or CONFIG).read_text())
+
+
+# 加工只替换几何定义，保留正式动作绑定和已审核的可售资格。
+def assemble_catalog(previous, bodies, wearables):
+    body_sale = {item['character_key']: item['sellable'] for item in previous['characters']}
+    wearable_sale = {item['wearable_key']: item['sellable'] for item in previous['wearables']}
+    missing_bodies = body_sale.keys() - {body['character_key'] for body in bodies}
+    missing_wearables = wearable_sale.keys() - {item['wearable_key'] for item in wearables}
+    if missing_bodies or missing_wearables:
+        missing = ', '.join(sorted(missing_bodies | missing_wearables))
+        raise ValueError(f'candidate removes published identities: {missing}. Keep their definitions and mark them unsellable to retire them.')
+    defaults = {key for body in bodies for key in body['defaults'].values()}
+    for body in bodies:
+        body['sellable'] = body_sale.get(body['character_key'], False)
+    for item in wearables:
+        key = item['wearable_key']
+        item['sellable'] = key not in defaults and not item.get('empty', False) and wearable_sale.get(key, True)
+    return {**previous, 'characters': bodies, 'wearables': wearables}
 
 
 # glTF 的底色因子使用线性值，目录色板使用 sRGB。
@@ -174,6 +194,22 @@ def write_candidate(staging, output, updates, reused_assets=(), root=ROOT, basel
     return helper.finalize_candidate(root, output, 'characters', reused, baseline, dependencies)
 
 
+# 中性贴图加工使用项目锁定的 Pillow 环境，保留 Blender 输出的几何。
+def prepare_textured_dyes(staging, regions, documents):
+    script = ROOT / 'scripts/prepare-modular-character-dyes.py'
+    result = subprocess.run(
+        ['uv', 'run', '--locked', '--project', str(ROOT), 'python', str(script),
+         '--models', str(staging), '--output', str(staging), '--regions', str(regions)],
+        input=json.dumps(documents, ensure_ascii=False), capture_output=True, text=True,
+    )
+    if result.returncode:
+        raise RuntimeError(result.stderr.strip())
+    prepared = json.loads(result.stdout)
+    for key in prepared['retired_models']:
+        (staging / (key + '.glb')).unlink()
+    return prepared
+
+
 # 实际制作集中在此入口，普通Python检查可以导入纯函数而无需安装bpy。
 def prepare(options):
     import bpy
@@ -184,11 +220,13 @@ def prepare(options):
     if (output/'candidate.json').exists() or (output/'internal').exists():
         raise ValueError('candidate output already contains delivery; choose a new directory')
     baseline = candidate_module().capture_baseline(ROOT)
+    previous_catalog = json.loads(CATALOG.read_text())
     work = output/'work'
     work.mkdir(parents=True, exist_ok=True)
     recipe = getattr(options, 'recipe', CONFIG)
     config = load_recipe(recipe)
     dye_defaults = config.get('dye_defaults', {})
+    dye_regions = ROOT / config['textured_dye_regions'] if config.get('textured_dye_regions') else None
     retired_back_wearables = set(config.get('retired_back_wearables', []))
     verified_inputs = verify_inputs(config)
     face_order = config.get('face_order')
@@ -199,6 +237,8 @@ def prepare(options):
         smile_module = importlib.util.module_from_spec(smile_spec)
         smile_spec.loader.exec_module(smile_module)
     dependency_paths = [recipe, Path(__file__), *[path for path in ROOT.glob('scripts/modular-character-*.py') if 'test' not in path.name]]
+    if dye_regions:
+        dependency_paths.extend([dye_regions, ROOT / 'scripts/prepare-modular-character-dyes.py', ROOT / 'pyproject.toml', ROOT / 'uv.lock'])
     if dye_defaults:
         palette_path = ROOT / 'internal/character/wearable-colors.json'
         palette = {entry['key']: linear_rgba(entry['hex']) for entry in json.loads(palette_path.read_text())}
@@ -921,21 +961,23 @@ def prepare(options):
         wearables = faces + [entry for entry in wearables if entry['slot'] != 'face']
     for definition in body_definitions:
         definition['defaults'] = {slot: aliases.get(key, key) for slot, key in definition['defaults'].items()}
-    default_keys = {key for definition in body_definitions for key in definition['defaults'].values()}
-    offers = [dict(wearable_key=entry['wearable_key'], name=entry['name'], coin_price=config['prices'][entry['slot']], diamond_price=0) for entry in wearables if not entry.get('empty') and entry['wearable_key'] not in default_keys]
-    catalog = {'characters': body_definitions, 'wearables': wearables}
+    catalog = assemble_catalog(previous_catalog, body_definitions, wearables)
     previous_assets = json.loads((BUILTIN / 'catalog.json').read_text())
     previous_manifest_path = ROOT / 'internal/assets/provider-character-manifest.json'
     old_manifest = json.loads(previous_manifest_path.read_text())
     old_character_asset_keys = {entry['key'] for entry in old_manifest.get('assets', [])}
     retained = [entry for entry in previous_assets if entry['key'] not in old_character_asset_keys and not (entry.get('provider') == 'kenney' and entry['kind'] in ['character', 'wearable']) and not (entry.get('kind') == 'wearable')]
     dedup_assets = {entry['key']: entry for entry in retained + assets}
-    manifest = {'recipe': config['recipe'], 'body_key': config['body_key'], 'characters': [{'definition': entry, 'provider': 'kaykit', 'status': 'imported'} for entry in body_definitions], 'sources': [{key: value for key, value in entry.items() if key not in ['asset', 'spec']} for entry in config['sources']], 'assets': assets, 'wearable_evidence': evidence, 'face_completions': face_completions, 'human_body': human_body_evidence, 'clothing_fit_evidence': clothing_fit_evidence, 'back_fit_evidence': back_fit_evidence, 'neck_support_evidence': neck_support_evidence, 'head_fit_evidence': head_fit_evidence, 'human_waist_evidence': human_waist_evidence, 'skeleton_body': skeleton_report, 'aliases': aliases, 'processing_complete': True, 'validation_status': 'not_run', 'failures': [], 'verified_inputs': verified_inputs, 'archive_verification': 'Archive checksums are retained source records; archive bytes were not rehashed in this run.'}
+    geometry_definitions = [{key: value for key, value in entry.items() if key != 'sellable'} for entry in body_definitions]
+    manifest = {'recipe': config['recipe'], 'body_key': config['body_key'], 'characters': [{'definition': entry, 'provider': 'kaykit', 'status': 'imported'} for entry in geometry_definitions], 'sources': [{key: value for key, value in entry.items() if key not in ['asset', 'spec']} for entry in config['sources']], 'assets': assets, 'wearable_evidence': evidence, 'face_completions': face_completions, 'human_body': human_body_evidence, 'clothing_fit_evidence': clothing_fit_evidence, 'back_fit_evidence': back_fit_evidence, 'neck_support_evidence': neck_support_evidence, 'head_fit_evidence': head_fit_evidence, 'human_waist_evidence': human_waist_evidence, 'skeleton_body': skeleton_report, 'aliases': aliases, 'processing_complete': True, 'validation_status': 'not_run', 'failures': [], 'verified_inputs': verified_inputs, 'archive_verification': 'Archive checksums are retained source records; archive bytes were not rehashed in this run.'}
     if mage_waist_evidence:
         manifest['mage_waist_evidence'] = mage_waist_evidence
-    updates = {ROOT / 'internal/character/character-catalog.json': catalog, ROOT / 'internal/shop/wearable-products.json': offers, BUILTIN / 'catalog.json': list(dedup_assets.values()), previous_manifest_path: manifest}
+    documents = {'catalog': catalog, 'manifest': manifest, 'assets': list(dedup_assets.values())}
+    if dye_regions:
+        documents = prepare_textured_dyes(staging, dye_regions, documents)
+    updates = {CATALOG: documents['catalog'], BUILTIN / 'catalog.json': documents['assets'], previous_manifest_path: documents['manifest']}
     write_candidate(staging, output, {path: (json.dumps(value, ensure_ascii=False, indent=2) + '\n').encode() for path, value in updates.items()}, retained, ROOT, baseline, dependencies)
-    print('人物候选生成完成', len(body_definitions), len(wearables), len(offers), flush=True)
+    print('人物候选生成完成', len(body_definitions), len(wearables), flush=True)
 
 
 if __name__ == '__main__':

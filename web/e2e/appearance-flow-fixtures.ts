@@ -12,7 +12,7 @@ export async function appearanceAPI(page: Page, route: string, method = 'GET', d
   const response = await page.request.get('/api/v1/session');
   expect(response.ok()).toBe(true);
   const session = await response.json() as components['schemas']['SessionResponse'];
-  return page.request.fetch(`/api/v1${route}`, { method, ...(data === undefined ? {} : { data }), headers: { Origin: 'http://127.0.0.1:15173', 'X-CSRF-Token': session.csrf_token, 'Idempotency-Key': crypto.randomUUID() } });
+  return page.request.fetch(`/api/v1${route}`, { method, ...(data === undefined ? {} : { data }), headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': session.csrf_token, 'Idempotency-Key': crypto.randomUUID() } });
 }
 
 // 独立预览复用正式登录表单，不用伪造会话跳过 HTTP 授权。
@@ -37,11 +37,13 @@ export async function ownedAlternativeUpper(page: Page, name: string, wearableKe
     let fundingTask: components['schemas']['Task'] | null = null;
     let fundingRecord: components['schemas']['Checkin'] | null = null;
     try {
-      const created = await appearanceAPI(page, '/management/products', 'POST', { name, asset_key: wearable.thumbnail_asset_key, coin_price: 0, diamond_price: 0, stock: null, enabled: true });
-      expect(created.status()).toBe(201);
-      const product = await created.json() as components['schemas']['Product'];
+      const products = await appearanceAPI(page, '/products?type=wearable&limit=100');
+      expect(products.ok()).toBe(true);
+      const { items } = await products.json() as components['schemas']['ProductList'];
+      const product = items.find((item) => item.wearable_key === wearable.wearable_key)!;
+      expect(product, `目录缺少 ${wearable.wearable_key} 的报价`).toBeDefined();
       let camp = await (await appearanceAPI(page, '/camp')).json() as components['schemas']['CampResponse'];
-      // 撤销已消费的打卡奖励可能留下负余额，零价购买也必须满足正式余额规则。
+      // 通过真实打卡补足当前账户购买该报价所需的两种余额。
       if (camp.wallet.coins < product.coin_price || camp.wallet.diamonds < product.diamond_price) {
         const task = await appearanceAPI(page, '/management/tasks', 'POST', { category_id: null, name: `${name}-余额准备`, icon_key: 'book-v1', coin_reward: Math.max(0, product.coin_price - camp.wallet.coins), diamond_reward: Math.max(0, product.diamond_price - camp.wallet.diamonds), daily_limit: 1, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true });
         expect(task.status()).toBe(201);
@@ -54,7 +56,8 @@ export async function ownedAlternativeUpper(page: Page, name: string, wearableKe
       const purchased = await appearanceAPI(page, '/purchases', 'POST', { product_id: product.id, expected_product_version: product.version, expected_wallet_version: camp.wallet.version });
       expect(purchased.status(), await purchased.text()).toBe(201);
       const result = await purchased.json() as components['schemas']['PurchaseResult'];
-      owned = { purchase_id: result.purchase.id, wearable_key: wearable.wearable_key };
+      expect(result.purchase.wearable_key).toBe(wearable.wearable_key);
+      owned = { wearable_key: wearable.wearable_key };
     } finally {
       if (fundingRecord) expect((await appearanceAPI(page, `/checkins/${fundingRecord.id}`, 'DELETE', { expected_version: fundingRecord.version })).ok()).toBe(true);
       if (fundingTask) expect((await appearanceAPI(page, `/management/tasks/${fundingTask.id}`, 'DELETE', { expected_version: fundingTask.version })).status()).toBe(204);

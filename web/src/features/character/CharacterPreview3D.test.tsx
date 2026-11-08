@@ -120,7 +120,7 @@ describe('装扮预览水平旋转', () => {
     const view = render(<CharacterPreview3D snapshot={snapshot} rotatable onStatus={onStatus} />);
     fireEvent.click(screen.getByRole('button', { name: '向右旋转' }));
     expect(onStatus).toHaveBeenCalledTimes(1);
-    view.rerender(<CharacterPreview3D snapshot={{ ...snapshot, version: 2, upper_purchase_id: 'upper-purchase' }} rotatable action="walk" onStatus={onStatus} />);
+    view.rerender(<CharacterPreview3D snapshot={{ ...snapshot, version: 2, upper_wearable_key: 'upper-b' }} rotatable action="walk" onStatus={onStatus} />);
     expect(modelRotation()).toBeCloseTo(Math.PI / 4);
     act(() => model.changed?.({ phase: 'error', error: new Error('network') }));
     fireEvent.click(screen.getByRole('button', { name: content.retry }));

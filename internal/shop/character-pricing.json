@@ -1,4 +1,6 @@
 {
-  "coin_price": 95,
-  "diamond_price": 0
+  "kaykit-skeleton-v1": {
+    "coin_price": 95,
+    "diamond_price": 0
+  }
 }

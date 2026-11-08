@@ -7517,10 +7517,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "adventurers",
-    "key": "modular-human-body-v1-f1c3cb86fde5",
+    "key": "modular-human-body-v1-b306f9356ae4",
     "name": "human-body-v1",
     "kind": "model",
-    "url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
+    "url": "/api/v1/assets/modular-human-body-v1-b306f9356ae4",
     "format": "glb"
   },
   {
@@ -7704,10 +7704,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-barbarian-683c6971a129",
+    "key": "modular-kaykit-adventurers-barbarian-2b615a1b7c88",
     "name": "kaykit-adventurers-barbarian",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-683c6971a129",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-barbarian-2b615a1b7c88",
     "format": "glb"
   },
   {
@@ -7836,10 +7836,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-ranger-48eeedc1df85",
+    "key": "modular-kaykit-adventurers-ranger-1a5632a0200e",
     "name": "kaykit-adventurers-ranger",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-ranger-48eeedc1df85",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-ranger-1a5632a0200e",
     "format": "glb"
   },
   {
@@ -8155,10 +8155,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-mage-86adf5fcd82e",
+    "key": "modular-kaykit-adventurers-mage-a996f7da0f34",
     "name": "kaykit-adventurers-mage",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-86adf5fcd82e",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-a996f7da0f34",
     "format": "glb"
   },
   {
@@ -8199,10 +8199,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-283ffc57e962",
+    "key": "modular-kaykit-adventurers-rogue-f17692422312",
     "name": "kaykit-adventurers-rogue",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-283ffc57e962",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-f17692422312",
     "format": "glb"
   },
   {
@@ -8210,10 +8210,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-hooded-40c173bdc575",
+    "key": "modular-kaykit-adventurers-rogue-hooded-51c880abaaa6",
     "name": "kaykit-adventurers-rogue-hooded",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-40c173bdc575",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-51c880abaaa6",
     "format": "glb"
   },
   {
@@ -8254,10 +8254,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-mage-0e9eaa4bdfba",
+    "key": "modular-kaykit-skeletons-mage-0950f8ac2044",
     "name": "kaykit-skeletons-mage",
     "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-0e9eaa4bdfba",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-0950f8ac2044",
     "format": "glb"
   },
   {

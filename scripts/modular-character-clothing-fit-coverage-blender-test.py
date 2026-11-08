@@ -6,6 +6,10 @@ import json
 from pathlib import Path
 import sys
 
+# Blender 执行脚本时不会把脚本目录加入模块搜索路径。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from character_catalog_source import load_character_catalog
+
 ROOT = Path(__file__).resolve().parents[1]
 # 标准腕段及已实际定位的掌根斑点；右手原本为开放护手，不在闭拳覆盖契约内。
 SCOPE = (.705, .842)
@@ -108,7 +112,7 @@ def verify(options):
 
     tools = load_tool('wrist_coverage_mesh_tools', 'modular-character-arm-fit-blender-test.py')
     review = load_tool('wrist_coverage_review_views', 'verify-modular-character-arms.py')
-    catalog = json.loads(options.catalog.read_text())
+    catalog = load_character_catalog(options.catalog)
     item = next(item for item in catalog['wearables'] if item['wearable_key'] == options.wearable_key)
     directories = [options.assets, ROOT / 'internal/assets/builtin']
     bpy.ops.wm.read_factory_settings(use_empty=True)

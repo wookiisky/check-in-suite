@@ -41,7 +41,7 @@ it('分类筛选后能直接跳页，切换分类后仍保留所选装扮', asyn
   for (let index = 1; index <= 27; index += 1) {
     const key = `extra-upper-${index}`;
     state.wearables.push({ ...upper, name: `额外上装 ${index}`, wearable_key: key });
-    state.inventory.push({ purchase_id: key, wearable_key: key });
+    state.inventory.push({ wearable_key: key });
   }
   const { client } = appearanceClient(async () => state);
   render(<AppearancePage client={client} onSaved={vi.fn()} leaveGuardRef={null} />);

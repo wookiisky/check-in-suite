@@ -21,16 +21,25 @@ func TestCharacterCatalogMigrationPreservesPurchasesAndReferences(t *testing.T) 
 	}
 	defer db.Close()
 	previous := fstest.MapFS{}
+	beforeExtraColors := fstest.MapFS{}
+	throughExtraColors := fstest.MapFS{}
 	names, _ := fs.Glob(migrations.Files, "*.sql")
 	for _, name := range names {
-		if name >= "006_" {
+		if name >= "011_" {
 			continue
 		}
 		data, err := fs.ReadFile(migrations.Files, name)
 		if err != nil {
 			t.Fatal(err)
 		}
-		previous[name] = &fstest.MapFile{Data: data}
+		file := &fstest.MapFile{Data: data}
+		throughExtraColors[name] = file
+		if name < "010_" {
+			beforeExtraColors[name] = file
+		}
+		if name < "006_" {
+			previous[name] = file
+		}
 	}
 	if err := Migrate(ctx, db, previous); err != nil {
 		t.Fatal(err)
@@ -46,7 +55,7 @@ func TestCharacterCatalogMigrationPreservesPurchasesAndReferences(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := Migrate(ctx, db, migrations.Files); err != nil {
+	if err := Migrate(ctx, db, beforeExtraColors); err != nil {
 		t.Fatal(err)
 	}
 	var name, head, face, back, ledger string
@@ -59,6 +68,19 @@ func TestCharacterCatalogMigrationPreservesPurchasesAndReferences(t *testing.T) 
 	var upperColor, backColor sql.NullString
 	if err := db.QueryRowContext(ctx, `SELECT upper_color_key,back_color_key FROM appearance_state WHERE id=1`).Scan(&upperColor, &backColor); err != nil || upperColor.Valid || backColor.Valid {
 		t.Fatalf("old appearance must use the baked colors: %v %v %v", upperColor, backColor, err)
+	}
+	if _, err := db.ExecContext(ctx, `UPDATE appearance_state SET upper_color_key='blue',back_color_key='red' WHERE id=1`); err != nil {
+		t.Fatal(err)
+	}
+	if err := Migrate(ctx, db, throughExtraColors); err != nil {
+		t.Fatal(err)
+	}
+	var headColor, lowerColor, shoesColor sql.NullString
+	var version int64
+	err = db.QueryRowContext(ctx, `SELECT version,upper_color_key,back_color_key,head_color_key,lower_color_key,shoes_color_key FROM appearance_state WHERE id=1`).
+		Scan(&version, &upperColor, &backColor, &headColor, &lowerColor, &shoesColor)
+	if err != nil || version != 4 || upperColor.String != "blue" || backColor.String != "red" || headColor.Valid || lowerColor.Valid || shoesColor.Valid {
+		t.Fatalf("color migration changed appearance: version=%d upper=%v back=%v head=%v lower=%v shoes=%v err=%v", version, upperColor, backColor, headColor, lowerColor, shoesColor, err)
 	}
 	_, err = db.ExecContext(ctx, `INSERT INTO products(id,type,name,asset_key,character_key,coin_price,diamond_price,enabled,created_at,updated_at) VALUES('new-character','character','新角色','new-art','new-character',95,0,1,2,2)`)
 	if err != nil {
@@ -73,8 +95,14 @@ func TestCharacterCatalogMigrationPreservesPurchasesAndReferences(t *testing.T) 
 		t.Fatal("migration left foreign key violations")
 	}
 	rows.Close()
-	if err := Migrate(ctx, db, migrations.Files); err != nil {
+	if err := Migrate(ctx, db, throughExtraColors); err != nil {
 		t.Fatal(err)
+	}
+	if err := Migrate(ctx, db, migrations.Files); err == nil {
+		t.Fatal("existing outfit must require an explicit rebuild")
+	}
+	if err := db.QueryRowContext(ctx, `SELECT version,upper_color_key FROM appearance_state WHERE id=1`).Scan(&version, &upperColor); err != nil || version != 4 || upperColor.String != "blue" {
+		t.Fatalf("failed migration lost outfit: version=%d color=%v err=%v", version, upperColor, err)
 	}
 }
 

@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/island"
 	"github.com/wookiisky/check-in-suite/internal/shop"
@@ -15,13 +14,11 @@ import (
 // 插入旧报价的管理事实，模拟更新前已经存在而不是经过当前素材校验创建。
 func historicalOffer(t *testing.T, f shopFixture, id, kind, identity, artwork string, enabled int, deleted any) {
 	t.Helper()
-	characterKey, sceneKey := "", ""
-	if kind == shop.TypeCharacter {
-		characterKey = identity
-	} else if kind == shop.TypeScene {
+	sceneKey := ""
+	if kind == shop.TypeScene {
 		sceneKey = identity
 	}
-	_, err := f.DB.Exec(`INSERT INTO products(id,type,name,asset_key,character_key,scene_key,description,coin_price,diamond_price,stock,enabled,deleted_at,version,created_at,updated_at) VALUES(?,?,?, ?,?,?,?,7,0,3,?,?,5,11,12)`, id, kind, "管理名称", artwork, characterKey, sceneKey, "管理说明", enabled, deleted)
+	_, err := f.DB.Exec(`INSERT INTO products(id,type,name,asset_key,scene_key,description,coin_price,diamond_price,stock,enabled,deleted_at,version,created_at,updated_at) VALUES(?,?,?,?,?,?,7,0,3,?,?,5,11,12)`, id, kind, "管理名称", artwork, sceneKey, "管理说明", enabled, deleted)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,79 +39,29 @@ func requireRefreshedOffer(t *testing.T, f shopFixture, id, artwork string, enab
 	}
 }
 
-// 角色及场景按稳定身份刷新全部报价，旧订单的图片快照不被更改。
-func TestCharacterAndSceneSeedsRefreshOnlyVersionedArtwork(t *testing.T) {
+// 场景按稳定身份刷新报价并使旧确认失效。
+func TestSceneSeedRefreshesOnlyVersionedArtwork(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	body, ok := character.Get("kaykit-skeleton-v1")
-	if !ok {
-		t.Fatal("missing basic skeleton")
-	}
 	scene, _ := island.SpatialSceneFind("forest-courtyard-v1")
-	oldBody := "kaykit-adventurers-barbarian-m-a608430851cc-thumbnail"
 	oldScene := "camp-sports-area-v1-thumbnail"
-	historicalOffer(t, f, "old-character", shop.TypeCharacter, body.Key, oldBody, 1, nil)
-	historicalOffer(t, f, "deleted-character", shop.TypeCharacter, body.Key, oldBody, 0, 13)
 	historicalOffer(t, f, "old-scene", shop.TypeScene, scene.Key, oldScene, 1, nil)
 	historicalOffer(t, f, "deleted-scene", shop.TypeScene, scene.Key, oldScene, 0, 13)
-	_, err := f.DB.Exec(`INSERT INTO purchases(id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,character_key_snapshot,coin_price,diamond_price,status,created_at) VALUES('historic-character-order','deleted-character','character','成交名称','成交说明',?,?,7,0,'owned',10)`, oldBody, body.Key)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := shop.SeedCharacterProducts(ctx, f.DB, 100); err != nil {
-		t.Fatal(err)
-	}
 	if err := shop.SeedSceneProducts(ctx, f.DB, 100); err != nil {
 		t.Fatal(err)
 	}
-	for _, offer := range []struct {
-		id, artwork string
-		enabled     int
-		deleted     bool
-	}{{"old-character", body.ThumbnailAssetKey, 1, false}, {"deleted-character", body.ThumbnailAssetKey, 0, true}, {"old-scene", scene.ThumbnailAssetKey, 1, false}, {"deleted-scene", scene.ThumbnailAssetKey, 0, true}} {
-		requireRefreshedOffer(t, f, offer.id, offer.artwork, offer.enabled, offer.deleted)
-	}
-	if err := shop.SeedCharacterProducts(ctx, f.DB, 101); err != nil {
-		t.Fatal(err)
-	}
+	requireRefreshedOffer(t, f, "old-scene", scene.ThumbnailAssetKey, 1, false)
+	requireRefreshedOffer(t, f, "deleted-scene", scene.ThumbnailAssetKey, 0, true)
 	if err := shop.SeedSceneProducts(ctx, f.DB, 101); err != nil {
 		t.Fatal(err)
 	}
-	requireRefreshedOffer(t, f, "old-character", body.ThumbnailAssetKey, 1, false)
 	requireRefreshedOffer(t, f, "old-scene", scene.ThumbnailAssetKey, 1, false)
-	var retained string
-	if err := f.DB.QueryRow(`SELECT asset_key_snapshot FROM purchases WHERE id='historic-character-order'`).Scan(&retained); err != nil || retained != oldBody {
-		t.Fatalf("historical artwork=%s err=%v", retained, err)
-	}
 	balance := creditFixture(t, f, 20, 0)
-	_, err = f.Service.Buy(ctx, f.Principal, core.ID(), shop.BuyInput{ProductID: "old-scene", ExpectedProductVersion: 5, ExpectedWalletVersion: balance.Version})
+	_, err := f.Service.Buy(ctx, f.Principal, core.ID(), shop.BuyInput{ProductID: "old-scene", ExpectedProductVersion: 5, ExpectedWalletVersion: balance.Version})
 	requireShopCode(t, err, "PRODUCT_CHANGED")
 	order, err := f.Service.Buy(ctx, f.Principal, core.ID(), shop.BuyInput{ProductID: "old-scene", ExpectedProductVersion: 6, ExpectedWalletVersion: balance.Version})
 	if err != nil || order.Purchase.SceneKey != scene.Key || order.Purchase.AssetKeySnapshot != scene.ThumbnailAssetKey {
 		t.Fatalf("refreshed scene purchase=%+v err=%v", order, err)
-	}
-}
-
-// 旧角色报价刷新后仍按同一人物成交，购买资格与身体权益没有依赖旧图片。
-func TestCharacterSeedRefreshAllowsBuyingHistoricalOffer(t *testing.T) {
-	f := newShopFixture(t)
-	ctx := context.Background()
-	body, ok := character.Get("kaykit-skeleton-v1")
-	if !ok {
-		t.Fatal("missing basic skeleton")
-	}
-	historicalOffer(t, f, "old-character", shop.TypeCharacter, body.Key, "kaykit-adventurers-barbarian-m-a608430851cc-thumbnail", 1, nil)
-	if err := shop.SeedCharacterProducts(ctx, f.DB, 100); err != nil {
-		t.Fatal(err)
-	}
-	balance := creditFixture(t, f, 20, 0)
-	order, err := f.Service.Buy(ctx, f.Principal, core.ID(), shop.BuyInput{ProductID: "old-character", ExpectedProductVersion: 6, ExpectedWalletVersion: balance.Version})
-	if err != nil || order.Purchase.CharacterKey != body.Key || order.Purchase.AssetKeySnapshot != body.ThumbnailAssetKey {
-		t.Fatalf("historical character purchase=%+v err=%v", order, err)
-	}
-	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: body.Key})
-	if err != nil || saved.CharacterKey != body.Key || len(saved.Inventory) != 0 {
-		t.Fatalf("historical offer lost character capability: %+v err=%v", saved, err)
 	}
 }
 

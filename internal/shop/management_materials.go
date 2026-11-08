@@ -19,7 +19,7 @@ type ManagementMaterial struct {
 	Asset    assets.Asset `json:"asset"`    // Controlled thumbnail with source metadata.
 	Group    string       `json:"group"`    // Shared appearance or camp shop group.
 	Category string       `json:"category"` // Body, wearable slot, camp object category, or scene.
-	Saleable bool         `json:"saleable"` // Whether the material can be bound to a new offer.
+	Saleable bool         `json:"saleable"` // Whether the owning catalog permits sale.
 }
 
 // ManagementActivityMaterial shows the same action clip used in the current camp.
@@ -70,24 +70,24 @@ func buildManagementMaterialCatalog() managementMaterialCatalog {
 		if !matchingKind {
 			return
 		}
-		material := ManagementMaterial{Asset: asset, Group: group, Category: category, Saleable: available && !asset.Free}
-		if material.Saleable {
-			result.byAsset[key] = materialBinding{productType: kind, definitionKey: definition}
+		material := ManagementMaterial{Asset: asset, Group: group, Category: category, Saleable: available}
+		if group == shopCamp {
+			material.Saleable = available && !asset.Free
+			if material.Saleable {
+				result.byAsset[key] = materialBinding{productType: kind, definitionKey: definition}
+			}
 		}
 		result.view.Items = append(result.view.Items, material)
 	}
 	bodies := character.Definitions()
 	for _, body := range bodies {
-		add(body.ThumbnailAssetKey, shopAppearance, TypeCharacter, TypeCharacter, body.Key, body.Key != character.DefaultCharacterKey)
+		add(body.ThumbnailAssetKey, shopAppearance, TypeCharacter, TypeCharacter, body.Key, body.Sellable)
 	}
 	for _, wearable := range character.Wearables() {
-		isDefault := slices.ContainsFunc(bodies, func(body character.Definition) bool {
-			return body.Defaults.ForSlot(wearable.Slot) == wearable.Key
-		})
-		add(wearable.ThumbnailAssetKey, shopAppearance, string(wearable.Slot), TypeWearable, wearable.Key, !wearable.Empty && !isDefault)
+		add(wearable.ThumbnailAssetKey, shopAppearance, string(wearable.Slot), TypeWearable, wearable.Key, wearable.Sellable)
 	}
 	for _, item := range island.SpatialCatalog() {
-		category := shopProductCategory(Product{Type: TypeIsland, IslandItemKey: item.Key}, nil)
+		category := shopProductCategory(Product{Type: TypeIsland, IslandItemKey: item.Key})
 		add(item.ThumbnailAssetKey, shopCamp, category, TypeIsland, item.Key, !item.Free)
 	}
 	for _, scene := range island.SpatialSceneDefinitions() {

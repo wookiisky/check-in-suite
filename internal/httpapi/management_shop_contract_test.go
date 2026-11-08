@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,33 +14,34 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/shop"
 )
 
-// TestManagementProductBindingsHTTP proves the server fixes a product's material identity at creation.
+// TestManagementProductBindingsHTTP verifies dress-up listings are published and only terms can be edited.
 func TestManagementProductBindingsHTTP(t *testing.T) {
 	app, request := shopHTTPRequest(t)
 	body := character.Definitions()[0]
 	for _, candidate := range character.Definitions() {
-		if candidate.Key != character.DefaultCharacterKey {
+		if candidate.Sellable {
 			body = candidate
 			break
 		}
 	}
+	if err := shop.SeedCharacterProducts(context.Background(), app.DB, 1); err != nil {
+		t.Fatal(err)
+	}
+	response := request(http.MethodGet, "/api/v1/products?include_inactive=true&type=character", "", "")
+	var catalog shop.ProductList
+	if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &catalog) != nil || len(catalog.Items) != 1 {
+		t.Fatalf("catalog=%d %s", response.Code, response.Body)
+	}
+	product := catalog.Items[0]
+	if product.Type != shop.TypeCharacter || product.CharacterKey != body.Key || product.AssetKey != body.ThumbnailAssetKey || product.Stock != nil {
+		t.Fatalf("published product=%+v", product)
+	}
 	const terms = `"name":"试用报价","coin_price":0,"diamond_price":0,"stock":null,"enabled":true`
 	createBody := fmt.Sprintf(`{"asset_key":%q,%s}`, body.ThumbnailAssetKey, terms)
-	created := request(http.MethodPost, "/api/v1/management/products", createBody, "managed-offer")
-	var product shop.Product
-	if created.Code != http.StatusCreated || json.Unmarshal(created.Body.Bytes(), &product) != nil ||
-		product.Type != shop.TypeCharacter || product.CharacterKey != body.Key || product.AssetKey != body.ThumbnailAssetKey || product.Stock != nil {
-		t.Fatalf("create=%d %s", created.Code, created.Body)
-	}
-	replay := request(http.MethodPost, "/api/v1/management/products", createBody, "managed-offer")
-	var replayProduct shop.Product
-	if replay.Code != http.StatusCreated || json.Unmarshal(replay.Body.Bytes(), &replayProduct) != nil || replayProduct.ID != product.ID {
-		t.Fatalf("replay=%d %s", replay.Code, replay.Body)
-	}
-	for _, asset := range []string{"title-crown-v1", "reward-gift-v1", "activity-reading-book-v1", "unknown"} {
+	for _, asset := range []string{body.ThumbnailAssetKey, "title-crown-v1", "reward-gift-v1", "activity-reading-book-v1", "unknown"} {
 		response := request(http.MethodPost, "/api/v1/management/products", fmt.Sprintf(`{"asset_key":%q,%s}`, asset, terms), asset)
-		if response.Code != http.StatusBadRequest {
-			t.Fatalf("asset %s accepted: %d %s", asset, response.Code, response.Body)
+		if response.Code != http.StatusBadRequest || !strings.Contains(response.Body.String(), `"asset_key":"INVALID_ASSET"`) {
+			t.Fatalf("invalid asset %s: %d %s", asset, response.Code, response.Body)
 		}
 	}
 	path := "/api/v1/management/products/" + product.ID
@@ -50,7 +52,7 @@ func TestManagementProductBindingsHTTP(t *testing.T) {
 			t.Fatalf("field %s accepted: %d %s", field, response.Code, response.Body)
 		}
 	}
-	response := request(http.MethodPatch, path, patch, "")
+	response = request(http.MethodPatch, path, patch, "")
 	var updated shop.Product
 	if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &updated) != nil || updated.Name != "更新报价" ||
 		updated.CoinPrice != 1 || updated.DiamondPrice != 2 || updated.Stock == nil || *updated.Stock != 0 || updated.Enabled ||
@@ -87,8 +89,8 @@ func TestManagementProductBindingsHTTP(t *testing.T) {
 	if response = request(http.MethodPatch, path, strings.Replace(patch, `"expected_version":1`, `"expected_version":3`, 1), ""); response.Code != http.StatusForbidden {
 		t.Fatalf("locked update=%d %s", response.Code, response.Body)
 	}
-	if replay = request(http.MethodPost, "/api/v1/management/products", createBody, "managed-offer"); replay.Code != http.StatusForbidden {
-		t.Fatalf("locked replay=%d %s", replay.Code, replay.Body)
+	if response = request(http.MethodPost, "/api/v1/management/products", createBody, "managed-offer"); response.Code != http.StatusForbidden {
+		t.Fatalf("locked create=%d %s", response.Code, response.Body)
 	}
 }
 

@@ -1,8 +1,10 @@
 import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
+import type { components } from '../src/api/schema';
 import content from '../src/features/island/three/spatial-content.json' with { type: 'json' };
 import { appearanceAPI } from './appearance-flow-fixtures';
 import { test, openIsland3D, readSpatial, selectHouse, spatialRequest, setSpatialCameraOpen } from './island-3d-fixtures';
+import { clearFunding, fundPurchase, shopAPI } from './shop-navigation';
 
 test.setTimeout(90_000);
 test.use({ actionTimeout: 15_000 });
@@ -84,6 +86,43 @@ test('真实阅读走到书桌表演并显示手部书本道具', async ({ page,
   await setSpatialCameraOpen(page, false);
   await captureCanvas(page, testInfo, 'reading-turned-canvas');
   expect(spatialRequest(await readSpatial(page))).toEqual(spatialRequest(originalLayout));
+});
+
+// 在实际营地中使用目录绑定播放踢球，暂停时保留当前活动。
+test('真实营地按目录绑定踢球并可暂停恢复', async ({ page, originalLayout }) => {
+  const binding = originalLayout.scene.activity_presentations.ball!;
+  expect(binding.ball?.contact_seconds).toBeGreaterThan(0);
+  const ball = originalLayout.catalog.find((item) => item.interaction?.activity === 'ball')!;
+  let owned = originalLayout.inventory.find((item) => item.item_key === ball.item_key);
+  if (!owned) {
+    const { items } = await shopAPI<components['schemas']['ProductList']>(page, '/products?type=island');
+    const product = items.find((item) => item.island_item_key === ball.item_key)!;
+    const funding = await fundPurchase(page, product, '踢球验证余额');
+    try {
+      const { wallet } = await shopAPI<components['schemas']['CampResponse']>(page, '/camp');
+      await shopAPI(page, '/purchases', 'POST', { product_id: product.id, expected_product_version: product.version, expected_wallet_version: wallet.version });
+    } finally {
+      await clearFunding(page, funding);
+    }
+    owned = (await readSpatial(page)).inventory.find((item) => item.item_key === ball.item_key);
+  }
+  const layout = await shopAPI<typeof originalLayout>(page, '/island/layout', 'PUT', {
+    ...spatialRequest(originalLayout),
+    placements: [...originalLayout.placements, { instance_id: owned!.instance_id, item_key: ball.item_key, space: 'outdoor', x_cm: 650, z_cm: 0, rotation: 0 }],
+  } satisfies components['schemas']['SpatialIslandSave']);
+  await openIsland3D(page);
+  await renderFrames(page);
+  const scene = page.getByRole('region', { name: content.scene, exact: true });
+  await page.getByRole('button', { name: content.activities.ball, exact: true }).click();
+  await expect(scene).toHaveAttribute('data-actor-phase', 'performing', { timeout: 40_000 });
+  await expect(page.getByText(`${content.activities.ball} · ${content.phases.performing}`, { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: content.pause, exact: true }).click();
+  await expect(page.getByText(content.paused, { exact: true })).toBeVisible();
+  await expect(scene).toHaveAttribute('data-actor-phase', 'performing');
+  await page.getByRole('button', { name: content.resume, exact: true }).click();
+  await expect(page.getByText(`${content.activities.ball} · ${content.phases.performing}`, { exact: true })).toBeVisible();
+  await expect(page.getByText(content.sceneError, { exact: true })).toBeHidden();
+  expect(spatialRequest(await readSpatial(page))).toEqual(spatialRequest(layout));
 });
 
 // 微调、环境和完整布局由同一 PUT 保存；刷新和取消分别核实已保存值与版本。

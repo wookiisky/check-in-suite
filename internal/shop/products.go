@@ -9,11 +9,13 @@ import (
 
 	"github.com/wookiisky/check-in-suite/internal/account"
 	"github.com/wookiisky/check-in-suite/internal/assets"
-	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/idempotency"
 	"github.com/wookiisky/check-in-suite/internal/island"
 )
+
+// catalogOfferFilter hides entries retired by the published catalog, without changing commercial terms.
+const catalogOfferFilter = " AND (p.type NOT IN ('character','wearable') OR p.catalog_revision IS NOT NULL)"
 
 const manageableOffers = " AND p.type IN ('character','wearable','island','scene')"
 
@@ -31,27 +33,47 @@ func scanProduct(row rowScanner) (Product, error) {
 		p.Stock = &stock.Int64
 	}
 	p.Deleted = deleted.Valid
-	if item, ok := island.SpatialForThumbnail(p.AssetKey); ok && p.Type == TypeIsland {
-		p.IslandItemKey, p.Repeatable = item.Key, item.Repeatable
-	}
-	if asset, ok := assets.Get(p.AssetKey); ok {
-		p.Provider, p.PackKey, p.PackName = asset.Provider, asset.PackKey, asset.PackName
-	}
-	if definition, ok := character.Get(p.CharacterKey); ok {
-		p.Provider, p.PackKey = definition.Provider, definition.PackKey
+	if err == nil {
+		applyProductCatalog(&p)
 	}
 	return p, err
 }
 
+// applyProductCatalog supplies live artwork and source metadata for an offer.
+func applyProductCatalog(p *Product) {
+	var display dressUpDisplay
+	switch p.Type {
+	case TypeCharacter:
+		display = dressUpDisplays()[TypeCharacter][p.CharacterKey]
+		p.AssetKey = display.Thumbnail
+	case TypeWearable:
+		display = dressUpDisplays()[TypeWearable][p.WearableKey]
+		p.AssetKey = display.Thumbnail
+	case TypeIsland:
+		if item, ok := island.SpatialForThumbnail(p.AssetKey); ok {
+			p.IslandItemKey, p.Repeatable = item.Key, item.Repeatable
+		}
+	}
+	if asset, ok := assets.Get(p.AssetKey); ok {
+		p.Provider, p.PackKey, p.PackName = asset.Provider, asset.PackKey, asset.PackName
+	}
+	if display.Provider != "" {
+		p.Provider = display.Provider
+	}
+	if display.PackKey != "" {
+		p.PackKey = display.PackKey
+	}
+}
+
 // readProduct keeps deleted source rows available only for successful creation replay.
-func readProduct(ctx context.Context, tx *sql.Tx, accountID int64, id string, includeDeleted, matchWearables bool) (Product, error) {
-	p, err := scanProduct(tx.QueryRowContext(ctx, "SELECT "+productColumns+" FROM products p WHERE p.account_id=? AND p.id=?", accountID, id))
+func readProduct(ctx context.Context, tx *sql.Tx, accountID int64, id string, includeDeleted bool) (Product, error) {
+	p, err := scanProduct(tx.QueryRowContext(ctx, "SELECT "+productColumns+" FROM products p WHERE p.account_id=? AND p.id=?"+catalogOfferFilter, accountID, id))
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && p.Deleted && !includeDeleted) {
 		return Product{}, core.Fail(404, "NOT_FOUND")
 	}
 	if err == nil {
 		items := []Product{p}
-		err = applyProductOwnership(ctx, tx, accountID, items, matchWearables)
+		err = applyProductOwnership(ctx, tx, accountID, items)
 		p = items[0]
 	}
 	return p, err
@@ -96,7 +118,7 @@ func (s *Service) ListProducts(ctx context.Context, p account.Principal, include
 	if err = account.Authorize(ctx, tx, p, includeInactive, s.Now()); err != nil {
 		return result, err
 	}
-	query := "SELECT " + productColumns + " FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL"
+	query := "SELECT " + productColumns + " FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL" + catalogOfferFilter
 	if includeInactive {
 		query += manageableOffers
 	} else {
@@ -120,7 +142,7 @@ func (s *Service) ListProducts(ctx context.Context, p account.Principal, include
 	if err != nil {
 		return result, err
 	}
-	if err = applyProductOwnership(ctx, tx, accountID, result.Items, includeInactive); err != nil {
+	if err = applyProductOwnership(ctx, tx, accountID, result.Items); err != nil {
 		return result, err
 	}
 	return result, tx.Commit()
@@ -148,7 +170,7 @@ func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key st
 		return Product{}, err
 	}
 	if saved != nil {
-		item, err := readProduct(ctx, tx, accountID, saved.ResourceID, true, false)
+		item, err := readProduct(ctx, tx, accountID, saved.ResourceID, true)
 		if err != nil {
 			return Product{}, err
 		}
@@ -161,21 +183,16 @@ func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key st
 	if !ok {
 		return Product{}, core.Invalid("asset_key", "INVALID_ASSET")
 	}
-	var wearableKey, characterKey, sceneKey string
-	switch binding.productType {
-	case TypeWearable:
-		wearableKey = binding.definitionKey
-	case TypeCharacter:
-		characterKey = binding.definitionKey
-	case TypeScene:
+	var sceneKey string
+	if binding.productType == TypeScene {
 		sceneKey = binding.definitionKey
 	}
 	id := core.ID()
-	_, err = tx.ExecContext(ctx, "INSERT INTO products(id,account_id,type,name,asset_key,wearable_key,character_key,scene_key,description,coin_price,diamond_price,stock,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, accountID, binding.productType, input.Name, input.AssetKey, wearableKey, characterKey, sceneKey, "", input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), now.UnixMilli())
+	_, err = tx.ExecContext(ctx, "INSERT INTO products(id,account_id,type,name,asset_key,scene_key,description,coin_price,diamond_price,stock,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", id, accountID, binding.productType, input.Name, input.AssetKey, sceneKey, "", input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), now.UnixMilli())
 	if err != nil {
 		return Product{}, err
 	}
-	item, err := readProduct(ctx, tx, accountID, id, false, false)
+	item, err := readProduct(ctx, tx, accountID, id, false)
 	if err != nil {
 		return Product{}, err
 	}
@@ -198,7 +215,7 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 	if err = account.Authorize(ctx, tx, p, true, now); err != nil {
 		return Product{}, err
 	}
-	current, err := readProduct(ctx, tx, accountID, id, false, false)
+	current, err := readProduct(ctx, tx, accountID, id, false)
 	if err != nil {
 		return Product{}, err
 	}
@@ -215,7 +232,7 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 	if err != nil {
 		return Product{}, err
 	}
-	item, err := readProduct(ctx, tx, accountID, id, false, false)
+	item, err := readProduct(ctx, tx, accountID, id, false)
 	if err != nil {
 		return Product{}, err
 	}

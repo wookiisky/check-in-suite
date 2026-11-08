@@ -11,6 +11,7 @@ export interface CharacterModel3DProps {
   snapshot: AppearanceState; // 已确认目录、库存与保存状态。
   draft?: AppearanceDraft; // 可选的完整编辑草稿。
   action?: string; // 目录声明的语义动作，默认 idle。
+  animationTime?: (() => number) | undefined; // 与活动道具共享的表演时间。
   paused?: boolean; // 页面或账户要求暂停。
   position?: [number, number, number]; // 场景世界位置，单位米。
   rotation?: number; // Y 轴朝向弧度。
@@ -20,7 +21,7 @@ export interface CharacterModel3DProps {
 }
 
 // 新资源全部准备好后一次提交节点；等待或失败时仍绘制上一套人物。
-export function CharacterModel3D({ snapshot, draft, action = 'idle', paused = false, position = [0, 0, 0], rotation = 0, onStatus, attempt = 0, attachments }: CharacterModel3DProps) {
+export function CharacterModel3D({ snapshot, draft, action = 'idle', animationTime, paused = false, position = [0, 0, 0], rotation = 0, onStatus, attempt = 0, attachments }: CharacterModel3DProps) {
   const stopped = useGraphicsMotion(paused);
   const statusCallback = useRef(onStatus);
   useLayoutEffect(() => { statusCallback.current = onStatus; }, [onStatus]);
@@ -33,9 +34,13 @@ export function CharacterModel3D({ snapshot, draft, action = 'idle', paused = fa
     } catch (error) { return { error }; }
   }, [snapshot, draft, action, attachments]);
   const { character, status } = usePreparedCharacter(resolution, attempt);
+  const externallyTimed = animationTime !== undefined;
   useLayoutEffect(() => {
-    if (character && character.key === resolution.resolved?.key) { character.play(action, stopped); invalidate(); }
-  }, [character, action, resolution.resolved?.key, invalidate]);
+    if (character && character.key === resolution.resolved?.key) {
+      character.play(action, stopped || externallyTimed);
+      invalidate();
+    }
+  }, [character, action, resolution.resolved?.key, invalidate, externallyTimed, stopped]);
   useEffect(() => { character?.resetDelta(); }, [character, stopped]);
   useEffect(() => {
     const reset = () => character?.resetDelta();
@@ -43,6 +48,12 @@ export function CharacterModel3D({ snapshot, draft, action = 'idle', paused = fa
     return () => document.removeEventListener('visibilitychange', reset);
   }, [character]);
   useEffect(() => { statusCallback.current?.(status); }, [status]);
-  useFrame((_, seconds) => { character?.advance(seconds, stopped || document.visibilityState === 'hidden'); });
+  useFrame((_, seconds) => {
+    if (animationTime) {
+      if (character?.key === resolution.resolved?.key) character?.seek(animationTime());
+      return;
+    }
+    character?.advance(seconds, stopped || document.visibilityState === 'hidden');
+  });
   return character ? <group position={position} rotation={[0, rotation, 0]}><primitive object={character.root} dispose={null} /></group> : null;
 }

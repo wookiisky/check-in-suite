@@ -21,19 +21,24 @@ func TestSpatialScenesMigrationPreservesExistingFacts(t *testing.T) {
 	}
 	defer db.Close()
 	previous := fstest.MapFS{}
+	throughScenes := fstest.MapFS{}
 	names, err := fs.Glob(migrations.Files, "*.sql")
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, name := range names {
-		if name >= "007_" {
+		if name >= "008_" {
 			continue
 		}
 		data, err := fs.ReadFile(migrations.Files, name)
 		if err != nil {
 			t.Fatal(err)
 		}
-		previous[name] = &fstest.MapFile{Data: data}
+		file := &fstest.MapFile{Data: data}
+		throughScenes[name] = file
+		if name < "007_" {
+			previous[name] = file
+		}
 	}
 	if err := Migrate(ctx, db, previous); err != nil {
 		t.Fatal(err)
@@ -53,7 +58,7 @@ INSERT INTO island_spatial_state(id,version,scene_key,environment_key,placements
 		t.Fatal(err)
 	}
 	for range 2 {
-		if err := Migrate(ctx, db, migrations.Files); err != nil {
+		if err := Migrate(ctx, db, throughScenes); err != nil {
 			t.Fatal(err)
 		}
 	}

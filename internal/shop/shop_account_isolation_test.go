@@ -58,14 +58,10 @@ func TestAccountsKeepShopOwnershipSeparate(t *testing.T) {
 	if err != nil || len(paged.Items) != 0 {
 		t.Fatalf("paged catalog leaked: %+v, %v", paged, err)
 	}
-	secondOffer, err := f.Service.CreateProduct(ctx, second, "shared-key", catalogCharacterProduct(t).createInput())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if secondOffer.ID == firstOffer.ID {
-		t.Fatal("idempotency receipt crossed accounts")
-	}
-	if _, err := f.Service.Buy(ctx, second, "shared-key", shop.BuyInput{ProductID: secondOffer.ID, ExpectedProductVersion: 1, ExpectedWalletVersion: 1}); err != nil {
+	secondFixture := f
+	secondFixture.Principal = second
+	secondOffer := configureDressUpOffer(t, secondFixture, catalogCharacterProduct(t))
+	if _, err := f.Service.Buy(ctx, second, "shared-key", shop.BuyInput{ProductID: secondOffer.ID, ExpectedProductVersion: secondOffer.Version, ExpectedWalletVersion: 1}); err != nil {
 		t.Fatal(err)
 	}
 	var firstCoins, secondCoins int64

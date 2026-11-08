@@ -12,7 +12,7 @@ describe('正式人物组装与动画', () => {
     const dispose = vi.spyOn((source.scene.getObjectByName('face') as SkinnedMesh).geometry, 'dispose');
     const cache = new GltfResourceCache(async () => source);
     const first = await prepareCharacter(resolveAppearance(snapshot), cache);
-    const second = await prepareCharacter(resolveAppearance(snapshot, { character_key: 'body', face_purchase_id: null, back_purchase_id: null, head_purchase_id: null, upper_purchase_id: 'purchase-upper', lower_purchase_id: null, shoes_purchase_id: null }), cache);
+    const second = await prepareCharacter(resolveAppearance(snapshot, { character_key: 'body', face_wearable_key: null, back_wearable_key: null, head_wearable_key: null, upper_wearable_key: 'upper-b', lower_wearable_key: null, shoes_wearable_key: null }), cache);
     expect(first.root.getObjectByName('body')!.visible).toBe(false);
     expect(second.root.getObjectByName('body')!.visible).toBe(true);
     expect(first.root.getObjectByName('upper-b')!.visible).toBe(false);
@@ -32,7 +32,7 @@ describe('正式人物组装与动画', () => {
     const scalp = (source.scene.getObjectByName('face-a') as SkinnedMesh).clone(); scalp.name = 'scalp-a'; source.scene.add(scalp);
     const cache = new GltfResourceCache(async () => source);
     const dressed = await prepareCharacter(resolveAppearance(snapshot), cache);
-    const bare = await prepareCharacter(resolveAppearance(snapshot, { ...draftFromAppearance(snapshot), head_purchase_id: 'purchase-head' }), cache);
+    const bare = await prepareCharacter(resolveAppearance(snapshot, { ...draftFromAppearance(snapshot), head_wearable_key: 'head-b' }), cache);
     expect(dressed.root.getObjectByName('face-a')!.visible).toBe(true);
     expect(dressed.root.getObjectByName('scalp-a')!.visible).toBe(false);
     expect(bare.root.getObjectByName('face-a')!.visible).toBe(true);
@@ -42,7 +42,7 @@ describe('正式人物组装与动画', () => {
   });
 
   it('不同资源的服装重绑到身体实例的同一组骨骼', async () => {
-    const snapshot = appearanceFixture(); snapshot.upper_purchase_id = 'purchase-upper';
+    const snapshot = appearanceFixture(); snapshot.upper_wearable_key = 'upper-b';
     snapshot.wearables.find((item) => item.wearable_key === 'upper-b')!.model_url = '/shirt.glb';
     const base = characterSource(); const shirt = characterSource(['upper-b']);
     const cache = new GltfResourceCache(async (url) => url === '/shirt.glb' ? shirt : base);
@@ -120,6 +120,19 @@ describe('正式人物组装与动画', () => {
     instance.advance(100, true); expect(bone.position.y).toBeCloseTo(0.25);
     instance.advance(100, false); expect(bone.position.y).toBeCloseTo(0.25);
     instance.advance(0.05, false); expect(bone.position.y).toBeCloseTo(0.3);
+    instance.dispose();
+  });
+
+  it('按外部活动时间直接采样，跨周期后仍与道具同步', async () => {
+    const cache = new GltfResourceCache(async () => characterSource());
+    const instance = await prepareCharacter(resolveAppearance(appearanceFixture()), cache);
+    const bone = instance.root.getObjectByName('root')!;
+    instance.seek(0.625);
+    expect(bone.position.y).toBeCloseTo(0.825);
+    instance.seek(2.625);
+    expect(bone.position.y).toBeCloseTo(0.825);
+    instance.seek(3);
+    expect(bone.position.y).toBeCloseTo(0.2);
     instance.dispose();
   });
 

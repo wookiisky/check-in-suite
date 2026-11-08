@@ -625,8 +625,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 从受控素材建立商品
-         * @description 服务端从素材目录确定商品类型和稳定身份，仅可选择允许出售的素材。
+         * 从受控素材建立营地商品
+         * @description 服务端从素材目录确定营地物件或场景的稳定身份。装扮报价由正式人物目录初始化。
          */
         post: operations["createProduct"];
         delete?: never;
@@ -1348,13 +1348,25 @@ export interface components {
         };
         SpatialActivityAttachment: {
             model_url: string;
+            model_asset_key?: string;
             bone: string;
             matrix: number[];
+        };
+        SpatialBallTiming: {
+            period_seconds: number;
+            contact_seconds: number;
+            /** @description 相对人物根节点的球心位置，单位米。 */
+            contact_position: [
+                number,
+                number,
+                number
+            ];
         };
         SpatialActivityPresentation: {
             /** @description 共享人物动作语义，如 read/exercise/play。任务活动身份保持 read/run/ball。 */
             action: string;
             attachment?: components["schemas"]["SpatialActivityAttachment"];
+            ball?: components["schemas"]["SpatialBallTiming"];
         };
         SpatialScene: {
             name?: string;
@@ -1455,7 +1467,7 @@ export interface components {
             owned: boolean;
         };
         ProductCreate: {
-            /** @description 受控目录中可出售的素材。 */
+            /** @description 受控目录中可新建商品的营地物件或场景素材。装扮配置由目录初始化。 */
             asset_key: string;
             name: string;
             coin_price: number;
@@ -1476,7 +1488,7 @@ export interface components {
             /** @enum {string} */
             group: "appearance" | "camp";
             category: string;
-            /** @description 是否可以从此素材建立商品。 */
+            /** @description 目录是否允许此素材关联报价。装扮由目录初始化报价，营地素材可以用于建立商品。 */
             saleable: boolean;
         };
         ManagementActivityMaterial: {
@@ -1588,6 +1600,8 @@ export interface components {
             url: string;
         };
         CharacterDefinition: {
+            /** @description 由正式人物目录授予报价资格。 */
+            sellable?: boolean;
             /** @description 原始动作预览目录，按需加载；不影响正式语义动作。 */
             preview_animations?: components["schemas"]["CharacterAnimation"][];
             /** @description 统一身体比例和绑定姿势的兼容身份。 */
@@ -1614,6 +1628,10 @@ export interface components {
             };
         };
         CharacterWearable: {
+            /** @description 由正式人物目录授予报价资格。 */
+            sellable?: boolean;
+            provider?: string;
+            pack_key?: string;
             /** @description 模型中可更换底色的材质名。 */
             dye_material?: string;
             /** @description 模型底色对应的预设身份。 */
@@ -1649,82 +1667,74 @@ export interface components {
             hex: string;
         };
         AppearanceOwnedItem: {
-            purchase_id: string;
             wearable_key: string;
         };
         AppearanceOwnedCharacter: {
-            purchase_id: string;
             character_key: string;
         };
         AppearanceState: {
             /** @description 可换色部件共用的预设色目录。 */
             wearable_colors?: components["schemas"]["WearableColor"][];
+            /** @description 已保存的头部预设色，null 或省略使用模型底色。 */
+            head_color_key?: string | null;
             /** @description 已保存的上衣预设色，null 或省略使用模型底色。 */
             upper_color_key?: string | null;
+            /** @description 已保存的下装预设色，null 或省略使用模型底色。 */
+            lower_color_key?: string | null;
+            /** @description 已保存的鞋子预设色，null 或省略使用模型底色。 */
+            shoes_color_key?: string | null;
             /** @description 已保存的背部预设色，null 或省略使用模型底色。 */
             back_color_key?: string | null;
             /** @description 统一骨架共用的原始动作目录，只返回一份，选中动作后才加载模型。 */
             preview_animations?: components["schemas"]["CharacterAnimation"][];
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            face_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            back_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            head_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            upper_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            lower_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            shoes_free_wearable_key?: string | null;
             /** @description 无需购买的初始角色身份。 */
             default_character_key?: string;
             /** @description 完整角色永久所有权，不受订单分页影响。 */
             character_inventory?: components["schemas"]["AppearanceOwnedCharacter"][];
             version: number;
             character_key: string;
-            face_purchase_id: string | null;
-            back_purchase_id: string | null;
-            head_purchase_id: string | null;
-            upper_purchase_id: string | null;
-            lower_purchase_id: string | null;
-            shoes_purchase_id: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            face_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            back_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            head_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            upper_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            lower_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            shoes_wearable_key: string | null;
             characters: components["schemas"]["CharacterDefinition"][];
             wearables: components["schemas"]["CharacterWearable"][];
-            /** @description 全部独立穿戴商品订单，不展开身体订单；不受订单列表分页影响。 */
+            /** @description 账户拥有的穿戴 ID，不受订单列表分页影响。 */
             inventory: components["schemas"]["AppearanceOwnedItem"][];
         };
         AppearanceSave: {
+            /** @description 所选头部部件的预设色，null 或省略使用模型底色。 */
+            head_color_key?: string | null;
             /** @description 所选上衣的预设色，null 或省略使用模型底色。 */
             upper_color_key?: string | null;
+            /** @description 所选下装的预设色，null 或省略使用模型底色。 */
+            lower_color_key?: string | null;
+            /** @description 所选鞋子的预设色，null 或省略使用模型底色。 */
+            shoes_color_key?: string | null;
             /** @description 所选背部部件的预设色，null 或省略使用模型底色。 */
             back_color_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            face_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            back_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            head_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            upper_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            lower_free_wearable_key?: string | null;
-            /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
-            shoes_free_wearable_key?: string | null;
             expected_version: number;
             character_key: string;
-            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
-            face_purchase_id: string | null;
-            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
-            back_purchase_id: string | null;
-            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
-            head_purchase_id: string | null;
-            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
-            upper_purchase_id: string | null;
-            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
-            lower_purchase_id: string | null;
-            /** @description null 恢复该部位免费默认装备；缺省或空字符串无效。 */
-            shoes_purchase_id: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            face_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            back_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            head_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            upper_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            lower_wearable_key: string | null;
+            /** @description null 跟随身体默认项，穿戴 ID 显式选中该部件或空件。 */
+            shoes_wearable_key: string | null;
         };
         Equipment: {
             title: components["schemas"]["Purchase"] | null;

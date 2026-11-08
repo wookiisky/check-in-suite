@@ -6,5 +6,7 @@
   {"key": "yellow", "name": "黄", "hex": "#FFD21F"},
   {"key": "blue", "name": "蓝", "hex": "#4179BE"},
   {"key": "green", "name": "绿", "hex": "#47885C"},
-  {"key": "brown", "name": "棕色", "hex": "#80573D"}
+  {"key": "brown", "name": "棕色", "hex": "#80573D"},
+  {"key": "gray", "name": "灰色", "hex": "#86848A"},
+  {"key": "purple", "name": "紫色", "hex": "#746EAF"}
 ]

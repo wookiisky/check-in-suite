@@ -150,8 +150,8 @@ async function verifyAssets(api) {
 function appearanceInput(state) {
   const input = { expected_version: state.version, character_key: state.character_key };
   for (const slot of ['face', 'head', 'upper', 'lower', 'shoes', 'back']) {
-    input[`${slot}_purchase_id`] = state[`${slot}_purchase_id`];
-    input[`${slot}_free_wearable_key`] = state[`${slot}_free_wearable_key`] ?? null;
+    input[`${slot}_wearable_key`] = state[`${slot}_wearable_key`];
+    if (slot !== 'face') input[`${slot}_color_key`] = state[`${slot}_color_key`] ?? null;
   }
   return input;
 }
@@ -260,7 +260,7 @@ try {
   report('静态页面与完整三维资源通过', { count: assets.length, total_bytes: assets.reduce((total, asset) => total + asset.bytes, 0), assets });
   const purchased = await buyReleaseItems(api, initialAppearance);
   const appearanceBody = appearanceInput(initialAppearance), layoutBody = layoutInput(initialLayout);
-  appearanceBody.upper_purchase_id = purchased.upper.id;
+  appearanceBody.upper_wearable_key = purchased.upper.wearable_key;
   const ownedLayout = await api.json('/api/v1/island/layout');
   const flowers = ownedLayout.inventory.find((item) => item.item_key === purchased.flowers.island_item_key);
   check(flowers, '真实购买的陈设未进入完整布局库存');

@@ -22,48 +22,61 @@ async function loadedDialog(handler?: Parameters<typeof appearanceClient>[0]) {
   return { ...fake, onClose, onSaved, view };
 }
 
-// 上装使用默认背心，背部使用已购部件，两者都可以换色。
+// 上装使用默认背心，其余可染槽使用已购部件。
 function dyeableAppearance() {
   const state = appearanceFixture();
   state.wearable_colors = [
     { key: 'ivory', name: '米白', hex: '#F2E8D5' },
     { key: 'red', name: '红', hex: '#BE3E3E' },
     { key: 'blue', name: '蓝', hex: '#4179BE' },
+    { key: 'gray', name: '灰', hex: '#898580' },
+    { key: 'purple', name: '紫', hex: '#7258A3' },
   ];
   Object.assign(state.wearables.find((item) => item.wearable_key === 'upper-default')!, { dye_material: 'fabric', default_color_key: 'ivory' });
-  Object.assign(state.wearables.find((item) => item.wearable_key === 'back-owned')!, { dye_material: 'fabric', default_color_key: 'red' });
-  state.back_purchase_id = 'back-purchase';
+  for (const slot of ['head', 'lower', 'shoes', 'back'] as const) {
+    Object.assign(state.wearables.find((item) => item.wearable_key === `${slot}-owned`)!, { dye_material: 'fabric', default_color_key: 'red' });
+    state[`${slot}_wearable_key`] = `${slot}-owned`;
+  }
   return state;
 }
 
 describe('三维外观编辑弹窗', () => {
-  it('试色、保存及重开保留两个槽的颜色，换下衣物清除对应颜色', async () => {
+  it('试色、保存及重开保留五个槽的颜色，换下穿戴清除对应颜色', async () => {
     let state = dyeableAppearance();
     const { client, request, onSaved, view } = await loadedDialog(async (_path, options) => {
       if (options.method === 'PUT') state = { ...dyeableAppearance(), ...options.body as object, version: state.version + 1 };
       return state;
     });
     const palette = (slot: string) => within(within(screen.getByRole('group', { name: slot })).getByRole('group', { name: '颜色' }));
-    expect(palette('上装').getByRole('radio', { name: '米白' })).toBeChecked();
-    expect(palette('背部').getByRole('radio', { name: '红' })).toBeChecked();
-    fireEvent.click(palette('上装').getByRole('radio', { name: '蓝' }));
-    fireEvent.click(palette('背部').getByRole('radio', { name: '米白' }));
-    expect(JSON.parse(screen.getByTestId('appearance-preview-draft').textContent!)).toMatchObject({ upper_color_key: 'blue', back_color_key: 'ivory' });
+    const colors = [
+      { slot: '头部', field: 'head_color_key', original: '红', selected: '紫', key: 'purple', dyeable: '头部新款', fixed: '头部默认款' },
+      { slot: '上装', field: 'upper_color_key', original: '米白', selected: '蓝', key: 'blue', dyeable: '上装默认款', fixed: '上装新款' },
+      { slot: '下装', field: 'lower_color_key', original: '红', selected: '蓝', key: 'blue', dyeable: '下装新款', fixed: '下装默认款' },
+      { slot: '鞋子', field: 'shoes_color_key', original: '红', selected: '灰', key: 'gray', dyeable: '鞋子新款', fixed: '鞋子默认款' },
+      { slot: '背部', field: 'back_color_key', original: '红', selected: '米白', key: 'ivory', dyeable: '背部新款', fixed: '背部默认款' },
+    ];
+    const selectedColors = Object.fromEntries(colors.map(({ field, key }) => [field, key]));
+    for (const { slot, original, selected } of colors) {
+      expect(palette(slot).getByRole('radio', { name: original })).toBeChecked();
+      fireEvent.click(palette(slot).getByRole('radio', { name: selected }));
+    }
+    expect(JSON.parse(screen.getByTestId('appearance-preview-draft').textContent!)).toMatchObject(selectedColors);
     expect(onSaved).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
-    expect(request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1]?.body).toMatchObject({ upper_color_key: 'blue', back_color_key: 'ivory', back_purchase_id: 'back-purchase' });
+    expect(request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1]?.body).toMatchObject({ ...selectedColors, back_wearable_key: 'back-owned' });
 
     view.unmount();
     render(<AppearanceDialog client={client} onClose={() => {}} onSaved={onSaved} />);
     await screen.findByRole('radio', { name: '头部新款' });
-    expect(palette('上装').getByRole('radio', { name: '蓝' })).toBeChecked();
-    expect(palette('背部').getByRole('radio', { name: '米白' })).toBeChecked();
-    fireEvent.click(screen.getByRole('radio', { name: '上装新款' }));
-    expect(within(screen.getByRole('group', { name: '上装' })).queryByRole('group', { name: '颜色' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('radio', { name: '上装默认款' }));
-    expect(palette('上装').getByRole('radio', { name: '米白' })).toBeChecked();
-    expect(palette('背部').getByRole('radio', { name: '米白' })).toBeChecked();
+    for (const { slot, selected } of colors) expect(palette(slot).getByRole('radio', { name: selected })).toBeChecked();
+    for (const { slot, field, original, fixed, dyeable } of colors) {
+      fireEvent.click(screen.getByRole('radio', { name: fixed }));
+      expect(within(screen.getByRole('group', { name: slot })).queryByRole('group', { name: '颜色' })).not.toBeInTheDocument();
+      expect(JSON.parse(screen.getByTestId('appearance-preview-draft').textContent!)).not.toHaveProperty(field);
+      fireEvent.click(screen.getByRole('radio', { name: dyeable }));
+      expect(palette(slot).getByRole('radio', { name: original })).toBeChecked();
+    }
   });
 
   it('未知写入核对时识别只有颜色不同的服务器外观', async () => {
@@ -71,22 +84,22 @@ describe('三维外观编辑弹窗', () => {
     let reads = 0;
     const { onSaved } = await loadedDialog(async (_path, options) => {
       if (options.method === 'PUT') throw new Error('NETWORK_INTERRUPTED');
-      return ++reads === 1 ? state : { ...state, version: 2, upper_color_key: 'red' };
+      return ++reads === 1 ? state : { ...state, version: 2, head_color_key: 'gray' };
     });
-    const upper = within(screen.getByRole('group', { name: '上装' }));
-    fireEvent.click(upper.getByRole('radio', { name: '蓝' }));
+    const head = within(screen.getByRole('group', { name: '头部' }));
+    fireEvent.click(head.getByRole('radio', { name: '蓝' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     fireEvent.click(await screen.findByRole('button', { name: '核对保存结果' }));
     const server = await screen.findByRole('region', { name: '当前已保存的外观' });
-    expect(within(server).getByText(/上装默认款.*红/)).toBeVisible();
+    expect(within(server).getByText(/头部新款.*灰/)).toBeVisible();
     expect(onSaved).not.toHaveBeenCalled();
-    expect(upper.getByRole('radio', { name: '蓝' })).toBeChecked();
+    expect(head.getByRole('radio', { name: '蓝' })).toBeChecked();
   });
 
   it('选择只修改草稿，取消时可以继续编辑或明确放弃且不写入', async () => {
     const { request, onSaved, onClose } = await loadedDialog();
     fireEvent.click(screen.getByRole('radio', { name: '头部新款' }));
-    expect(screen.getByTestId('appearance-preview-draft')).toHaveTextContent('head-purchase');
+    expect(screen.getByTestId('appearance-preview-draft')).toHaveTextContent('head-owned');
     expect(onSaved).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: '关闭' }));
     expect(onClose).not.toHaveBeenCalled();
@@ -106,7 +119,7 @@ describe('三维外观编辑弹窗', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
     const write = request.mock.calls.find(([, options]) => options?.method === 'PUT');
     expect(write?.[0]).toBe('/appearance');
-    expect(write?.[1]?.body).toEqual({ expected_version: 1, character_key: 'body-fixture', face_purchase_id: null, back_purchase_id: null, head_purchase_id: 'head-purchase', upper_purchase_id: 'upper-purchase', lower_purchase_id: null, shoes_purchase_id: null });
+    expect(write?.[1]?.body).toEqual({ expected_version: 1, character_key: 'body-fixture', face_wearable_key: null, back_wearable_key: null, head_wearable_key: 'head-owned', upper_wearable_key: 'upper-owned', lower_wearable_key: null, shoes_wearable_key: null });
     expect(onSaved.mock.calls[0]![0].version).toBe(2);
     expect(request.mock.calls.some(([path]) => path === '/camp')).toBe(false);
     // 保存回调早于画面提交；先等待真实保存反馈，再模拟后续模型失败。
@@ -117,7 +130,7 @@ describe('三维外观编辑弹窗', () => {
   });
 
   it('明确保存当前默认部件身份后重开仍显示默认选中', async () => {
-    const state = { ...appearanceFixture(), face_free_wearable_key: 'face-default' };
+    const state = { ...appearanceFixture(), face_wearable_key: 'face-default' };
     await loadedDialog(async () => state);
     expect(screen.getByRole('radio', { name: '形象默认款' })).toBeChecked();
   });
@@ -127,9 +140,9 @@ describe('三维外观编辑弹窗', () => {
     const body = state.characters[0]!;
     const face = state.wearables.find((item) => item.wearable_key === 'face-owned')!;
     state.characters.push({ ...body, character_key: 'other-body', body_key: 'body-fixture', defaults: { ...body.defaults, face: 'face-free' } });
-    state.character_inventory = [{ character_key: 'other-body', purchase_id: 'other-body-order' }];
+    state.character_inventory = [{ character_key: 'other-body' }];
     state.wearables.splice(2, 0, { ...face, wearable_key: 'face-free', name: '另一身体的形象' }, { ...face, wearable_key: 'face-extra', name: '另购形象' });
-    state.inventory.unshift({ wearable_key: 'face-extra', purchase_id: 'extra-order' });
+    state.inventory.unshift({ wearable_key: 'face-extra' });
     await loadedDialog(async () => state);
     const faces = within(screen.getByRole('group', { name: '形象' }));
     expect(faces.getAllByRole('radio').map((radio) => radio.getAttribute('aria-label'))).toEqual([
@@ -147,13 +160,13 @@ describe('三维外观编辑弹窗', () => {
     expect(screen.getByRole('radio', { name: '头部新款' })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
-    expect(request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1]?.body).toMatchObject({ face_purchase_id: 'face-purchase', head_purchase_id: 'head-purchase', back_purchase_id: 'back-purchase', upper_purchase_id: null });
+    expect(request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1]?.body).toMatchObject({ face_wearable_key: 'face-owned', head_wearable_key: 'head-owned', back_wearable_key: 'back-owned', upper_wearable_key: null });
     fireEvent.click(screen.getByRole('radio', { name: '头部默认款' }));
     fireEvent.click(screen.getByRole('radio', { name: '背部默认款' }));
     expect(screen.getByRole('radio', { name: '形象新款' })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(2));
-    expect(request.mock.calls.filter(([, options]) => options?.method === 'PUT').at(-1)?.[1]?.body).toMatchObject({ face_purchase_id: 'face-purchase', head_purchase_id: null, back_purchase_id: null });
+    expect(request.mock.calls.filter(([, options]) => options?.method === 'PUT').at(-1)?.[1]?.body).toMatchObject({ face_wearable_key: 'face-owned', head_wearable_key: null, back_wearable_key: null });
   });
 
   it('保存期间冻结编辑和关闭，不重复提交', async () => {
@@ -166,11 +179,11 @@ describe('三维外观编辑弹窗', () => {
     fireEvent.click(screen.getByRole('button', { name: '正在保存…' }));
     expect(request.mock.calls.filter(([, options]) => options?.method === 'PUT')).toHaveLength(1);
     expect(onClose).not.toHaveBeenCalled();
-    await act(async () => pending.resolve({ ...appearanceFixture(2), shoes_purchase_id: 'shoes-purchase' }));
+    await act(async () => pending.resolve({ ...appearanceFixture(2), shoes_wearable_key: 'shoes-owned' }));
   });
 
   it('冲突保留草稿，明确读取并核对当前外观后才能继续提交', async () => {
-    const latest = { ...appearanceFixture(2), upper_purchase_id: 'upper-purchase' };
+    const latest = { ...appearanceFixture(2), upper_wearable_key: 'upper-owned' };
     let reads = 0;
     const { request } = await loadedDialog(async (_path, options) => {
       if (options?.method === 'PUT') throw new ApiFailure(409, { code: 'VERSION_CONFLICT', field_errors: {}, request_id: '' });
@@ -192,7 +205,7 @@ describe('三维外观编辑弹窗', () => {
 
   it('未知写入先核对结果，已经保存时不再次写入', async () => {
     let reads = 0;
-    const saved = { ...appearanceFixture(2), lower_purchase_id: 'lower-purchase' };
+    const saved = { ...appearanceFixture(2), lower_wearable_key: 'lower-owned' };
     const { request, onSaved } = await loadedDialog(async (_path, options) => {
       if (options?.method === 'PUT') throw new ApiFailure(0, { code: 'NETWORK_ERROR', field_errors: {}, request_id: '' });
       return ++reads === 1 ? appearanceFixture() : saved;
@@ -224,7 +237,7 @@ describe('三维外观编辑弹窗', () => {
   });
 
   it('默认选项提交显式null，业务拒绝保留草稿且允许修正', async () => {
-    const original = { ...appearanceFixture(), head_purchase_id: 'head-purchase' };
+    const original = { ...appearanceFixture(), head_wearable_key: 'head-owned' };
     const { request } = await loadedDialog(async (_path, options) => {
       if (options.method === 'PUT') throw new ApiFailure(422, { code: 'INVALID_EQUIPMENT', field_errors: {}, request_id: '' });
       return original;
@@ -232,7 +245,7 @@ describe('三维外观编辑弹窗', () => {
     fireEvent.click(screen.getByRole('radio', { name: '头部默认款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(screen.getByRole('button', { name: '保存外观' })).toBeEnabled());
-    expect(request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1]?.body).toMatchObject({ head_purchase_id: null });
+    expect(request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1]?.body).toMatchObject({ head_wearable_key: null });
     expect(screen.getByRole('radio', { name: '头部默认款' })).toBeChecked();
     expect(screen.queryByRole('button', { name: '核对保存结果' })).not.toBeInTheDocument();
   });
@@ -242,7 +255,7 @@ describe('三维外观编辑弹窗', () => {
     const { request, onSaved } = await loadedDialog(async (_path, options) => {
       if (options.method !== 'PUT') return appearanceFixture();
       if (++writes === 1) throw new Error('NETWORK_INTERRUPTED');
-      return { ...appearanceFixture(2), shoes_purchase_id: 'shoes-purchase' };
+      return { ...appearanceFixture(2), shoes_wearable_key: 'shoes-owned' };
     });
     fireEvent.click(screen.getByRole('radio', { name: '鞋子新款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
@@ -254,12 +267,12 @@ describe('三维外观编辑弹窗', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
     const requests = request.mock.calls.filter(([, options]) => options?.method === 'PUT');
     expect(requests[0]![1]?.body).toEqual(requests[1]![1]?.body);
-    expect(requests[1]![1]?.body).toMatchObject({ expected_version: 1, shoes_purchase_id: 'shoes-purchase' });
+    expect(requests[1]![1]?.body).toMatchObject({ expected_version: 1, shoes_wearable_key: 'shoes-owned' });
   });
 
   it('暂时关闭未知结果后，重开核对而不再写入', async () => {
     let committed = false;
-    const saved = { ...appearanceFixture(2), upper_purchase_id: 'upper-purchase' };
+    const saved = { ...appearanceFixture(2), upper_wearable_key: 'upper-owned' };
     const fake = appearanceClient(async (_path, options) => {
       if (options.method === 'PUT') { committed = true; throw new Error('RESPONSE_LOST'); }
       return committed ? saved : appearanceFixture();
@@ -289,7 +302,7 @@ describe('三维外观编辑弹窗', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     view.rerender(<AppearanceDialog client={next.client} onClose={() => {}} onSaved={onSaved} />);
     await screen.findByRole('radio', { name: '头部默认款' });
-    await act(async () => delayed.resolve({ ...appearanceFixture(2), head_purchase_id: 'head-purchase' }));
+    await act(async () => delayed.resolve({ ...appearanceFixture(2), head_wearable_key: 'head-owned' }));
     expect(onSaved).not.toHaveBeenCalled();
     expect(screen.getByRole('radio', { name: '头部默认款' })).toBeChecked();
   });

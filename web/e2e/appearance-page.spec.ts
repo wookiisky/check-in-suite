@@ -17,7 +17,7 @@ test('标题栏打开装扮页，旋转人物并确认离开未保存草稿', as
   const initial = await (await appearanceAPI(page, '/appearance')).json() as components['schemas']['AppearanceState'];
   const body = initial.characters.find((value) => value.character_key === initial.character_key)!;
   const defaultUpper = initial.wearables.find((value) => value.wearable_key === body.defaults.upper)!;
-  const desired = initial.upper_purchase_id === item.purchase_id ? defaultUpper.name : item.wearable.name;
+  const desired = initial.upper_wearable_key === item.wearable_key ? defaultUpper.name : item.wearable.name;
 
   await nav.getByRole('button', { name: app.navigation.appearance, exact: true }).click();
   await expect(page.getByRole('heading', { name: appearance.pageTitle, exact: true })).toBeVisible();
@@ -40,5 +40,5 @@ test('标题栏打开装扮页，旋转人物并确认离开未保存草稿', as
   await expect(checkin).toHaveAttribute('aria-current', 'page');
   const after = await (await appearanceAPI(page, '/appearance')).json() as components['schemas']['AppearanceState'];
   expect(after.version).toBe(initial.version);
-  expect(after.upper_purchase_id).toBe(initial.upper_purchase_id);
+  expect(after.upper_wearable_key).toBe(initial.upper_wearable_key);
 });

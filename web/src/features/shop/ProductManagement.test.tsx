@@ -7,7 +7,7 @@ import { ProductEditor } from './ProductEditor';
 import { ProductManagement } from './ProductManagement';
 import { pendingProducts } from './pending';
 import type { Product } from './types';
-import { managedWearable as product, managedMaterials, managedMaterial } from './product-management-fixtures';
+import { managedWearable as product, managedCampMaterial, managedCampProduct, managedMaterials, managedMaterial } from './product-management-fixtures';
 import content from './content.json';
 
 const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
@@ -63,26 +63,46 @@ describe('商品配置', () => {
     expect(screen.getByLabelText(content.packLabel)).toHaveValue('');
   });
 
-  it('素材库用缩略图呈现绑定，只能从可售素材新增商品', async () => {
+  it('角色装扮直接编辑目录报价，素材库只读展示装扮素材', async () => {
+    const request = vi.fn().mockImplementation(async (path: string) => path === '/management/materials'
+      ? managedMaterials
+      : { items: [product] });
+    render(<ProductManagement client={{ request }} session={session} />);
+    const edit = await screen.findByRole('button', { name: `${content.edit} ${product.name}` });
+    expect(screen.queryByRole('button', { name: content.addProduct })).not.toBeInTheDocument();
+    fireEvent.click(edit);
+    expect(screen.getByRole('dialog', { name: content.editProduct })).toBeVisible();
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    fireEvent.click(screen.getByRole('tab', { name: content.materialLibrary }));
+    const material = (await screen.findByRole('heading', { name: managedMaterial.asset.name })).closest('article')!;
+    expect(material.querySelector('img')).toHaveAttribute('src', '/api/v1/assets/catalog-preview-q');
+    expect(screen.queryByRole('button', { name: /^新增商品/ })).not.toBeInTheDocument();
+  });
+
+  it('营地商品只能从可售的营地素材新增', async () => {
     const request = vi.fn().mockImplementation(async (path: string) => {
       if (path === '/management/materials') return managedMaterials;
-      if (path === '/management/products') return product;
-      return { items: [product] };
+      if (path === '/management/products') return managedCampProduct;
+      return { items: [managedCampProduct] };
     });
     render(<ProductManagement client={{ request }} session={session} />);
+    const appearanceTab = screen.getByRole('tab', { name: content.categoryGroups.appearance });
+    appearanceTab.focus();
+    fireEvent.keyDown(appearanceTab, { key: 'ArrowRight' });
+    expect(screen.getByRole('tab', { name: content.shopCamp })).toHaveFocus();
     fireEvent.click(screen.getByRole('button', { name: content.addProduct }));
-    const choice = await screen.findByRole('button', { name: `${content.addProduct} ${managedMaterial.asset.name}` });
+    const choice = await screen.findByRole('button', { name: `${content.addProduct} ${managedCampMaterial.asset.name}` });
     const material = choice.closest('article')!;
-    expect(material.querySelector('img')).toHaveAttribute('src', '/api/v1/assets/catalog-preview-q');
-    expect(screen.queryByRole('button', { name: `${content.addProduct} 免费上装` })).not.toBeInTheDocument();
+    expect(material.querySelector('img')).toHaveAttribute('src', '/api/v1/assets/camp-chair');
+    expect(screen.queryByRole('button', { name: `${content.addProduct} 免费家具` })).not.toBeInTheDocument();
     fireEvent.click(choice);
     const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByLabelText(content.name)).toHaveValue(managedMaterial.asset.name);
+    expect(within(dialog).getByLabelText(content.name)).toHaveValue(managedCampMaterial.asset.name);
     expect(within(dialog).queryByLabelText('商品类型')).not.toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: content.save }));
     await waitFor(() => expect(request).toHaveBeenCalledWith('/management/products', {
       method: 'POST', idempotencyKey: expect.any(String),
-      body: { asset_key: managedMaterial.asset.key, name: managedMaterial.asset.name, coin_price: 0, diamond_price: 0, stock: null, enabled: true },
+      body: { asset_key: managedCampMaterial.asset.key, name: managedCampMaterial.asset.name, coin_price: 0, diamond_price: 0, stock: null, enabled: true },
     }));
     expect(screen.getByRole('tab', { name: content.productLibrary })).toHaveAttribute('aria-selected', 'true');
   });
@@ -117,23 +137,23 @@ describe('商品配置', () => {
   it('真实 201 响应截断后跨弹窗恢复同一商品命令', async () => {
     const fetchMock = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response('{"id":', { status: 201, headers: { 'Content-Type': 'application/json' } }))
-      .mockResolvedValueOnce(Response.json(product, { status: 201 }));
+      .mockResolvedValueOnce(Response.json(managedCampProduct, { status: 201 }));
     vi.stubGlobal('fetch', fetchMock);
     const client = new ApiClient();
     const onSaved = vi.fn();
     const props = { client, session, onClose: vi.fn(), onSaved };
-    const first = render(<ProductEditor {...props} product={null} material={managedMaterial} />);
-    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新上装' } });
+    const first = render(<ProductEditor {...props} product={null} material={managedCampMaterial} />);
+    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新家具' } });
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await screen.findByText(content.createPending);
     expect(onSaved).not.toHaveBeenCalled();
     first.unmount();
 
     render(<ProductEditor {...props} product={null} />);
-    expect(screen.getByLabelText(content.name)).toHaveValue('新上装');
+    expect(screen.getByLabelText(content.name)).toHaveValue('新家具');
     expect(screen.getByLabelText(content.name)).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: content.recoverCreate }));
-    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(product));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(managedCampProduct));
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const firstWrite = fetchMock.mock.calls[0]?.[1];
     const replay = fetchMock.mock.calls[1]?.[1];

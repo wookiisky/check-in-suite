@@ -1,10 +1,15 @@
 import type { components } from '../../api/schema';
 
 export type AppearanceState = components['schemas']['AppearanceState'];
-export type FreeWearableSelection = Partial<Record<`${CharacterSlot}_free_wearable_key`, string | null>>;
-export type WearableColorField = 'upper_color_key' | 'back_color_key';
-export const wearableColorFields: Partial<Record<CharacterSlot, WearableColorField>> = { upper: 'upper_color_key', back: 'back_color_key' };
-export type AppearanceDraft = Pick<AppearanceState, 'character_key' | `${CharacterSlot}_purchase_id` | WearableColorField> & FreeWearableSelection;
+export type WearableColorField = `${Exclude<CharacterSlot, 'face'>}_color_key`;
+export const wearableColorFields: Partial<Record<CharacterSlot, WearableColorField>> = {
+  head: 'head_color_key',
+  upper: 'upper_color_key',
+  lower: 'lower_color_key',
+  shoes: 'shoes_color_key',
+  back: 'back_color_key',
+};
+export type AppearanceDraft = Pick<AppearanceState, 'character_key' | `${CharacterSlot}_wearable_key` | WearableColorField>;
 export type CharacterDefinition = components['schemas']['CharacterDefinition'];
 export type CharacterWearable = components['schemas']['CharacterWearable'];
 export type CharacterLoadStatus = { phase: 'loading' } | { phase: 'ready' } | { phase: 'error'; error: unknown };
@@ -20,10 +25,8 @@ export interface CharacterAttachment {
 
 // 外观编辑只持有选择，库存和目录继续来自确认后的服务器快照。
 export function draftFromAppearance(snapshot: AppearanceDraft): AppearanceDraft {
-  const draft: AppearanceDraft = { character_key: snapshot.character_key, face_purchase_id: snapshot.face_purchase_id, back_purchase_id: snapshot.back_purchase_id, head_purchase_id: snapshot.head_purchase_id, upper_purchase_id: snapshot.upper_purchase_id, lower_purchase_id: snapshot.lower_purchase_id, shoes_purchase_id: snapshot.shoes_purchase_id };
+  const draft: AppearanceDraft = { character_key: snapshot.character_key, face_wearable_key: snapshot.face_wearable_key, back_wearable_key: snapshot.back_wearable_key, head_wearable_key: snapshot.head_wearable_key, upper_wearable_key: snapshot.upper_wearable_key, lower_wearable_key: snapshot.lower_wearable_key, shoes_wearable_key: snapshot.shoes_wearable_key };
   for (const slot of characterSlots) {
-    const field = `${slot}_free_wearable_key` as const;
-    if (snapshot[field] != null) draft[field] = snapshot[field];
     const colorField = wearableColorFields[slot];
     if (colorField && snapshot[colorField] != null) draft[colorField] = snapshot[colorField];
   }
@@ -67,16 +70,14 @@ export function resolveAppearance(snapshot: AppearanceState, draft = draftFromAp
   const definition = snapshot.characters.find((item) => item.character_key === draft.character_key);
   if (!definition) throw new Error('CHARACTER_DEFINITION_MISSING');
   const definitions = new Map(snapshot.wearables.map((item) => [item.wearable_key, item]));
+  const entitled = new Set(snapshot.inventory.map((item) => item.wearable_key));
+  for (const body of freeCharacterDefinitions(snapshot)) {
+    for (const slot of characterSlots) entitled.add(body.defaults[slot]);
+  }
   const wearables = characterSlots.map((slot) => {
-    const purchaseID = draft[`${slot}_purchase_id`];
-    const freeKey = draft[`${slot}_free_wearable_key`];
-    if (freeKey != null) {
-      const freeCharacters = freeCharacterDefinitions(snapshot);
-      if (purchaseID !== null || !freeCharacters.some((item) => freeKey === item.defaults[slot])) throw new Error('CHARACTER_FREE_WEARABLE_INVALID');
-    }
-    const owned = purchaseID === null ? null : snapshot.inventory.find((item) => item.purchase_id === purchaseID && definitions.get(item.wearable_key)?.slot === slot);
-    if (purchaseID !== null && !owned) throw new Error('CHARACTER_PURCHASE_MISSING');
-    const key = owned ? owned.wearable_key : freeKey ?? definition.defaults[slot];
+    const chosen = draft[`${slot}_wearable_key`];
+    if (chosen !== null && !entitled.has(chosen)) throw new Error('CHARACTER_WEARABLE_UNOWNED');
+    const key = chosen ?? definition.defaults[slot];
     const wearable = definitions.get(key);
     if (!wearable || wearable.slot !== slot || !wearableFitsCharacter(wearable, definition, snapshot.characters)) throw new Error('CHARACTER_WEARABLE_INCOMPATIBLE');
     return wearable;

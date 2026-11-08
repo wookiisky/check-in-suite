@@ -1,4 +1,9 @@
 {
+  "activity_bindings": {
+    "read": "read",
+    "run": "exercise",
+    "ball": "play"
+  },
   "scene": {
     "scene_key": "seaside-v1",
     "regions": [
@@ -161,39 +166,6 @@
           "max_z_cm": -130
         }
       ]
-    },
-    "activity_presentations": {
-      "read": {
-        "action": "read",
-        "attachment": {
-          "model_url": "/api/v1/assets/activity-reading-book-v1",
-          "bone": "handslotl",
-          "matrix": [
-            0.8603424520169254,
-            -0.46344967822942357,
-            0.212192946544305,
-            0,
-            -0.4738308795345004,
-            -0.5737358222998188,
-            0.668066093607832,
-            0,
-            -0.18787257760648296,
-            -0.6753084338661607,
-            -0.7132059455704735,
-            0,
-            -0.1623446987584709,
-            0.1416639365310146,
-            0.006838380136453576,
-            1
-          ]
-        }
-      },
-      "run": {
-        "action": "exercise"
-      },
-      "ball": {
-        "action": "play"
-      }
     }
   },
   "catalog": [

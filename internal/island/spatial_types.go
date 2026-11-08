@@ -1,5 +1,7 @@
 package island
 
+import "github.com/wookiisky/check-in-suite/internal/character"
+
 // SpatialSpace 决定位置使用室外世界坐标还是房屋局部坐标。
 type SpatialSpace string
 
@@ -125,30 +127,17 @@ type SpatialHouse struct {
 	InteriorClearances []SpatialRect        `json:"interior_clearances"`            // 室内门口通路，不允许行走障碍封堵。
 }
 
-// SpatialActivityAttachment 把活动道具固定到正式人物骨骼。
-type SpatialActivityAttachment struct {
-	ModelURL string      `json:"model_url"` // 受控道具模型。
-	Bone     string      `json:"bone"`      // GLTFLoader 加载后的骨骼名称。
-	Matrix   [16]float64 `json:"matrix"`    // Three.js 列优先局部变换矩阵，单位米。
-}
-
-// SpatialActivityPresentation 显式关联业务活动与实际动作，不从物件名字推断。
-type SpatialActivityPresentation struct {
-	Action     string                     `json:"action"`               // 正式人物支持的语义动作。
-	Attachment *SpatialActivityAttachment `json:"attachment,omitempty"` // 活动期间可选道具。
-}
-
 // SpatialScene 由服务端与前端共同使用，天空等视觉背景不扩大可保存区域。
 type SpatialScene struct {
-	BackgroundTerrain     string                                 `json:"background_terrain,omitempty"` // 可选远景地形；仅海边延伸远海。
-	Key                   string                                 `json:"scene_key"`                    // 固定版本的整体场景身份。
-	Regions               []SpatialTerrainRegion                 `json:"regions"`                      // 有限地形范围。
-	Environments          []string                               `json:"environments"`                 // 可选环境叠加。
-	House                 *SpatialHouse                          `json:"house"`                        // 按当前布局解析的房型；无房时为空。
-	Name                  string                                 `json:"name,omitempty"`               // 场景显示名称。
-	Spawn                 SpatialPoint                           `json:"spawn"`                        // 新进入场景的合法室外落点。
-	FixedObjects          []SpatialFixedObject                   `json:"fixed_objects"`                // 视觉和空间判断共用的固定景物。
-	ActivityPresentations map[string]SpatialActivityPresentation `json:"activity_presentations"`       // read/run/ball 的表演。
+	BackgroundTerrain     string                                    `json:"background_terrain,omitempty"` // 可选远景地形；仅海边延伸远海。
+	Key                   string                                    `json:"scene_key"`                    // 固定版本的整体场景身份。
+	Regions               []SpatialTerrainRegion                    `json:"regions"`                      // 有限地形范围。
+	Environments          []string                                  `json:"environments"`                 // 可选环境叠加。
+	House                 *SpatialHouse                             `json:"house"`                        // 按当前布局解析的房型；无房时为空。
+	Name                  string                                    `json:"name,omitempty"`               // 场景显示名称。
+	Spawn                 SpatialPoint                              `json:"spawn"`                        // 新进入场景的合法室外落点。
+	FixedObjects          []SpatialFixedObject                      `json:"fixed_objects"`                // 视觉和空间判断共用的固定景物。
+	ActivityPresentations map[string]character.ActivityPresentation `json:"activity_presentations"`       // read/run/ball 的表演。
 }
 
 // SpatialPlacement 保存地面坐标，摄像机变换不进入持久布局。

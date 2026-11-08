@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -72,7 +73,7 @@ func TestDevelopmentBuyAll(t *testing.T) {
 	create(input)
 	var body character.Definition
 	for _, item := range character.Definitions() {
-		if item.Key != character.DefaultCharacterKey {
+		if item.Sellable {
 			body = item
 			break
 		}
@@ -80,7 +81,9 @@ func TestDevelopmentBuyAll(t *testing.T) {
 	if body.Key == "" {
 		t.Fatal("fixture needs a paid character")
 	}
-	create(shop.ProductCreate{AssetKey: body.ThumbnailAssetKey, ProductTerms: shop.ProductTerms{Name: body.Name, Enabled: true}})
+	if err := shop.SeedCharacterProducts(context.Background(), app.DB, 1); err != nil {
+		t.Fatal(err)
+	}
 
 	before := read()
 	if !before.DevelopmentBuyAll || before.Total != 3 || len(before.Items) != 1 {

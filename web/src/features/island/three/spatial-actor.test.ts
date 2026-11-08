@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SpatialActorController, spatialBallPosition, spatialWalkSurfaceHeight } from './spatial-actor';
 import type { SpatialActorEnvironment } from './spatial-actor';
-import { navigationFixture, spatialActorFixture } from './spatial-actor-fixture';
+import { navigationFixture, spatialActorFixture, testBallTiming } from './spatial-actor-fixture';
 import type { SpatialLayout } from './spatial-navigation';
 import { spatialLocalToWorld } from './spatial-navigation';
 import houses from '../../../../../internal/island/spatial-houses.json';
@@ -130,9 +130,16 @@ describe('三维角色统一活动执行器',()=>{
     expect(actor.request({sequence:3,activity:'walk',destination:{x_cm:500,z_cm:500}},{...next,access:null})).toBeNull();
   });
   it('球轨迹在艺术动作触球时刻经过脚尖，并闭合循环',()=>{
-    spatialBallPosition(0.625).forEach((value,index)=>expect(value).toBeCloseTo([-0.1407,0.4362,0.5835][index]!));
-    expect(spatialBallPosition(0)).toEqual(spatialBallPosition(1.5));
-    expect(spatialBallPosition(0.75)[2]).toBeGreaterThan(spatialBallPosition(0.625)[2]);
+    const {contact_seconds:contact,period_seconds:period,contact_position:point}=testBallTiming;
+    spatialBallPosition(contact,testBallTiming).forEach((value,index)=>expect(value).toBeCloseTo(point[index]!));
+    expect(spatialBallPosition(0,testBallTiming)).toEqual(spatialBallPosition(period,testBallTiming));
+    expect(spatialBallPosition(1,testBallTiming)[2]).toBeGreaterThan(point[2]);
+  });
+  it('素材和资格已就绪时仍须等目录绑定后才能表演',()=>{
+    const {environment}=spatialActorFixture(),actor=new SpatialActorController(environment);
+    delete environment.layout.scene.activity_presentations.read;
+    expect(actor.request({sequence:1,activity:'read'},environment)).toBe('missing_presentation');
+    expect(actor.status.phase).toBe('idle');
   });
   it('面向水域的球目标不启动越岸轨迹',()=>{
     const {environment}=spatialActorFixture(),layout=environment.layout;

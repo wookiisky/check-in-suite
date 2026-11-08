@@ -4,7 +4,7 @@ import houseConfiguration from '../../../../../internal/island/spatial-houses.js
 import type { SpatialIslandState } from './spatial-ui-types';
 import { layoutIssue, firstAvailablePlacement, houseForPlacements } from './spatial-layout';
 
-const state={version:1,scene_key:configuration.scene.scene_key,environment_key:'day',scene:configuration.scene,catalog:configuration.catalog,placements:configuration.default_placements,inventory:configuration.default_placements.map((p)=>({instance_id:p.instance_id,item_key:p.item_key}))} as SpatialIslandState;
+const state={version:1,scene_key:configuration.scene.scene_key,environment_key:'day',scene:{...configuration.scene,activity_presentations:{}},catalog:configuration.catalog,placements:configuration.default_placements,inventory:configuration.default_placements.map((p)=>({instance_id:p.instance_id,item_key:p.item_key}))} as SpatialIslandState;
 describe('三维布局完整占地',()=>{
   it('实际Tiny Treats房屋的分数厘米门外通路可验证并从库存摆放',()=>{
     const house=houseConfiguration.houses.find(item=>item.house_key==='tiny-treats-cottage-v1')!;

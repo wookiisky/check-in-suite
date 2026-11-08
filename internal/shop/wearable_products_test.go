@@ -56,9 +56,9 @@ func TestHumanDefaultsAndPaidFormerOutfit(t *testing.T) {
 	}
 	upper, lower, shoes := "upper-rogue-v1", "lower-rogue-v1", "shoes-rogue-v1"
 	for _, input := range []shop.SaveAppearanceInput{
-		{UpperFreeWearableKey: &upper},
-		{LowerFreeWearableKey: &lower},
-		{ShoesFreeWearableKey: &shoes},
+		{UpperWearableKey: &upper},
+		{LowerWearableKey: &lower},
+		{ShoesWearableKey: &shoes},
 	} {
 		input.ExpectedVersion, input.CharacterKey = initial.Version, initial.CharacterKey
 		_, err := f.Service.SaveAppearance(ctx, f.Principal, input)
@@ -66,7 +66,6 @@ func TestHumanDefaultsAndPaidFormerOutfit(t *testing.T) {
 	}
 
 	creditFixture(t, f, 75, 0)
-	purchases := make(map[string]*string)
 	for key, price := range map[string]int64{upper: 35, lower: 25, shoes: 15} {
 		offer, exists := offerByKey[key]
 		if !exists || offer.Type != shop.TypeWearable || offer.CoinPrice != price || offer.DiamondPrice != 0 {
@@ -76,16 +75,15 @@ func TestHumanDefaultsAndPaidFormerOutfit(t *testing.T) {
 		if purchase.WearableKey != key {
 			t.Fatalf("purchase wearable = %s, want %s", purchase.WearableKey, key)
 		}
-		purchases[key] = &purchase.ID
 	}
 	if balance := readBalance(t, f); balance.Coins != 0 || balance.Diamonds != 0 {
 		t.Fatalf("balance after purchases = %+v", balance)
 	}
 	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{
 		ExpectedVersion: initial.Version, CharacterKey: initial.CharacterKey,
-		UpperPurchaseID: purchases[upper], LowerPurchaseID: purchases[lower], ShoesPurchaseID: purchases[shoes],
+		UpperWearableKey: &upper, LowerWearableKey: &lower, ShoesWearableKey: &shoes,
 	})
-	if err != nil || saved.UpperPurchaseID == nil || saved.LowerPurchaseID == nil || saved.ShoesPurchaseID == nil || len(saved.Inventory) != 3 {
+	if err != nil || saved.UpperWearableKey == nil || saved.LowerWearableKey == nil || saved.ShoesWearableKey == nil || len(saved.Inventory) != 3 {
 		t.Fatalf("purchased outfit could not be saved: %+v, %v", saved, err)
 	}
 }

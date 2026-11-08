@@ -9,6 +9,10 @@ from pathlib import Path
 import subprocess
 import sys
 
+# Blender 执行脚本时不会把脚本目录加入模块搜索路径。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from character_catalog_source import load_character_catalog
+
 ROOT = Path(__file__).resolve().parents[1]
 POSES = [(item['motion'], item['frame']) for item in
          json.loads((ROOT/'scripts/asset-pipeline-rules.json').read_text())['sampling']['poses']]
@@ -304,7 +308,7 @@ def verify(options):
 
     assembly = load_module('arm_appearance_assembly', 'verify-modular-character-appearance.py')
     catalog_path = options.catalog
-    catalog = json.loads(catalog_path.read_text())
+    catalog = load_character_catalog(catalog_path)
     cases = build_cases(catalog, options.only)
     if options.body:
         cases = [case for case in cases if case['body'] in options.body]
@@ -317,7 +321,8 @@ def verify(options):
                   asset_directory=str(options.asset_directory.resolve()) if options.asset_directory else None,
                   catalog_sha256=hashlib.sha256(catalog_path.read_bytes()).hexdigest(), visual_review='pending',
                   pipeline_sha256={path.name: hashlib.sha256(path.read_bytes()).hexdigest()
-                                   for path in [Path(__file__), ROOT/'scripts/verify-modular-character-appearance.py']})
+                                   for path in [Path(__file__), ROOT/'scripts/verify-modular-character-appearance.py',
+                                                ROOT/'scripts/character_catalog_source.py']})
     (options.output/'evidence.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
     return int(not report['complete'])
 

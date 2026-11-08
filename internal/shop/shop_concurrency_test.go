@@ -198,7 +198,7 @@ func TestConcurrentTitleAndAppearance(t *testing.T) {
 	title := buyProduct(t, f, createProduct(t, f, productInput("title"))).Purchase
 	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("head", "barbarian"))).Purchase
 	results := compete(func() error {
-		_, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HeadPurchaseID: &hair.ID})
+		_, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", HeadWearableKey: &hair.WearableKey})
 		return err
 	}, func() error { _, err := f.Contender.SetTitle(ctx, f.Principal, &title.ID); return err })
 	if results[0] != nil || results[1] != nil {
@@ -209,7 +209,7 @@ func TestConcurrentTitleAndAppearance(t *testing.T) {
 		t.Fatalf("title=%+v %v", equipment, err)
 	}
 	appearance, err := f.Service.Appearance(ctx, f.Principal)
-	if err != nil || appearance.Version != 2 || appearance.HeadPurchaseID == nil || *appearance.HeadPurchaseID != hair.ID {
+	if err != nil || appearance.Version != 2 || appearance.HeadWearableKey == nil || *appearance.HeadWearableKey != hair.WearableKey {
 		t.Fatalf("appearance=%+v %v", appearance, err)
 	}
 }

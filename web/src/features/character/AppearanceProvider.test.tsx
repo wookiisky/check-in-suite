@@ -21,7 +21,7 @@ describe('已保存外观共享快照', () => {
     const view = render(<AppearanceProvider client={client} active={false}><Consumer /></AppearanceProvider>);
     expect(request).not.toHaveBeenCalled();
     view.rerender(<AppearanceProvider client={client} active><Consumer /></AppearanceProvider>);
-    await waitFor(() => expect(screen.getByTestId('snapshot')).toHaveTextContent('head-purchase'));
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('snapshot').textContent!)?.inventory).toEqual(first.inventory));
     fireEvent.click(screen.getByText('刷新外观'));
     await waitFor(() => expect(JSON.parse(screen.getByTestId('snapshot').textContent!).inventory).toEqual([]));
     view.rerender(<AppearanceProvider client={client} active={false}><Consumer /></AppearanceProvider>);

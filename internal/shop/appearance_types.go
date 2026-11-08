@@ -4,35 +4,29 @@ import "github.com/wookiisky/check-in-suite/internal/character"
 
 // SaveAppearanceInput replaces all six slots under one appearance version.
 type SaveAppearanceInput struct {
+	HeadColorKey  *string `json:"head_color_key"`  // 省略或空值使用头部素材底色。
 	UpperColorKey *string `json:"upper_color_key"` // 省略或空值使用上衣素材底色。
+	LowerColorKey *string `json:"lower_color_key"` // 省略或空值使用下装素材底色。
+	ShoesColorKey *string `json:"shoes_color_key"` // 省略或空值使用鞋子素材底色。
 	BackColorKey  *string `json:"back_color_key"`  // 省略或空值使用背部素材底色。
 
-	FaceFreeWearableKey  *string `json:"face_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.
-	HeadFreeWearableKey  *string `json:"head_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.
-	UpperFreeWearableKey *string `json:"upper_free_wearable_key"` // Optional default part of an acquired body, shared across compatible bodies.
-	LowerFreeWearableKey *string `json:"lower_free_wearable_key"` // Optional default part of an acquired body, shared across compatible bodies.
-	BackFreeWearableKey  *string `json:"back_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.
-	ShoesFreeWearableKey *string `json:"shoes_free_wearable_key"` // Optional default part of an acquired body, shared across compatible bodies.
-
-	ExpectedVersion int64   `json:"expected_version"`  // Version reviewed before saving.
-	CharacterKey    string  `json:"character_key"`     // Controlled body and compatibility identity.
-	FacePurchaseID  *string `json:"face_purchase_id"`  // Nil restores the default face.
-	HeadPurchaseID  *string `json:"head_purchase_id"`  // Nil restores the default head item.
-	UpperPurchaseID *string `json:"upper_purchase_id"` // Nil restores the default upper garment.
-	LowerPurchaseID *string `json:"lower_purchase_id"` // Nil restores the default lower garment.
-	BackPurchaseID  *string `json:"back_purchase_id"`  // Nil restores the default back item.
-	ShoesPurchaseID *string `json:"shoes_purchase_id"` // Nil restores default footwear.
+	ExpectedVersion  int64   `json:"expected_version"`   // Version reviewed before saving.
+	CharacterKey     string  `json:"character_key"`      // Controlled body and compatibility identity.
+	FaceWearableKey  *string `json:"face_wearable_key"`  // 空值使用当前身体的默认件。
+	HeadWearableKey  *string `json:"head_wearable_key"`  // 空值使用当前身体的默认件。
+	UpperWearableKey *string `json:"upper_wearable_key"` // 空值使用当前身体的默认件。
+	LowerWearableKey *string `json:"lower_wearable_key"` // 空值使用当前身体的默认件。
+	BackWearableKey  *string `json:"back_wearable_key"`  // 空值使用当前身体的默认件。
+	ShoesWearableKey *string `json:"shoes_wearable_key"` // 空值使用当前身体的默认件。
 }
 
-// AppearanceOwnedItem 将保留的购买身份关联到当前可装备的服装定义。
+// AppearanceOwnedItem 是订单授予的稳定穿戴身份。
 type AppearanceOwnedItem struct {
-	PurchaseID  string `json:"purchase_id"`  // Permanent owned purchase identity.
 	WearableKey string `json:"wearable_key"` // 购买时记录的穿戴定义。
 }
 
 // AppearanceOwnedCharacter preserves each permanently acquired character identity.
 type AppearanceOwnedCharacter struct {
-	PurchaseID   string `json:"purchase_id"`   // Original owned order identity.
 	CharacterKey string `json:"character_key"` // Stable character identity copied in the order.
 }
 
@@ -40,26 +34,22 @@ type AppearanceOwnedCharacter struct {
 type AppearanceState struct {
 	PreviewAnimations []character.Animation     `json:"preview_animations"` // 标准身体共用的检查动作目录，不随人物数量重复。
 	WearableColors    []character.WearableColor `json:"wearable_colors"`    // 支持换色的部件共用的预设色。
+	HeadColorKey      *string                   `json:"head_color_key"`     // 空值使用头部素材底色。
 	UpperColorKey     *string                   `json:"upper_color_key"`    // 空值使用上衣素材底色。
+	LowerColorKey     *string                   `json:"lower_color_key"`    // 空值使用下装素材底色。
+	ShoesColorKey     *string                   `json:"shoes_color_key"`    // 空值使用鞋子素材底色。
 	BackColorKey      *string                   `json:"back_color_key"`     // 空值使用背部素材底色。
-
-	FaceFreeWearableKey  *string `json:"face_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.
-	HeadFreeWearableKey  *string `json:"head_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.
-	UpperFreeWearableKey *string `json:"upper_free_wearable_key"` // Optional default part of an acquired body, shared across compatible bodies.
-	LowerFreeWearableKey *string `json:"lower_free_wearable_key"` // Optional default part of an acquired body, shared across compatible bodies.
-	BackFreeWearableKey  *string `json:"back_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.
-	ShoesFreeWearableKey *string `json:"shoes_free_wearable_key"` // Optional default part of an acquired body, shared across compatible bodies.
 
 	DefaultCharacterKey string                     `json:"default_character_key"` // Explicit free initial character identity.
 	CharacterInventory  []AppearanceOwnedCharacter `json:"character_inventory"`   // All acquired characters, independent of order pagination.
 	Version             int64                      `json:"version"`               // Independent optimistic appearance version.
 	CharacterKey        string                     `json:"character_key"`         // Selected controlled body.
-	FacePurchaseID      *string                    `json:"face_purchase_id"`      // Nil restores the default face.
-	HeadPurchaseID      *string                    `json:"head_purchase_id"`      // Saved head item instance or default.
-	UpperPurchaseID     *string                    `json:"upper_purchase_id"`     // Saved upper garment instance or default.
-	LowerPurchaseID     *string                    `json:"lower_purchase_id"`     // Saved lower garment instance or default.
-	BackPurchaseID      *string                    `json:"back_purchase_id"`      // Nil restores the default back item.
-	ShoesPurchaseID     *string                    `json:"shoes_purchase_id"`     // Saved footwear instance or default.
+	FaceWearableKey     *string                    `json:"face_wearable_key"`     // 空值使用当前身体的默认件。
+	HeadWearableKey     *string                    `json:"head_wearable_key"`     // 空值使用当前身体的默认件。
+	UpperWearableKey    *string                    `json:"upper_wearable_key"`    // 空值使用当前身体的默认件。
+	LowerWearableKey    *string                    `json:"lower_wearable_key"`    // 空值使用当前身体的默认件。
+	BackWearableKey     *string                    `json:"back_wearable_key"`     // 空值使用当前身体的默认件。
+	ShoesWearableKey    *string                    `json:"shoes_wearable_key"`    // 空值使用当前身体的默认件。
 	Characters          []character.Definition     `json:"characters"`            // Versioned body definitions.
 	Wearables           []character.Wearable       `json:"wearables"`             // Versioned wearable definitions and geometry references.
 	Inventory           []AppearanceOwnedItem      `json:"inventory"`             // Entire owned six-slot wardrobe, independent of order pagination.

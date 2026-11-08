@@ -21,16 +21,14 @@ type ownershipIdentity struct {
 }
 
 // stableOwnershipIdentity groups different offers for the same owned item.
-func stableOwnershipIdentity(item Product, matchWearables bool) ownershipIdentity {
+func stableOwnershipIdentity(item Product) ownershipIdentity {
 	switch item.Type {
 	case TypeScene:
 		return ownershipIdentity{Scene: item.SceneKey}
 	case TypeCharacter:
 		return ownershipIdentity{Character: item.CharacterKey}
 	case TypeWearable:
-		if matchWearables {
-			return ownershipIdentity{Wearable: item.WearableKey}
-		}
+		return ownershipIdentity{Wearable: item.WearableKey}
 	}
 	return ownershipIdentity{Item: item.IslandItemKey}
 }
@@ -41,7 +39,7 @@ func addOwnership(first, second ownershipCount) ownershipCount {
 }
 
 // applyProductOwnership resolves all visible quotes with one grouped order query.
-func applyProductOwnership(ctx context.Context, tx *sql.Tx, accountID int64, items []Product, matchWearables bool) error {
+func applyProductOwnership(ctx context.Context, tx *sql.Tx, accountID int64, items []Product) error {
 	counts := map[ownershipIdentity]ownershipCount{}
 	rows, err := tx.QueryContext(ctx, `SELECT product_id,item_key_snapshot,character_key_snapshot,wearable_key_snapshot,scene_key_snapshot,type_snapshot,status,count(*) FROM purchases WHERE account_id=? GROUP BY product_id,item_key_snapshot,character_key_snapshot,wearable_key_snapshot,scene_key_snapshot,type_snapshot,status`, accountID)
 	if err != nil {
@@ -65,7 +63,7 @@ func applyProductOwnership(ctx context.Context, tx *sql.Tx, accountID int64, ite
 		if body != "" {
 			keys = append(keys, ownershipIdentity{Character: body}, ownershipIdentity{Product: product, Character: body})
 		}
-		if matchWearables && wearable != "" {
+		if wearable != "" {
 			keys = append(keys, ownershipIdentity{Wearable: wearable}, ownershipIdentity{Product: product, Wearable: wearable})
 		}
 		if scene != "" {
@@ -83,7 +81,7 @@ func applyProductOwnership(ctx context.Context, tx *sql.Tx, accountID int64, ite
 	for index := range items {
 		item := &items[index]
 		value := counts[ownershipIdentity{Product: item.ID}]
-		stable := stableOwnershipIdentity(*item, matchWearables)
+		stable := stableOwnershipIdentity(*item)
 		if stable != (ownershipIdentity{}) {
 			other := counts[stable]
 			intersection := stable

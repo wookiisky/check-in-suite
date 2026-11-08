@@ -60,7 +60,7 @@ func SeedCatalogForAccount(ctx context.Context, db *sql.DB, accountID, now int64
 
 // SeedCatalogInTx creates initial offers atomically with the account and its empty wallet.
 func SeedCatalogInTx(ctx context.Context, tx *sql.Tx, accountID, now int64) error {
-	for _, seed := range []func(context.Context, *sql.Tx, int64, int64) error{seedCharacterProductsInTx, seedWearableProductsInTx, seedSpatialProductsInTx, seedSceneProductsInTx} {
+	for _, seed := range []func(context.Context, *sql.Tx, int64, int64) error{seedCharacterProductsInTx, SeedWearableProductsInTx, seedSpatialProductsInTx, seedSceneProductsInTx} {
 		if err := seed(ctx, tx, accountID, now); err != nil {
 			return err
 		}

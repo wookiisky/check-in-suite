@@ -115,10 +115,10 @@ func TestSeedPopulatesUsableHistory(t *testing.T) {
 		t.Fatalf("demo missing title: %+v %v", equipment, err)
 	}
 	appearance, err := shop.New(db, cfg, service).Appearance(ctx, principal)
-	if err != nil || appearance.CharacterKey != character.DefaultCharacterKey || appearance.HeadPurchaseID == nil || appearance.UpperPurchaseID == nil || appearance.LowerPurchaseID == nil || appearance.ShoesPurchaseID == nil || len(appearance.Inventory) != 4 {
+	if err != nil || appearance.CharacterKey != character.DefaultCharacterKey || appearance.HeadWearableKey == nil || appearance.UpperWearableKey == nil || appearance.LowerWearableKey == nil || appearance.ShoesWearableKey == nil || len(appearance.Inventory) != 4 {
 		t.Fatalf("demo missing 3D outfit: %+v %v", appearance, err)
 	}
-	if _, err := shop.New(db, cfg, service).SaveAppearance(ctx, principal, shop.SaveAppearanceInput{ExpectedVersion: appearance.Version, CharacterKey: appearance.CharacterKey, HeadPurchaseID: appearance.HeadPurchaseID, UpperPurchaseID: appearance.UpperPurchaseID, LowerPurchaseID: appearance.LowerPurchaseID, ShoesPurchaseID: appearance.ShoesPurchaseID}); err != nil {
+	if _, err := shop.New(db, cfg, service).SaveAppearance(ctx, principal, shop.SaveAppearanceInput{ExpectedVersion: appearance.Version, CharacterKey: appearance.CharacterKey, HeadWearableKey: appearance.HeadWearableKey, UpperWearableKey: appearance.UpperWearableKey, LowerWearableKey: appearance.LowerWearableKey, ShoesWearableKey: appearance.ShoesWearableKey}); err != nil {
 		t.Fatalf("demo 3D outfit invalid: %v", err)
 	}
 	state, err := island.New(db, time.Now).ReadSpatial(ctx, principal)
@@ -166,12 +166,8 @@ func TestDemoOffersMatchStartup(t *testing.T) {
 	for _, body := range character.Definitions() {
 		for _, slot := range character.Slots() {
 			key := body.Defaults.ForSlot(slot)
-			wearable, found := character.GetWearable(key)
-			if !found {
-				t.Fatal("missing default wearable")
-			}
 			var count int
-			if err := db.QueryRow("SELECT count(*) FROM products WHERE asset_key=?", wearable.ThumbnailAssetKey).Scan(&count); err != nil || count != 0 {
+			if err := db.QueryRow("SELECT count(*) FROM products WHERE wearable_key=?", key).Scan(&count); err != nil || count != 0 {
 				t.Fatalf("default wearable became an offer: %s count=%d err=%v", key, count, err)
 			}
 		}

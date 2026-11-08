@@ -23,7 +23,7 @@ import { firstAvailablePlacement, layoutIssue } from './three/spatial-layout';
 import { dragCamera, zoomCamera } from './three/spatial-camera';
 import type { SpatialCameraState, SpatialInsets } from './three/spatial-camera';
 import type { SpatialPlacement, SpatialSpace } from './three/spatial-ui-types';
-import type { SpatialActorActivity, SpatialActorIntent, SpatialActorStatus } from './three/spatial-actor';
+import type { SpatialActorActivity, SpatialActorIntent, SpatialActorStatus, SpatialActorUnavailable } from './three/spatial-actor';
 import content from './three/spatial-content.json';
 import sceneContent from './three/scene-picker-content.json';
 import './three/spatial-island.css';
@@ -203,7 +203,7 @@ export function IslandPage3D({client,session,initialSceneKey,onBack,onShop,onCam
     if(activity!=='walk'&&activity!=='rest'&&!allowed.includes(activity)){setLocked(activity);return;}
     setIntent(current=>({sequence:(current?.sequence??0)+1,activity,...(instanceId?{instanceId}:{})}));setMessage('');
   }
-  function unavailable(reason:'locked'|'unreachable'|'missing_target',activity:SpatialActorActivity){if(reason==='locked')setLocked(activity);else setMessage(content[reason]);}
+  function unavailable(reason:SpatialActorUnavailable,activity:SpatialActorActivity){if(reason==='locked')setLocked(activity);else setMessage(content[reason]);}
   function objectClick(instanceId:string){
     const placement=view?.placements.find(item=>item.instance_id===instanceId),definition=view?.catalog.find(d=>d.item_key===placement?.item_key);
     if(definition?.assembly==='house'){setIntent(current=>({sequence:(current?.sequence??0)+1,activity:'walk',space:actor.space==='indoor'?'outdoor':'indoor'}));return;}

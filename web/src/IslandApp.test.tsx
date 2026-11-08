@@ -375,7 +375,7 @@ describe('账户页面与管理授权', () => {
     fireEvent.click(screen.getByRole('tab', { name: content.navigation.records }));
     await screen.findByRole('tabpanel', { name: content.navigation.records });
     fireEvent.click(screen.getByRole('tab', { name: content.navigation.products }));
-    await screen.findByRole('button', { name: shopContent.addProduct });
+    await screen.findByRole('tab', { name: shopContent.materialLibrary });
     expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(0);
     fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
     await screen.findByRole('tablist', { name: shopContent.categoryGroupLabel });

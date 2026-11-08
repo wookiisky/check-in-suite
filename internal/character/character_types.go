@@ -34,6 +34,7 @@ type Animation struct {
 
 // Definition describes a complete body and its compatible default outfit.
 type Definition struct {
+	Sellable          bool                 `json:"sellable,omitempty"`            // 是否允许账户商店上架该身体。
 	PreviewAnimations []Animation          `json:"preview_animations,omitempty"`  // 独立预览使用的原始动作，按需读取而不进入营地玩法。
 	Key               string               `json:"character_key"`                 // 身体定义身份。
 	BodyKey           string               `json:"body_key"`                      // 可共用服装的统一身体规格。
@@ -54,6 +55,7 @@ type Definition struct {
 
 // Wearable describes geometry, body coverage and compatibility independently from ownership.
 type Wearable struct {
+	Sellable          bool                `json:"sellable,omitempty"`          // 是否允许账户商店上架该穿戴。
 	DyeMaterial       string              `json:"dye_material,omitempty"`      // GLB 内用于切换底色的材质名。
 	DefaultColorKey   string              `json:"default_color_key,omitempty"` // 素材底色对应的预设身份。
 	Regions           map[string][]string `json:"regions,omitempty"`           // 可被其他穿戴部件覆盖的子区域，例如形象的头皮。

@@ -12,6 +12,7 @@ export interface PreparedCharacter {
   root: Object3D; // 可放入任意营地或预览 Canvas 的根节点。
   play: (action: string, immediate?: boolean) => void; // 使用目录中的语义动作。
   advance: (seconds: number, paused: boolean) => void; // 逐帧推进，不触发 React 状态更新。
+  seek: (seconds: number) => void; // 带道具的表演按外部时钟直接取样。
   resetDelta: () => void; // 隐藏或恢复后丢弃第一帧时间差。
   dispose: () => void; // 释放实例与资源引用。
 }
@@ -169,6 +170,11 @@ export async function prepareCharacter(resolved: ResolvedAppearance, cache: Gltf
         if (paused) { skipFrame = true; return; }
         if (skipFrame) { skipFrame = false; return; }
         mixer.update(Math.min(seconds, 0.05));
+      },
+      seek(seconds) {
+        if (!current) return;
+        current.time = seconds % current.getClip().duration;
+        mixer.update(0);
       },
       resetDelta() { skipFrame = true; },
       dispose() {

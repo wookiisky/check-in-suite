@@ -26,8 +26,8 @@ func TestAppearanceSavesColorsForFreeAndOwnedWearables(t *testing.T) {
 	purchase := buyProduct(t, f, product).Purchase
 	upperColor, backColor := "ivory", "orange"
 	input := shop.SaveAppearanceInput{
-		ExpectedVersion: 1, CharacterKey: body.Key, UpperFreeWearableKey: &body.Defaults.Upper,
-		BackPurchaseID: &purchase.ID, UpperColorKey: &upperColor, BackColorKey: &backColor,
+		ExpectedVersion: 1, CharacterKey: body.Key, UpperWearableKey: &body.Defaults.Upper,
+		BackWearableKey: &purchase.WearableKey, UpperColorKey: &upperColor, BackColorKey: &backColor,
 	}
 	if _, err := f.Service.SaveAppearance(ctx, f.Principal, input); err != nil {
 		t.Fatal(err)
@@ -37,7 +37,7 @@ func TestAppearanceSavesColorsForFreeAndOwnedWearables(t *testing.T) {
 		t.Fatalf("saved upper=%v back=%v err=%v", saved.UpperColorKey, saved.BackColorKey, err)
 	}
 	input.ExpectedVersion = saved.Version
-	input.BackPurchaseID = nil
+	input.BackWearableKey = nil
 	input.UpperColorKey = nil
 	_, err = f.Service.SaveAppearance(ctx, f.Principal, input)
 	requireShopCode(t, err, "INVALID_EQUIPMENT")

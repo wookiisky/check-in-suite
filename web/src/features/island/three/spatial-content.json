@@ -86,6 +86,7 @@
   "inactiveTask": "任务当前未启用",
   "goCamp": "前往打卡",
   "close": "关闭",
+  "missing_presentation": "当前装扮还没有绑定这个活动的动作。",
   "missing_target": "先摆放对应物品，再开始活动。",
   "unreachable": "暂时走不到那里，请为物品和门口留出通路。",
   "accessPending": "正在确认活动资格…",

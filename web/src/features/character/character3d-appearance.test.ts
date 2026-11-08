@@ -7,26 +7,26 @@ describe('正式人物外观解析', () => {
     expect(characterSlots).toEqual(['face', 'head', 'upper', 'lower', 'shoes', 'back']);
   });
 
-  it('空槽解析免费默认，购买实例按目录身份选择', () => {
+  it('空槽解析免费默认，已购穿戴按目录身份选择', () => {
     const snapshot = appearanceFixture();
     const resolved = resolveAppearance(snapshot);
     expect(resolved.wearables.map((item) => item.wearable_key)).toEqual(['face-a', 'head-a', 'upper-a', 'lower-a', 'shoes-a', 'back-a']);
-    const draft = { ...draftFromAppearance(snapshot), upper_purchase_id: 'purchase-upper' };
+    const draft = { ...draftFromAppearance(snapshot), upper_wearable_key: 'upper-b' };
     expect(resolveAppearance(snapshot, draft).wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-b');
-    expect(snapshot.upper_purchase_id).toBeNull();
+    expect(snapshot.upper_wearable_key).toBeNull();
     expect(resolveAppearance({ ...snapshot, version: 2 })).toEqual(resolved);
   });
 
   it('拒绝不属于库存、错误部位和不兼容身体骨架', () => {
     const snapshot = appearanceFixture(); const draft = draftFromAppearance(snapshot);
-    expect(() => resolveAppearance(snapshot, { ...draft, upper_purchase_id: 'absent' })).toThrow();
-    expect(() => resolveAppearance(snapshot, { ...draft, upper_purchase_id: 'purchase-head' })).toThrow();
+    expect(() => resolveAppearance(snapshot, { ...draft, upper_wearable_key: 'absent' })).toThrow();
+    expect(() => resolveAppearance(snapshot, { ...draft, upper_wearable_key: 'head-b' })).toThrow();
     expect(() => resolveAppearance(snapshot, { ...draft, character_key: 'unknown' })).toThrow();
     snapshot.wearables.find((item) => item.wearable_key === 'upper-b')!.rig_key = 'other';
-    expect(() => resolveAppearance(snapshot, { ...draft, upper_purchase_id: 'purchase-upper' })).toThrow();
+    expect(() => resolveAppearance(snapshot, { ...draft, upper_wearable_key: 'upper-b' })).toThrow();
     snapshot.wearables.find((item) => item.wearable_key === 'upper-b')!.rig_key = 'rig';
     snapshot.wearables.find((item) => item.wearable_key === 'upper-b')!.character_key = 'other-body';
-    expect(() => resolveAppearance(snapshot, { ...draft, upper_purchase_id: 'purchase-upper' })).toThrow();
+    expect(() => resolveAppearance(snapshot, { ...draft, upper_wearable_key: 'upper-b' })).toThrow();
   });
 
   it('活动道具及其精确变换属于一次异步准备的身份', () => {
@@ -46,7 +46,7 @@ describe('正式人物外观解析', () => {
     Object.assign(first, { body_key: 'medium' });
     snapshot.characters.push({ ...first, character_key: 'second-character' });
     for (const item of snapshot.wearables) Object.assign(item, { body_key: 'medium' });
-    const draft = { ...draftFromAppearance(snapshot), character_key: 'second-character', upper_purchase_id: 'purchase-upper' };
+    const draft = { ...draftFromAppearance(snapshot), character_key: 'second-character', upper_wearable_key: 'upper-b' };
     const resolved = resolveAppearance(snapshot, draft);
     expect(resolved.definition.character_key).toBe('second-character');
     expect(resolved.wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-b');
@@ -60,7 +60,7 @@ describe('正式人物外观解析', () => {
     const original = snapshot.characters[0]!;
     Object.assign(original, { body_key: 'medium' });
     snapshot.characters.push({ ...original, character_key: 'second-character' });
-    const draft = { ...draftFromAppearance(snapshot), character_key: 'second-character', upper_purchase_id: 'purchase-upper' };
+    const draft = { ...draftFromAppearance(snapshot), character_key: 'second-character', upper_wearable_key: 'upper-b' };
     expect(resolveAppearance(snapshot, draft).wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-b');
     const upper = snapshot.wearables.find((item) => item.wearable_key === 'upper-b')!;
     upper.character_key = 'unknown';
@@ -69,12 +69,12 @@ describe('正式人物外观解析', () => {
     expect(() => resolveAppearance(snapshot, draft)).toThrow('CHARACTER_WEARABLE_INCOMPATIBLE');
   });
 
-  it('六个部位分别保留独立商品订单，不根据订单顺序猜测槽位', () => {
+  it('六个部位分别保留稳定穿戴身份，不根据订单顺序猜测槽位', () => {
     const snapshot = appearanceFixture();
-    const draft = { ...draftFromAppearance(snapshot), face_purchase_id: 'purchase-face', head_purchase_id: 'purchase-head', upper_purchase_id: 'purchase-upper', lower_purchase_id: 'purchase-lower', shoes_purchase_id: 'purchase-shoes', back_purchase_id: 'purchase-back' };
+    const draft = { ...draftFromAppearance(snapshot), face_wearable_key: 'face-b', head_wearable_key: 'head-b', upper_wearable_key: 'upper-b', lower_wearable_key: 'lower-b', shoes_wearable_key: 'shoes-b', back_wearable_key: 'back-b' };
     expect(resolveAppearance(snapshot, draft).wearables.map((item) => item.wearable_key)).toEqual(['face-b', 'head-b', 'upper-b', 'lower-b', 'shoes-b', 'back-b']);
     snapshot.inventory = snapshot.inventory.filter((item) => item.wearable_key !== 'lower-b');
-    expect(() => resolveAppearance(snapshot, draft)).toThrow('CHARACTER_PURCHASE_MISSING');
+    expect(() => resolveAppearance(snapshot, draft)).toThrow('CHARACTER_WEARABLE_UNOWNED');
   });
 
   it('稳定人物身份不掩盖模型版本或当前预览动作的变化', () => {
@@ -98,19 +98,22 @@ describe('正式人物外观解析', () => {
     Object.assign(first, { body_key: 'medium' });
     const second = { ...first, character_key: 'second', defaults: { ...first.defaults, upper: 'upper-b' } };
     snapshot.characters.push(second);
-    const draft = { ...draftFromAppearance(snapshot), character_key: 'second', upper_free_wearable_key: 'upper-a' };
+    const draft = { ...draftFromAppearance(snapshot), character_key: 'second', upper_wearable_key: 'upper-a' };
     expect(resolveAppearance(snapshot, draft).wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-a');
-    Object.assign(snapshot, { character_key: 'second', upper_free_wearable_key: 'upper-a' });
-    expect(draftFromAppearance(snapshot).upper_free_wearable_key).toBe('upper-a');
+    Object.assign(snapshot, { character_key: 'second', upper_wearable_key: 'upper-a' });
+    expect(draftFromAppearance(snapshot).upper_wearable_key).toBe('upper-a');
     expect(resolveAppearance(snapshot).wearables.find((item) => item.slot === 'upper')?.wearable_key).toBe('upper-a');
   });
 
-  it('免费来源不能指定付费人物衣服或和购买来源同时存在', () => {
+  it('拒绝未拥有的目录穿戴，并保留明确选择的空件', () => {
     const snapshot = appearanceFixture();
-    Object.assign(snapshot, { default_character_key: 'body' });
-    const draft = draftFromAppearance(snapshot);
-    expect(() => resolveAppearance(snapshot, { ...draft, upper_free_wearable_key: 'upper-b' })).toThrow('CHARACTER_FREE_WEARABLE_INVALID');
-    expect(() => resolveAppearance(snapshot, { ...draft, upper_free_wearable_key: 'upper-a', upper_purchase_id: 'purchase-upper' })).toThrow('CHARACTER_FREE_WEARABLE_INVALID');
-    expect(() => resolveAppearance(snapshot, { ...draft, upper_free_wearable_key: '' })).toThrow('CHARACTER_FREE_WEARABLE_INVALID');
+    snapshot.inventory = [];
+    const empty = { ...snapshot.wearables.find((item) => item.wearable_key === 'head-a')!, empty: true };
+    snapshot.wearables[snapshot.wearables.findIndex((item) => item.wearable_key === 'head-a')] = empty;
+    const draft = { ...draftFromAppearance(snapshot), head_wearable_key: 'head-a' };
+    expect(draftFromAppearance(draft).head_wearable_key).toBe('head-a');
+    expect(resolveAppearance(snapshot, draft).wearables.find((item) => item.slot === 'head')).toBe(empty);
+    expect(() => resolveAppearance(snapshot, { ...draft, upper_wearable_key: 'upper-b' })).toThrow('CHARACTER_WEARABLE_UNOWNED');
+    expect(() => resolveAppearance(snapshot, { ...draft, upper_wearable_key: '' })).toThrow('CHARACTER_WEARABLE_UNOWNED');
   });
 });

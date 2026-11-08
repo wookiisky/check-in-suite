@@ -36,10 +36,10 @@ export function activityBookSource(): GLTFSource {
 export function appearanceFixture(): components['schemas']['AppearanceState'] {
   const slots = ['face', 'head', 'upper', 'lower', 'shoes', 'back'] as const;
   return {
-    version: 1, character_key: 'body', face_purchase_id: null, back_purchase_id: null, head_purchase_id: null, upper_purchase_id: null, lower_purchase_id: null, shoes_purchase_id: null,
+    version: 1, character_key: 'body', face_wearable_key: null, back_wearable_key: null, head_wearable_key: null, upper_wearable_key: null, lower_wearable_key: null, shoes_wearable_key: null,
     characters: [{ name: '测试人物', character_key: 'body', rig_key: 'rig', model_asset_key: 'base', model_url: '/base.glb', scale: 1, fixed_nodes: ['face'], body_regions: { torso: ['body'] }, defaults: { face: 'face-a', back: 'back-a', head: 'head-a', upper: 'upper-a', lower: 'lower-a', shoes: 'shoes-a' }, animations: { idle: { clip: 'Stand', asset_key: 'base', url: '/base.glb' } } }],
     wearables: slots.flatMap((slot) => ['a', 'b'].map((variant) => ({ name: `${slot}/${variant}`, wearable_key: `${slot}-${variant}`, slot, character_key: 'body', rig_key: 'rig', model_asset_key: 'base', model_url: '/base.glb', thumbnail_asset_key: `${slot}-${variant}`, thumbnail_url: '/thumbnail.png', nodes: [`${slot}-${variant}`], covers: slot === 'upper' && variant === 'a' ? ['torso'] : [] }))),
-    inventory: slots.map((slot) => ({ purchase_id: `purchase-${slot}`, wearable_key: `${slot}-b` })),
+    inventory: slots.map((slot) => ({ wearable_key: `${slot}-b` })),
   };
 }
 
@@ -53,5 +53,5 @@ export function deferred<T>() {
 // 异步准备测试只观察实例提交和释放，蒙皮与播放由真实组装测试验证。
 export function preparedCharacterFixture(name: string): import('./character3d-model').PreparedCharacter {
   const root = new Group(); root.name = name;
-  return { key: name, root, play() {}, advance() {}, resetDelta() {}, dispose() { root.clear(); } };
+  return { key: name, root, play() {}, seek() {}, advance() {}, resetDelta() {}, dispose() { root.clear(); } };
 }

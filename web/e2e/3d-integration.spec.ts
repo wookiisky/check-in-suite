@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
 import type { components } from '../src/api/schema';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
@@ -10,14 +9,11 @@ import character from '../src/features/character/character-panel-content.json' w
 import spatial from '../src/features/island/three/spatial-content.json' with { type: 'json' };
 import { appearanceRequest } from './appearance-flow-fixtures';
 import { readSpatial, spatialRequest } from './island-3d-fixtures';
-import { loginMain, shopAPI, selectShopCategory, purchaseProduct, openAppearance, goHome } from './shop-navigation';
+import { loginMain, shopAPI, selectShopCategory, purchaseProduct, openAppearance, goHome, fundPurchase, clearFunding } from './shop-navigation';
 
-type Product = components['schemas']['Product'];
 type Appearance = components['schemas']['AppearanceState'];
-type Task = components['schemas']['Task'];
-type Checkin = components['schemas']['Checkin'];
 type Camp = components['schemas']['CampResponse'];
-type Funding = { task: Task; record: Checkin };
+type Funding = Awaited<ReturnType<typeof fundPurchase>>;
 
 test.setTimeout(120_000);
 test.use({ actionTimeout: 15_000 });
@@ -30,12 +26,25 @@ test('背心换色可放弃，保存后同步首页和营地', async ({ page }, 
   try {
     const state = await shopAPI<Appearance>(page, '/appearance', 'PUT', {
       expected_version: original.version, character_key: original.default_character_key,
-      face_purchase_id: null, head_purchase_id: null, upper_purchase_id: null,
-      lower_purchase_id: null, shoes_purchase_id: null, back_purchase_id: null,
+      face_wearable_key: null, head_wearable_key: null, upper_wearable_key: null,
+      lower_wearable_key: null, shoes_wearable_key: null, back_wearable_key: null,
     });
-    expect(state.wearable_colors?.map((item) => item.key)).toEqual(['ivory', 'black', 'red', 'orange', 'yellow', 'blue', 'green', 'brown']);
+    expect(state.wearable_colors?.map((item) => item.key).sort()).toEqual(['black', 'blue', 'brown', 'gray', 'green', 'ivory', 'orange', 'purple', 'red', 'yellow']);
     expect(state.wearables.filter((item) => item.dye_material).map((item) => item.wearable_key).sort()).toEqual([
-      'kaykit-adventurers-knight-back-cape', 'kaykit-skeletons-minion-back-cloak', 'upper-human-tank-v1',
+      'hair-barbarian-v1',
+      'hair-rogue-v1',
+      'kaykit-adventurers-barbarian-shoes',
+      'kaykit-adventurers-knight-back-cape',
+      'kaykit-adventurers-mage-head',
+      'kaykit-adventurers-mage-lower',
+      'kaykit-adventurers-mage-upper',
+      'kaykit-adventurers-ranger-head',
+      'kaykit-adventurers-rogue-head',
+      'kaykit-adventurers-rogue-hooded-head',
+      'kaykit-skeletons-mage-upper',
+      'kaykit-skeletons-minion-back-cloak',
+      'shoes-rogue-v1',
+      'upper-human-tank-v1',
     ]);
     const home = page.getByRole('region', { name: character.label, exact: true }).locator('.character3d-preview');
     const stage = page.getByRole('region', { name: spatial.scene, exact: true });
@@ -56,13 +65,21 @@ test('背心换色可放弃，保存后同步首页和营地', async ({ page }, 
     expect(nameBounds!.y + nameBounds!.height).toBeLessThanOrEqual(swatchBounds!.y + swatchBounds!.height);
     expect(swatchBounds!.width).toBeLessThanOrEqual(44);
     expect(swatchBounds!.height).toBeCloseTo(swatchBounds!.width, 0);
-    const cards = await wardrobe.locator('.appearance-color-option').evaluateAll((options) =>
+    const swatchCards = () => wardrobe.locator('.appearance-color-option').evaluateAll((options) =>
       options.map((option) => ({ top: option.getBoundingClientRect().top, width: option.getBoundingClientRect().width })),
     );
-    expect(cards).toHaveLength(8);
-    expect(new Set(cards.map((card) => card.top)).size).toBe(1);
+    const cards = await swatchCards();
+    expect(cards).toHaveLength(10);
+    if (testInfo.project.name === 'desktop-chromium') expect(new Set(cards.map((card) => card.top)).size).toBe(1);
     expect(Math.min(...cards.map((card) => card.width))).toBeGreaterThanOrEqual(24);
     const palette = wardrobe.locator('.appearance-colors');
+    const viewport = page.viewportSize();
+    if (viewport) {
+      await page.setViewportSize({ width: 320, height: viewport.height });
+      await expect.poll(async () => new Set((await swatchCards()).map((card) => card.top)).size).toBeGreaterThan(1);
+      expect(await palette.evaluate((element) => element.scrollWidth)).toBeLessThanOrEqual(await palette.evaluate((element) => element.clientWidth));
+      await page.setViewportSize(viewport);
+    }
     await palette.evaluate((element) => element.scrollIntoView({ block: 'center' }));
     await palette.screenshot({ path: testInfo.outputPath('color-options.png') });
     await expect(model).toHaveAttribute('data-character-status', 'ready');
@@ -94,7 +111,7 @@ test('背心换色可放弃，保存后同步首页和营地', async ({ page }, 
     await expect(wardrobe.getByText(appearance.saved, { exact: true })).toBeVisible();
     const saved = await shopAPI<Appearance>(page, '/appearance');
     expect(saved.version).toBe(state.version + 1);
-    expect(saved.upper_purchase_id).toBeNull();
+    expect(saved.upper_wearable_key).toBeNull();
     expect(saved.upper_color_key).toBe('yellow');
     await expect(model).toHaveAttribute('data-character-status', 'ready');
     await model.locator('canvas').screenshot({ path: testInfo.outputPath('round-neck-yellow.png') });
@@ -118,25 +135,6 @@ test('背心换色可放弃，保存后同步首页和营地', async ({ page }, 
     await shopAPI(page, '/appearance', 'PUT', { ...appearanceRequest(original), expected_version: current.version });
   }
 });
-
-// 余额来自真实打卡奖励，购买仍由页面提交完整价格和版本。
-async function fundPurchase(page: Page, product: Product, name: string): Promise<Funding> {
-  await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
-  const camp = await shopAPI<Camp>(page, '/camp');
-  const task = await shopAPI<Task>(page, '/management/tasks', 'POST', { category_id: null, name, icon_key: 'book-v1', coin_reward: Math.max(1, product.coin_price - camp.wallet.coins), diamond_reward: Math.max(1, product.diamond_price - camp.wallet.diamonds), daily_limit: 2, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true });
-  const result = await shopAPI<components['schemas']['CheckinResult']>(page, '/checkins', 'POST', { expected_today: camp.today, task_id: task.id, expected_task_version: task.version, text: '', photo_media_id: null, audio_media_id: null });
-  await shopAPI(page, '/management/lock', 'POST');
-  return { task, record: result.checkin };
-}
-
-// 还原任务与资格，不直接修改账本或伪造购买撤销。
-async function clearFunding(page: Page, funding: Funding | null) {
-  if (!funding) return;
-  await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
-  await shopAPI(page, `/checkins/${funding.record.id}`, 'DELETE', { expected_version: funding.record.version });
-  await shopAPI(page, `/management/tasks/${funding.task.id}`, 'DELETE', { expected_version: funding.task.version });
-  await shopAPI(page, '/management/lock', 'POST');
-}
 
 // 服装报价用稳定目录身份，购买后保留分类，只有整套外观保存才改变人物。
 test('真实购买服装不自动换装，独立装扮页保存后打卡页显示新外观', async ({ page }, testInfo) => {
@@ -170,7 +168,7 @@ test('真实购买服装不自动换装，独立装扮页保存后打卡页显�
     await wardrobe.getByRole('button', { name: appearance.save, exact: true }).click();
     await expect(wardrobe.getByText(appearance.saved, { exact: true })).toBeVisible();
     const saved = await shopAPI<Appearance>(page, '/appearance');
-    expect(saved[`${wearable.slot}_purchase_id`]).toBe(owned.purchase_id);
+    expect(saved[`${wearable.slot}_wearable_key`]).toBe(owned.wearable_key);
     await goHome(page);
     const panel = page.getByRole('region', { name: character.label, exact: true });
     const preview = panel.locator('.character3d-preview');

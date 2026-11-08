@@ -10,6 +10,10 @@ import subprocess
 import sys
 from types import SimpleNamespace
 
+# Blender 执行脚本时不会把脚本目录加入模块搜索路径。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from character_catalog_source import load_character_catalog
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -268,7 +272,7 @@ def render_scenario(scenario, bodies, wearables, output, renderer, settings, ass
 def verify(options):
     import bpy
 
-    catalog = json.loads(options.catalog.read_text())
+    catalog = load_character_catalog(options.catalog)
     bodies = {item['character_key']: item for item in catalog['characters']}
     wearables = {item['wearable_key']: item for item in catalog['wearables']}
     representatives = json.loads((ROOT / 'scripts/modular-character-evidence.json').read_text())
@@ -293,7 +297,8 @@ def verify(options):
                   catalog_sha256=hashlib.sha256(options.catalog.read_bytes()).hexdigest(),
                   asset_directory=str(options.asset_directory.resolve()) if options.asset_directory else None,
                   pipeline_sha256={path.name: hashlib.sha256(path.read_bytes()).hexdigest()
-                                   for path in [Path(__file__), ROOT / 'scripts/render-gltf-previews.py']})
+                                   for path in [Path(__file__), ROOT / 'scripts/render-gltf-previews.py',
+                                                ROOT / 'scripts/character_catalog_source.py']})
     (options.output / 'evidence.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     return int(not report['complete'])
 

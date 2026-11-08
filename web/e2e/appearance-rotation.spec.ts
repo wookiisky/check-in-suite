@@ -57,7 +57,7 @@ test('装扮可绕一周查看且换装保存保留朝向', async ({ page }, tes
   await dialog.getByRole('button', { name: character.rotation.reset, exact: true }).click();
   await expect.poll(() => rotationOf(model)).toBeCloseTo(0);
   for (let step = 0; step < 4; step += 1) await right.click();
-  const desired = before.upper_purchase_id === item.purchase_id ? null : item.purchase_id;
+  const desired = before.upper_wearable_key === item.wearable_key ? null : item.wearable_key;
   const body = before.characters.find((value) => value.character_key === before.character_key)!;
   const defaultUpper = before.wearables.find((value) => value.wearable_key === body.defaults.upper)!;
   const option = desired ? item.wearable.name : defaultUpper.name;
@@ -69,7 +69,7 @@ test('装扮可绕一周查看且换装保存保留朝向', async ({ page }, tes
   await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
   await expect.poll(() => rotationOf(model)).toBeCloseTo(Math.PI);
   const saved = await (await appearanceAPI(page, '/appearance')).json() as Appearance;
-  expect(saved.upper_purchase_id).toBe(desired);
+  expect(saved.upper_wearable_key).toBe(desired);
   expect(saved.version).toBe(before.version + 1);
   expect(writes).toBe(1);
   await dialog.getByRole('button', { name: appearance.cancel, exact: true }).click();

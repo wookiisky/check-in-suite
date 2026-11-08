@@ -22,7 +22,7 @@ func TestAppearanceFaceHeadAndBackAreIndependentOwnedSlots(t *testing.T) {
 			defaultKeys[body.Defaults.ForSlot(slot)] = true
 		}
 	}
-	purchases := make(map[character.Slot]string)
+	ownedKeys := make(map[character.Slot]string)
 	for _, slot := range []character.Slot{character.SlotFace, character.SlotHead, character.SlotBack} {
 		var candidate character.Wearable
 		for _, item := range state.Wearables {
@@ -35,21 +35,21 @@ func TestAppearanceFaceHeadAndBackAreIndependentOwnedSlots(t *testing.T) {
 			t.Fatalf("no non-default %s wearable", slot)
 		}
 		product := createProduct(t, f, productFixture{Type: shop.TypeWearable, Name: candidate.Name, AssetKey: candidate.ThumbnailAssetKey, WearableKey: candidate.Key, Enabled: true})
-		purchases[slot] = buyProduct(t, f, product).Purchase.ID
+		ownedKeys[slot] = buyProduct(t, f, product).Purchase.WearableKey
 	}
-	face, head, back := purchases[character.SlotFace], purchases[character.SlotHead], purchases[character.SlotBack]
-	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: state.CharacterKey, FacePurchaseID: &face, HeadPurchaseID: &head, BackPurchaseID: &back})
-	if err != nil || saved.FacePurchaseID == nil || saved.HeadPurchaseID == nil || saved.BackPurchaseID == nil || *saved.FacePurchaseID != face || *saved.HeadPurchaseID != head || *saved.BackPurchaseID != back {
+	face, head, back := ownedKeys[character.SlotFace], ownedKeys[character.SlotHead], ownedKeys[character.SlotBack]
+	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: state.CharacterKey, FaceWearableKey: &face, HeadWearableKey: &head, BackWearableKey: &back})
+	if err != nil || saved.FaceWearableKey == nil || saved.HeadWearableKey == nil || saved.BackWearableKey == nil || *saved.FaceWearableKey != face || *saved.HeadWearableKey != head || *saved.BackWearableKey != back {
 		t.Fatalf("six-slot save=%+v err=%v", saved, err)
 	}
-	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: state.CharacterKey, FacePurchaseID: &back, HeadPurchaseID: &head, BackPurchaseID: &back})
+	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: state.CharacterKey, FaceWearableKey: &back, HeadWearableKey: &head, BackWearableKey: &back})
 	requireShopCode(t, err, "INVALID_EQUIPMENT")
 	after, err := f.Service.Appearance(ctx, f.Principal)
-	if err != nil || after.Version != 2 || after.FacePurchaseID == nil || *after.FacePurchaseID != face {
+	if err != nil || after.Version != 2 || after.FaceWearableKey == nil || *after.FaceWearableKey != face {
 		t.Fatalf("invalid save partially applied: %+v %v", after, err)
 	}
 	cleared, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: state.CharacterKey})
-	if err != nil || cleared.Version != 3 || cleared.FacePurchaseID != nil || cleared.HeadPurchaseID != nil || cleared.BackPurchaseID != nil {
+	if err != nil || cleared.Version != 3 || cleared.FaceWearableKey != nil || cleared.HeadWearableKey != nil || cleared.BackWearableKey != nil {
 		t.Fatalf("restore=%+v err=%v", cleared, err)
 	}
 }
@@ -68,15 +68,15 @@ func TestAppearanceOwnedBodyDefaultsRequireBodyEntitlement(t *testing.T) {
 	if skeleton.Key == "" {
 		t.Fatal("missing purchasable skeleton")
 	}
-	input := shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: character.DefaultCharacterKey, FaceFreeWearableKey: &skeleton.Defaults.Face}
+	input := shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: character.DefaultCharacterKey, FaceWearableKey: &skeleton.Defaults.Face}
 	_, err := f.Service.SaveAppearance(ctx, f.Principal, input)
 	requireShopCode(t, err, "INVALID_EQUIPMENT")
 	purchase := buyProduct(t, f, createProduct(t, f, catalogCharacterProduct(t))).Purchase
 	saved, err := f.Service.SaveAppearance(ctx, f.Principal, input)
-	if err != nil || saved.FaceFreeWearableKey == nil || *saved.FaceFreeWearableKey != skeleton.Defaults.Face || len(saved.Inventory) != 0 {
+	if err != nil || saved.FaceWearableKey == nil || *saved.FaceWearableKey != skeleton.Defaults.Face || len(saved.Inventory) != 0 {
 		t.Fatalf("owned default: %+v %v", saved, err)
 	}
-	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: skeleton.Key, FacePurchaseID: &purchase.ID})
+	_, err = f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 2, CharacterKey: skeleton.Key, FaceWearableKey: &purchase.ID})
 	requireShopCode(t, err, "INVALID_EQUIPMENT")
 }
 
@@ -96,4 +96,31 @@ func TestAppearanceCatalogFiltersAcceptSixSlots(t *testing.T) {
 	requireShopCode(t, err, "INVALID_REQUEST")
 	_, err = f.Service.ListPurchases(ctx, f.Principal, shop.PurchaseQuery{Slot: "hair"})
 	requireShopCode(t, err, "INVALID_REQUEST")
+}
+
+// 空件和默认件可以指向同一个定义，但保存时保留主动选择。
+func TestAppearancePreservesExplicitEmptyWearable(t *testing.T) {
+	f := newShopFixture(t)
+	ctx := context.Background()
+	body, ok := character.Get(character.DefaultCharacterKey)
+	if !ok {
+		t.Fatal("missing default character")
+	}
+	emptyHead := body.Defaults.Head
+	empty, ok := character.GetWearable(emptyHead)
+	if !ok || !empty.Empty {
+		t.Fatalf("expected empty head, got %+v", empty)
+	}
+	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{
+		ExpectedVersion: 1, CharacterKey: body.Key, HeadWearableKey: &emptyHead,
+	})
+	if err != nil || saved.HeadWearableKey == nil || *saved.HeadWearableKey != emptyHead {
+		t.Fatalf("empty wearable: %+v %v", saved, err)
+	}
+	restored, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{
+		ExpectedVersion: saved.Version, CharacterKey: body.Key,
+	})
+	if err != nil || restored.HeadWearableKey != nil {
+		t.Fatalf("default wearable: %+v %v", restored, err)
+	}
 }

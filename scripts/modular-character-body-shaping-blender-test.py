@@ -1,8 +1,13 @@
 """用真实标准身体验证低面数裸身、分区接缝、绑定与握姿。"""
 import importlib.util
 import json
+import sys
 import tempfile
 from pathlib import Path
+
+# Blender 执行脚本时不会把脚本目录加入模块搜索路径。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from character_catalog_source import load_character_catalog
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -106,7 +111,7 @@ def verify():
             posed[key] = point
     assert max((point - Vector(key)).length for key, point in posed.items()) > .08, '真实骨骼变形没有执行'
     # 同一套真实交付动作逐帧检查，而非只检查自设关节旋转。
-    catalog = json.loads((ROOT / 'internal/character/character-catalog.json').read_text())
+    catalog = load_character_catalog(ROOT / 'internal/character/character-catalog.json')
     human = next(body for body in catalog['characters'] if body['character_key'] == 'kaykit-medium-v1')
     for semantic, frames in [('idle', [13]), ('cheer', [11, 21, 31]), ('read', [24, 48, 72])]:
         definition = human['animations'][semantic]

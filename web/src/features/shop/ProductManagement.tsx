@@ -35,16 +35,11 @@ export function ProductManagement({ client, session }: ShopProps) {
   const catalog = useProductCatalog(client, { search, revision, group, category });
   const pending = pendingProducts.get(client);
 
-  // 从素材新增后回到对应商品分类，确保上一个筛选条件不会遮住它。
-  function savedProduct(product: Product) {
+  // 营地商品新增后回到对应分类，并清除可能遮住它的筛选条件。
+  function savedProduct() {
     if (creating) {
-      if (creating === 'recover') {
-        setGroup(product.type === 'scene' || product.type === 'island' ? 'camp' : 'appearance');
-        setCategory('');
-      } else {
-        setGroup(creating.group);
-        setCategory(creating.category);
-      }
+      setGroup('camp');
+      setCategory(creating === 'recover' ? '' : creating.category);
       setSearch(emptySearch);
     }
     setEditing(null);
@@ -75,7 +70,9 @@ export function ProductManagement({ client, session }: ShopProps) {
         : <div className="shop-categories">
           <ViewTabs label={content.categoryGroupLabel} className="shop-category-tabs" panelClassName="shop-category-panel"
             items={shopGroups} value={group} onChange={changeGroup}
-            actions={<div className="shop-category-actions"><button type="button" disabled={Boolean(pending)} onClick={() => setSection('materials')}>{content.addProduct}</button></div>}>
+            actions={<>{group === 'camp' && <div className="shop-category-actions">
+              <button type="button" disabled={Boolean(pending)} onClick={() => setSection('materials')}>{content.addProduct}</button>
+            </div>}</>}>
             <ViewTabs label={group === 'appearance' ? content.categoryDetailLabel : content.campCategoryLabel}
               className="shop-category-tabs shop-category-details" items={shopCategoryTabs(group, catalog.campCategories)}
               value={category} onChange={setCategory}>

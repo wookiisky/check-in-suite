@@ -4,6 +4,8 @@ import (
 	_ "embed"
 	"encoding/json"
 	"slices"
+
+	"github.com/wookiisky/check-in-suite/internal/character"
 )
 
 //go:embed spatial-scene.json
@@ -14,6 +16,7 @@ var spatialThumbnailAliasesJSON []byte
 
 // spatialConfiguration 保持默认布局与场景配置属于同一个固定版本来源。
 type spatialConfiguration struct {
+	ActivityBindings   map[string]string   `json:"activity_bindings"`   // 业务活动选择的正式人物表演。
 	Scene              SpatialScene        `json:"scene"`               // 地形与房屋空间。
 	Catalog            []SpatialDefinition `json:"catalog"`             // 已有真实素材的物件。
 	DefaultEnvironment string              `json:"default_environment"` // 初始环境。
@@ -34,6 +37,17 @@ func loadSpatialCatalog() spatialCatalogIndex {
 	var result spatialCatalogIndex
 	if err := json.Unmarshal(spatialSceneJSON, &result.configuration); err != nil {
 		panic(err)
+	}
+	result.configuration.Scene.ActivityPresentations = make(map[string]character.ActivityPresentation)
+	for activity, key := range result.configuration.ActivityBindings {
+		presentation, found := character.Presentation(key)
+		if !found {
+			panic("unregistered character presentation for " + activity + ": " + key)
+		}
+		if activity == "ball" && presentation.Ball == nil {
+			panic("missing timing for ball presentation: " + key)
+		}
+		result.configuration.Scene.ActivityPresentations[activity] = presentation
 	}
 	var extra spatialHouseConfiguration
 	if err := json.Unmarshal(spatialHousesJSON, &extra); err != nil {

@@ -52,10 +52,10 @@ export async function selectShopCategory(page: Page, group: 'appearance' | 'isla
 
 // 从素材库选取一个有固定类型的营地场景，进入新增商品表单。
 export async function openSceneProductEditor(page: Page, assetName: string) {
+  await page.getByRole('tablist', { name: shop.categoryGroupLabel, exact: true }).getByRole('tab', { name: shop.shopCamp, exact: true }).click();
   await page.getByRole('button', { name: shop.addProduct, exact: true }).click();
   const materials = page.getByRole('tab', { name: shop.materialLibrary, exact: true });
   await expect(materials).toHaveAttribute('aria-selected', 'true');
-  await page.getByRole('tablist', { name: shop.materialGroupLabel, exact: true }).getByRole('tab', { name: shop.shopCamp, exact: true }).click();
   await page.getByRole('tablist', { name: shop.campCategoryLabel, exact: true }).getByRole('tab', { name: shop.campCategories.scene, exact: true }).click();
   await page.getByRole('button', { name: `${shop.addProduct} ${assetName}`, exact: true }).click();
 }
@@ -80,4 +80,28 @@ export async function purchaseProduct(page: Page, product: components['schemas']
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
   await expect(dialog).toHaveCount(0);
+}
+
+type Camp = components['schemas']['CampResponse'];
+type Product = components['schemas']['Product'];
+type Task = components['schemas']['Task'];
+type Funding = { task: Task; record: components['schemas']['Checkin'] };
+
+// 余额来自真实打卡奖励，购买仍由页面提交完整价格和版本。
+export async function fundPurchase(page: Page, product: Product, name: string): Promise<Funding> {
+  await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
+  const camp = await shopAPI<Camp>(page, '/camp');
+  const task = await shopAPI<Task>(page, '/management/tasks', 'POST', { category_id: null, name, icon_key: 'book-v1', coin_reward: Math.max(1, product.coin_price - camp.wallet.coins), diamond_reward: Math.max(1, product.diamond_price - camp.wallet.diamonds), daily_limit: 2, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true });
+  const result = await shopAPI<components['schemas']['CheckinResult']>(page, '/checkins', 'POST', { expected_today: camp.today, task_id: task.id, expected_task_version: task.version, text: '', photo_media_id: null, audio_media_id: null });
+  await shopAPI(page, '/management/lock', 'POST');
+  return { task, record: result.checkin };
+}
+
+// 还原任务与资格，不直接修改账本或伪造购买撤销。
+export async function clearFunding(page: Page, funding: Funding | null) {
+  if (!funding) return;
+  await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
+  await shopAPI(page, `/checkins/${funding.record.id}`, 'DELETE', { expected_version: funding.record.version });
+  await shopAPI(page, `/management/tasks/${funding.task.id}`, 'DELETE', { expected_version: funding.task.version });
+  await shopAPI(page, '/management/lock', 'POST');
 }

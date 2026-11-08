@@ -16,10 +16,10 @@ function characterCatalogFixture() {
   return {
     ...state,
     default_character_key: base.character_key,
-    head_purchase_id: 'head-purchase' as string | null,
+    head_wearable_key: 'head-owned' as string | null,
     characters: [base, { ...base, character_key: 'owned-knight', name: '已购骑士', thumbnail_url: '/knight.png' }, { ...base, character_key: 'locked-mage', name: '未购法师' }],
     wearables: state.wearables.map((item) => ({ ...item, body_key: 'shared-body' })),
-    character_inventory: [{ purchase_id: 'knight-order', character_key: 'owned-knight' }],
+    character_inventory: [{ character_key: 'owned-knight' }],
   };
 }
 
@@ -32,13 +32,13 @@ describe('完整人物与共享服装', () => {
     fireEvent.click(await screen.findByRole('radio', { name: '已购骑士' }));
     expect(screen.queryByRole('radio', { name: '未购法师' })).not.toBeInTheDocument();
     expect(screen.getByTestId('appearance-preview-draft')).toHaveTextContent('owned-knight');
-    expect(screen.getByTestId('appearance-preview-draft')).not.toHaveTextContent('head-purchase');
+    expect(screen.getByTestId('appearance-preview-draft')).not.toHaveTextContent('head-owned');
     expect(fake.request.mock.calls.filter(([, options]) => options?.method === 'PUT')).toHaveLength(0);
     fireEvent.click(screen.getByRole('radio', { name: '头部新款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
     expect(fake.request).toHaveBeenCalledWith('/appearance', expect.objectContaining({ method: 'PUT', body: {
-      expected_version: 1, character_key: 'owned-knight', face_purchase_id: null, back_purchase_id: null, head_purchase_id: 'head-purchase', upper_purchase_id: null, lower_purchase_id: null, shoes_purchase_id: null,
+      expected_version: 1, character_key: 'owned-knight', face_wearable_key: null, back_wearable_key: null, head_wearable_key: 'head-owned', upper_wearable_key: null, lower_wearable_key: null, shoes_wearable_key: null,
     } }));
   });
 
@@ -67,7 +67,7 @@ describe('完整人物与共享服装', () => {
     fireEvent.click(await screen.findByRole('radio', { name: '形象新款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
-    expect(fake.request).toHaveBeenCalledWith('/appearance', expect.objectContaining({ method: 'PUT', body: expect.objectContaining({ character_key: 'body-fixture', face_purchase_id: null, face_free_wearable_key: 'face-owned' }) }));
+    expect(fake.request).toHaveBeenCalledWith('/appearance', expect.objectContaining({ method: 'PUT', body: expect.objectContaining({ character_key: 'body-fixture', face_wearable_key: 'face-owned' }) }));
   });
 
   it('初始免费服装可用于购买人物，重新选择购买服装会清除免费选择', async () => {
@@ -82,14 +82,13 @@ describe('完整人物与共享服装', () => {
     fireEvent.click(screen.getByRole('radio', { name: '上装默认款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
-    expect(fake.request).toHaveBeenCalledWith('/appearance', expect.objectContaining({ method: 'PUT', body: expect.objectContaining({ character_key: 'owned-knight', upper_purchase_id: null, upper_free_wearable_key: 'upper-default' }) }));
+    expect(fake.request).toHaveBeenCalledWith('/appearance', expect.objectContaining({ method: 'PUT', body: expect.objectContaining({ character_key: 'owned-knight', upper_wearable_key: 'upper-default' }) }));
     fireEvent.click(screen.getByRole('radio', { name: '上装新款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(2));
     const writes = fake.request.mock.calls.filter(([, options]) => options?.method === 'PUT');
     const secondWrite = writes[1]![1]!;
-    expect(secondWrite.body).toMatchObject({ upper_purchase_id: 'upper-purchase' });
-    expect((secondWrite.body as Record<string, unknown>).upper_free_wearable_key ?? null).toBeNull();
+    expect(secondWrite.body).toMatchObject({ upper_wearable_key: 'upper-owned' });
   });
 
   it('可用的空穿戴排在默认衣服前，显示通用图标并保留免费选择身份', async () => {
@@ -112,7 +111,7 @@ describe('完整人物与共享服装', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await screen.findByText('外观已保存。');
     expect(fake.request).toHaveBeenCalledWith('/appearance', expect.objectContaining({
-      method: 'PUT', body: expect.objectContaining({ upper_purchase_id: null, upper_free_wearable_key: 'upper-none' }),
+      method: 'PUT', body: expect.objectContaining({ upper_wearable_key: 'upper-none' }),
     }));
   });
 
@@ -137,6 +136,6 @@ describe('完整人物与共享服装', () => {
     expect(freeOption).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await screen.findByText('外观已保存。');
-    expect(fake.request.mock.calls.filter(([, options]) => options?.method === 'PUT').at(-1)![1]!.body).toMatchObject({ expected_version: 2, upper_free_wearable_key: 'upper-default', upper_purchase_id: null });
+    expect(fake.request.mock.calls.filter(([, options]) => options?.method === 'PUT').at(-1)![1]!.body).toMatchObject({ expected_version: 2, upper_wearable_key: 'upper-default' });
   });
 });

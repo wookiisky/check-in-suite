@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
-	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/core"
 	"github.com/wookiisky/check-in-suite/internal/island"
 	"github.com/wookiisky/check-in-suite/internal/wallet"
@@ -19,7 +18,7 @@ const (
 )
 
 // activeShopOffers is shared by browsing and the development ownership grant.
-const activeShopOffers = "SELECT " + productColumns + " FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL AND p.enabled=1"
+const activeShopOffers = "SELECT " + productColumns + " FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL AND p.enabled=1" + catalogOfferFilter
 
 // ShopQuery specifies a numbered page of the public shop for the current account.
 type ShopQuery struct {
@@ -40,12 +39,12 @@ type ShopPage struct {
 }
 
 // shopProductCategory uses stable catalog metadata shared with appearance and camp.
-func shopProductCategory(item Product, slots map[string]character.Slot) string {
+func shopProductCategory(item Product) string {
 	switch item.Type {
 	case TypeScene, TypeCharacter:
 		return item.Type
 	case TypeWearable:
-		return string(slots[item.WearableKey])
+		return dressUpDisplays()[TypeWearable][item.WearableKey].Slot
 	case TypeIsland:
 		if definition, ok := island.SpatialFind(item.IslandItemKey); ok && definition.Category != "" {
 			return definition.Category
@@ -91,19 +90,14 @@ func (s *Service) BrowseShop(ctx context.Context, principal account.Principal, i
 	}
 	items := []Product{}
 	categories := map[string]bool{TypeScene: true}
-	slots := map[string]character.Slot{}
-	if input.Group == shopAppearance && input.Category != "" {
-		for _, wearable := range character.Wearables() {
-			slots[wearable.Key] = wearable.Slot
-		}
-	}
+
 	for rows.Next() {
 		item, err := scanProduct(rows)
 		if err != nil {
 			rows.Close()
 			return result, err
 		}
-		category := shopProductCategory(item, slots)
+		category := shopProductCategory(item)
 		if input.Group == shopCamp {
 			categories[category] = true
 		}
@@ -122,7 +116,7 @@ func (s *Service) BrowseShop(ctx context.Context, principal account.Principal, i
 		}
 		sort.Strings(result.CampCategories)
 	}
-	if err := applyProductOwnership(ctx, tx, principal.AccountID, items, true); err != nil {
+	if err := applyProductOwnership(ctx, tx, principal.AccountID, items); err != nil {
 		return result, err
 	}
 	unowned := items[:0]

@@ -6,7 +6,7 @@ import { OrthographicCamera, Plane, Vector2, Vector3 } from 'three';
 import type { CharacterLoadStatus, AppearanceState } from '../../character/character3d-appearance';
 import type { IslandAccess } from '../island-activity-access';
 import { SpatialActor3D } from './SpatialActor3D';
-import type { SpatialActorIntent, SpatialActorStatus } from './spatial-actor';
+import type { SpatialActorActivity, SpatialActorIntent, SpatialActorStatus, SpatialActorUnavailable } from './spatial-actor';
 import { cameraBasis, cameraTarget, dragCamera, groundFromWorld, snappedPlacement, zoomCamera } from './spatial-camera';
 import type { SpatialCameraState, SpatialInsets } from './spatial-camera';
 import { layoutIssue } from './spatial-layout';
@@ -31,7 +31,7 @@ export interface SpatialScene3DProps {
   hiddenInstanceId?:string; // 玩球时交给角色表现同一物件。
   intent?:SpatialActorIntent; // 手动活动序列。
   onStatus:(status:SpatialActorStatus)=>void; // 只有活动状态变化通知页面。
-  onUnavailable:(reason:'locked'|'unreachable'|'missing_target',activity:'walk'|'rest'|'read'|'run'|'ball')=>void; // HTML原因说明。
+  onUnavailable:(reason:SpatialActorUnavailable,activity:SpatialActorActivity)=>void; // HTML原因说明。
   onSelect:(instanceId:string)=>void; // 实际mesh选择。
   onObject:(instanceId:string)=>void; // 浏览点击互动。
   onPlacement:(placement:SpatialPlacement)=>void; // 指针移动的整数厘米草稿。

@@ -36,22 +36,22 @@ function pendingAppearances(client: AppearanceClient) {
   return next;
 }
 const slots = [
-  { slot: 'face', field: 'face_purchase_id', freeField: 'face_free_wearable_key' },
-  { slot: 'head', field: 'head_purchase_id', freeField: 'head_free_wearable_key' },
-  { slot: 'upper', field: 'upper_purchase_id', freeField: 'upper_free_wearable_key' },
-  { slot: 'lower', field: 'lower_purchase_id', freeField: 'lower_free_wearable_key' },
-  { slot: 'shoes', field: 'shoes_purchase_id', freeField: 'shoes_free_wearable_key' },
-  { slot: 'back', field: 'back_purchase_id', freeField: 'back_free_wearable_key' },
+  { slot: 'face', field: 'face_wearable_key' },
+  { slot: 'head', field: 'head_wearable_key' },
+  { slot: 'upper', field: 'upper_wearable_key' },
+  { slot: 'lower', field: 'lower_wearable_key' },
+  { slot: 'shoes', field: 'shoes_wearable_key' },
+  { slot: 'back', field: 'back_wearable_key' },
 ] as const;
 type SlotConfiguration = typeof slots[number];
 const pageSize = 12;
 const categoryTabs = [{ id: '', label: content.allCategories }, { id: 'body', label: content.characterTitle },
   ...slots.map(({ slot }) => ({ id: slot, label: content.slots[slot] }))];
 
-/** 每个部位的选项保留订单或目录身份。 */
+/** 每个部位的选项使用稳定穿戴身份。 */
 interface EditorOption {
   key: string; // 当前部位内稳定的 React 标识。
-  name: string; // 展示名，重复实例包含序号。
+  name: string; // 目录展示名。
   thumbnailUrl: string | undefined; // 身体可能没有缩略图。
   wearable?: Wearable; // 部位定义提供空穿戴标记。
   value: string; // 原生选择控件的值。
@@ -91,19 +91,17 @@ export interface AppearanceEditorProps {
 
 // 选择字段的逐项比较不依赖 JSON 键顺序，也不混入目录或版本字段。
 function sameDraft(first: AppearanceDraft, second: AppearanceDraft) {
-  return first.character_key === second.character_key && slots.every(({ slot, field, freeField }) => {
+  return first.character_key === second.character_key && slots.every(({ slot, field }) => {
     const colorField = wearableColorFields[slot];
-    return first[field] === second[field] && (first[freeField] ?? null) === (second[freeField] ?? null)
+    return first[field] === second[field]
       && (!colorField || (first[colorField] ?? null) === (second[colorField] ?? null));
   });
 }
 
-// 比较目录身份时，默认款、显式免费选择和订单可以指向同一件衣物。
-function selectedWearableKey(snapshot: AppearanceState, draft: AppearanceDraft, { slot, field, freeField }: SlotConfiguration) {
-  const purchaseID = draft[field];
-  if (purchaseID !== null) return snapshot.inventory.find((item) => item.purchase_id === purchaseID)?.wearable_key;
+// 将空值还原为当前身体默认件，以便预览和比较配色。
+function selectedWearableKey(snapshot: AppearanceState, draft: AppearanceDraft, { slot, field }: SlotConfiguration) {
   const character = snapshot.characters.find((candidate) => candidate.character_key === draft.character_key);
-  return draft[freeField] ?? character?.defaults[slot];
+  return draft[field] ?? character?.defaults[slot];
 }
 
 // 冲突核对展示服务器的衣物和配色，方便分辨只改了颜色的外观。
@@ -178,8 +176,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
   const dirty = Boolean(snapshot && draft && !sameDraft(draftFromAppearance(snapshot), draft));
   const busy = saving || checking;
   const character = snapshot?.characters.find((item) => item.character_key === draft?.character_key);
-  const ownedCharacters = new Set(snapshot?.character_inventory?.map((item) => item.character_key));
-  const selectableCharacters = snapshot?.characters.filter((item) => item.character_key === (snapshot.default_character_key ?? snapshot.character_key) || ownedCharacters.has(item.character_key)) ?? [];
+  const selectableCharacters = snapshot ? freeCharacterDefinitions(snapshot) : [];
 
   // 离开只处理本地草稿；不取消已经提交的写请求，也不误报其结果。
   const requestLeave: AppearanceLeaveGuard = (leave) => {
@@ -190,14 +187,12 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
   useImperativeHandle(leaveGuardRef, () => requestLeave);
 
   // 每次新选择只改草稿，仍允许模型加载中继续选择下一套。
-  function choose(configuration: SlotConfiguration, purchaseID: string | null, freeKey?: string) {
+  function choose(configuration: SlotConfiguration, wearableKey: string | null) {
     if (!snapshot || busy || pending) return;
-    const { slot, field, freeField } = configuration;
+    const { slot, field } = configuration;
     setDraft((current) => {
       if (!current) return current;
-      const next = { ...current, [field]: purchaseID };
-      if (freeKey == null) delete next[freeField];
-      else next[freeField] = freeKey;
+      const next = { ...current, [field]: wearableKey };
       const colorField = wearableColorFields[slot];
       if (colorField && selectedWearableKey(snapshot, current, configuration) !== selectedWearableKey(snapshot, next, configuration)) delete next[colorField];
       return next;
@@ -221,7 +216,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
   // 换人物先展示其默认整套；已购买的共用服装仍可在各槽重新选择。
   function chooseCharacter(key: string) {
     if (busy || pending || !selectableCharacters.some((item) => item.character_key === key)) return;
-    setDraft({ character_key: key, face_purchase_id: null, back_purchase_id: null, head_purchase_id: null, upper_purchase_id: null, lower_purchase_id: null, shoes_purchase_id: null });
+    setDraft({ character_key: key, face_wearable_key: null, back_wearable_key: null, head_wearable_key: null, upper_wearable_key: null, lower_wearable_key: null, shoes_wearable_key: null });
     setSaved(false); setConfirmed(false); setError(null);
   }
 
@@ -288,67 +283,41 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
       })),
     });
 
-    const wearablesByKey = new Map(snapshot.wearables.map((item) => [item.wearable_key, item]));
-    const freeCharacters = freeCharacterDefinitions(snapshot);
+    const ownedKeys = new Set(snapshot.inventory.map((item) => item.wearable_key));
     for (const configuration of slots) {
-      const { slot, field, freeField } = configuration;
-      const defaultWearable = wearablesByKey.get(character?.defaults[slot] ?? '');
-      const freeKeys = new Set(freeCharacters.map((item) => item.defaults[slot]));
-      const freeWearables = snapshot.wearables.filter((item) => freeKeys.has(item.wearable_key) && item !== defaultWearable && character && wearableFitsCharacter(item, character, snapshot.characters));
-      const owned = snapshot.inventory.flatMap((item) => {
-        const wearable = wearablesByKey.get(item.wearable_key);
-        return wearable && character && wearable.slot === slot && wearableFitsCharacter(wearable, character, snapshot.characters) ? [{ item, wearable }] : [];
-      });
-      const instances = new Map<string, number>();
-      const options: (EditorOption & { wearable: Wearable })[] = [
-        ...(defaultWearable ? [{
-          key: 'default',
-          name: defaultWearable.name,
-          thumbnailUrl: defaultWearable.thumbnail_url,
-          wearable: defaultWearable,
-          value: '',
-          selected: draft[field] === null && (!draft[freeField] || draft[freeField] === defaultWearable.wearable_key),
-          onChoose: () => choose(configuration, null),
-        }] : []),
-        ...freeWearables.map((wearable) => ({
-          key: wearable.wearable_key,
+      const { slot, field } = configuration;
+      const defaultKey = character?.defaults[slot];
+      const freeKeys = new Set(selectableCharacters.map((item) => item.defaults[slot]));
+      const available = snapshot.wearables.filter((item) => item.slot === slot && character
+        && wearableFitsCharacter(item, character, snapshot.characters)
+        && (freeKeys.has(item.wearable_key) || ownedKeys.has(item.wearable_key)));
+      // 默认空件仍可显式选中，方便从其他穿戴切回真正的空槽。
+      const options = available.map((wearable) => {
+        const key = wearable.wearable_key;
+        const value = key === defaultKey && !wearable.empty ? null : key;
+        return {
+          key,
           name: wearable.name,
           thumbnailUrl: wearable.thumbnail_url,
           wearable,
-          value: wearable.wearable_key,
-          selected: draft[field] === null && draft[freeField] === wearable.wearable_key,
-          onChoose: () => choose(configuration, null, wearable.wearable_key),
-        })),
-        ...owned.map(({ item, wearable }) => {
-          const count = (instances.get(wearable.wearable_key) ?? 0) + 1;
-          instances.set(wearable.wearable_key, count);
-          const name = count === 1 ? wearable.name : content.additionalInstance.replace('{name}', wearable.name).replace('{number}', String(count));
-          return {
-            key: item.purchase_id,
-            name,
-            thumbnailUrl: wearable.thumbnail_url,
-            wearable,
-            value: item.purchase_id,
-            selected: draft[field] === item.purchase_id,
-            onChoose: () => choose(configuration, item.purchase_id),
-          };
-        }),
-      ];
-      // 形象按目录顺序排列，不随默认款或购买顺序移动。
-      if (slot === 'face') {
-        options.sort((first, second) => snapshot.wearables.indexOf(first.wearable) - snapshot.wearables.indexOf(second.wearable));
-      } else {
-        // 空穿戴可能来自另一已解锁的身体，仍排在当前身体的默认衣物前。
-        options.sort((first, second) => Number(second.wearable.empty ?? false) - Number(first.wearable.empty ?? false));
+          value: value ?? '',
+          selected: key === (draft[field] ?? defaultKey),
+          onChoose: () => choose(configuration, value),
+        };
+      });
+      // 形象沿用目录顺序。其余槽先展示空件，再展示默认款。
+      if (slot !== 'face') {
+        options.sort((first, second) => Number(Boolean(second.wearable.empty)) - Number(Boolean(first.wearable.empty))
+          || Number(second.key === defaultKey) - Number(first.key === defaultKey));
       }
       const selected = options.find((option) => option.selected)?.wearable;
       const colorField = wearableColorFields[slot];
-      const defaultKey = selected?.default_color_key;
+      const defaultColor = selected?.default_color_key;
       const colors = snapshot.wearable_colors;
-      const dye = colorField && selected?.dye_material && defaultKey && colors?.length ? {
-        field: colorField, defaultKey, selectedKey: draft[colorField] ?? defaultKey, colors,
+      const dye = colorField && selected?.dye_material && defaultColor && colors?.length ? {
+        field: colorField, defaultKey: defaultColor, selectedKey: draft[colorField] ?? defaultColor, colors,
       } : undefined;
-      categories.push({ key: slot, field, label: content.slots[slot], disabled: disabled || !character, emptyOwned: !owned.length, options, dye });
+      categories.push({ key: slot, field, label: content.slots[slot], disabled: disabled || !character, emptyOwned: !available.some((item) => ownedKeys.has(item.wearable_key)), options, dye });
     }
   }
   const browsable = categories.filter((group) => !category || group.key === category);

@@ -6,18 +6,22 @@ import { createSpatialNavigation, spatialLocalToWorld, spatialWorldToLocal } fro
 import type { SpatialLayout, SpatialNavigation, SpatialPlacement, SpatialSpace } from './spatial-navigation';
 
 export type SpatialActorActivity = 'walk' | 'rest' | IslandActivity;
-export type SpatialActorUnavailable = 'locked' | 'unreachable' | 'missing_target';
+export type SpatialActorUnavailable = 'locked' | 'unreachable' | 'missing_target' | 'missing_presentation';
 export type SpatialActorAttachment = components['schemas']['SpatialActivityAttachment'];
+export type SpatialBallTiming = components['schemas']['SpatialBallTiming'];
+type ActivityPresentation = components['schemas']['SpatialActivityPresentation'];
 
-// Play周期1.5秒，在0.625秒与原踢球动作的右脚接触；先低弹跳，再向前飞出并滚回。
-export function spatialBallPosition(elapsed:number):[number,number,number] {
-  const time=((elapsed%1.5)+1.5)%1.5,contact=0.625;
+// 触球位置来自动作绑定。营地负责球从地面出发、飞出并滚回的轨迹。
+export function spatialBallPosition(elapsed:number,timing:SpatialBallTiming):[number,number,number] {
+  const {period_seconds:period,contact_seconds:contact,contact_position:[x,y,z]}=timing;
+  const time=((elapsed%period)+period)%period;
+  const startY=0.13,startZ=0.6;
   if(time<=contact) {
     const progress=time/contact;
-    return [-0.1407*progress,0.13+0.3062*progress+Math.sin(progress*Math.PI)*0.12,0.6-0.0165*progress];
+    return [x*progress,startY+(y-startY)*progress+Math.sin(progress*Math.PI)*0.12,startZ+(z-startZ)*progress];
   }
-  const progress=(time-contact)/(1.5-contact);
-  return [-0.1407*(1-progress),0.13+0.3062*(1-progress)+Math.sin(progress*Math.PI)*0.45,0.5835+Math.sin(progress*Math.PI)*1.0+0.0165*progress];
+  const progress=(time-contact)/(period-contact);
+  return [x*(1-progress),startY+(y-startY)*(1-progress)+Math.sin(progress*Math.PI)*0.45,z+(startZ-z)*progress+Math.sin(progress*Math.PI)];
 }
 
 /** UI 递增 sequence 表示一次新命令，目标坐标始终是厘米世界坐标。 */
@@ -42,9 +46,11 @@ export interface SpatialActorEnvironment {
   now:()=>number; // ApiClient 校准后的当前时间。
   editing:boolean; // 编辑期间冻结人物与导航布局。
   paused:boolean; // 页面隐藏、暂停和减少动效的合并状态。
+  actions?:ReadonlySet<string>; // 当前身体声明的动作，场景测试可单独提供表演数据。
 }
 interface ActorTarget {
   placement:SpatialPlacement; // 规划时复制的实例位置，用来发现目标移动。
+  presentation:ActivityPresentation; // 规划与播放共用同一版本的目录绑定。
   approach:SpatialPoint; // 结束或撤销后返回的可行走落点。
   pose:SpatialPoint & {y_cm:number;rotation:number}; // 表演根点允许进入座面体积。
 }
@@ -74,6 +80,7 @@ export class SpatialActorController {
   status:SpatialActorStatus; // 只在状态或空间变化时由wrapper发布。
   elapsed=0; // 当前表演时间，暂停时冻结。
   action='idle'; // 共享人物目录中的语义动作。
+  ballTiming:SpatialBallTiming|undefined; // 球轨迹使用当前表演绑定中的时间与位置。
   attachments:readonly SpatialActorAttachment[]=[]; // 阅读等活动使用的骨骼道具。
   private layout:SpatialLayout; // 当前已应用布局，编辑草稿不逐帧替换它。
   private layoutSignature:string; // 接口重新返回相同布局不打断正在执行的活动。
@@ -103,7 +110,8 @@ export class SpatialActorController {
     if(this.status.phase!=='idle'&&this.status.activity!=='walk'&&this.status.activity!=='rest'&&!allowedIslandActivities(environment.access,environment.now()).includes(this.status.activity))this.stop();
     if(this.target&&!environment.editing) {
       const current=environment.layout.placements.find(item=>item.instance_id===this.target!.placement.instance_id);
-      if(!current||JSON.stringify(current)!==JSON.stringify(this.target.placement))this.stop();
+      if(!current||JSON.stringify(current)!==JSON.stringify(this.target.placement)||
+        (environment.actions&&!environment.actions.has(this.target.presentation.action)))this.stop();
     }
     this.updateSpace();
   }
@@ -115,7 +123,7 @@ export class SpatialActorController {
     if(intent.activity!=='walk'&&intent.activity!=='rest'&&!allowedIslandActivities(environment.access,environment.now()).includes(intent.activity))return 'locked';
     this.stop();
     if(intent.activity==='rest') {
-      this.status={phase:'performing',activity:'rest',space:this.navigation.space(this.position)};this.action=this.layout.scene.activity_presentations.rest?.action??'rest';return null;
+      this.status={phase:'performing',activity:'rest',space:this.navigation.space(this.position)};this.action='rest';return null;
     }
     if(intent.activity==='walk') {
       for(let attempt=0;attempt<(intent.destination?1:8);attempt++) {
@@ -128,6 +136,9 @@ export class SpatialActorController {
     }
     const candidates=this.layout.placements.filter(item=>(!intent.instanceId||item.instance_id===intent.instanceId)&&this.layout.catalog.find(definition=>definition.item_key===item.item_key)?.interaction?.activity===intent.activity);
     if(!candidates.length)return 'missing_target';
+    const presentation=this.layout.scene.activity_presentations[intent.activity];
+    const ballTiming=presentation?.ball;
+    if(!presentation||(environment.actions&&!environment.actions.has(presentation.action))||(intent.activity==='ball'&&!ballTiming))return 'missing_presentation';
     candidates.sort((a,b)=>this.targetDistance(a)-this.targetDistance(b));
     for(const placement of candidates) {
       if(placement.space==='indoor'&&(!this.navigation.house||!this.layout.scene.house))continue;
@@ -140,8 +151,8 @@ export class SpatialActorController {
       const pose=interaction.pose??{...interaction,y_cm:0};
       const root=spatialLocalToWorld(pose,transform),rotation=transform.rotation+pose.rotation;
       // 球沿有限局部轨迹活动，整条轨迹必须留在陆地且不穿墙或家具。
-      if(intent.activity==='ball'&&Array.from({length:25},(_,index)=>spatialBallPosition(index*1.5/24)).some(point=>!this.navigation.walkable(spatialLocalToWorld({x_cm:point[0]*100,z_cm:point[2]*100},{...root,rotation}))))continue;
-      this.target={placement:{...placement},approach,pose:{...root,y_cm:pose.y_cm+(placement.space==='indoor'?(this.layout.scene.house?.floor_height_cm??0):0),rotation:-rotation*Math.PI/2}};
+      if(ballTiming&&Array.from({length:25},(_,index)=>spatialBallPosition(index*ballTiming.period_seconds/24,ballTiming)).some(point=>!this.navigation.walkable(spatialLocalToWorld({x_cm:point[0]*100,z_cm:point[2]*100},{...root,rotation}))))continue;
+      this.target={placement:{...placement},presentation,approach,pose:{...root,y_cm:pose.y_cm+(placement.space==='indoor'?(this.layout.scene.house?.floor_height_cm??0):0),rotation:-rotation*Math.PI/2}};
       this.route=path.slice(1);this.status={phase:'walking',activity:intent.activity,space:this.navigation.space(this.position),targetInstanceId:placement.instance_id};this.action='walk';return null;
     }
     return 'unreachable';
@@ -162,9 +173,9 @@ export class SpatialActorController {
       this.updateHeight();this.updateSpace();
       if(!this.route.length) {
         if(this.target) {
-          const presentation=this.layout.scene.activity_presentations[this.status.activity];
+          const {presentation}=this.target;
           this.position={x_cm:this.target.pose.x_cm,z_cm:this.target.pose.z_cm,y_cm:this.target.pose.y_cm};this.rotation=this.target.pose.rotation;
-          this.status={...this.status,phase:'performing'};this.action=presentation?.action??'idle';this.attachments=presentation?.attachment?[presentation.attachment]:[];this.elapsed=0;
+          this.status={...this.status,phase:'performing'};this.action=presentation.action;this.attachments=presentation.attachment?[presentation.attachment]:[];this.ballTiming=presentation.ball;this.elapsed=0;
         } else this.stop();
       }
     } else if(this.status.phase==='performing') {
@@ -184,7 +195,7 @@ export class SpatialActorController {
   // 停止后先回approach，下一次路径不会从座面或桌内出发。
   private stop() {
     if(this.target&&this.status.phase==='performing')this.position={...this.target.approach,y_cm:0};
-    this.target=null;this.route=[];this.elapsed=0;this.idleSeconds=0;this.action='idle';this.attachments=[];
+    this.target=null;this.route=[];this.elapsed=0;this.idleSeconds=0;this.action='idle';this.attachments=[];this.ballTiming=undefined;
     this.status={phase:'idle',activity:'rest',space:this.navigation.space(this.position)};this.updateHeight();
   }
 

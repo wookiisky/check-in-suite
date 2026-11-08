@@ -37,7 +37,55 @@ async function searchCatalogProduct(page: Page, name: string) {
   await page.getByRole('button', { name: shop.search, exact: true }).click();
 }
 
-// 真实浏览器从素材库建立绑定并验证报价可以改动而素材保持原样。
+// 装扮报价由正式目录提供，在商品库直接修改并保留原素材绑定。
+test('装扮素材只读，目录商品的报价可编辑', async ({ page }, testInfo) => {
+  await page.goto('/');
+  await page.getByLabel(content.account.username).fill('island-e2e');
+  await page.getByLabel(content.account.loginPassword).fill('Island-Test-2026');
+  await page.getByRole('button', { name: content.account.login, exact: true }).click();
+  await enterManagement(page);
+  await page.getByRole('tablist', { name: content.navigation.management, exact: true })
+    .getByRole('tab', { name: content.navigation.products, exact: true }).click();
+
+  const materialTab = page.getByRole('tab', { name: shop.materialLibrary, exact: true });
+  const productTab = page.getByRole('tab', { name: shop.productLibrary, exact: true });
+  await expect(page.getByRole('button', { name: shop.addProduct, exact: true })).toHaveCount(0);
+  await materialTab.click();
+  await expect(page.getByText(shop.appearanceMaterialHint, { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: new RegExp(`^${shop.addProduct}`) })).toHaveCount(0);
+  await productTab.click();
+
+  const original = (await catalogAPI(page, '/products?include_inactive=true&group=appearance') as { items: Product[] })
+    .items.find((item) => item.type === 'wearable');
+  expect(original).toBeDefined();
+  if (!original) return;
+  const editedName = `目录装扮-${testInfo.project.name}`;
+  try {
+    await searchCatalogProduct(page, original.name);
+    await page.getByRole('button', { name: `${shop.edit} ${original.name}`, exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: shop.editProduct });
+    await expect(dialog.getByRole('img', { name: shop.asset })).toHaveAttribute('src', `/api/v1/assets/${original.asset_key}`);
+    await dialog.getByLabel(shop.name, { exact: true }).fill(editedName);
+    await dialog.getByLabel(shop.coinPrice, { exact: true }).fill('19');
+    await dialog.getByRole('button', { name: shop.save, exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    const result = await catalogAPI(page, `/products?include_inactive=true&group=appearance&search=${encodeURIComponent(editedName)}`) as { items: Product[] };
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]).toMatchObject({
+      id: original.id, name: editedName, coin_price: 19, wearable_key: original.wearable_key, asset_key: original.asset_key,
+    });
+  } finally {
+    const result = await catalogAPI(page, `/products?include_inactive=true&group=appearance&search=${encodeURIComponent(editedName)}`) as { items: Product[] };
+    const updated = result.items.find(({ id }) => id === original.id);
+    if (updated) await catalogAPI(page, `/management/products/${original.id}`, 'PATCH', {
+      name: original.name, coin_price: original.coin_price, diamond_price: original.diamond_price,
+      stock: original.stock, enabled: original.enabled, expected_version: updated.version,
+    });
+    await catalogAPI(page, '/management/lock', 'POST');
+  }
+});
+
+// 真实浏览器从素材库建立营地商品绑定并验证报价可以改动而素材保持原样。
 test('商品素材绑定、草稿、库存和上下架闭环', async ({ page }, testInfo) => {
   test.setTimeout(90_000);
   const suffix = `${testInfo.project.name}-${Date.now()}`;
@@ -56,6 +104,7 @@ test('商品素材绑定、草稿、库存和上下架闭环', async ({ page }, 
   const productTab = page.getByRole('tab', { name: shop.productLibrary, exact: true });
   const group = page.getByRole('tablist', { name: shop.categoryGroupLabel, exact: true });
   const campCategory = page.getByRole('tablist', { name: shop.campCategoryLabel, exact: true });
+  await group.getByRole('tab', { name: shop.shopCamp, exact: true }).click();
   await page.getByRole('button', { name: shop.addProduct, exact: true }).click();
   await expect(materialTab).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('tab', { name: shop.materialActivities, exact: true }).click();
