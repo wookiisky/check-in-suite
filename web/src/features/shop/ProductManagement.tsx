@@ -1,202 +1,110 @@
-import { useEffect, useState } from 'react';
-import { Modal } from '../../components/Modal';
-import type { Asset, Product, ShopProps } from './types';
+import { useState } from 'react';
+import { ViewTabs } from '../../components/ViewTabs';
+import { CatalogFilters } from './CatalogFilters';
 import { ProductEditor } from './ProductEditor';
-import { useAppearance } from '../character/AppearanceProvider';
+import { ShopMaterialLibrary } from './ShopMaterialLibrary';
+import { ShopItemArtwork } from './ShopItemArtwork';
 import { Price } from './Price';
 import { pendingProducts } from './pending';
 import { shopError } from './helpers';
+import { shopCategoryTabs, shopGroups } from './shop-categories';
+import type { ShopGroup } from './shop-categories';
+import type { ManagementMaterial, Product, ShopProps } from './types';
+import { useProductCatalog, type CatalogSearch } from './useProductCatalog';
 import content from './content.json';
 import './shop.css';
-import { categoryLabel, itemCategory } from './shop-categories';
-import { ShopItemArtwork } from './ShopItemArtwork';
-import { useProductCatalog, type CatalogSearch } from './useProductCatalog';
-import { CatalogFilters } from './CatalogFilters';
 
-// 管理商品读取包括下架配置，删除只移除销售入口，历史所有权保留。
+type CatalogSection = 'products' | 'materials';
+
+const sections = [
+  { id: 'products', label: content.productLibrary },
+  { id: 'materials', label: content.materialLibrary },
+] as const;
+const emptySearch: CatalogSearch = { search: '', provider: '', packKey: '' };
+
+// 管理目录与商店使用相同分类，另保留停用和已拥有的报价。
 export function ProductManagement({ client, session }: ShopProps) {
-  const appearance = useAppearance();
-  const catalog = appearance.snapshot;
-  const [search, setSearch] = useState<CatalogSearch>({ search: '', provider: '', packKey: '' });
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [assetLoading, setAssetLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<unknown>(null);
-  const [message, setMessage] = useState('');
+  const [section, setSection] = useState<CatalogSection>('products');
+  const [group, setGroup] = useState<ShopGroup>('appearance');
+  const [category, setCategory] = useState('');
+  const [search, setSearch] = useState(emptySearch);
   const [revision, refresh] = useState(0);
-  const [editing, setEditing] = useState<Product | 'new' | null>(null);
-  const [deleting, setDeleting] = useState<Product | null>(null);
+  const [message, setMessage] = useState('');
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [creating, setCreating] = useState<ManagementMaterial | 'recover' | null>(null);
+  const catalog = useProductCatalog(client, { search, revision, group, category });
   const pending = pendingProducts.get(client);
-  const productCatalog = useProductCatalog(client, { search, revision, includeInactive: true });
-  const products = productCatalog.products;
-  const loading = assetLoading || productCatalog.loading;
-  useEffect(() => {
-    const controller = new AbortController();
-    setAssetLoading(true);
-    setError(null);
-    void client.request<{ items: Asset[] }>('/assets', { signal: controller.signal })
-      .then((assetList) => {
-        if (!controller.signal.aborted) {
-          setAssets(assetList.items);
-        }
-      })
-      .catch((reason: unknown) => {
-        if (!controller.signal.aborted) setError(reason);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setAssetLoading(false);
-      });
-    return () => controller.abort();
-  }, [client, revision]);
-  async function deleteProduct() {
-    if (!deleting) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await client.request<void>(`/management/products/${deleting.id}`, {
-        method: 'DELETE',
-        body: { expected_version: deleting.version },
-      });
-      setDeleting(null);
-      setMessage(content.productDeleted);
-      refresh((value) => value + 1);
-    } catch (reason) {
-      setError(reason);
-    } finally {
-      setBusy(false);
+
+  // 从素材新增后回到对应商品分类，确保上一个筛选条件不会遮住它。
+  function savedProduct(product: Product) {
+    if (creating) {
+      if (creating === 'recover') {
+        setGroup(product.type === 'scene' || product.type === 'island' ? 'camp' : 'appearance');
+        setCategory('');
+      } else {
+        setGroup(creating.group);
+        setCategory(creating.category);
+      }
+      setSearch(emptySearch);
     }
+    setEditing(null);
+    setCreating(null);
+    setSection('products');
+    setMessage(content.productSaved);
+    refresh((value) => value + 1);
   }
-  return (
-    <div className="shop-workspace">
-      <h1>{content.manageTitle}</h1>
-      {message && (
-        <p role="status" className="shop-warning">
-          {message}
-        </p>
-      )}
-      {pending && (
-        <div className="shop-warning">
-          <p>{content.createPending}</p>
-          <button
-            onClick={(event) => {
-              event.currentTarget.focus();
-              setEditing('new');
-            }}
-          >
-            {content.recoverCreate}
-          </button>
-        </div>
-      )}
-      {(error !== null || productCatalog.error !== null || appearance.error !== null) && (
-        <div role="alert">
-          <p className="shop-error">{shopError(error ?? productCatalog.error ?? appearance.error)}</p>
-          <button
-            className="secondary"
-            onClick={() => {
-              setDeleting(null);
-              refresh((value) => value + 1);
-              void appearance.refresh();
-            }}
-          >
-            {content.reload}
-          </button>
-        </div>
-      )}
-      <button
-        type="button"
-        disabled={loading || !catalog || Boolean(pending)}
-        onClick={(event) => {
-          event.currentTarget.focus();
-          setEditing('new');
-        }}
-      >
-        {content.addProduct}
-      </button>
-      <CatalogFilters value={search} facets={productCatalog.facets} onChange={setSearch} />
-      {loading || appearance.loading && !catalog ? (
-        <p role="status">{content.loading}</p>
-      ) : (
-        <div className="shop-product-list">
-          {products.length === 0 && !productCatalog.cursor && <p>{content.emptyProducts}</p>}
-          {products.map((item) => {
-            const category = itemCategory(item, catalog?.wearables);
-            return <article key={item.id} className="shop-product-row">
-              <ShopItemArtwork item={item} />
-              <div>
-                <h3>{item.name}</h3>
-                <p>
-                  {category ? categoryLabel(category) : content.types[item.type]}
-                  {!item.enabled && <strong> · {content.unavailable}</strong>}
-                </p>
-                <Price coins={item.coin_price} diamonds={item.diamond_price} />
-                <p>
-                  {content.stock} {item.stock ?? content.unlimited}
-                </p>
+
+  // 来源和素材包仅在各自分组中有效，搜索仍可跨组使用。
+  function changeGroup(next: ShopGroup) {
+    if (next === group) return;
+    setGroup(next);
+    setCategory('');
+    setSearch((before) => ({ ...before, provider: '', packKey: '' }));
+  }
+
+  return <div className="shop-workspace shop-management">
+    {message && <p role="status" className="shop-warning feedback-success">{message}</p>}
+    {pending && !creating && <div className="shop-warning">
+      <p>{content.createPending}</p>
+      <button type="button" onClick={(event) => { event.currentTarget.focus(); setCreating('recover'); }}>{content.recoverCreate}</button>
+    </div>}
+    <ViewTabs label={content.manageTitle} items={sections} value={section} onChange={setSection}
+      className="shop-category-tabs" panelClassName="shop-category-panel">
+      {section === 'materials'
+        ? <ShopMaterialLibrary client={client} initialGroup={group} initialCategory={category} createPending={Boolean(pending)} onCreate={setCreating} />
+        : <div className="shop-categories">
+          <ViewTabs label={content.categoryGroupLabel} className="shop-category-tabs" panelClassName="shop-category-panel"
+            items={shopGroups} value={group} onChange={changeGroup}
+            actions={<div className="shop-category-actions"><button type="button" disabled={Boolean(pending)} onClick={() => setSection('materials')}>{content.addProduct}</button></div>}>
+            <ViewTabs label={group === 'appearance' ? content.categoryDetailLabel : content.campCategoryLabel}
+              className="shop-category-tabs shop-category-details" items={shopCategoryTabs(group, catalog.campCategories)}
+              value={category} onChange={setCategory}>
+              <CatalogFilters value={search} facets={catalog.facets} onChange={setSearch} />
+              {catalog.error !== null && <div role="alert">
+                <p className="shop-error">{shopError(catalog.error)}</p>
+                <button type="button" className="secondary" onClick={() => refresh((value) => value + 1)}>{content.reload}</button>
+              </div>}
+              {catalog.loading && <p role="status">{content.loading}</p>}
+              {!catalog.loading && catalog.error === null && catalog.products.length === 0 && <p>{content.emptyCategoryProducts}</p>}
+              <div className="shop-grid shop-management-grid">
+                {catalog.products.map((item) => <article key={item.id} className="shop-card shop-product-card shop-management-card">
+                  <h3>{item.name}</h3>
+                  <ShopItemArtwork item={item} className="shop-item-art shop-product-art" />
+                  <Price coins={item.coin_price} diamonds={item.diamond_price} />
+                  <p>{content.stock} {item.stock ?? content.unlimited} · <span>{item.enabled ? content.enabled : content.unavailable}</span></p>
+                  <button type="button" className="secondary" aria-label={`${content.edit} ${item.name}`}
+                    onClick={(event) => { event.currentTarget.focus(); setEditing(item); }}>{content.edit}</button>
+                </article>)}
               </div>
-              <div className="shop-actions">
-                <button
-                  className="secondary"
-                  disabled={!catalog}
-                  onClick={(event) => {
-                    event.currentTarget.focus();
-                    setEditing(item);
-                  }}
-                  aria-label={`${content.edit} ${item.name}`}
-                >
-                  {content.edit}
-                </button>
-                <button
-                  className="secondary"
-                  onClick={(event) => {
-                    event.currentTarget.focus();
-                    setError(null);
-                    setDeleting(item);
-                  }}
-                  aria-label={`${content.delete} ${item.name}`}
-                >
-                  {content.delete}
-                </button>
-              </div>
-            </article>;
-          })}
-        </div>
-      )}
-      {productCatalog.cursor && <div className="shop-stack"><p>{content.moreHint}</p><button type="button" className="secondary" disabled={loading || productCatalog.loadingMore} onClick={() => void productCatalog.more()}>{productCatalog.loadingMore ? content.loading : content.more}</button></div>}
-      {editing !== null && (
-        <ProductEditor
-          client={client}
-          session={session}
-          product={editing === 'new' ? null : editing}
-          assets={assets}
-          characters={catalog?.characters ?? []}
-          wearables={catalog?.wearables ?? []}
-          onClose={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            setMessage(content.productSaved);
-            refresh((value) => value + 1);
-          }}
-        />
-      )}
-      {deleting && (
-        <Modal title={content.deleteProduct} onClose={() => setDeleting(null)} closeDisabled={busy}>
-          <h3>{deleting.name}</h3>
-          <p>{content.deleteHint}</p>
-          {error !== null && (
-            <p role="alert" className="shop-error">
-              {shopError(error)}
-            </p>
-          )}
-          <div className="button-row">
-            <button disabled={busy} onClick={() => void deleteProduct()}>
-              {busy ? content.saving : content.confirmDelete}
-            </button>
-            <button className="secondary" disabled={busy} onClick={() => setDeleting(null)}>
-              {content.cancel}
-            </button>
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
+              {catalog.cursor && <button type="button" className="secondary" disabled={catalog.loadingMore} onClick={() => void catalog.more()}>
+                {catalog.loadingMore ? content.loading : content.more}
+              </button>}
+            </ViewTabs>
+          </ViewTabs>
+        </div>}
+    </ViewTabs>
+    {(editing || creating) && <ProductEditor client={client} session={session} product={editing}
+      {...(creating && creating !== 'recover' ? { material: creating } : {})}
+      onClose={() => { setEditing(null); setCreating(null); }} onSaved={savedProduct} />}
+  </div>;
 }

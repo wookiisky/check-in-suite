@@ -5,13 +5,14 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/wookiisky/check-in-suite/internal/assets"
 	"sort"
 	"strings"
 
 	"github.com/wookiisky/check-in-suite/internal/account"
+	"github.com/wookiisky/check-in-suite/internal/assets"
 	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/core"
+	"github.com/wookiisky/check-in-suite/internal/island"
 )
 
 // productCursor retains an immutable order boundary and the filters that produced it.
@@ -19,7 +20,8 @@ type productCursor struct {
 	CreatedAt       int64  `json:"at"`       // Original immutable creation instant.
 	ID              string `json:"id"`       // Tie-breaker for products created in the same millisecond.
 	Type            string `json:"type"`     // Exact product behavior filter.
-	Group           string `json:"group"`    // Broader appearance filter.
+	Group           string `json:"group"`    // Stable appearance or camp group.
+	Category        string `json:"category"` // Stable detail category within the group.
 	Slot            string `json:"slot"`     // Wearable attachment filter.
 	Search          string `json:"search"`   // Normalized name filter.
 	Provider        string `json:"provider"` // Source filter.
@@ -28,11 +30,11 @@ type productCursor struct {
 }
 
 // productMatches applies explicit metadata filters without deriving capability from display names.
-func productMatches(item Product, input ProductQuery) bool {
+func productMatches(item Product, input ProductQuery, slots map[string]character.Slot) bool {
 	if input.Type != "" && item.Type != input.Type {
 		return false
 	}
-	if input.Group == "appearance" && item.Type != TypeCharacter && item.Type != TypeWearable && item.Type != TypeTitle {
+	if input.Category != "" && shopProductCategory(item, slots) != input.Category {
 		return false
 	}
 	if input.Provider != "" && item.Provider != input.Provider {
@@ -97,13 +99,19 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if input.Type != "" && !validType(input.Type) {
 		return result, core.Invalid("type", "INVALID_VALUE")
 	}
-	if input.Group != "" && input.Group != "appearance" {
+	if input.Group != "" && input.Group != shopAppearance && input.Group != shopCamp {
 		return result, core.Invalid("group", "INVALID_VALUE")
+	}
+	if input.Category != "" && input.Group == "" {
+		return result, core.Invalid("category", "INVALID_VALUE")
+	}
+	if err := core.Text("category", input.Category, 0, 64); err != nil {
+		return result, err
 	}
 	if input.Slot != "" && input.Slot != "face" && input.Slot != "back" && input.Slot != "head" && input.Slot != "upper" && input.Slot != "lower" && input.Slot != "shoes" {
 		return result, core.Invalid("slot", "INVALID_VALUE")
 	}
-	expected := productCursor{Type: input.Type, Group: input.Group, Slot: input.Slot, Search: input.Search, Provider: input.Provider, PackKey: input.PackKey, IncludeInactive: includeInactive}
+	expected := productCursor{Type: input.Type, Group: input.Group, Category: input.Category, Slot: input.Slot, Search: input.Search, Provider: input.Provider, PackKey: input.PackKey, IncludeInactive: includeInactive}
 	boundary := expected
 	if input.Cursor != "" {
 		data, err := base64.RawURLEncoding.DecodeString(input.Cursor)
@@ -134,15 +142,13 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 		query += " AND p.type=?"
 		args = append(args, input.Type)
 	}
-	if input.Group == "appearance" {
-		query += " AND p.type IN ('character','wearable','title')"
-	}
+	query += productGroupFilter(input.Group, includeInactive)
 	if input.Cursor != "" {
 		query += " AND (p.created_at>? OR (p.created_at=? AND p.id>?))"
 		args = append(args, boundary.CreatedAt, boundary.CreatedAt, boundary.ID)
 	}
 	query += " ORDER BY p.created_at,p.id"
-	if input.Provider == "" && input.PackKey == "" && input.Slot == "" && input.Search == "" {
+	if input.Provider == "" && input.PackKey == "" && input.Slot == "" && input.Search == "" && input.Category == "" {
 		query += " LIMIT ?"
 		args = append(args, input.Limit+1)
 	}
@@ -150,13 +156,19 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if err != nil {
 		return result, err
 	}
+	slots := map[string]character.Slot{}
+	if input.Group == shopAppearance && input.Category != "" {
+		for _, wearable := range character.Wearables() {
+			slots[wearable.Key] = wearable.Slot
+		}
+	}
 	for rows.Next() {
 		item, err := scanProduct(rows)
 		if err != nil {
 			rows.Close()
 			return result, err
 		}
-		if !productMatches(item, input) {
+		if !productMatches(item, input, slots) {
 			continue
 		}
 		if len(result.Items) == input.Limit {
@@ -178,10 +190,10 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if readErr != nil {
 		return result, readErr
 	}
-	if err := applyProductOwnership(ctx, tx, accountID, result.Items, false); err != nil {
+	if err := applyProductOwnership(ctx, tx, accountID, result.Items, includeInactive); err != nil {
 		return result, err
 	}
-	result.Facets, err = visibleProductFacets(ctx, tx, accountID, includeInactive)
+	result.Facets, result.CampCategories, err = visibleProductMetadata(ctx, tx, accountID, includeInactive, input.Group)
 	if err != nil {
 		return result, err
 	}
@@ -191,36 +203,71 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	return result, nil
 }
 
-// visibleProductFacets reads only distinct source identities instead of every product description.
-func visibleProductFacets(ctx context.Context, tx *sql.Tx, accountID int64, includeInactive bool) (*ProductFacets, error) {
-	query := "SELECT DISTINCT asset_key,character_key FROM products WHERE account_id=? AND deleted_at IS NULL"
+// productGroupFilter keeps public historical title reads while management uses current shop groups.
+func productGroupFilter(group string, includeInactive bool) string {
+	switch group {
+	case shopAppearance:
+		if includeInactive {
+			return " AND p.type IN ('character','wearable')"
+		}
+		return " AND p.type IN ('character','wearable','title')"
+	case shopCamp:
+		return " AND p.type IN ('island','scene')"
+	default:
+		if includeInactive {
+			return manageableOffers
+		}
+		return ""
+	}
+}
+
+// visibleProductMetadata reads distinct source identities and camp categories independently of the page.
+func visibleProductMetadata(ctx context.Context, tx *sql.Tx, accountID int64, includeInactive bool, group string) (*ProductFacets, []string, error) {
+	query := "SELECT DISTINCT p.type,p.asset_key,p.character_key FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL"
 	if !includeInactive {
-		query += " AND enabled=1"
+		query += " AND p.enabled=1"
+	}
+	if includeInactive || group == shopCamp {
+		query += productGroupFilter(group, includeInactive)
 	}
 	rows, err := tx.QueryContext(ctx, query, accountID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	defer rows.Close()
 	items := []Product{}
+	categories := map[string]bool{TypeScene: true}
 	for rows.Next() {
-		var assetKey, bodyKey string
-		if err := rows.Scan(&assetKey, &bodyKey); err != nil {
-			rows.Close()
-			return nil, err
+		var kind, assetKey, bodyKey string
+		if err := rows.Scan(&kind, &assetKey, &bodyKey); err != nil {
+			return nil, nil, err
 		}
-		item := Product{}
+		item := Product{Type: kind}
 		if asset, ok := assets.Get(assetKey); ok {
 			item.Provider, item.PackKey, item.PackName = asset.Provider, asset.PackKey, asset.PackName
 		}
-		if body, ok := character.Get(bodyKey); ok {
-			item.Provider, item.PackKey = body.Provider, body.PackKey
+		if bodyKey != "" {
+			if body, ok := character.Get(bodyKey); ok {
+				item.Provider, item.PackKey = body.Provider, body.PackKey
+			}
+		}
+		if group == shopCamp {
+			if definition, ok := island.SpatialForThumbnail(assetKey); ok {
+				item.IslandItemKey = definition.Key
+			}
+			categories[shopProductCategory(item, nil)] = true
 		}
 		items = append(items, item)
 	}
-	readErr := rows.Err()
-	rows.Close()
-	if readErr != nil {
-		return nil, readErr
+	if err := rows.Err(); err != nil {
+		return nil, nil, err
 	}
-	return productFacets(items), nil
+	var campCategories []string
+	if group == shopCamp {
+		for category := range categories {
+			campCategories = append(campCategories, category)
+		}
+		sort.Strings(campCategories)
+	}
+	return productFacets(items), campCategories, nil
 }

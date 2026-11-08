@@ -1,0 +1,47 @@
+.management-shell.app-shell { padding-block-start: 16px; }
+.management-workspace { font-size: 16px; line-height: 1.4; }
+.management-workspace h1, .management-workspace h2 { font-size: 20px; }
+.management-workspace h3 { font-size: 16px; }
+.management-workspace :is(.muted, .form-error, .field-error, .checkin-hint, .checkin-record-meta, .shop-hint, .shop-error, .achievement-hint) { font-size: 14px; }
+.management-workspace :is(button, input:not([type="checkbox"], [type="radio"]), select) { min-height: 44px; min-width: 44px; }
+.management-workspace button { padding: 6px 12px; border-radius: 12px; }
+.management-workspace :is(input:not([type="checkbox"], [type="radio"]), select, textarea) { padding-block: 7px; border-radius: 10px; }
+.management-workspace input:is([type="checkbox"], [type="radio"]) { min-width: 0; min-height: 0; }
+.management-workspace :is(.panel, .island-dialog) { padding: 14px; border-radius: 16px; }
+.management-workspace .dialog-header { margin-bottom: 12px; gap: 10px; }
+.management-workspace .form-stack { gap: 6px; margin-top: 10px; }
+.management-workspace .form-stack > button { margin-top: 4px; }
+.management-workspace .notice { margin-bottom: 8px; padding: 10px 12px; }
+.management-workspace .management-tabs { gap: 6px; margin-bottom: 14px; }
+.management-workspace .view-tabs > button[aria-selected="true"] { background: var(--forest-dark); }
+
+.management-account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.management-account-name, .management-password-field {
+  display: grid;
+  grid-template-columns: 6em minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 8px;
+}
+.management-account-name { margin: 10px 0 0; }
+.management-account-name dd { margin: 0; overflow-wrap: anywhere; font-weight: 700; }
+.management-password-field > .field-error { grid-column: 2; }
+.management-workspace .family-sound-panel { gap: 10px; }
+.management-workspace .family-sound-panel > button { justify-self: start; }
+.management-workspace .family-preferences { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 8px; }
+.management-workspace .family-preferences label { min-height: 44px; gap: 8px; }
+.management-workspace .family-preferences input { width: 22px; height: 22px; flex-basis: 22px; }
+.management-workspace :is(.achievement-workspace, .achievement-management-list) { gap: 10px; }
+.management-workspace .achievement-workspace > button { justify-self: start; }
+.management-workspace .achievement-management-row { grid-template-columns: 56px minmax(0, 1fr) auto; gap: 8px; }
+.management-workspace .achievement-management-row > .achievement-art { width: 56px; height: 56px; }
+.management-workspace .achievement-management-row > div { gap: 4px; }
+@media (max-width: 600px) {
+  .management-shell.app-shell { padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); }
+  .management-workspace .management-tabs > button { padding-inline: 6px; }
+  .management-workspace .achievement-management-row { grid-template-columns: 56px minmax(0, 1fr); }
+}

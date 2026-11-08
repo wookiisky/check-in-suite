@@ -59,12 +59,12 @@ test('成就管理、按计划完成、佩戴持久化与删除后的资格重�
   await settings.click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toBeVisible();
   const task = await achievementAPI(page, '/management/tasks', 'POST', { category_id: null, name: taskName, icon_key: 'book-v1', coin_reward: 7, diamond_reward: 3, daily_limit: 1, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true }) as Task;
   const assets = await achievementAPI(page, '/assets') as { items: components['schemas']['Asset'][] };
   const badge = assets.items.find((item) => item.kind === 'badge');
   expect(badge).toBeDefined();
-  await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: achievement.manageTitle, exact: true }).click();
+  await page.getByRole('tablist', { name: content.navigation.management, exact: true }).getByRole('tab', { name: content.navigation.achievementManagement, exact: true }).click();
   await createAchievementInPage(page, countName, taskName, 'count', badge!.key);
   await createAchievementInPage(page, streakName, taskName, 'streak', badge!.key);
   const configured = await achievementAPI(page, '/management/achievements') as { items: Achievement[] };
@@ -73,7 +73,7 @@ test('成就管理、按计划完成、佩戴持久化与删除后的资格重�
   expect(mine.every((item) => !item.qualified && !item.equipped)).toBe(true);
   expect(mine.find((item) => item.name === countName)?.window_days).toBe(7);
 
-  await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+  await page.getByRole('navigation', { name: content.navigation.label, exact: true }).getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await page.locator('.checkin-task').filter({ hasText: taskName }).click();
   await page.getByRole('dialog').getByRole('button', { name: checkin.checkin, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -171,10 +171,10 @@ test('成就冲突采用新建类别后仍可保存，普通详情显示类别�
   await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toBeVisible();
   const input: AchievementInput = { name, asset_key: 'badge-star-v1', metric: 'count', scope: 'all', category_id: null, task_ids: [], target: 10, window_days: null, enabled: true };
   const created = await achievementAPI(page, '/management/achievements', 'POST', input) as Achievement;
-  await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: achievement.manageTitle, exact: true }).click();
+  await page.getByRole('tablist', { name: content.navigation.management, exact: true }).getByRole('tab', { name: content.navigation.achievementManagement, exact: true }).click();
   await page.getByRole('button', { name: `${achievement.edit} ${name}`, exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel(achievement.target, { exact: true }).fill('11');
@@ -190,7 +190,7 @@ test('成就冲突采用新建类别后仍可保存，普通详情显示类别�
   await expect(dialog).toHaveCount(0);
   const result = await achievementAPI(page, '/management/achievements') as { items: Achievement[] };
   expect(result.items.find((item) => item.id === created.id)).toMatchObject({ target: 12, category_id: category.id, version: 3 });
-  await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+  await page.getByRole('navigation', { name: content.navigation.label, exact: true }).getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await page.getByRole('button', { name: character.achievements, exact: true }).click();
   await page.getByRole('button', { name: `${achievement.details} ${name}`, exact: true }).click();
   await expect(page.getByRole('dialog').getByRole('region', { name: achievement.scope })).toContainText(categoryName);

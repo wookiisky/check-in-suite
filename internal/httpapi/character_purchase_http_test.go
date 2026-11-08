@@ -21,7 +21,7 @@ func TestCharacterPurchaseAndSharedOutfitHTTP(t *testing.T) {
 	if body.Key == "" {
 		t.Fatal("正式目录缺少可购买的新角色")
 	}
-	input := shop.ProductInput{Type: shop.TypeCharacter, CharacterKey: body.Key, Name: body.Name, AssetKey: body.ThumbnailAssetKey, Enabled: true}
+	input := shop.ProductCreate{AssetKey: body.ThumbnailAssetKey, ProductTerms: shop.ProductTerms{Name: body.Name, Enabled: true}}
 	data, err := json.Marshal(input)
 	if err != nil {
 		t.Fatal(err)

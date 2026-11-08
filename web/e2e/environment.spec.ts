@@ -68,8 +68,8 @@ test('真实登录、管理再次验证、姓名保存和退出', async ({ page 
   await page.getByLabel(content.account.username).fill('island-e2e');
   await page.getByLabel(content.account.loginPassword).fill('Island-Test-2026');
   await page.getByRole('button', { name: content.account.login, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.navigation.camp, exact: true })).toBeVisible();
-  const sounds = page.getByRole('heading', { name: family.sounds, exact: true });
+  await expect(page.getByRole('heading', { name: content.navigation.campTitle, exact: true })).toBeVisible();
+  const sounds = page.getByRole('tab', { name: family.sounds, exact: true });
   await expect(sounds).toHaveCount(0);
   await expect(page.getByLabel(family.music, { exact: true })).toHaveCount(0);
   if (process.env.ISLAND_CAPTURE_PREVIEWS) {
@@ -90,18 +90,27 @@ test('真实登录、管理再次验证、姓名保存和退出', async ({ page 
   await expect(page.getByLabel(family.music, { exact: true })).toHaveCount(0);
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+  const account = page.getByRole('tab', { name: content.navigation.account, exact: true });
+  await expect(account).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('button', { name: '退出管理', exact: true })).toHaveCount(0);
   await expect(sounds).toBeVisible();
-  await expect(page.getByLabel(family.music, { exact: true })).toBeVisible();
+  await expect(page.getByLabel(family.music, { exact: true })).toHaveCount(0);
   await expect(page.getByLabel(content.account.displayName)).toHaveValue('测试小朋友');
   if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.screenshot({ path: `.local/previews/account-${testInfo.project.name}.png`, fullPage: true });
   await page.getByRole('button', { name: content.account.saveName, exact: true }).click();
   // 两个浏览器项目可能同时保存同一资料版本，冲突必须可见而非覆盖。
   await expect(page.getByText(content.account.nameSaved).or(page.getByText(content.errors.VERSION_CONFLICT))).toBeVisible();
-  await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+  const beforeTabs = await (await page.request.get('/api/v1/session')).json();
+  await sounds.click();
+  await expect(sounds).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByLabel(family.music, { exact: true })).toBeVisible();
+  await expect(page.getByLabel(content.account.displayName, { exact: true })).toHaveCount(0);
+  expect((await (await page.request.get('/api/v1/session')).json()).management_expires_at).toBe(beforeTabs.management_expires_at);
+  await page.getByRole('navigation', { name: content.navigation.label, exact: true }).getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await expect(openManagement).toBeEnabled();
   await expect(sounds).toHaveCount(0);
   await expect(page.getByLabel(family.music, { exact: true })).toHaveCount(0);
+  expect((await (await page.request.get('/api/v1/session')).json()).management_expires_at).toBeNull();
   await openManagement.click();
   await expect(page.getByLabel(content.account.managementPassword, { exact: true })).toHaveValue('');
   await page.getByRole('button', { name: content.common.cancel, exact: true }).click();

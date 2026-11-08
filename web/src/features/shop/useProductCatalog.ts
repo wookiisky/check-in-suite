@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import type { components } from '../../api/schema';
 import type { Product, ShopClient } from './types';
+import type { ShopGroup } from './shop-categories';
 
 // 目录筛选在服务端作用于全部商品，而不是仅在当前页查找。
 export interface CatalogSearch {
@@ -9,28 +11,22 @@ export interface CatalogSearch {
 }
 
 // 筛选选项来自完整可见目录，不能由当前页推断。
-export interface CatalogFacets {
-  providers: string[]; // 目录中可用的来源。
-  packs: { key: string; provider: string; name?: string }[]; // 来源对应的素材包及官方名称。
-}
-
-interface ProductPage {
-  items: Product[]; // 本页报价，包含当前所有权事实。
-  next_cursor?: string | null; // 没有游标时已到末页。
-  facets?: CatalogFacets; // 完整目录的筛选选项。
-}
+export type CatalogFacets = components['schemas']['ProductFacets'];
+type ProductPage = components['schemas']['ProductList'];
+const emptyFacets: CatalogFacets = { providers: [], packs: [] };
 
 interface CatalogOptions {
   search: CatalogSearch; // 搜索与来源。
   revision: number; // 购买或管理成功后重新读取。
-  includeInactive?: boolean; // 管理页查看下架商品。
+  group: ShopGroup; // 商店分组。
+  category: string; // 空值读取分组内全部商品。
 }
 
 // 首次读取与翻页共享代次；切换任何条件都会放弃旧页和迟到响应。
 export function useProductCatalog(client: ShopClient, options: CatalogOptions) {
-  const { search, revision, includeInactive } = options;
-  const query = new URLSearchParams({ limit: '48' });
-  if (includeInactive) query.set('include_inactive', 'true');
+  const { search, revision, group, category } = options;
+  const query = new URLSearchParams({ limit: '48', include_inactive: 'true', group });
+  if (category) query.set('category', category);
   if (search.search) query.set('search', search.search);
   if (search.provider) query.set('provider', search.provider);
   if (search.packKey) query.set('pack_key', search.packKey);
@@ -39,7 +35,8 @@ export function useProductCatalog(client: ShopClient, options: CatalogOptions) {
   const moreController = useRef<AbortController | null>(null); // 切换条件时也取消翻页。
   const loadingMoreRef = useRef(false); // 同一游标只允许一个在途读取。
   const [page, setPage] = useState<{ path: string; items: Product[]; cursor: string | null }>({ path: '', items: [], cursor: null });
-  const [facets, setFacets] = useState<CatalogFacets>({ providers: [], packs: [] });
+  const [campCategories, setCampCategories] = useState<string[]>(['scene']);
+  const [facetsByGroup, setFacetsByGroup] = useState<Partial<Record<ShopGroup, CatalogFacets>>>({});
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<unknown>(null);
@@ -52,14 +49,16 @@ export function useProductCatalog(client: ShopClient, options: CatalogOptions) {
     void client.request<ProductPage>(path, { signal: controller.signal }).then((result) => {
       if (controller.signal.aborted || generation.current !== request) return;
       setPage({ path, items: result.items, cursor: result.next_cursor ?? null });
-      if (result.facets) setFacets(result.facets);
+      const facets = result.facets;
+      if (facets) setFacetsByGroup((before) => ({ ...before, [group]: facets }));
+      if (result.camp_categories) setCampCategories(result.camp_categories);
     }).catch((reason: unknown) => {
       if (!controller.signal.aborted && generation.current === request) setError(reason);
     }).finally(() => {
       if (!controller.signal.aborted && generation.current === request) setLoading(false);
     });
     return () => { controller.abort(); moreController.current?.abort(); generation.current += 1; };
-  }, [client, path, revision]);
+  }, [client, group, path, revision]);
 
   // 翻页失败保留已读报价和游标，重试仍读取同一页。
   async function more() {
@@ -80,5 +79,5 @@ export function useProductCatalog(client: ShopClient, options: CatalogOptions) {
       if (!controller.signal.aborted && generation.current === request) { loadingMoreRef.current = false; setLoadingMore(false); }
     }
   }
-  return { products: page.path === path ? page.items : [], cursor: page.path === path ? page.cursor : null, facets, loading: loading || page.path !== path, loadingMore, error, more };
+  return { products: page.path === path ? page.items : [], cursor: page.path === path ? page.cursor : null, facets: facetsByGroup[group] ?? emptyFacets, campCategories, loading: loading || page.path !== path, loadingMore, error, more };
 }

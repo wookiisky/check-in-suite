@@ -50,6 +50,16 @@ export async function selectShopCategory(page: Page, group: 'appearance' | 'isla
   await page.getByRole('tablist', { name: wardrobe ? shop.categoryDetailLabel : shop.campCategoryLabel, exact: true }).getByRole('tab', { name: detail, exact: true }).click();
 }
 
+// 从素材库选取一个有固定类型的营地场景，进入新增商品表单。
+export async function openSceneProductEditor(page: Page, assetName: string) {
+  await page.getByRole('button', { name: shop.addProduct, exact: true }).click();
+  const materials = page.getByRole('tab', { name: shop.materialLibrary, exact: true });
+  await expect(materials).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('tablist', { name: shop.materialGroupLabel, exact: true }).getByRole('tab', { name: shop.shopCamp, exact: true }).click();
+  await page.getByRole('tablist', { name: shop.campCategoryLabel, exact: true }).getByRole('tab', { name: shop.campCategories.scene, exact: true }).click();
+  await page.getByRole('button', { name: `${shop.addProduct} ${assetName}`, exact: true }).click();
+}
+
 // 通过真实分页定位同一分类中可能位于后页的报价。
 export async function shopProductButton(page: Page, product: components['schemas']['Product']) {
   const button = page.getByRole('button', { name: `${shop.buy} ${product.name}`, exact: true });

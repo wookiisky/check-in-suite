@@ -17,7 +17,7 @@ describe('任务开启和关闭', () => {
       if (options?.method === 'PATCH') return patch(path, options);
       return { items: path.startsWith('/tasks') ? [closed] : [] };
     });
-    render(<CheckinManagement client={{ request }} session={session} />);
+    render(<CheckinManagement client={{ request }} session={session} section="tasks" />);
     await screen.findByText(content.noActiveTasks);
     expect(screen.queryByText(closed.name)).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText(content.showDisabledTasks));
@@ -35,7 +35,7 @@ describe('任务开启和关闭', () => {
       if (options?.method === 'PATCH') return { ...taskFixture, enabled: false, version: 2 };
       return { items: path.startsWith('/tasks') ? [taskFixture] : [] };
     });
-    render(<CheckinManagement client={{ request }} session={session} />);
+    render(<CheckinManagement client={{ request }} session={session} section="tasks" />);
     const button = await screen.findByRole('button', { name: `${content.disableTask} ${taskFixture.name}` });
     button.focus();
     fireEvent.click(button);
@@ -59,7 +59,7 @@ describe('任务开启和关闭', () => {
       if (options?.method === 'PATCH') return patch();
       return { items: path.startsWith('/tasks') ? [taskFixture] : [] };
     });
-    render(<CheckinManagement client={{ request }} session={session} />);
+    render(<CheckinManagement client={{ request }} session={session} section="tasks" />);
     const button = await screen.findByRole('button', { name: `${content.disableTask} ${taskFixture.name}` });
     fireEvent.click(button);
     fireEvent.click(button);
@@ -85,7 +85,7 @@ describe('任务开启和关闭', () => {
       if (reads === 2) throw new Error('read failed');
       return { items: [reads === 1 ? taskFixture : latest] };
     });
-    render(<CheckinManagement client={{ request }} session={session} />);
+    render(<CheckinManagement client={{ request }} session={session} section="tasks" />);
     fireEvent.click(await screen.findByRole('button', { name: `${content.disableTask} ${taskFixture.name}` }));
     await screen.findByRole('alert');
     expect(screen.getByText(taskFixture.name)).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe('任务开启和关闭', () => {
 
   it('没有任何任务时显示新增提示，不显示全部关闭的提示', async () => {
     const request = vi.fn().mockResolvedValue({ items: [] });
-    render(<CheckinManagement client={{ request }} session={session} />);
+    render(<CheckinManagement client={{ request }} session={session} section="tasks" />);
     await screen.findByText(content.emptyTasks);
     expect(screen.queryByText(content.noActiveTasks)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: content.newTask })).toBeEnabled();

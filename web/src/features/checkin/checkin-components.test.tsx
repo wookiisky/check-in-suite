@@ -9,6 +9,7 @@ import { RecordList } from './RecordList';
 import { CampPage } from './CampPage';
 import { CheckinManagement } from './CheckinManagement';
 import { campFixture, recordFixture, taskFixture } from './test-fixtures';
+import type { Task } from './types';
 import content from './content.json';
 
 const session = testSession as Session;
@@ -104,11 +105,66 @@ describe('打卡与记录界面', () => {
 });
 
 describe('任务配置与管理记录', () => {
-  it('新增任务明确提交星期、次数、奖励及类别', async () => {
-    const request = vi.fn().mockImplementation(async (path: string, options?: { method?: string }) => options?.method === 'POST' ? taskFixture : path === '/assets' ? { items: [{ key: 'book-v1', name: '阅读', kind: 'icon', url: '/api/v1/assets/book-v1' }] } : { items: [] });
-    render(<CheckinManagement client={{ request }} session={session} />);
+  it('类别页独立，项目按类别筛选、显示图标并在当前类别新增', async () => {
+    const category = { id: 'learning', name: '学习', sort_order: 1, version: 1 };
+    const tasks: Task[] = [
+      { ...taskFixture, category_id: category.id },
+      { ...taskFixture, id: 'uncategorized-task', name: '自由活动', category_id: null },
+    ];
+    const request = vi.fn().mockImplementation(async (path: string, options?: { body: Pick<Task, 'name' | 'category_id'> }) => {
+      if (path.startsWith('/categories')) return { items: [category] };
+      if (path === '/assets') return { items: [{ key: 'book-v1', name: '书本图标', kind: 'icon' }] };
+      if (path === '/management/tasks' && options) {
+        const created = { ...taskFixture, ...options.body, id: 'new-task' };
+        tasks.push(created);
+        return created;
+      }
+      return { items: [...tasks] };
+    });
+    const client = { request };
+    const view = render(<CheckinManagement client={client} session={session} section="categories" />);
+    await screen.findByText(category.name);
+    expect(screen.queryByRole('button', { name: content.newTask })).not.toBeInTheDocument();
+    expect(request.mock.calls.every(([path]) => path.startsWith('/categories'))).toBe(true);
+
+    view.rerender(<CheckinManagement client={client} session={session} section="tasks" />);
+    const categories = within(await screen.findByRole('tablist', { name: content.category }));
+    const all = categories.getByRole('tab', { name: content.allCategories });
+    expect(all).toHaveAttribute('aria-selected', 'true');
+    const learning = await categories.findByRole('tab', { name: category.name });
+    const row = screen.getByText(taskFixture.name).closest('li');
+    expect(row?.querySelector('img')).toHaveAttribute('src', '/api/v1/assets/book-v1');
+    expect(screen.getByText('自由活动')).toBeVisible();
+    expect(screen.queryByRole('button', { name: content.newCategory })).not.toBeInTheDocument();
+    fireEvent.click(learning);
+    expect(screen.queryByText('自由活动')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: content.newTask }));
+    const dialog = within(screen.getByRole('dialog'));
+    expect(dialog.getByRole('combobox', { name: content.category })).toHaveValue(category.id);
+    await dialog.findByRole('radio', { name: '书本图标' });
+    fireEvent.change(dialog.getByLabelText(content.name), { target: { value: '写字' } });
+    fireEvent.click(dialog.getByRole('button', { name: content.save }));
+    expect(await screen.findByText('写字')).toBeVisible();
+    expect(learning).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(categories.getByRole('tab', { name: content.uncategorized }));
+    expect(screen.queryByText(taskFixture.name)).not.toBeInTheDocument();
+    expect(screen.getByText('自由活动')).toBeVisible();
+  });
+
+  it('新增任务展示可选图标图片，并提交选择的图标、星期、次数及奖励', async () => {
+    const assets = { items: [
+      { key: 'book-v1', name: '阅读', kind: 'icon', url: '/api/v1/assets/book-v1' },
+      { key: 'star-v1', name: '星星', kind: 'icon', url: '/api/v1/assets/star-v1' },
+    ] };
+    const request = vi.fn().mockImplementation(async (path: string, options?: { method?: string }) => options?.method === 'POST' ? taskFixture : path === '/assets' ? assets : { items: [] });
+    render(<CheckinManagement client={{ request }} session={session} section="tasks" />);
     fireEvent.click(await screen.findByRole('button', { name: content.newTask }));
-    await screen.findByRole('option', { name: '阅读' });
+    const icons = within(screen.getByRole('group', { name: content.icon }));
+    expect(await icons.findByRole('radio', { name: '阅读' })).toBeChecked();
+    const star = icons.getByRole('radio', { name: '星星' });
+    expect(star.closest('label')?.querySelector('img')).toHaveAttribute('src', '/api/v1/assets/star-v1');
+    fireEvent.click(star);
+    expect(star).toBeChecked();
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByLabelText(content.coins)).toHaveValue(0);
     expect(within(dialog).getByLabelText(content.diamonds)).toHaveValue(0);
@@ -117,7 +173,7 @@ describe('任务配置与管理记录', () => {
     expect(dialog).not.toHaveTextContent(/金币|钻石/);
     fireEvent.change(screen.getByLabelText(content.name), { target: { value: '阅读' } });
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: content.save }));
-    await waitFor(() => expect(request).toHaveBeenCalledWith('/management/tasks', expect.objectContaining({ method: 'POST', body: expect.objectContaining({ name: '阅读', daily_limit: 1, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true }) })));
+    await waitFor(() => expect(request).toHaveBeenCalledWith('/management/tasks', expect.objectContaining({ method: 'POST', body: expect.objectContaining({ name: '阅读', icon_key: 'star-v1', daily_limit: 1, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true }) })));
   });
 });
 
@@ -244,7 +300,7 @@ describe('审查发现的恢复路径', () => {
       if (path.startsWith('/tasks')) { taskReads++; return { items: [taskReads === 1 ? taskFixture : latest] }; }
       return { items: [] };
     });
-    render(<CheckinManagement client={{ request }} session={session} />);
+    render(<CheckinManagement client={{ request }} session={session} section="tasks" />);
     await screen.findByText(taskFixture.name);
     fireEvent.click(screen.getByRole('button', { name: content.remove }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: content.remove }));

@@ -12,7 +12,7 @@ test('任务编辑冲突展示最新配置，并按明确选择持久化', async
   await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toBeVisible();
   const session = await (await page.request.get('/api/v1/session')).json() as components['schemas']['SessionResponse'];
   const headers = { Origin: 'http://127.0.0.1:15173', 'X-CSRF-Token': session.csrf_token };
   const draft = {
@@ -24,12 +24,12 @@ test('任务编辑冲突展示最新配置，并按明确选择持久化', async
   });
   expect(created.status()).toBe(201);
   const task = await created.json() as components['schemas']['Task'];
-  await page.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await page.locator('.checkin-config-row').filter({ hasText: draft.name })
     .getByRole('button', { name: checkin.editConfig, exact: true }).click();
   const dialog = page.getByRole('dialog');
   const name = dialog.getByLabel(checkin.name, { exact: true });
-  const coins = dialog.getByLabel(checkin.coins, { exact: true });
+  const coins = dialog.getByRole('spinbutton', { name: checkin.coins, exact: true });
   await name.fill(`${draft.name}-本地`);
   const updated = await page.request.patch(`/api/v1/management/tasks/${task.id}`, {
     headers, data: { ...draft, coin_reward: 99, expected_version: task.version },

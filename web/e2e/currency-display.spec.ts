@@ -4,6 +4,8 @@ import checkin from '../src/features/checkin/content.json' with { type: 'json' }
 import shop from '../src/features/shop/content.json' with { type: 'json' };
 import achievement from '../src/features/achievements/content.json' with { type: 'json' };
 import island from '../src/features/island/three/spatial-content.json' with { type: 'json' };
+import { openSceneProductEditor, shopAPI } from './shop-navigation';
+import type { components } from '../src/api/schema';
 
 // 真实浏览器验证币种标签、指标配置和各页面的图标资源，截图供桌面与手机核对。
 test('币种只显示图标，表单与成就指标保留可访问名称', async ({ page }, testInfo) => {
@@ -15,8 +17,8 @@ test('币种只显示图标，表单与成就指标保留可访问名称', async
   await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  const management = page.getByRole('navigation', { name: content.navigation.management, exact: true });
-  await management.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  const management = page.getByRole('tablist', { name: content.navigation.management, exact: true });
+  await management.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await page.getByRole('button', { name: checkin.newTask, exact: true }).click();
   let dialog = page.getByRole('dialog');
   await expect(dialog).not.toContainText(/金币|钻石/);
@@ -25,8 +27,11 @@ test('币种只显示图标，表单与成就指标保留可访问名称', async
   await expect(dialog.getByRole('img', { name: checkin.coins, exact: true })).toBeVisible();
   await dialog.getByRole('button', { name: content.common.close, exact: true }).click();
 
-  await management.getByRole('button', { name: content.navigation.products, exact: true }).click();
-  await page.getByRole('button', { name: shop.addProduct, exact: true }).click();
+  await management.getByRole('tab', { name: content.navigation.products, exact: true }).click();
+  const assets = await shopAPI<components['schemas']['AssetList']>(page, '/assets');
+  const scene = assets.items.find((asset) => asset.key === 'forest-courtyard-v1-thumbnail');
+  expect(scene).toBeDefined();
+  await openSceneProductEditor(page, scene!.name);
   dialog = page.getByRole('dialog');
   await expect(dialog).not.toContainText(/金币|钻石/);
   await expect(dialog.getByRole('spinbutton', { name: shop.coinPrice, exact: true })).toBeVisible();
@@ -34,7 +39,7 @@ test('币种只显示图标，表单与成就指标保留可访问名称', async
   await dialog.screenshot({ path: testInfo.outputPath('product-currency-fields.png') });
   await dialog.getByRole('button', { name: content.common.close, exact: true }).click();
 
-  await management.getByRole('button', { name: achievement.manageTitle, exact: true }).click();
+  await management.getByRole('tab', { name: content.navigation.achievementManagement, exact: true }).click();
   for (const metric of ['coins', 'diamonds'] as const) {
     const name = `图标验收-${metric}-${testInfo.project.name}`;
     await page.getByRole('button', { name: achievement.new, exact: true }).click();
@@ -59,7 +64,7 @@ test('币种只显示图标，表单与成就指标保留可访问名称', async
     await expect(row).not.toContainText(/金币|钻石/);
     await expect(row.locator('.currency-amount')).toHaveText('12');
   }
-  await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+  await page.getByRole('navigation', { name: content.navigation.label, exact: true }).getByRole('button', { name: content.navigation.camp, exact: true }).click();
   for (const route of ['camp', 'shop', 'island'] as const) {
     await page.getByRole('button', { name: content.navigation[route], exact: true }).click();
     const wallet = page.locator(route === 'island' ? '.spatial-wallet' : '.global-wallet');

@@ -31,9 +31,7 @@ func TestPurchaseReplayAndOwnership(t *testing.T) {
 	if _, err = f.Service.SetTitle(ctx, f.Principal, &first.Purchase.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err = f.Service.DeleteProduct(ctx, f.Principal, p.ID, 2); err != nil {
-		t.Fatal(err)
-	}
+	retireHistoricalProduct(t, f, p.ID)
 	replay, err := f.Service.Buy(ctx, f.Principal, "purchase-once", command)
 	if err != nil {
 		t.Fatal(err)
@@ -64,7 +62,7 @@ func TestPurchaseFailuresAndRollback(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
 	balance := creditFixture(t, f, 10, 1)
-	input := productInput("reward")
+	input := catalogCharacterProduct(t)
 	input.CoinPrice = 2
 	input.DiamondPrice = 2
 	stock := int64(2)
@@ -74,7 +72,7 @@ func TestPurchaseFailuresAndRollback(t *testing.T) {
 	_, err := f.Service.Buy(ctx, f.Principal, "insufficient", command)
 	requireShopCode(t, err, "INSUFFICIENT_BALANCE")
 	input.DiamondPrice = 1
-	p, err = f.Service.UpdateProduct(ctx, f.Principal, p.ID, shop.ProductUpdate{ProductInput: input, ExpectedVersion: p.Version})
+	p, err = f.Service.UpdateProduct(ctx, f.Principal, p.ID, shop.ProductUpdate{ProductTerms: input.terms(), ExpectedVersion: p.Version})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,21 +112,13 @@ func TestProductsAndRewards(t *testing.T) {
 	if first.Purchase.ID == second.Purchase.ID {
 		t.Fatal("repeatable reward reused ownership")
 	}
-	input.Name = "新的商品名称"
-	input.Description = "仅影响后续购买"
-	input.CoinPrice = 10
-	p, err := f.Service.UpdateProduct(ctx, f.Principal, p.ID, shop.ProductUpdate{ProductInput: input, ExpectedVersion: p.Version})
-	if err != nil {
+	if _, err := f.DB.Exec("UPDATE products SET name='新的商品名称',description='仅影响后续购买',coin_price=10 WHERE id=?", p.ID); err != nil {
 		t.Fatal(err)
 	}
 	prior, err := f.Service.ListPurchases(ctx, f.Principal, shop.PurchaseQuery{Type: "reward"})
 	if err != nil || len(prior.Items) != 2 || prior.Items[0].NameSnapshot != first.Purchase.NameSnapshot || prior.Items[0].CoinPrice != 0 {
 		t.Fatalf("purchase snapshot was rewritten: %+v %v", prior, err)
 	}
-	input.Type = "title"
-	input.AssetKey = "title-crown-v1"
-	_, err = f.Service.UpdateProduct(ctx, f.Principal, p.ID, shop.ProductUpdate{ProductInput: input, ExpectedVersion: p.Version})
-	requireShopCode(t, err, "PRODUCT_TYPE_LOCKED")
 	_, err = f.Service.Redeem(ctx, f.Principal, first.Purchase.ID, "wrong-password")
 	requireShopCode(t, err, "INVALID_CREDENTIALS")
 	if err = f.Accounts.Lock(ctx, f.Principal); err != nil {
@@ -163,7 +153,7 @@ func TestProductsAndRewards(t *testing.T) {
 func TestManagementCreationReplayRequiresFreshUnlock(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	input := productInput("title")
+	input := catalogCharacterProduct(t).createInput()
 	first, err := f.Service.CreateProduct(ctx, f.Principal, "managed-create", input)
 	if err != nil {
 		t.Fatal(err)
@@ -221,20 +211,20 @@ func TestTitleEquipmentOwnershipAndIndependentAppearance(t *testing.T) {
 func TestProductValidationAndNullStock(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	input := productInput("reward")
+	input := catalogCharacterProduct(t)
 	input.Name = "   "
-	_, err := f.Service.CreateProduct(ctx, f.Principal, core.ID(), input)
+	_, err := f.Service.CreateProduct(ctx, f.Principal, core.ID(), input.createInput())
 	requireShopCode(t, err, "INVALID_REQUEST")
-	input = productInput("reward")
+	input = catalogCharacterProduct(t)
 	input.AssetKey = "../../private"
-	_, err = f.Service.CreateProduct(ctx, f.Principal, core.ID(), input)
+	_, err = f.Service.CreateProduct(ctx, f.Principal, core.ID(), input.createInput())
 	requireShopCode(t, err, "INVALID_REQUEST")
-	input = productInput("reward")
+	input = catalogCharacterProduct(t)
 	negative := int64(-1)
 	input.Stock = &negative
-	_, err = f.Service.CreateProduct(ctx, f.Principal, core.ID(), input)
+	_, err = f.Service.CreateProduct(ctx, f.Principal, core.ID(), input.createInput())
 	requireShopCode(t, err, "INVALID_REQUEST")
-	p := createProduct(t, f, productInput("reward"))
+	p := createProduct(t, f, catalogCharacterProduct(t))
 	data, err := json.Marshal(p)
 	if err != nil {
 		t.Fatal(err)

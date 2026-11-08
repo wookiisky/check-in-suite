@@ -20,7 +20,7 @@ func TestAppearanceSavesColorsForFreeAndOwnedWearables(t *testing.T) {
 	if !found {
 		t.Fatal("missing cape")
 	}
-	product := createProduct(t, f, shop.ProductInput{
+	product := createProduct(t, f, productFixture{
 		Type: shop.TypeWearable, Name: cape.Name, AssetKey: cape.ThumbnailAssetKey, WearableKey: cape.Key, Enabled: true,
 	})
 	purchase := buyProduct(t, f, product).Purchase

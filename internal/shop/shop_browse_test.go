@@ -28,7 +28,7 @@ func TestShopBuyChecksStableWearableOwnership(t *testing.T) {
 	if wearable.Key == "" {
 		t.Fatal("missing non-default wearable")
 	}
-	input := shop.ProductInput{Type: shop.TypeWearable, Name: wearable.Name, AssetKey: wearable.ThumbnailAssetKey, WearableKey: wearable.Key, CoinPrice: 2, Enabled: true}
+	input := productFixture{Type: shop.TypeWearable, Name: wearable.Name, AssetKey: wearable.ThumbnailAssetKey, WearableKey: wearable.Key, CoinPrice: 2, Enabled: true}
 	first := createProduct(t, f, input)
 	input.Name = "备用报价"
 	second := createProduct(t, f, input)

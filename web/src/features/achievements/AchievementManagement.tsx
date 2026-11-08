@@ -54,7 +54,6 @@ export function AchievementManagement({ client, session }: AchievementProps) {
   function reload() { setDeleting(null); setDeleteConflict(false); refresh((value) => value + 1); }
 
   return <div className="achievement-workspace">
-    <h1>{content.manageTitle}</h1>
     {notice && <p role="status" className="notice">{notice}</p>}
     {pending && <div className="notice"><p>{content.pendingCreate}</p><button disabled={loading} onClick={() => setEditing('new')}>{content.retryCreate}</button></div>}
     {error !== null && !deleting && <div role="alert"><p>{achievementError(error)}</p><button disabled={busy} className="secondary" onClick={reload}>{content.reload}</button></div>}

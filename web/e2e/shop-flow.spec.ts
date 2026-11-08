@@ -32,7 +32,7 @@ test('商店断响应恢复只扣一次双币，成交卡片留在当页置灰',
     const furniture = (await shopAPI<components['schemas']['ShopPage']>(page, '/shop/products?group=camp&category=furniture&limit=100')).items.find((item) => item.repeatable);
     expect(furniture).toBeDefined();
     offer = await shopAPI<Product>(page, '/management/products', 'POST', {
-      type: 'island', name, asset_key: furniture!.asset_key, description: '', coin_price: 3, diamond_price: 2, stock: null, enabled: true,
+      name, asset_key: furniture!.asset_key, coin_price: 3, diamond_price: 2, stock: null, enabled: true,
     });
     await shopAPI(page, '/management/lock', 'POST');
     await selectShopCategory(page, 'island', shop.campCategories.furniture);
@@ -91,7 +91,10 @@ test('商店断响应恢复只扣一次双币，成交卡片留在当页置灰',
   } finally {
     await page.unroute('**/api/v1/purchases');
     await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
-    if (offer) await shopAPI(page, `/management/products/${offer.id}`, 'DELETE', { expected_version: offer.version });
+    if (offer) await shopAPI(page, `/management/products/${offer.id}`, 'PATCH', {
+      name: offer.name, coin_price: offer.coin_price, diamond_price: offer.diamond_price,
+      stock: offer.stock, enabled: false, expected_version: offer.version,
+    });
     if (earned) await shopAPI(page, `/checkins/${earned.id}`, 'DELETE', { expected_version: earned.version });
     if (task) await shopAPI(page, `/management/tasks/${task.id}`, 'DELETE', { expected_version: task.version });
     await shopAPI(page, '/management/lock', 'POST');

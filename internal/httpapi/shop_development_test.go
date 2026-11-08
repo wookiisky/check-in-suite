@@ -39,7 +39,7 @@ func TestDevelopmentBuyAll(t *testing.T) {
 		t.Fatalf("anonymous response=%d %s", response.Code, response.Body)
 	}
 
-	create := func(input shop.ProductInput) shop.Product {
+	create := func(input shop.ProductCreate) shop.Product {
 		t.Helper()
 		body, err := json.Marshal(input)
 		if err != nil {
@@ -62,7 +62,7 @@ func TestDevelopmentBuyAll(t *testing.T) {
 		t.Fatal("fixture needs three repeatable furniture items")
 	}
 	stock := int64(0)
-	input := shop.ProductInput{Type: shop.TypeIsland, Name: "开发商品一", AssetKey: items[0].ThumbnailAssetKey, Enabled: true, CoinPrice: 20, DiamondPrice: 2, Stock: &stock}
+	input := shop.ProductCreate{AssetKey: items[0].ThumbnailAssetKey, ProductTerms: shop.ProductTerms{Name: "开发商品一", Enabled: true, CoinPrice: 20, DiamondPrice: 2, Stock: &stock}}
 	first := create(input)
 	input.Name = "开发商品一的另一报价"
 	create(input)
@@ -80,7 +80,7 @@ func TestDevelopmentBuyAll(t *testing.T) {
 	if body.Key == "" {
 		t.Fatal("fixture needs a paid character")
 	}
-	create(shop.ProductInput{Type: shop.TypeCharacter, Name: body.Name, AssetKey: body.ThumbnailAssetKey, CharacterKey: body.Key, Enabled: true})
+	create(shop.ProductCreate{AssetKey: body.ThumbnailAssetKey, ProductTerms: shop.ProductTerms{Name: body.Name, Enabled: true}})
 
 	before := read()
 	if !before.DevelopmentBuyAll || before.Total != 3 || len(before.Items) != 1 {

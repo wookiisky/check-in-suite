@@ -5,7 +5,7 @@ import content from '../src/content/zh-CN.json' with { type: 'json' };
 import groups from '../src/features/groups/content.json' with { type: 'json' };
 import reports from '../src/features/reports/content.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
-import { openConfigurationSettings, closeConfigurationSettings } from './configuration-navigation';
+import { openManagement, closeConfigurationSettings } from './configuration-navigation';
 
 // 每个辅助账户有自己的Cookie与CSRF，浏览器流程不依赖客户端指定账户归属。
 async function loginAccount(request: APIRequestContext, username: string) {
@@ -51,7 +51,7 @@ test('同组查看独立任务、打卡附件和统计，退出后拒绝继续�
     expect((await page.request.get(photoURL)).ok()).toBe(false);
     expect(await page.locator('.checkin-task').filter({ hasText: taskName }).count()).toBe(0);
 
-    await openConfigurationSettings(page);
+    await openManagement(page);
     await page.getByLabel(groups.existingGroups, { exact: true }).selectOption(String(group.id));
     await page.getByLabel(groups.managementPassword, { exact: true }).fill('Wrong-Password-2026');
     await page.getByRole('button', { name: groups.join, exact: true }).click();
@@ -86,11 +86,11 @@ test('同组查看独立任务、打卡附件和统计，退出后拒绝继续�
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: `.local/previews/groups-${testInfo.project.name}.png`, fullPage: true, animations: 'disabled' });
 
-    await openConfigurationSettings(page);
+    await openManagement(page);
     await page.getByLabel(groups.managementPassword, { exact: true }).fill('Manage-Test-2026');
     await page.getByRole('button', { name: groups.leave, exact: true }).click();
     await expect(page.getByRole('button', { name: groups.join, exact: true })).toBeVisible();
-    await closeConfigurationSettings(page);
+    await closeConfigurationSettings(page, 'stats');
     expect((await page.request.get(`/api/v1/stats?start_date=${peer.session.today}&end_date=${peer.session.today}&account_id=${peer.session.account.id}`)).status()).toBe(403);
     expect((await page.request.get(photoURL)).ok()).toBe(false);
     await expect(page.getByLabel(groups.memberLabel)).toHaveCount(0);

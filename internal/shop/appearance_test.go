@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/wookiisky/check-in-suite/internal/character"
 	"github.com/wookiisky/check-in-suite/internal/shop"
 )
 
@@ -75,12 +76,7 @@ func TestAppearanceUsesPurchasedDefinitionAfterOfferDeletion(t *testing.T) {
 	if purchase.WearableKey != "shoes-barbarian-v1" {
 		t.Fatalf("snapshot=%+v", purchase)
 	}
-	changed := appearanceProduct("upper", "barbarian")
-	_, err := f.Service.UpdateProduct(ctx, f.Principal, product.ID, shop.ProductUpdate{ProductInput: changed, ExpectedVersion: product.Version})
-	requireShopCode(t, err, "PRODUCT_ITEM_LOCKED")
-	if err = f.Service.DeleteProduct(ctx, f.Principal, product.ID, product.Version); err != nil {
-		t.Fatal(err)
-	}
+	retireHistoricalProduct(t, f, product.ID)
 	state, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: "kaykit-medium-v1", ShoesPurchaseID: &purchase.ID})
 	if err != nil || state.ShoesPurchaseID == nil || *state.ShoesPurchaseID != purchase.ID {
 		t.Fatalf("deleted offer lost ownership: %+v %v", state, err)
@@ -147,19 +143,22 @@ func TestAppearanceCommitFailureAndSessionRevocation(t *testing.T) {
 	requireShopCode(t, err, "SESSION_REQUIRED")
 }
 
-// 商品明确绑定服装目录与缩略图，不能借用另一种素材或二维类型。
+// 商品从服装缩略图获得稳定身份，模型和无关图片都不可直接出售。
 func TestWearableProductRequiresMatchingDefinition(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	invalid := []shop.ProductInput{appearanceProduct("head", "barbarian"), appearanceProduct("head", "barbarian"), appearanceProduct("head", "barbarian")}
-	invalid[0].WearableKey = "missing"
-	invalid[1].AssetKey = "wearable-upper-barbarian-v1"
-	invalid[2].Type = "accessory"
-	for _, input := range invalid {
-		if _, err := f.Service.CreateProduct(ctx, f.Principal, input.AssetKey+input.WearableKey, input); err == nil {
-			t.Fatalf("accepted %+v", input)
-		}
+	input := appearanceProduct("head", "barbarian")
+	wearable, ok := character.GetWearable(input.WearableKey)
+	if !ok {
+		t.Fatal("missing wearable")
 	}
+	for _, assetKey := range []string{wearable.ModelAssetKey, "settings-v1", "unknown"} {
+		invalid := input.createInput()
+		invalid.AssetKey = assetKey
+		_, err := f.Service.CreateProduct(ctx, f.Principal, assetKey, invalid)
+		requireShopCode(t, err, "INVALID_REQUEST")
+	}
+	createProduct(t, f, input)
 }
 
 // 外观库存必须完整，不能把默认订单页的五十条当作全部所有权。

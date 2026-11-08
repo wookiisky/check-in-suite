@@ -24,3 +24,6 @@ export type CharacterSlot = components['schemas']['CharacterSlot'];
 export type CharacterWearable = components['schemas']['CharacterWearable'];
 export type CharacterDefinition = components['schemas']['CharacterDefinition'];
 export type SceneOption = components['schemas']['SpatialSceneOption'];
+
+export type ManagementMaterial = components['schemas']['ManagementMaterial'];
+export type ManagementMaterials = components['schemas']['ManagementMaterials'];

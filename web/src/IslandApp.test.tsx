@@ -55,7 +55,7 @@ async function unlock() {
   fireEvent.click(await screen.findByRole('button', { name: content.navigation.management }));
   fireEvent.change(screen.getByLabelText(content.account.managementPassword), { target: { value: 'Manage-Test-2026' } });
   fireEvent.click(screen.getByRole('button', { name: content.account.unlock }));
-  await screen.findByRole('heading', { name: content.account.settingsTitle });
+  await screen.findByRole('tab', { name: content.navigation.account, selected: true });
 }
 
 beforeEach(() => {vi.clearAllMocks();vi.stubGlobal('matchMedia',characterTestMatchMedia);});
@@ -74,24 +74,24 @@ describe('账户页面与管理授权', () => {
     }
   });
 
-  it.each(['section', 'navigation', 'brand', 'lock', 'logout'] as const)('账户姓名草稿在%s离开前确认，取消保留输入，放弃后再执行操作', async (target) => {
+  it.each(['section', 'navigation', 'brand', 'logout'] as const)('账户姓名草稿在%s离开前确认，取消保留输入，放弃后再执行操作', async (target) => {
     const server = installServer(true);
     render(<IslandApp />);
     await unlock();
     fireEvent.change(screen.getByLabelText(content.account.displayName), { target: { value: '尚未保存的姓名' } });
-    if (target === 'section') fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    if (target === 'section') fireEvent.click(screen.getByRole('tab', { name: content.navigation.tasks }));
     else if (target === 'navigation') fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
     else if (target === 'brand') fireEvent.click(screen.getByRole('link', { name: content.appName }));
-    else fireEvent.click(screen.getByRole('button', { name: target === 'lock' ? content.account.leaveManagement : content.account.logout }));
+    else fireEvent.click(screen.getByRole('button', { name: content.account.logout }));
     const dialog = await screen.findByRole('dialog', { name: content.account.discardTitle });
     expect(screen.getByLabelText(content.account.displayName)).toHaveValue('尚未保存的姓名');
     expect(server.mock.calls.some(([path]) => /\/(management\/lock|auth\/logout)$/.test(String(path)))).toBe(false);
     fireEvent.click(within(dialog).getByRole('button', { name: content.account.keepEditing }));
     expect(screen.getByLabelText(content.account.displayName)).toHaveValue('尚未保存的姓名');
-    if (target === 'section') fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    if (target === 'section') fireEvent.click(screen.getByRole('tab', { name: content.navigation.tasks }));
     else if (target === 'navigation') fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
     else if (target === 'brand') fireEvent.click(screen.getByRole('link', { name: content.appName }));
-    else fireEvent.click(screen.getByRole('button', { name: target === 'lock' ? content.account.leaveManagement : content.account.logout }));
+    else fireEvent.click(screen.getByRole('button', { name: content.account.logout }));
     fireEvent.click(within(await screen.findByRole('dialog', { name: content.account.discardTitle })).getByRole('button', { name: content.account.discard }));
     await waitFor(() => expect(screen.queryByLabelText(content.account.displayName)).not.toBeInTheDocument());
     if (target === 'section') await screen.findByRole('button', { name: checkinContent.newTask });
@@ -106,11 +106,11 @@ describe('账户页面与管理授权', () => {
     const unload = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(unload);
     expect(unload.defaultPrevented).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    fireEvent.click(screen.getByRole('tab', { name: content.navigation.tasks }));
     const dialog = await screen.findByRole('dialog', { name: content.account.discardTitle });
     fireEvent.click(within(dialog).getByRole('button', { name: content.common.close }));
     expect(screen.getByLabelText(content.account.newPassword, { selector: `#${kind}-new` })).toHaveValue('Unsaved-Password-2026');
-    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    fireEvent.click(screen.getByRole('tab', { name: content.navigation.tasks }));
     fireEvent.click(within(await screen.findByRole('dialog', { name: content.account.discardTitle })).getByRole('button', { name: content.account.discard }));
     await screen.findByRole('button', { name: checkinContent.newTask });
     const cleanUnload = new Event('beforeunload', { cancelable: true });
@@ -126,16 +126,15 @@ describe('账户页面与管理授权', () => {
     let complete!: (response: Response) => void;
     server.mockImplementationOnce(() => new Promise((resolve) => { complete = resolve; }));
     fireEvent.click(screen.getByRole('button', { name: content.account.saveName }));
-    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    fireEvent.click(screen.getByRole('tab', { name: content.navigation.tasks }));
     fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
-    fireEvent.click(screen.getByRole('button', { name: content.account.leaveManagement }));
     fireEvent.click(screen.getByRole('button', { name: content.account.logout }));
     fireEvent.click(screen.getByRole('link', { name: content.appName }));
     expect(screen.getByLabelText(content.account.displayName)).toHaveValue('保存后的姓名');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await act(async () => complete(Response.json({ ...testSession.account, display_name: '保存后的姓名', version: 2 })));
     await screen.findByText(content.account.nameSaved);
-    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    fireEvent.click(screen.getByRole('tab', { name: content.navigation.tasks }));
     await screen.findByRole('button', { name: checkinContent.newTask });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
@@ -151,8 +150,8 @@ describe('账户页面与管理授权', () => {
     let complete!: (response: Response) => void;
     server.mockImplementationOnce(() => new Promise((resolve) => { complete = resolve; }));
     fireEvent.click(screen.getByRole('button', { name: content.account.changeLoginPassword }));
-    expect(screen.getByRole('button', { name: content.navigation.tasks })).toBeDisabled();
-    expect(screen.getByRole('button', { name: content.account.leaveManagement })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: content.navigation.tasks })).toBeDisabled();
+    expect(screen.getByRole('button', { name: content.navigation.camp })).toBeDisabled();
     await act(async () => complete(new Response(null, { status: 204 })));
     await screen.findByRole('heading', { name: content.account.loginTitle });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -184,14 +183,17 @@ describe('账户页面与管理授权', () => {
     fireEvent.click(screen.getByRole('button', { name: content.common.cancel }));
     await unlock();
     expect(screen.queryByRole('button', { name: content.navigation.management })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: familyContent.sounds })).toBeInTheDocument();
+    expect(screen.queryByLabelText(familyContent.music)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: familyContent.sounds }));
+    expect(within(screen.getByRole('tabpanel', { name: familyContent.sounds })).getByLabelText(familyContent.music)).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText(familyContent.reduceMotion));
     await waitFor(() => expect(screen.getByLabelText(familyContent.reduceMotion)).toBeEnabled());
     expect(screen.getByLabelText(familyContent.reduceMotion)).toBeChecked();
-    fireEvent.click(screen.getByRole('button', { name: content.account.leaveManagement }));
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.camp }));
     expect(screen.queryByLabelText(familyContent.music)).not.toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('button', { name: content.navigation.management })).toBeEnabled());
     await unlock();
+    fireEvent.click(screen.getByRole('tab', { name: familyContent.sounds }));
     expect(screen.getByLabelText(familyContent.reduceMotion)).toBeChecked();
   });
 
@@ -200,15 +202,17 @@ describe('账户页面与管理授权', () => {
     server.mockResolvedValueOnce(Response.json({ ...testSession, account: { ...testSession.account, preferences: { ...testSession.account.preferences, music_enabled: true } } }));
     render(<IslandApp />);
     await unlock();
+    fireEvent.click(screen.getByRole('tab', { name: familyContent.sounds }));
     fireEvent.click(screen.getByRole('button', { name: familyContent.playMusic }));
     await waitFor(() => expect(sound.start).toHaveBeenCalledTimes(1));
     const stops = sound.stop.mock.calls.length;
-    fireEvent.click(screen.getByRole('button', { name: content.account.leaveManagement }));
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.camp }));
     expect(screen.queryByLabelText(familyContent.music)).not.toBeInTheDocument();
     expect(sound.dispose).not.toHaveBeenCalled();
     expect(sound.stop).toHaveBeenCalledTimes(stops);
     await waitFor(() => expect(screen.getByRole('button', { name: content.navigation.management })).toBeEnabled());
     await unlock();
+    fireEvent.click(screen.getByRole('tab', { name: familyContent.sounds }));
     expect(screen.getByRole('button', { name: familyContent.pauseMusic })).toBeInTheDocument();
     expect(sound.activate).toHaveBeenCalledTimes(1);
   });
@@ -269,25 +273,29 @@ describe('账户页面与管理授权', () => {
   it('已有管理授权也不自动展示管理页，退出后再次进入须重新输入密码', async () => {
     const server = installServer(true, '2026-10-29T04:30:00Z');
     render(<IslandApp />);
-    expect(screen.queryByRole('heading', { name: content.account.settingsTitle })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: content.navigation.account })).not.toBeInTheDocument();
     await unlock();
-    fireEvent.click(screen.getByRole('button', { name: content.account.leaveManagement }));
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.camp }));
     await waitFor(() => expect(server).toHaveBeenCalledWith('/api/v1/management/lock', expect.objectContaining({ method: 'POST', headers: expect.any(Headers) })));
     fireEvent.click(screen.getByRole('button', { name: content.navigation.management }));
     expect(screen.getByLabelText(content.account.managementPassword)).toHaveValue('');
-    expect(screen.queryByRole('heading', { name: content.account.settingsTitle })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: content.navigation.account })).not.toBeInTheDocument();
   });
 
   it('退出管理请求失败也立即隐藏管理内容，显示可重试的未确认状态', async () => {
     const server = installServer(true);
     render(<IslandApp />);
     await unlock();
-    server.mockRejectedValueOnce(new TypeError('offline'));
-    fireEvent.click(screen.getByRole('button', { name: content.account.leaveManagement }));
-    expect(screen.queryByRole('heading', { name: content.account.settingsTitle })).not.toBeInTheDocument();
+    let rejectLock!: (reason: Error) => void;
+    server.mockImplementationOnce(() => new Promise((_, reject) => { rejectLock = reject; }));
+    fireEvent.click(screen.getByRole('button', { name: content.navigation.camp }));
+    expect(screen.queryByRole('tab', { name: content.navigation.account })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: content.navigation.management })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: content.account.retryLock })).not.toBeInTheDocument();
+    await act(async () => rejectLock(new TypeError('offline')));
     await screen.findByText(content.account.lockUnconfirmed);
     fireEvent.click(screen.getByRole('button', { name: content.account.retryLock }));
-    await waitFor(() => expect(screen.queryByText(content.account.lockUnconfirmed)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('button', { name: content.navigation.management })).toBeEnabled());
   });
 
   it('服务端字段错误保留姓名草稿并显示字段提示', async () => {
@@ -347,17 +355,26 @@ describe('账户页面与管理授权', () => {
     await screen.findByRole('heading', { name: content.account.loginTitle });
   });
 
-  it('营地和管理四组导航使用真实模块，组内切换不退出授权，返回营地才锁定', async () => {
+  it('管理页切换标签不锁定，切到普通页面时只锁定一次', async () => {
     const server = installServer(true);
     render(<IslandApp />);
     await screen.findByRole('heading', { name: checkinContent.todayTasks });
     await unlock();
-    fireEvent.click(screen.getByRole('button', { name: content.navigation.tasks }));
+    expect(screen.queryByRole('button', { name: '退出管理' })).not.toBeInTheDocument();
+    const tabs = screen.getByRole('tablist', { name: content.navigation.management });
+    expect(within(tabs).getAllByRole('tab')).toHaveLength(7);
+    const account = within(tabs).getByRole('tab', { selected: true });
+    account.focus();
+    fireEvent.keyDown(account, { key: 'ArrowRight' });
+    await screen.findByRole('button', { name: checkinContent.newCategory });
+    expect(screen.queryByRole('button', { name: checkinContent.newTask })).not.toBeInTheDocument();
+    fireEvent.click(within(tabs).getByRole('tab', { name: content.navigation.tasks }));
     await screen.findByRole('button', { name: checkinContent.newTask });
+    expect(screen.queryByRole('button', { name: checkinContent.newCategory })).not.toBeInTheDocument();
     expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(0);
-    fireEvent.click(screen.getByRole('button', { name: content.navigation.records }));
-    await screen.findByRole('heading', { name: checkinContent.manageRecords });
-    fireEvent.click(screen.getByRole('button', { name: content.navigation.products }));
+    fireEvent.click(screen.getByRole('tab', { name: content.navigation.records }));
+    await screen.findByRole('tabpanel', { name: content.navigation.records });
+    fireEvent.click(screen.getByRole('tab', { name: content.navigation.products }));
     await screen.findByRole('button', { name: shopContent.addProduct });
     expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(0);
     fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));

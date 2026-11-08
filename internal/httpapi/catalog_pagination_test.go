@@ -9,14 +9,9 @@ import (
 
 // 商品浏览的真实HTTP参数控制分页，空页也保留结束标记和完整来源选项。
 func TestCatalogProductPaginationHTTP(t *testing.T) {
-	_, request := shopHTTPRequest(t)
-	for index, name := range []string{"first title", "second title"} {
-		body := `{"type":"title","name":"` + name + `","asset_key":"title-crown-v1","description":"","coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`
-		response := request("POST", "/api/v1/management/products", body, []string{"first", "second"}[index])
-		if response.Code != 201 {
-			t.Fatalf("create: %d %s", response.Code, response.Body)
-		}
-	}
+	app, request := shopHTTPRequest(t)
+	seedHistoricalOfferHTTP(t, app, "first", shop.TypeTitle, "first title", "title-crown-v1")
+	seedHistoricalOfferHTTP(t, app, "second", shop.TypeTitle, "second title", "title-crown-v1")
 	response := request("GET", "/api/v1/products?limit=1&group=appearance", "", "")
 	var first shop.ProductList
 	if response.Code != 200 || json.Unmarshal(response.Body.Bytes(), &first) != nil || len(first.Items) != 1 || first.NextCursor == nil || first.Facets == nil {
@@ -37,15 +32,9 @@ func TestCatalogProductPaginationHTTP(t *testing.T) {
 
 // 提供筛选而省略页大小时仍须执行筛选，旧的纯列表请求继续返回全部配置。
 func TestCatalogProductFiltersWithoutExplicitLimitHTTP(t *testing.T) {
-	_, request := shopHTTPRequest(t)
-	for index, kind := range []string{"title", "reward"} {
-		key := map[string]string{"title": "title-crown-v1", "reward": "reward-gift-v1"}[kind]
-		body := `{"type":"` + kind + `","name":"` + kind + ` alpha","asset_key":"` + key + `","description":"","coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`
-		response := request("POST", "/api/v1/management/products", body, []string{"filtered-title", "filtered-reward"}[index])
-		if response.Code != 201 {
-			t.Fatalf("create: %d %s", response.Code, response.Body)
-		}
-	}
+	app, request := shopHTTPRequest(t)
+	seedHistoricalOfferHTTP(t, app, "filtered-title", shop.TypeTitle, "title alpha", "title-crown-v1")
+	seedHistoricalOfferHTTP(t, app, "filtered-reward", shop.TypeReward, "reward alpha", "reward-gift-v1")
 	for _, query := range []string{"type=reward", "search=reward", "group=appearance"} {
 		response := request("GET", "/api/v1/products?"+query, "", "")
 		var page shop.ProductList

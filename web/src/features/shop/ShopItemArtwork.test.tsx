@@ -5,7 +5,8 @@ import { product, purchase } from './test-fixtures';
 
 describe('商品缩略图', () => {
   it('服装直接显示模型生成缩略图，并保留可访问名称', () => {
-    render(<ShopItemArtwork item={{ ...product, type: 'wearable', asset_key: 'arbitrary-thumbnail', wearable_key: 'not-a-slot' }} label="服装预览" />);
+    const wearable = { ...product, type: 'wearable', asset_key: 'arbitrary-thumbnail', wearable_key: 'not-a-slot' };
+    render(<ShopItemArtwork item={wearable} label="服装预览" />);
     expect(screen.getByRole('img', { name: '服装预览' })).toHaveAttribute('src', '/api/v1/assets/arbitrary-thumbnail');
   });
 

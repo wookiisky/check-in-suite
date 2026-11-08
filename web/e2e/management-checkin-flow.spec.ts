@@ -23,8 +23,7 @@ async function enterManagement(page: Page) {
   await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
-  await page.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toBeVisible();
 }
 
 // 日期只由服务端的台北业务日推导，避免依赖运行机器的时区。
@@ -41,12 +40,13 @@ function configurationRow(page: Page, name: string) {
 
 // 多个管理流程都需要通过表单建立自己的任务，彼此不复用业务数据。
 async function createTask(page: Page, name: string, category?: string) {
+  await page.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await page.getByRole('button', { name: checkin.newTask, exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel(checkin.name, { exact: true }).fill(name);
   if (category) await dialog.getByRole('combobox', { name: checkin.category, exact: true }).selectOption({ label: category });
-  await dialog.getByLabel(checkin.coins, { exact: true }).fill('11');
-  await dialog.getByLabel(checkin.diamonds, { exact: true }).fill('2');
+  await dialog.getByRole('spinbutton', { name: checkin.coins, exact: true }).fill('11');
+  await dialog.getByRole('spinbutton', { name: checkin.diamonds, exact: true }).fill('2');
   await dialog.getByRole('button', { name: checkin.save, exact: true }).click();
   await expect(dialog).toHaveCount(0);
   const tasks = await readJSON<components['schemas']['TaskList']>(page, '/tasks?include_inactive=true');
@@ -65,6 +65,7 @@ test('管理类别和任务的新增、编辑、排序、停启及引用删除�
   const renamedTask = `改项-${suffix}`;
   await enterManagement(page);
 
+  await page.getByRole('tab', { name: content.navigation.categories, exact: true }).click();
   await page.getByRole('button', { name: checkin.newCategory, exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: checkin.save, exact: true }).click();
@@ -95,27 +96,39 @@ test('管理类别和任务的新增、编辑、排序、停启及引用删除�
   const task = await createTask(page, taskName, renamedCategory);
   expect(task.category_id).toBe(category.id);
 
+  await page.getByRole('tab', { name: content.navigation.categories, exact: true }).click();
   await configurationRow(page, renamedCategory).getByRole('button', { name: checkin.remove, exact: true }).click();
   await dialog.getByRole('button', { name: checkin.remove, exact: true }).click();
   await expect(dialog.getByRole('alert')).toHaveText(checkin.errors.CATEGORY_NOT_EMPTY);
   await dialog.getByRole('button', { name: checkin.cancel, exact: true }).click();
   await page.getByRole('button', { name: checkin.reload, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
+  const categoryTabs = page.getByRole('tablist', { name: checkin.category, exact: true });
+  const categoryTab = categoryTabs.getByRole('tab', { name: renamedCategory, exact: true });
+  await categoryTab.click();
+  await expect(categoryTab).toHaveAttribute('aria-selected', 'true');
   await expect(configurationRow(page, taskName).getByRole('button', { name: checkin.editConfig, exact: true })).toBeEnabled();
+  await expect(configurationRow(page, taskName).locator('img[src$="/' + task.icon_key + '"]')).toBeVisible();
 
   await configurationRow(page, taskName).getByRole('button', { name: checkin.editConfig, exact: true }).click();
   // 等待异步图标选项就绪，再填写并核对输入值，避免未完成加载时提交。
-  await expect(dialog.getByRole('combobox', { name: checkin.icon, exact: true })).toHaveValue(task.icon_key);
+  const icons = dialog.getByRole('group', { name: checkin.icon, exact: true });
+  await expect(icons.locator(`input[type="radio"][value="${task.icon_key}"]`)).toBeChecked();
   await dialog.getByLabel(checkin.name, { exact: true }).fill(renamedTask);
   await dialog.getByRole('combobox', { name: checkin.category, exact: true }).selectOption('');
-  await dialog.getByLabel(checkin.coins, { exact: true }).fill('-1');
-  await expect(dialog.getByLabel(checkin.coins, { exact: true })).toHaveValue('-1');
+  await dialog.getByRole('spinbutton', { name: checkin.coins, exact: true }).fill('-1');
+  await expect(dialog.getByRole('spinbutton', { name: checkin.coins, exact: true })).toHaveValue('-1');
   await dialog.getByRole('button', { name: checkin.save, exact: true }).click();
   await expect(dialog).toBeVisible();
-  expect(await dialog.getByLabel(checkin.coins, { exact: true }).evaluate((element) => (element as HTMLInputElement).validity.rangeUnderflow)).toBe(true);
-  await dialog.getByLabel(checkin.coins, { exact: true }).fill('13');
-  await dialog.getByLabel(checkin.diamonds, { exact: true }).fill('4');
+  expect(await dialog.getByRole('spinbutton', { name: checkin.coins, exact: true }).evaluate((element) => (element as HTMLInputElement).validity.rangeUnderflow)).toBe(true);
+  await dialog.getByRole('spinbutton', { name: checkin.coins, exact: true }).fill('13');
+  await dialog.getByRole('spinbutton', { name: checkin.diamonds, exact: true }).fill('4');
   await dialog.getByLabel(checkin.dailyLimit, { exact: true }).fill('2');
-  await dialog.getByRole('combobox', { name: checkin.icon, exact: true }).selectOption('star-v1');
+  const star = icons.getByRole('radio', { name: '星星', exact: true });
+  await star.check();
+  const starArtwork = icons.locator('img[src$="/star-v1"]');
+  await expect(starArtwork).toBeVisible();
+  await expect.poll(() => starArtwork.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
   for (const weekday of checkin.weekdays) await dialog.getByRole('checkbox', { name: weekday, exact: true }).uncheck();
   await expect(dialog.getByRole('alert')).toHaveText(checkin.weekdayRequired);
   await expect(dialog.getByRole('button', { name: checkin.save, exact: true })).toBeDisabled();
@@ -130,6 +143,9 @@ test('管理类别和任务的新增、编辑、排序、停启及引用删除�
   const configured = (await readJSON<components['schemas']['TaskList']>(page, '/tasks?include_inactive=true')).items.find((item) => item.id === task.id)!;
   expect(configured).toMatchObject({ name: renamedTask, category_id: null, icon_key: 'star-v1', coin_reward: 13, diamond_reward: 4, daily_limit: 2, enabled: true, unlock_activities: ['ball', 'read', 'run'] });
   expect(configured.weekdays).toEqual([1, 2, 3, 4, 5, 6, 7].filter((day) => day !== excludedWeekday));
+  await expect(configurationRow(page, renamedTask)).toHaveCount(0);
+  await categoryTabs.getByRole('tab', { name: checkin.uncategorized, exact: true }).click();
+  await expect(configurationRow(page, renamedTask).locator('img[src$="/star-v1"]')).toBeVisible();
 
   await page.getByRole('button', { name: `${checkin.disableTask} ${renamedTask}`, exact: true }).click();
   await expect(configurationRow(page, renamedTask)).toHaveCount(0);
@@ -138,7 +154,7 @@ test('管理类别和任务的新增、编辑、排序、停启及引用删除�
   await expect(page.getByRole('button', { name: `${checkin.disableTask} ${renamedTask}`, exact: true })).toBeEnabled();
 
   const date = offsetDate(initial.today, -1);
-  await page.getByRole('button', { name: content.navigation.records, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.records, exact: true }).click();
   await page.getByLabel(checkin.date, { exact: true }).fill(date);
   await page.getByRole('combobox', { name: checkin.chooseTask, exact: true }).selectOption(task.id);
   await page.getByRole('button', { name: checkin.backfillNew, exact: true }).click();
@@ -147,7 +163,7 @@ test('管理类别和任务的新增、编辑、排序、停启及引用删除�
   await expect(dialog).toHaveCount(0);
   const granted = await readJSON<Camp>(page, '/camp');
 
-  await page.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await configurationRow(page, renamedTask).getByRole('button', { name: checkin.remove, exact: true }).click();
   await dialog.getByRole('button', { name: checkin.cancel, exact: true }).click();
   await expect(configurationRow(page, renamedTask)).toBeVisible();
@@ -158,12 +174,13 @@ test('管理类别和任务的新增、编辑、排序、停启及引用删除�
   const history = await readJSON<Records>(page, `/checkins?start_date=${date}&end_date=${date}`);
   expect(history.items.filter((item) => item.task_id === task.id)).toMatchObject([{ task_name_snapshot: renamedTask, coin_reward_snapshot: 13, diamond_reward_snapshot: 4 }]);
   expect((await readJSON<Camp>(page, '/camp')).wallet).toEqual(granted.wallet);
+  await page.getByRole('tab', { name: content.navigation.categories, exact: true }).click();
   await configurationRow(page, renamedCategory).getByRole('button', { name: checkin.remove, exact: true }).click();
   await dialog.getByRole('button', { name: checkin.remove, exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(configurationRow(page, renamedCategory)).toHaveCount(0);
 
-  await page.getByRole('button', { name: content.navigation.records, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.records, exact: true }).click();
   await page.getByLabel(checkin.date, { exact: true }).fill(date);
   await page.locator('.checkin-record').filter({ hasText: renamedTask }).click();
   await dialog.getByRole('button', { name: checkin.delete, exact: true }).click();
@@ -185,7 +202,7 @@ test('管理历史补录、错误恢复、内容编辑、纠正日期与删除�
   const correctedDate = offsetDate(initial.today, -2);
   const readRecords = async (businessDate: string) => (await readJSON<Records>(page, `/checkins?start_date=${businessDate}&end_date=${businessDate}`)).items.filter((item) => item.task_id === task.id);
   const dialog = page.getByRole('dialog');
-  await page.getByRole('button', { name: content.navigation.records, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.records, exact: true }).click();
   await page.getByLabel(checkin.date, { exact: true }).fill(offsetDate(initial.today, 1));
   await page.getByRole('combobox', { name: checkin.chooseTask, exact: true }).selectOption(task.id);
   await page.getByRole('button', { name: checkin.backfillNew, exact: true }).click();
@@ -268,7 +285,7 @@ test('管理历史补录、错误恢复、内容编辑、纠正日期与删除�
   const finalWallet = (await readJSON<Camp>(page, '/camp')).wallet;
   expect(finalWallet.coins).toBe(initial.wallet.coins);
   expect(finalWallet.diamonds).toBe(initial.wallet.diamonds);
-  await page.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await configurationRow(page, taskName).getByRole('button', { name: checkin.remove, exact: true }).click();
   await dialog.getByRole('button', { name: checkin.remove, exact: true }).click();
   await expect(dialog).toHaveCount(0);

@@ -624,7 +624,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 新建配置 */
+        /**
+         * 从受控素材建立商品
+         * @description 服务端从素材目录确定商品类型和稳定身份，仅可选择允许出售的素材。
+         */
         post: operations["createProduct"];
         delete?: never;
         options?: never;
@@ -642,15 +645,31 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** 删除配置并保留历史关联 */
-        delete: operations["deleteProduct"];
+        delete?: never;
         options?: never;
         head?: never;
         /**
          * 编辑配置并检查版本
-         * @description 已出售商品不能改为另一物品身份，返回 PRODUCT_ITEM_LOCKED；成交类型变更受 PRODUCT_TYPE_LOCKED 约束。展示与互动能力通过资源定义追加，不改写成交事实。
+         * @description 可编辑名称、金币和钻石价格、库存及启用状态。素材、类型及稳定身份在建立商品时绑定。
          */
         patch: operations["updateProduct"];
+        trace?: never;
+    };
+    "/api/v1/management/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取商品素材与营地活动绑定 */
+        get: operations["listManagementMaterials"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/purchases": {
@@ -1436,37 +1455,45 @@ export interface components {
             owned: boolean;
         };
         ProductCreate: {
-            /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
-            character_key?: string;
-            /** @description 独立场景的永久身份；scene 商品必须提供，订单保留成交资格。 */
-            scene_key?: string;
-            /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
-            wearable_key?: string;
-            type: components["schemas"]["ProductType"];
-            name: string;
+            /** @description 受控目录中可出售的素材。 */
             asset_key: string;
-            description: string;
+            name: string;
             coin_price: number;
             diamond_price: number;
             stock: number | null;
             enabled: boolean;
         };
         ProductUpdate: {
-            /** @description 完整角色的稳定身份；character 商品必须提供，订单保存成交身份。 */
-            character_key?: string;
-            /** @description 独立场景的永久身份；scene 商品必须提供，订单保留成交资格。 */
-            scene_key?: string;
-            /** @description 三维服装的稳定定义身份；wearable 商品必须提供，其他类型省略。订单保存成交时的身份。 */
-            wearable_key?: string;
-            type: components["schemas"]["ProductType"];
             name: string;
-            asset_key: string;
-            description: string;
             coin_price: number;
             diamond_price: number;
             stock: number | null;
             enabled: boolean;
             expected_version: number;
+        };
+        ManagementMaterial: {
+            asset: components["schemas"]["Asset"];
+            /** @enum {string} */
+            group: "appearance" | "camp";
+            category: string;
+            /** @description 是否可以从此素材建立商品。 */
+            saleable: boolean;
+        };
+        ManagementActivityMaterial: {
+            scene_key: string;
+            scene_name: string;
+            activity: string;
+            character_key: string;
+            character_name: string;
+            /** @description 包含当前动作片段的受控资源。 */
+            asset_key: string;
+            clip: string;
+            /** @description 活动道具的受控模型资源。 */
+            attachment_asset_key?: string;
+        };
+        ManagementMaterials: {
+            items: components["schemas"]["ManagementMaterial"][];
+            activities: components["schemas"]["ManagementActivityMaterial"][];
         };
         ProductPack: {
             name?: string;
@@ -1483,6 +1510,8 @@ export interface components {
             next_cursor?: string | null;
             /** @description 全部可见商品的来源与包选项，不受当前页限制。 */
             facets?: components["schemas"]["ProductFacets"];
+            /** @description 营地分组的完整类别，与当前页和所有权无关。 */
+            camp_categories?: string[];
         };
         ShopPage: {
             items: components["schemas"]["Product"][];
@@ -2944,13 +2973,15 @@ export interface operations {
     listProducts: {
         parameters: {
             query?: {
-                /** @description true要求当前会话已解锁管理 */
+                /** @description true 要求当前会话已解锁管理，并返回当前可配置的商品（包括停用项）。 */
                 include_inactive?: boolean;
                 /** @description 提供筛选或游标而省略时使用48；无筛选且省略时保留完整配置读取。 */
                 limit?: number;
                 cursor?: string;
                 type?: components["schemas"]["ProductType"];
-                group?: "appearance";
+                group?: "appearance" | "camp";
+                /** @description 所选商品分组内的稳定类别，分页前筛选。 */
+                category?: string;
                 slot?: components["schemas"]["CharacterSlot"];
                 search?: string;
                 provider?: string;
@@ -3003,33 +3034,6 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
-    deleteProduct: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": components["parameters"]["CSRF"];
-            };
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VersionRequest"];
-            };
-        };
-        responses: {
-            /** @description 成功，无响应体 */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            default: components["responses"]["Error"];
-        };
-    };
     updateProduct: {
         parameters: {
             query?: never;
@@ -3056,13 +3060,34 @@ export interface operations {
                     "application/json": components["schemas"]["Product"];
                 };
             };
-            /** @description VERSION_CONFLICT、PRODUCT_ITEM_LOCKED 或 PRODUCT_TYPE_LOCKED；保留当前配置。 */
+            /** @description VERSION_CONFLICT；保留当前配置。 */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listManagementMaterials: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 当前目录 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagementMaterials"];
                 };
             };
             default: components["responses"]["Error"];

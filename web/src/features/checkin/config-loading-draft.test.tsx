@@ -14,7 +14,7 @@ it.each([13, -1])('图标迟到加载不覆盖已输入的奖励草稿 %s', asyn
   fireEvent.change(screen.getByLabelText(content.diamonds), { target: { value: '4' } });
   fireEvent.change(screen.getByLabelText(content.name), { target: { value: '尚未保存的任务' } });
   await act(async () => finishAssets({ items: [{ key: 'book-v1', name: '书本图标', kind: 'icon' }] }));
-  expect(screen.getByLabelText(content.icon)).toHaveValue('book-v1');
+  expect(screen.getByRole('radio', { name: '书本图标' })).toBeChecked();
   expect(screen.getByLabelText(content.coins)).toHaveValue(coins);
   expect(screen.getByLabelText(content.diamonds)).toHaveValue(4);
   expect(screen.getByLabelText(content.name)).toHaveValue('尚未保存的任务');

@@ -3,16 +3,25 @@ import { useEffect, useRef, useState } from 'react';
 import type { components } from '../../api/schema';
 import { ApiFailure } from '../../api/client';
 import { Modal } from '../../components/Modal';
+import { ViewTabs } from '../../components/ViewTabs';
 import type { Category, CheckinProps, Task } from './types';
 import { ConfigDialog, pendingConfiguration } from './ConfigDialog';
 import { HistoryManagement } from './HistoryManagement';
+import { TaskIcon } from './TaskIcon';
 import { checkinError, isDefiniteFailure } from './format';
 import content from './content.json';
 import './checkin.css';
 
-/** 配置与历史管理共用管理授权，但数据和编辑草稿保持各自独立。 */
-export function CheckinManagement({ client, session, section }: CheckinProps & { section?: 'configuration' | 'records' }) {
-  const [tab, setTab] = useState<'configuration' | 'records'>('configuration');
+const uncategorizedTab = 'uncategorized';
+
+/** 记录和配置分别加载，切换配置页后从对应列表重新开始。 */
+export function CheckinManagement({ section, ...props }: CheckinProps & { section: 'categories' | 'tasks' | 'records' }) {
+  if (section === 'records') return <HistoryManagement {...props} />;
+  return <CheckinConfiguration key={section} {...props} section={section} />;
+}
+
+// 类别与项目共用写入恢复规则，列表各自展示。
+function CheckinConfiguration({ client, session, section }: CheckinProps & { section: 'categories' | 'tasks' }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [revision, refresh] = useState(0);
@@ -21,24 +30,34 @@ export function CheckinManagement({ client, session, section }: CheckinProps & {
   const [editing, setEditing] = useState<{ kind: 'category' | 'task'; item: Category | Task | null } | null>(null);
   const [deleting, setDeleting] = useState<{ kind: 'category' | 'task'; item: Category | Task } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [category, setCategory] = useState('');
   const [showDisabled, setShowDisabled] = useState(false);
   const [changingTask, setChangingTask] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const visibilityControl = useRef<HTMLInputElement>(null);
   const command = pendingConfiguration.get(client);
-  const activeTab = section ?? tab;
   const actionsDisabled = loading || busy || error !== null;
-  const visibleTasks = tasks.filter((task) => showDisabled || task.enabled);
+  const categoryTabs = [
+    { id: '', label: content.allCategories },
+    ...categories.map((item) => ({ id: item.id, label: item.name })),
+    { id: uncategorizedTab, label: content.uncategorized },
+  ];
+  const selectedCategory = categoryTabs.some((item) => item.id === category) ? category : '';
+  const categoryTasks = tasks.filter((task) => !selectedCategory || (task.category_id ?? uncategorizedTab) === selectedCategory);
+  const visibleTasks = categoryTasks.filter((task) => showDisabled || task.enabled);
 
   useEffect(() => {
     let active = true;
     setLoading(true); setError(null); setMessage('');
-    void Promise.all([client.request<{ items: Category[] }>('/categories?include_inactive=true'), client.request<{ items: Task[] }>('/tasks?include_inactive=true')])
+    void Promise.all([
+      client.request<{ items: Category[] }>('/categories?include_inactive=true'),
+      section === 'tasks' ? client.request<{ items: Task[] }>('/tasks?include_inactive=true') : Promise.resolve({ items: [] }),
+    ])
       .then(([categoryPage, taskPage]) => { if (active) { setCategories(categoryPage.items); setTasks(taskPage.items); } })
       .catch((failure: unknown) => { if (active) setError(failure); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [client, revision]);
+  }, [client, revision, section]);
 
   // 复用完整配置更新及版本校验；失联后只重读，不自动反转或覆盖新版本。
   async function changeTaskStatus(task: Task, trigger: HTMLButtonElement) {
@@ -107,30 +126,54 @@ export function CheckinManagement({ client, session, section }: CheckinProps & {
     } finally { setBusy(false); }
   }
 
-  return <div className="checkin-workspace">
-    {section === undefined && <div className="checkin-tabs" aria-label={content.categoriesTasks}><button className="secondary" disabled={busy} aria-pressed={tab === 'configuration'} onClick={() => setTab('configuration')}>{content.categoriesTasks}</button><button className="secondary" disabled={busy} aria-pressed={tab === 'records'} onClick={() => setTab('records')}>{content.manageRecords}</button></div>}
-    {activeTab === 'records' ? <HistoryManagement client={client} session={session} /> : <>
-      {loading && <p role="status">{content.loading}</p>}
-      {message && <p role="status" className={error === null ? 'checkin-notice' : 'checkin-warning'}>{message}</p>}
-      {error !== null && <div role="alert" className="checkin-error"><p>{checkinError(error)}</p>{!deleting && <button className="secondary" disabled={busy} onClick={() => refresh((value) => value + 1)}>{content.reload}</button>}</div>}
-      {command && !editing && <div className="checkin-warning"><p>{content.configUnknown}</p><button disabled={busy} onClick={() => void recoverConfiguration()}>{content.retryConfig}</button></div>}
-      <section className="checkin-panel"><div className="checkin-section-heading"><h2>{content.categories}</h2><button disabled={actionsDisabled || Boolean(command)} onClick={() => setEditing({ kind: 'category', item: null })}>{content.newCategory}</button></div>
-        {categories.length === 0 && !loading && <p>{content.emptyCategories}</p>}{categories.map((item) => <div className="checkin-config-row" key={item.id}><strong>{item.name}</strong><div className="checkin-actions"><button className="secondary" disabled={actionsDisabled} onClick={() => setEditing({ kind: 'category', item })}>{content.editConfig}</button><button className="secondary" disabled={actionsDisabled} onClick={() => setDeleting({ kind: 'category', item })}>{content.remove}</button></div></div>)}
-      </section>
-      <section className="checkin-panel"><div className="checkin-section-heading"><h2>{content.tasks}</h2><button disabled={actionsDisabled || Boolean(command)} onClick={() => setEditing({ kind: 'task', item: null })}>{content.newTask}</button></div>
-        <label className="checkin-toggle"><input ref={visibilityControl} type="checkbox" checked={showDisabled} onChange={(event) => setShowDisabled(event.target.checked)} />{content.showDisabledTasks}</label>
-        {visibleTasks.length === 0 && !loading && error === null && <p>{tasks.length === 0 ? content.emptyTasks : content.noActiveTasks}</p>}
-        {visibleTasks.map((item) => <div className="checkin-config-row" key={item.id}>
-          <div><strong>{item.name}</strong>{!item.enabled && <p className="checkin-hint">{content.disabled}</p>}<p className="checkin-hint"><CurrencyAmount currency="coins" amount={item.coin_reward} /> · <CurrencyAmount currency="diamonds" amount={item.diamond_reward} /> · {content.dailyLimit} {item.daily_limit}</p></div>
+  return <div className="checkin-workspace checkin-management">
+    {loading && <p role="status">{content.loading}</p>}
+    {message && <p role="status" className={error === null ? 'checkin-notice' : 'checkin-warning'}>{message}</p>}
+    {error !== null && <div role="alert" className="checkin-error"><p>{checkinError(error)}</p>{!deleting && <button className="secondary" disabled={busy} onClick={() => refresh((value) => value + 1)}>{content.reload}</button>}</div>}
+    {command && !editing && <div className="checkin-warning"><p>{content.configUnknown}</p><button disabled={busy} onClick={() => void recoverConfiguration()}>{content.retryConfig}</button></div>}
+    {section === 'categories' ? <section className="checkin-panel">
+      <button disabled={actionsDisabled || Boolean(command)} onClick={() => setEditing({ kind: 'category', item: null })}>{content.newCategory}</button>
+      {categories.length === 0 && !loading && error === null && <p>{content.emptyCategories}</p>}
+      <ul className="checkin-config-list" role="list">{categories.map((item) => <li className="checkin-config-row" key={item.id}>
+        <div><strong>{item.name}</strong><span className="checkin-config-meta">{content.sortOrder} {item.sort_order}</span></div>
+        <div className="checkin-actions">
+          <button className="secondary" disabled={actionsDisabled} onClick={() => setEditing({ kind: 'category', item })}>{content.editConfig}</button>
+          <button className="secondary" disabled={actionsDisabled} onClick={() => setDeleting({ kind: 'category', item })}>{content.remove}</button>
+        </div>
+      </li>)}</ul>
+    </section> : <section className="checkin-panel">
+      <div className="checkin-management-toolbar">
+        <button disabled={actionsDisabled || Boolean(command)} onClick={() => setEditing({ kind: 'task', item: null })}>{content.newTask}</button>
+        <label className="checkin-toggle">
+          <input ref={visibilityControl} type="checkbox" checked={showDisabled} onChange={(event) => setShowDisabled(event.target.checked)} />
+          {content.showDisabledTasks}
+        </label>
+      </div>
+      <ViewTabs label={content.category} items={categoryTabs} value={selectedCategory} onChange={setCategory}>
+        {visibleTasks.length === 0 && !loading && error === null && <p>{categoryTasks.length === 0 ? content.emptyTasks : content.noActiveTasks}</p>}
+        <ul className="checkin-config-list" role="list">{visibleTasks.map((item) => <li className="checkin-config-row" key={item.id}>
+          <div className="checkin-config-task">
+            <TaskIcon name={item.icon_key} />
+            <div>
+              <strong>{item.name}</strong><span className="checkin-config-meta">{item.enabled ? content.enabledStatus : content.disabled}</span>
+              <div className="checkin-config-details">
+                <CurrencyAmount currency="coins" amount={item.coin_reward} />
+                <CurrencyAmount currency="diamonds" amount={item.diamond_reward} />
+                <span>{content.dailyLimit} {item.daily_limit}</span>
+              </div>
+            </div>
+          </div>
           <div className="checkin-actions">
             <button className="secondary" disabled={actionsDisabled || Boolean(command)} aria-label={`${item.enabled ? content.disableTask : content.enableTask} ${item.name}`} aria-busy={changingTask === item.id} onClick={(event) => void changeTaskStatus(item, event.currentTarget)}>{changingTask === item.id ? content.saving : item.enabled ? content.disableTask : content.enableTask}</button>
             <button className="secondary" disabled={actionsDisabled} onClick={() => setEditing({ kind: 'task', item })}>{content.editConfig}</button>
             <button className="secondary" disabled={actionsDisabled} onClick={() => setDeleting({ kind: 'task', item })}>{content.remove}</button>
           </div>
-        </div>)}
-      </section>
-    </>}
-    {editing && <ConfigDialog client={client} session={session} kind={editing.kind} item={editing.item} categories={categories} onClose={() => setEditing(null)} onSaved={() => refresh((value) => value + 1)} />}
+        </li>)}</ul>
+      </ViewTabs>
+    </section>}
+    {editing && <ConfigDialog client={client} session={session} kind={editing.kind} item={editing.item} categories={categories}
+      initialCategoryID={selectedCategory === uncategorizedTab ? '' : selectedCategory}
+      onClose={() => setEditing(null)} onSaved={() => refresh((value) => value + 1)} />}
     {deleting && <Modal title={content.remove} closeDisabled={busy} onClose={() => setDeleting(null)}><div className="checkin-stack"><h3>{deleting.item.name}</h3><p>{content.configDeleteQuestion}</p>{deleting.kind === 'task' && <p>{content.taskDeleteUnlockWarning}</p>}{error !== null && <p role="alert">{checkinError(error)}</p>}{error instanceof ApiFailure && error.detail.code === 'VERSION_CONFLICT' && <button className="secondary" disabled={busy} onClick={() => void refreshDeleteTarget()}>{content.confirmLatest}</button>}<div className="checkin-actions"><button disabled={busy} onClick={() => void remove()}>{busy ? content.saving : content.remove}</button><button className="secondary" disabled={busy} onClick={() => setDeleting(null)}>{content.cancel}</button></div></div></Modal>}
   </div>;
 }

@@ -36,7 +36,7 @@ func TestShopHTTP(t *testing.T) {
 		app.ServeHTTP(response, req)
 		return response
 	}
-	productBody := `{"type":"reward","name":"一起看电影","asset_key":"reward-gift-v1","description":"家庭奖励","coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`
+	productBody := `{"name":"餐椅","asset_key":"camp-dining-chair-v1-thumbnail","coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`
 	response := request("POST", "/api/v1/management/products", productBody, "product-test")
 	if response.Code != 403 {
 		t.Fatalf("locked configuration accepted: %d %s", response.Code, response.Body)
@@ -55,7 +55,9 @@ func TestShopHTTP(t *testing.T) {
 	if !strings.Contains(response.Body.String(), `"stock":null`) || product.Owned {
 		t.Fatalf("product wire: %s", response.Body)
 	}
-	purchaseBody := `{"product_id":"` + product.ID + `","expected_product_version":1,"expected_wallet_version":1}`
+	const rewardID = "historical-family-reward"
+	seedHistoricalOfferHTTP(t, app, rewardID, shop.TypeReward, "一起看电影", "reward-gift-v1")
+	purchaseBody := `{"product_id":"` + rewardID + `","expected_product_version":1,"expected_wallet_version":1}`
 	response = request("POST", "/api/v1/purchases", purchaseBody, "purchase-test")
 	if response.Code != 201 {
 		t.Fatalf("purchase: %d %s", response.Code, response.Body)

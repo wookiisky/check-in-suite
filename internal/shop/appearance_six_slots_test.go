@@ -34,7 +34,7 @@ func TestAppearanceFaceHeadAndBackAreIndependentOwnedSlots(t *testing.T) {
 		if candidate.Key == "" {
 			t.Fatalf("no non-default %s wearable", slot)
 		}
-		product := createProduct(t, f, shop.ProductInput{Type: shop.TypeWearable, Name: candidate.Name, AssetKey: candidate.ThumbnailAssetKey, WearableKey: candidate.Key, Enabled: true})
+		product := createProduct(t, f, productFixture{Type: shop.TypeWearable, Name: candidate.Name, AssetKey: candidate.ThumbnailAssetKey, WearableKey: candidate.Key, Enabled: true})
 		purchases[slot] = buyProduct(t, f, product).Purchase.ID
 	}
 	face, head, back := purchases[character.SlotFace], purchases[character.SlotHead], purchases[character.SlotBack]

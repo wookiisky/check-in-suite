@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { ApiClient } from '../../api/client';
 import type { Preferences, Session } from '../../api/types';
 import { Modal } from '../../components/Modal';
@@ -13,11 +14,12 @@ import './family.css';
 type PreferenceKey = keyof Preferences;
 
 // 偏好按字段保存，音乐只有当前页面明确用户操作后才播放。
-export function SoundPreferences({ client, session, onPreferencesChange, presentation = 'panel', open = false, onClose }: {
+export function SoundPreferences({ client, session, onPreferencesChange, presentation = 'panel', panelTarget, open = false, onClose }: {
   client: Pick<ApiClient, 'request'>; // 已绑定会话的请求入口。
   session: Session; // 当前音效与动效偏好。
   onPreferencesChange: (preferences: Preferences) => void; // 更新共享账户偏好。
   presentation?: 'panel' | 'dialog'; // 普通页面面板与全屏小岛弹层复用同一运行实例。
+  panelTarget?: HTMLElement | null; // 管理标签承载控件，切换标签时声音实例继续运行。
   open?: boolean; // 弹层是否可见，不影响声音生命周期。
   onClose?: () => void; // 关闭设置但继续运行声音。
 }) {
@@ -132,10 +134,11 @@ export function SoundPreferences({ client, session, onPreferencesChange, present
       if (key === 'music_enabled' && value) { wantedPlayback.current = false; setPlaying(false); engine.current?.stopMusic(); }
     } finally { effectsSuppressed.current = false; if (mounted.current) setBusy(null); }
   }
-  const controls = <section className={presentation === 'panel' ? 'panel family-sound-panel' : 'family-sound-dialog'}>{presentation === 'panel' && <h2>{content.sounds}</h2>}<div className="family-preferences">{(['music_enabled', 'effects_enabled', 'reduce_motion'] as const).map((key) => <label key={key}><input type="checkbox" checked={preferences[key]} disabled={busy !== null} onChange={(event) => void change(key, event.target.checked)} />{key === 'music_enabled' ? content.music : key === 'effects_enabled' ? content.effects : content.reduceMotion}</label>)}</div>
+  const controls = <section className={presentation === 'panel' ? 'panel family-sound-panel' : 'family-sound-dialog'}>{presentation === 'panel' && panelTarget === undefined && <h2>{content.sounds}</h2>}<div className="family-preferences">{(['music_enabled', 'effects_enabled', 'reduce_motion'] as const).map((key) => <label key={key}><input type="checkbox" checked={preferences[key]} disabled={busy !== null} onChange={(event) => void change(key, event.target.checked)} />{key === 'music_enabled' ? content.music : key === 'effects_enabled' ? content.effects : content.reduceMotion}</label>)}</div>
     {preferences.music_enabled && <>{recording && <p className="muted">{content.recordingPaused}</p>}<button className="secondary" onClick={() => { if (playing) { wantedPlayback.current = false; setPlaying(false); engine.current?.stopMusic(); } else void startMusic(); }}>{playing ? content.pauseMusic : content.playMusic}</button></>}
     {audioError && <p role="alert" className="form-error">{audioError}</p>}<FormFeedback error={error} />
   </section>;
   if (presentation === 'dialog') return open ? <Modal title={content.sounds} onClose={() => onClose?.()}>{controls}</Modal> : null;
+  if (panelTarget !== undefined) return panelTarget ? createPortal(controls, panelTarget) : null;
   return controls;
 }

@@ -45,7 +45,7 @@ func TestSpatialPurchaseSnapshot(t *testing.T) {
 	f := newShopFixture(t)
 	balance := creditFixture(t, f, 100, 0)
 	ctx := context.Background()
-	product := createProduct(t, f, shop.ProductInput{Type: shop.TypeIsland, Name: "三维椅子", AssetKey: "camp-dining-chair-v1-thumbnail", CoinPrice: 20, Enabled: true})
+	product := createProduct(t, f, productFixture{Type: shop.TypeIsland, Name: "三维椅子", AssetKey: "camp-dining-chair-v1-thumbnail", CoinPrice: 20, Enabled: true})
 	if product.IslandItemKey != "camp-dining-chair-v1" || !product.Repeatable {
 		t.Fatalf("missing spatial capability: %+v", product)
 	}
@@ -60,12 +60,14 @@ func TestSpatialPurchaseSnapshot(t *testing.T) {
 	if first.Purchase.ID == second.Purchase.ID || first.Purchase.ItemKeySnapshot != "camp-dining-chair-v1" || first.Purchase.IslandItemKey != "camp-dining-chair-v1" {
 		t.Fatalf("snapshot mismatch: %+v", first.Purchase)
 	}
-	other := createProduct(t, f, shop.ProductInput{Type: shop.TypeIsland, Name: "同款另售", AssetKey: product.AssetKey, Enabled: true})
+	other := createProduct(t, f, productFixture{Type: shop.TypeIsland, Name: "同款另售", AssetKey: product.AssetKey, Enabled: true})
 	if !other.Owned || other.OwnedCount != 2 {
 		t.Fatalf("cross-offer ownership lost: %+v", other)
 	}
-	_, err = f.Service.UpdateProduct(ctx, f.Principal, product.ID, shop.ProductUpdate{ExpectedVersion: product.Version, ProductInput: shop.ProductInput{Type: shop.TypeIsland, Name: product.Name, AssetKey: "camp-bed-v1-thumbnail", Enabled: true}})
-	requireShopCode(t, err, "PRODUCT_ITEM_LOCKED")
+	changed, err := f.Service.UpdateProduct(ctx, f.Principal, product.ID, shop.ProductUpdate{ExpectedVersion: product.Version, ProductTerms: shop.ProductTerms{Name: "新报价", Enabled: true}})
+	if err != nil || changed.IslandItemKey != product.IslandItemKey || changed.AssetKey != product.AssetKey {
+		t.Fatalf("camp item binding changed: %+v err=%v", changed, err)
+	}
 	if _, err = f.DB.Exec(`UPDATE products SET deleted_at=1,name='改名' WHERE id=?`, product.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +77,7 @@ func TestSpatialPurchaseSnapshot(t *testing.T) {
 	}
 	for _, assetKey := range []string{"camp-house-v1-thumbnail", "camp-reading-desk-v1-thumbnail", "camp-sports-area-v1-thumbnail"} {
 		t.Run(assetKey, func(t *testing.T) {
-			_, err = f.Service.CreateProduct(ctx, f.Principal, core.ID(), shop.ProductInput{Type: shop.TypeIsland, Name: "免费初始款", AssetKey: assetKey, Enabled: true})
+			_, err = f.Service.CreateProduct(ctx, f.Principal, core.ID(), productFixture{Type: shop.TypeIsland, Name: "免费初始款", AssetKey: assetKey, Enabled: true}.createInput())
 			requireShopCode(t, err, "INVALID_REQUEST")
 		})
 	}

@@ -26,7 +26,7 @@ describe('配置编辑冲突恢复', () => {
     });
     const saved = vi.fn();
     render(<ConfigDialog client={{ request }} session={session} kind="task" item={taskFixture} categories={[category]} onClose={vi.fn()} onSaved={saved} />);
-    await screen.findByRole('option', { name: '书本图标' });
+    await screen.findByRole('radio', { name: '书本图标' });
     fireEvent.change(screen.getByLabelText(content.name), { target: { value: '我的名称' } });
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await screen.findByText(content.errors.VERSION_CONFLICT);
@@ -59,7 +59,7 @@ describe('配置编辑冲突恢复', () => {
       return { items: [latestTask] };
     });
     render(<ConfigDialog client={{ request }} session={session} kind="task" item={{ ...taskFixture, category_id: category.id }} categories={[category]} onClose={vi.fn()} onSaved={vi.fn()} />);
-    await screen.findByRole('option', { name: '书本图标' });
+    await screen.findByRole('radio', { name: '书本图标' });
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     fireEvent.click(await screen.findByRole('button', { name: content.confirmLatest }));
     await screen.findByRole('button', { name: '使用最新配置' });
@@ -68,7 +68,7 @@ describe('配置编辑冲突恢复', () => {
     fireEvent.click(screen.getByRole('button', { name: '使用最新配置' }));
     expect(screen.getByLabelText(content.name)).toHaveValue(latestTask.name);
     expect(screen.getByLabelText(content.category)).toHaveValue(nextCategory.id);
-    expect(screen.getByLabelText(content.icon)).toHaveValue(latestTask.icon_key);
+    expect(screen.getByRole('radio', { name: '星星图标' })).toBeChecked();
     expect(screen.getByLabelText(content.coins)).toHaveValue(99);
     expect(screen.getByLabelText(content.diamonds)).toHaveValue(7);
     expect(screen.getByLabelText(content.dailyLimit)).toHaveValue(8);

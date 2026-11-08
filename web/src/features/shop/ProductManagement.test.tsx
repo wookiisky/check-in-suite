@@ -1,13 +1,13 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiClient, ApiFailure } from '../../api/client';
 import type { Session } from '../../api/types';
 import { testSession } from '../../test/account-fixtures';
 import { ProductEditor } from './ProductEditor';
 import { ProductManagement } from './ProductManagement';
-import { AppearanceProvider } from '../character/AppearanceProvider';
-import { deferred } from './appearance-test-fixtures';
-import { managedTitle as product, productAssets as assets, productCatalog, managedWearable } from './product-management-fixtures';
+import { pendingProducts } from './pending';
+import type { Product } from './types';
+import { managedWearable as product, managedMaterials, managedMaterial } from './product-management-fixtures';
 import content from './content.json';
 
 const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
@@ -15,131 +15,122 @@ const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
 afterEach(() => vi.unstubAllGlobals());
 
 describe('商品配置', () => {
-  it('大量素材先限制选项数量，搜索仍能选中目录后面的素材', () => {
-    const manyAssets = Array.from({ length: 140 }, (_, index) => ({ key: `island-${index}`, name: `摆设${index}`, kind: 'island' as const, url: `/island-${index}.png` }));
-    render(<ProductEditor client={{ request: vi.fn() }} session={session} product={null} assets={manyAssets} onClose={vi.fn()} onSaved={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'island' } });
-    expect(screen.getByLabelText(content.asset).querySelectorAll('option')).toHaveLength(101);
-    fireEvent.change(screen.getByLabelText(content.assetSearchLabel), { target: { value: '摆设139' } });
-    fireEvent.change(screen.getByLabelText(content.asset), { target: { value: 'island-139' } });
-    expect(screen.getByLabelText(content.asset)).toHaveValue('island-139');
-  });
-
-  it('完整人物商品提交稳定人物身份，切换为其他类型时清除旧身份', async () => {
-    const character = { ...productCatalog.characters[0]!, character_key: 'knight', name: '骑士', thumbnail_asset_key: 'knight-thumbnail' };
-    const characterAsset = { key: 'knight-thumbnail', name: '骑士', kind: 'character' as const, url: '/knight.png' };
-    const request = vi.fn().mockResolvedValue({ ...product, type: 'character', character_key: 'knight' });
-    render(<ProductEditor client={{ request }} session={session} product={null} assets={[...assets, characterAsset]} characters={[...productCatalog.characters, character]} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'character' } });
-    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '骑士商品' } });
-    fireEvent.click(screen.getByRole('button', { name: content.save }));
-    await waitFor(() => expect(request).toHaveBeenCalled());
-    expect(request.mock.calls[0]?.[1].body).toMatchObject({ type: 'character', asset_key: 'knight-thumbnail', character_key: 'knight' });
-    expect(request.mock.calls[0]?.[1].body.wearable_key).toBeUndefined();
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'reward' } });
-    fireEvent.click(screen.getByRole('button', { name: content.save }));
-    await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
-    expect(request.mock.calls[1]?.[1].body.character_key).toBeUndefined();
-  });
-
-  it('按定义部位选择服装并提交准确身份，默认款不售卖', async () => {
-    const request = vi.fn().mockResolvedValue(managedWearable);
-    render(<ProductEditor client={{ request }} session={session} product={null} assets={assets} characters={productCatalog.characters} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);
-    expect(screen.queryByRole('option', { name: '动物形象' })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'upper' } });
-    expect(screen.queryByRole('option', { name: '上装默认款' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: '头部新款' })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(content.asset), { target: { value: 'catalog-preview-q' } });
-    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新的服装' } });
-    fireEvent.click(screen.getByRole('button', { name: content.save }));
-    await waitFor(() => expect(request).toHaveBeenCalled());
-    expect(request.mock.calls[0]?.[1].body).toMatchObject({ type: 'wearable', asset_key: 'catalog-preview-q', wearable_key: 'catalog-choice-z' });
-  });
-
-  it('编辑已有服装保留定义身份，已有购买记录时只允许修改报价', async () => {
-    const request = vi.fn().mockResolvedValue(managedWearable);
-    render(<ProductEditor client={{ request }} session={session} product={{ ...managedWearable, owned_count: 2 }} assets={assets} characters={productCatalog.characters} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);
-    expect(screen.getByLabelText(content.typeFilter)).toHaveValue('upper');
-    expect(screen.getByLabelText(content.typeFilter)).toBeDisabled();
-    expect(screen.getByLabelText(content.asset)).toBeDisabled();
-    fireEvent.change(screen.getByLabelText(content.coinPrice), { target: { value: '25' } });
-    fireEvent.click(screen.getByRole('button', { name: content.save }));
-    await waitFor(() => expect(request).toHaveBeenCalled());
-    expect(request.mock.calls[0]?.[1].body).toMatchObject({ wearable_key: 'catalog-choice-z', asset_key: 'catalog-preview-q', coin_price: 25, expected_version: 1 });
-  });
-  it('从共享目录取得定义后才能新增服装，失败重读恢复', async () => {
-    let appearanceReads = 0;
-    const waiting = deferred<typeof productCatalog>();
+  it('按商店分组和子类请求后端，保留停用商品并提供分页', async () => {
+    const furniture = { ...product, type: 'island', name: '营地长椅', enabled: false };
     const request = vi.fn(async (path: string) => {
-      if (path === '/appearance') {
-        appearanceReads += 1;
-        if (appearanceReads === 1) throw new Error('catalog unavailable');
-        return waiting.promise;
-      }
-      if (path === '/assets') return { items: assets };
-      return { items: [managedWearable] };
+      const query = new URL(path, 'http://fixture').searchParams;
+      if (query.get('group') === 'appearance') return { items: [product] };
+      return {
+        items: query.get('cursor') ? [] : [furniture],
+        camp_categories: ['scene', 'furniture'],
+        next_cursor: query.get('cursor') ? null : 'more',
+      };
     });
-    const client = { request: request as ApiClient['request'] };
-    render(<AppearanceProvider active client={client}><ProductManagement client={client} session={session} /></AppearanceProvider>);
-    await screen.findByRole('alert');
-    expect(screen.getByRole('button', { name: content.addProduct })).toBeDisabled();
-    expect(screen.getByRole('button', { name: `${content.edit} ${managedWearable.name}` })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: content.reload }));
-    await waitFor(() => expect(appearanceReads).toBe(2));
-    waiting.resolve(productCatalog);
-    await waitFor(() => expect(screen.getByRole('button', { name: content.addProduct })).toBeEnabled());
+    render(<ProductManagement client={{ request: request as ApiClient['request'] }} session={session} />);
+    await screen.findByRole('heading', { name: product.name });
+    fireEvent.click(screen.getByRole('tab', { name: content.shopCamp }));
+    fireEvent.click(await screen.findByRole('tab', { name: content.campCategories.furniture }));
+    expect(await screen.findByText(content.unavailable)).toBeVisible();
+    expect(screen.queryByRole('button', { name: /删除/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: content.more }));
+    await waitFor(() => {
+      const query = new URL(request.mock.lastCall![0], 'http://fixture').searchParams;
+      expect(Object.fromEntries(query)).toMatchObject({ group: 'camp', category: 'furniture', include_inactive: 'true', cursor: 'more' });
+    });
+  });
+
+  it('切换商品分组清除分组专属的来源和素材包筛选，保留搜索', async () => {
+    const request = vi.fn(async (path: string) => {
+      const group = new URL(path, 'http://fixture').searchParams.get('group');
+      return {
+        items: [],
+        facets: group === 'appearance'
+          ? { providers: ['kaykit'], packs: [{ key: 'adventurers', provider: 'kaykit', name: 'Adventurers' }] }
+          : { providers: ['kenney'], packs: [] },
+      };
+    });
+    render(<ProductManagement client={{ request: request as ApiClient['request'] }} session={session} />);
+    await screen.findByRole('option', { name: 'Adventurers' });
+    fireEvent.change(screen.getByLabelText(content.searchLabel), { target: { value: '森林' } });
+    fireEvent.click(screen.getByRole('button', { name: content.search }));
+    fireEvent.change(screen.getByLabelText(content.providerLabel), { target: { value: 'kaykit' } });
+    fireEvent.change(screen.getByLabelText(content.packLabel), { target: { value: 'adventurers' } });
+    fireEvent.click(screen.getByRole('tab', { name: content.shopCamp }));
+    await screen.findByRole('option', { name: 'Kenney' });
+    const query = new URL(request.mock.lastCall![0], 'http://fixture').searchParams;
+    expect(Object.fromEntries(query)).toEqual({ group: 'camp', include_inactive: 'true', limit: '48', search: '森林' });
+    expect(screen.getByLabelText(content.providerLabel)).toHaveValue('');
+    expect(screen.getByLabelText(content.packLabel)).toHaveValue('');
+  });
+
+  it('素材库用缩略图呈现绑定，只能从可售素材新增商品', async () => {
+    const request = vi.fn().mockImplementation(async (path: string) => {
+      if (path === '/management/materials') return managedMaterials;
+      if (path === '/management/products') return product;
+      return { items: [product] };
+    });
+    render(<ProductManagement client={{ request }} session={session} />);
     fireEvent.click(screen.getByRole('button', { name: content.addProduct }));
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'upper' } });
-    expect(screen.getByRole('option', { name: '森林款' })).toHaveValue('catalog-preview-q');
-    expect(screen.queryByRole('option', { name: '上装默认款' })).not.toBeInTheDocument();
+    const choice = await screen.findByRole('button', { name: `${content.addProduct} ${managedMaterial.asset.name}` });
+    const material = choice.closest('article')!;
+    expect(material.querySelector('img')).toHaveAttribute('src', '/api/v1/assets/catalog-preview-q');
+    expect(screen.queryByRole('button', { name: `${content.addProduct} 免费上装` })).not.toBeInTheDocument();
+    fireEvent.click(choice);
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByLabelText(content.name)).toHaveValue(managedMaterial.asset.name);
+    expect(within(dialog).queryByLabelText('商品类型')).not.toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: content.save }));
+    await waitFor(() => expect(request).toHaveBeenCalledWith('/management/products', {
+      method: 'POST', idempotencyKey: expect.any(String),
+      body: { asset_key: managedMaterial.asset.key, name: managedMaterial.asset.name, coin_price: 0, diamond_price: 0, stock: null, enabled: true },
+    }));
+    expect(screen.getByRole('tab', { name: content.productLibrary })).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('改为非服装商品时清除服装身份，不沿用旧的 key', async () => {
+  it('素材库展示动作片段、场景、人物和道具绑定', async () => {
+    const request = vi.fn().mockImplementation(async (path: string) => path === '/management/materials' ? managedMaterials : { items: [] });
+    render(<ProductManagement client={{ request }} session={session} />);
+    fireEvent.click(screen.getByRole('tab', { name: content.materialLibrary }));
+    fireEvent.click(await screen.findByRole('tab', { name: content.materialActivities }));
+    expect(screen.getByText('Read_Seated')).toBeVisible();
+    expect(screen.getByText('海边营地')).toBeVisible();
+    expect(screen.getByText('人形')).toBeVisible();
+    expect(screen.getByText('activity-reading-book-v1')).toBeVisible();
+    expect(screen.queryByRole('button', { name: /新增商品/ })).not.toBeInTheDocument();
+  });
+
+  it('编辑未售商品也只提交报价字段，显示当前素材且允许库存为零', async () => {
     const request = vi.fn().mockResolvedValue(product);
-    render(<ProductEditor client={{ request }} session={session} product={managedWearable} assets={assets} characters={productCatalog.characters} wearables={productCatalog.wearables} onClose={vi.fn()} onSaved={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'reward' } });
+    render(<ProductEditor client={{ request }} session={session} product={product} onClose={vi.fn()} onSaved={vi.fn()} />);
+    expect(screen.getByRole('img', { name: content.asset })).toHaveAttribute('src', '/api/v1/assets/catalog-preview-q');
+    expect(screen.queryByLabelText('商品类型')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('商品描述')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(content.coinPrice), { target: { value: '25' } });
+    fireEvent.change(screen.getByLabelText(content.finiteStock), { target: { value: '0' } });
     fireEvent.click(screen.getByRole('button', { name: content.save }));
-    await waitFor(() => expect(request).toHaveBeenCalled());
-    expect(request.mock.calls[0]?.[1].body).toMatchObject({ type: 'reward', asset_key: 'reward-book-v1' });
-    expect(request.mock.calls[0]?.[1].body.wearable_key).toBeUndefined();
+    await waitFor(() => expect(request).toHaveBeenCalledWith(`/management/products/${product.id}`, {
+      method: 'PATCH',
+      body: { name: product.name, coin_price: 25, diamond_price: product.diamond_price, stock: 0, enabled: true, expected_version: 1 },
+    }));
   });
 
-  it('真实201新增响应截断后跨弹窗恢复同一商品命令', async () => {
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(
-        new Response('{"id":', { status: 201, headers: { 'Content-Type': 'application/json' } }),
-      )
+  it('真实 201 响应截断后跨弹窗恢复同一商品命令', async () => {
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response('{"id":', { status: 201, headers: { 'Content-Type': 'application/json' } }))
       .mockResolvedValueOnce(Response.json(product, { status: 201 }));
     vi.stubGlobal('fetch', fetchMock);
     const client = new ApiClient();
     const onSaved = vi.fn();
-    const first = render(
-      <ProductEditor
-        client={client}
-        session={session}
-        product={null}
-        assets={assets}
-        onClose={vi.fn()}
-        onSaved={onSaved}
-      />,
-    );
-    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新增称号' } });
+    const props = { client, session, onClose: vi.fn(), onSaved };
+    const first = render(<ProductEditor {...props} product={null} material={managedMaterial} />);
+    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新上装' } });
     fireEvent.click(screen.getByRole('button', { name: content.save }));
     await screen.findByText(content.createPending);
     expect(onSaved).not.toHaveBeenCalled();
     first.unmount();
-    render(
-      <ProductEditor
-        client={client}
-        session={session}
-        product={null}
-        assets={assets}
-        onClose={vi.fn()}
-        onSaved={onSaved}
-      />,
-    );
-    expect(screen.getByLabelText(content.name)).toHaveValue('新增称号');
+
+    render(<ProductEditor {...props} product={null} />);
+    expect(screen.getByLabelText(content.name)).toHaveValue('新上装');
     expect(screen.getByLabelText(content.name)).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: content.recoverCreate }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(product));
@@ -147,70 +138,43 @@ describe('商品配置', () => {
     const firstWrite = fetchMock.mock.calls[0]?.[1];
     const replay = fetchMock.mock.calls[1]?.[1];
     expect(replay?.body).toBe(firstWrite?.body);
-    expect((replay?.headers as Headers).get('Idempotency-Key')).toBe(
-      (firstWrite?.headers as Headers).get('Idempotency-Key'),
-    );
+    expect((replay?.headers as Headers).get('Idempotency-Key')).toBe((firstWrite?.headers as Headers).get('Idempotency-Key'));
   });
 
-  it('素材选择只展示当前商品种类，库存不限量传null且创建未知后复用原键', async () => {
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(
-        new ApiFailure(0, { code: 'NETWORK_ERROR', field_errors: {}, request_id: '' }),
-      )
-      .mockResolvedValueOnce(product);
-    const onSaved = vi.fn();
-    render(
-      <ProductEditor
-        client={{ request }}
-        session={session}
-        product={null}
-        assets={assets}
-        onClose={vi.fn()}
-        onSaved={onSaved}
-      />,
-    );
-    fireEvent.change(screen.getByLabelText(content.typeFilter), { target: { value: 'reward' } });
-    expect(screen.getByLabelText(content.asset)).toHaveValue('reward-book-v1');
-    expect(screen.queryByRole('option', { name: '皇冠' })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(content.name), { target: { value: '新奖励' } });
-    fireEvent.click(screen.getByRole('button', { name: content.save }));
-    await screen.findByText(content.createPending);
-    expect(screen.getByLabelText(content.name)).toBeDisabled();
+  it('重新进入管理后恢复营地商品创建，回到营地商品库', async () => {
+    const campProduct: Product = { ...product, name: '海边家具', type: 'island', asset_key: 'camp-chair' };
+    const request = vi.fn(async (path: string) => {
+      if (path === '/management/products') return campProduct;
+      const group = new URL(path, 'http://fixture').searchParams.get('group');
+      return { items: group === 'camp' ? [campProduct] : [] };
+    });
+    const client = { request: request as ApiClient['request'] };
+    pendingProducts.set(client, {
+      key: 'camp-replay',
+      body: { asset_key: campProduct.asset_key, name: campProduct.name, coin_price: 0, diamond_price: 0, stock: null, enabled: true },
+    });
+
+    render(<ProductManagement client={client} session={session} />);
     fireEvent.click(screen.getByRole('button', { name: content.recoverCreate }));
-    await waitFor(() => expect(onSaved).toHaveBeenCalled());
-    expect(request.mock.calls[0]).toEqual(request.mock.calls[1]);
-    expect(request.mock.calls[0]?.[1].body.stock).toBeNull();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: content.recoverCreate }));
+    expect(await screen.findByRole('heading', { name: campProduct.name })).toBeVisible();
+    expect(screen.getByRole('tab', { name: content.shopCamp })).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('编辑版本冲突保留草稿，读取当前配置后明确确认才能按新版本提交', async () => {
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(
-        new ApiFailure(409, { code: 'VERSION_CONFLICT', field_errors: {}, request_id: '' }),
-      )
+  it('编辑冲突保留草稿，重读后明确确认才提交新版本', async () => {
+    const request = vi.fn()
+      .mockRejectedValueOnce(new ApiFailure(409, { code: 'VERSION_CONFLICT', field_errors: {}, request_id: '' }))
       .mockResolvedValueOnce({ items: [{ ...product, version: 2, name: '别处改名' }] })
       .mockResolvedValueOnce(product);
-    render(
-      <ProductEditor
-        client={{ request }}
-        session={session}
-        product={product}
-        assets={assets}
-        onClose={vi.fn()}
-        onSaved={vi.fn()}
-      />,
-    );
+    render(<ProductEditor client={{ request }} session={session} product={product} onClose={vi.fn()} onSaved={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(content.name), { target: { value: '我的草稿' } });
     fireEvent.click(screen.getByRole('button', { name: content.save }));
-    await screen.findByRole('button', { name: content.reloadProduct });
-    fireEvent.click(screen.getByRole('button', { name: content.reloadProduct }));
+    fireEvent.click(await screen.findByRole('button', { name: content.reloadProduct }));
     await screen.findByText(content.reviewProduct);
     expect(screen.getByLabelText(content.name)).toHaveValue('我的草稿');
     expect(request).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getByRole('button', { name: content.confirmDraft }));
     await waitFor(() => expect(request).toHaveBeenCalledTimes(3));
-    expect(request.mock.calls[2]?.[1].body.expected_version).toBe(2);
-    expect(request.mock.calls[2]?.[1].body.name).toBe('我的草稿');
+    expect(request.mock.calls[2]?.[1].body).toMatchObject({ expected_version: 2, name: '我的草稿' });
   });
 });

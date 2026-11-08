@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
+import { openSceneProductEditor, shopAPI } from './shop-navigation';
 import achievement from '../src/features/achievements/content.json' with { type: 'json' };
 import type { components } from '../src/api/schema';
 
@@ -20,7 +21,7 @@ interface CreationFlow {
 }
 
 const creationFlows: CreationFlow[] = [
-  { kind: '类别', section: content.navigation.tasks, create: checkin.newCategory, name: checkin.name, save: checkin.save, pending: checkin.configUnknown, recover: checkin.retryConfig, endpoint: '/management/categories', listEndpoint: '/categories?include_inactive=true', reopen: false },
+  { kind: '类别', section: content.navigation.categories, create: checkin.newCategory, name: checkin.name, save: checkin.save, pending: checkin.configUnknown, recover: checkin.retryConfig, endpoint: '/management/categories', listEndpoint: '/categories?include_inactive=true', reopen: false },
   { kind: '任务', section: content.navigation.tasks, create: checkin.newTask, name: checkin.name, save: checkin.save, pending: checkin.configUnknown, recover: checkin.retryConfig, endpoint: '/management/tasks', listEndpoint: '/tasks?include_inactive=true', reopen: false },
   { kind: '商品', section: content.navigation.products, create: shop.addProduct, name: shop.name, save: shop.save, pending: shop.createPending, recover: shop.recoverCreate, endpoint: '/management/products', listEndpoint: '/products?include_inactive=true', reopen: true },
   { kind: '成就', section: content.navigation.achievementManagement, create: achievement.new, name: achievement.name, save: achievement.save, pending: achievement.pendingCreate, recover: achievement.retryCreate, endpoint: '/management/achievements', listEndpoint: '/management/achievements', reopen: true },
@@ -40,7 +41,7 @@ async function unlockManagement(page: Page) {
   await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toBeVisible();
 }
 
 // 用当前浏览器会话核对持久结果，写入仍执行实际来源与CSRF检查。
@@ -58,11 +59,21 @@ for (const flow of creationFlows) {
   test(`${flow.kind}配置提交已成功但响应丢失，关闭后恢复仍只创建一条`, async ({ page }, testInfo) => {
     const name = `恢复${flow.kind}-${testInfo.project.name}-${Date.now()}`;
     await enterManagement(page);
-    await page.getByRole('navigation', { name: content.navigation.management, exact: true })
-      .getByRole('button', { name: flow.section, exact: true }).click();
-    await page.getByRole('button', { name: flow.create, exact: true }).click();
+    await page.getByRole('tablist', { name: content.navigation.management, exact: true })
+      .getByRole('tab', { name: flow.section, exact: true }).click();
+    const product = flow.endpoint === '/management/products';
+    let add = page.getByRole('button', { name: flow.create, exact: true });
+    if (product) {
+      const assets = await shopAPI<components['schemas']['AssetList']>(page, '/assets');
+      const scene = assets.items.find((asset) => asset.key === 'forest-courtyard-v1-thumbnail')!;
+      await openSceneProductEditor(page, scene.name);
+      add = page.getByRole('button', { name: `${flow.create} ${scene.name}`, exact: true });
+    } else {
+      await add.click();
+    }
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel(flow.name, { exact: true }).fill(name);
+    if (product) await dialog.getByRole('checkbox', { name: shop.enabled, exact: true }).uncheck();
 
     const submissions: { key: string | undefined; body: string | null }[] = [];
     let createdID = '';
@@ -91,7 +102,7 @@ for (const flow of creationFlows) {
     expect(await readCreated()).toEqual([expect.objectContaining({ id: createdID, name })]);
     await dialog.getByRole('button', { name: content.common.close, exact: true }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByRole('button', { name: flow.create, exact: true })).toBeDisabled();
+    await expect(add).toBeDisabled();
     await page.getByRole('button', { name: flow.recover, exact: true }).click();
     if (flow.reopen) {
       await expect(dialog.getByLabel(flow.name, { exact: true })).toHaveValue(name);
@@ -112,8 +123,8 @@ for (const flow of creationFlows) {
 test('管理授权被撤销后拒绝旧任务表单，重新解锁可恢复原命令', async ({ page }, testInfo) => {
   const name = `撤权任务-${testInfo.project.name}-${Date.now()}`;
   await enterManagement(page);
-  await page.getByRole('navigation', { name: content.navigation.management, exact: true })
-    .getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await page.getByRole('tablist', { name: content.navigation.management, exact: true })
+    .getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await page.getByRole('button', { name: checkin.newTask, exact: true }).click();
   await page.getByRole('dialog').getByLabel(checkin.name, { exact: true }).fill(name);
   expect((await sessionRequest(page, '/management/lock', 'POST')).status()).toBe(204);
@@ -136,8 +147,8 @@ test('管理授权被撤销后拒绝旧任务表单，重新解锁可恢复原�
   const tasksResponse = await sessionRequest(page, '/tasks?include_inactive=true');
   const tasks = await tasksResponse.json() as { items: components['schemas']['Task'][] };
   expect(tasks.items.some((task) => task.name === name)).toBe(false);
-  await page.getByRole('navigation', { name: content.navigation.management, exact: true })
-    .getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await page.getByRole('tablist', { name: content.navigation.management, exact: true })
+    .getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await expect(page.getByText(checkin.configUnknown, { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: checkin.newTask, exact: true })).toBeDisabled();
   await page.getByRole('button', { name: checkin.retryConfig, exact: true }).click();
@@ -162,8 +173,8 @@ test('退出管理请求失败提示尚未锁定，重试后服务端授权确�
     if (attempts === 1) await route.abort('failed');
     else await route.continue();
   });
-  await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toHaveCount(0);
+  await page.getByRole('navigation', { name: content.navigation.label, exact: true }).getByRole('button', { name: content.navigation.camp, exact: true }).click();
+  await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toHaveCount(0);
   await expect(page.getByText(content.account.lockUnconfirmed, { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: content.navigation.management, exact: true })).toBeDisabled();
   const beforeRetry = await (await page.request.get('/api/v1/session')).json() as components['schemas']['SessionResponse'];

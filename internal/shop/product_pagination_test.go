@@ -23,9 +23,7 @@ func TestProductPaginationFiltersAndStableCursor(t *testing.T) {
 	if err != nil || len(first.Items) != 1 || first.NextCursor == nil || first.Facets == nil {
 		t.Fatalf("first=%+v err=%v", first, err)
 	}
-	if err := f.Service.DeleteProduct(ctx, f.Principal, first.Items[0].ID, first.Items[0].Version); err != nil {
-		t.Fatal(err)
-	}
+	retireHistoricalProduct(t, f, first.Items[0].ID)
 	second, err := f.Service.ListProductsPage(ctx, f.Principal, false, shop.ProductQuery{Limit: 2, Group: "appearance", Cursor: *first.NextCursor})
 	if err != nil || len(second.Items) != 2 || second.NextCursor != nil {
 		t.Fatalf("second=%+v err=%v", second, err)

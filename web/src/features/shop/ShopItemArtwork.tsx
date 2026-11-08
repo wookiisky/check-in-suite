@@ -3,7 +3,7 @@ import { assetURL } from './helpers';
 
 // 服装直接展示模型生成的缩略图，不在商品卡片启动三维渲染。
 export function ShopItemArtwork({ item, className = 'shop-item-art', label }: {
-  item: Product | Purchase | Asset;
+  item: Pick<Product, 'asset_key'> | Pick<Purchase, 'asset_key_snapshot'> | Pick<Asset, 'key'>;
   className?: string;
   label?: string;
 }) {

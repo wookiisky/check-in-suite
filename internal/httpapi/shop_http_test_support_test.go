@@ -40,3 +40,16 @@ func shopHTTPRequest(t *testing.T) (*App, func(string, string, string, string) *
 		return response
 	}
 }
+
+// seedHistoricalOfferHTTP sets up old orders without exposing a management route for old types.
+func seedHistoricalOfferHTTP(t *testing.T, app *App, id, kind, name, asset string) {
+	t.Helper()
+	result, err := app.DB.Exec(`INSERT INTO products(id,account_id,type,name,asset_key,coin_price,diamond_price,enabled,created_at,updated_at)
+		SELECT ?,id,?,?,?,0,0,1,1,1 FROM accounts WHERE username='family'`, id, kind, name, asset)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count, err := result.RowsAffected(); err != nil || count != 1 {
+		t.Fatalf("historical offers inserted=%d err=%v", count, err)
+	}
+}

@@ -4,6 +4,10 @@ Spec 帮助 Coding Agent 找到完成任务所需的上下文，也帮助工程�
 
 初次了解项目，先读[系统概览](SYSTEM/OVERVIEW.md)。处理具体任务时，直接找相关专题。启动项目见 [README](../README.md)。
 
+## 开发期数据规则
+
+服务尚未发布。发布前的后续开发无需考虑兼容或迁移旧数据，结构或数据契约变化时可以重建开发库。重建是显式的开发操作，步骤见[运行手册](ENGINEERING/OPERATIONS.md#数据库迁移与不兼容处理)。
+
 ## 找到相关专题
 
 - **已知任务**：从下表打开负责该规则的专题，按需要继续阅读相关专题。
@@ -19,7 +23,7 @@ Spec 帮助 Coding Agent 找到完成任务所需的上下文，也帮助工程�
 | 修改营地布置、活动资格或人物动作 | [营地](FEATURES/ISLAND.md) | 物品所有权读[商店](FEATURES/SHOP.md)，解锁条件读[打卡](FEATURES/CHECKIN.md) |
 | 修改三维外观、素材或相关验证 | [三维外观](FEATURES/SHOP.md#三维外观保存)、[营地动效](FEATURES/ISLAND.md#动效资源与验证边界) | 素材制作和安装读[运行手册](ENGINEERING/OPERATIONS.md#三维资源制作与安装)，测试选择读[测试指南](ENGINEERING/TESTING.md) |
 | 修改上传、录音或文件清理 | [媒体](FEATURES/MEDIA.md) | 鉴权读[HTTP 协议](SYSTEM/HTTP_API.md)，记录关联读[打卡](FEATURES/CHECKIN.md) |
-| 修改通用页面交互、家庭留言或声音 | [界面与家庭互动](FEATURES/INTERFACE.md) | 具体交互规则读对应功能专题 |
+| 修改管理页布局、通用页面交互、家庭留言或声音 | [界面与家庭互动](FEATURES/INTERFACE.md) | 具体交互规则读对应功能专题 |
 | 修改接口、错误或重试 | [HTTP 协议](SYSTEM/HTTP_API.md) | 参数结构查 [OpenAPI](../api/openapi.yaml)，业务拒绝条件查对应功能专题 |
 | 修改事务、钱包、日期或迁移 | [存储与一致性](SYSTEM/STORAGE.md) | 数据库升级和故障处置读[运行手册](ENGINEERING/OPERATIONS.md#数据库迁移与不兼容处理) |
 | 构建、安装、发布或排障 | [运行手册](ENGINEERING/OPERATIONS.md) | 验证范围和环境限制读[测试指南](ENGINEERING/TESTING.md) |

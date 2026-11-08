@@ -6,7 +6,8 @@ import { useWallet } from '../../components/WalletContext';
 import { useAppearance } from '../character/AppearanceProvider';
 import { PurchaseDialog } from './PurchaseDialog';
 import { ShopItemArtwork } from './ShopItemArtwork';
-import { appearanceCategories, categoryLabel } from './shop-categories';
+import { shopCategoryTabs, shopGroups } from './shop-categories';
+import type { ShopGroup } from './shop-categories';
 import { pendingPurchases } from './pending';
 import { canBuy, shopError } from './helpers';
 import type { Product, Purchase, ShopProps, Wallet } from './types';
@@ -14,13 +15,6 @@ import content from './content.json';
 import './shop.css';
 
 type ShopSnapshot = components['schemas']['ShopPage'];
-type ShopGroup = 'appearance' | 'camp';
-
-const groups = [
-  { id: 'appearance', label: content.categoryGroups.appearance },
-  { id: 'camp', label: content.shopCamp },
-] as const;
-const appearanceTabs = appearanceCategories.map((id) => ({ id, label: categoryLabel(id) }));
 const pageSize = 24;
 
 interface ShopSelection {
@@ -152,11 +146,6 @@ export function ShopPage({ client, onAppearance, initialGroup }: ShopProps & { o
     setMessage(order.type_snapshot === 'scene' ? content.scenePurchased : order.type_snapshot === 'island' ? content.islandPurchased : content.purchaseSuccess);
   }
 
-  const labels: Readonly<Record<string, string>> = content.campCategories;
-  const detailTabs = [
-    { id: '', label: content.categoryGroups.all },
-    ...(selection.group === 'appearance' ? appearanceTabs : campCategories.map((id) => ({ id, label: labels[id] ?? id }))),
-  ];
   const confirmationWallet = pending?.wallet ?? currentWallet;
   const actions = (onAppearance || buyAllEnabled) && <div className="shop-category-actions">
     {onAppearance && <button type="button" className="secondary" onClick={onAppearance}>{content.openAppearance}</button>}
@@ -170,9 +159,9 @@ export function ShopPage({ client, onAppearance, initialGroup }: ShopProps & { o
     {error !== null && <div role="alert"><p className="shop-error">{shopError(error)}</p><button className="secondary" onClick={reload}>{content.reload}</button></div>}
     <div className="shop-categories">
       <ViewTabs label={content.categoryGroupLabel} className="shop-category-tabs" actions={actions} panelClassName="shop-category-panel"
-        items={groups} value={selection.group} onChange={(group) => browse({ group, category: '', page: 1 })}>
+        items={shopGroups} value={selection.group} onChange={(group) => browse({ group, category: '', page: 1 })}>
         <ViewTabs label={selection.group === 'appearance' ? content.categoryDetailLabel : content.campCategoryLabel}
-          className="shop-category-tabs shop-category-details" items={detailTabs} value={selection.category}
+          className="shop-category-tabs shop-category-details" items={shopCategoryTabs(selection.group, campCategories)} value={selection.category}
           onChange={(category) => browse({ ...selection, category, page: 1 })}>
           {loading && snapshot === null && <p role="status">{content.loading}</p>}
           {!loading && error === null && products.length === 0 && <p>{content.emptyCategoryProducts}</p>}

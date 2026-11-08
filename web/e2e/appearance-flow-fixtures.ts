@@ -37,7 +37,7 @@ export async function ownedAlternativeUpper(page: Page, name: string, wearableKe
     let fundingTask: components['schemas']['Task'] | null = null;
     let fundingRecord: components['schemas']['Checkin'] | null = null;
     try {
-      const created = await appearanceAPI(page, '/management/products', 'POST', { type: 'wearable', name, asset_key: wearable.thumbnail_asset_key, wearable_key: wearable.wearable_key, description: '', coin_price: 0, diamond_price: 0, stock: null, enabled: true });
+      const created = await appearanceAPI(page, '/management/products', 'POST', { name, asset_key: wearable.thumbnail_asset_key, coin_price: 0, diamond_price: 0, stock: null, enabled: true });
       expect(created.status()).toBe(201);
       const product = await created.json() as components['schemas']['Product'];
       let camp = await (await appearanceAPI(page, '/camp')).json() as components['schemas']['CampResponse'];

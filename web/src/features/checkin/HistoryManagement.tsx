@@ -62,17 +62,21 @@ export function HistoryManagement({ client, session }: CheckinProps) {
   }
 
   const chosenTask = tasks.find((task) => task.id === taskID) ?? tasks[0];
-  return <div className="checkin-workspace">
+  return <div className="checkin-workspace checkin-management">
     {message && <p role="status" className="checkin-notice">{message}</p>}
     {error !== null && <div role="alert" className="checkin-error"><p>{checkinError(error)}</p><button className="secondary" onClick={() => refresh((value) => value + 1)}>{content.reload}</button></div>}
     {pending && <div className="checkin-warning"><p>{content.pendingBanner}</p><button onClick={() => setCreating(pending.task)}>{content.recover}</button></div>}
     {!pending && draft && <div className="checkin-warning"><p>{content.draftAvailable}</p><button onClick={() => setCreating(draft.task)}>{content.continueDraft}</button></div>}
-    <section className="checkin-panel checkin-stack"><h2>{content.manageRecords}</h2><label>{content.date}<input type="date" value={date} max={today} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
+    <section className="checkin-panel checkin-stack">
+      <div className="checkin-management-toolbar checkin-history-filters">
+        <label>{content.date}<input type="date" value={date} max={today} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
+        {tasks.length === 0 ? !loading && error === null && <p>{content.noEnabledTasks}</p> : <>
+          <label>{content.chooseTask}<select value={chosenTask?.id ?? ''} onChange={(event) => setTaskID(event.target.value)}>{tasks.map((task) => <option key={task.id} value={task.id}>{task.name}</option>)}</select></label>
+          <button disabled={loading || !chosenTask || pending !== null || draft !== null} onClick={() => { if (chosenTask) setCreating(chosenTask); }}>{content.backfillNew}</button>
+        </>}
+      </div>
       {loading ? <p role="status">{content.loading}</p> : error === null && <RecordList records={records} management onSelect={setSelected} />}
-      {cursor && <><p className="checkin-hint">{content.morePending}</p><button className="secondary" disabled={loading} onClick={() => void more()}>{content.more}</button></>}
-    </section>
-    <section className="checkin-panel checkin-stack"><h2>{content.backfillNew}</h2><p className="checkin-hint">{content.backfillWarning}</p>
-      {tasks.length === 0 ? <p>{content.noEnabledTasks}</p> : <><label>{content.chooseTask}<select value={chosenTask?.id ?? ''} onChange={(event) => setTaskID(event.target.value)}>{tasks.map((task) => <option key={task.id} value={task.id}>{task.name}</option>)}</select></label><button disabled={loading || !chosenTask || pending !== null || draft !== null} onClick={() => { if (chosenTask) setCreating(chosenTask); }}>{content.backfillNew}</button></>}
+      {cursor && <button className="secondary" disabled={loading} onClick={() => void more()}>{content.more}</button>}
     </section>
     {creating && <CheckinComposer client={client} session={session} task={creating} date={date} initialText={draftText} management={pending ? pending.path.startsWith('/management') : draft ? draft.management : true} onClose={() => setCreating(null)} onSaved={(notice) => { setDraftText(''); saved(notice); }} />}
     {selected && <RecordDialog client={client} session={session} record={selected} today={today} management onClose={() => setSelected(null)} onSaved={saved} onCorrect={correct} />}

@@ -17,7 +17,7 @@ describe('价格的币种展示', () => {
   });
 
   it('商品的图标标签保留输入框名称和数值编辑', () => {
-    const { container } = render(<ProductEditor client={{ request: vi.fn() }} session={{ ...testSession, timezone: 'Asia/Taipei' }} product={product} assets={[]} onClose={vi.fn()} onSaved={vi.fn()} />);
+    const { container } = render(<ProductEditor client={{ request: vi.fn() }} session={{ ...testSession, timezone: 'Asia/Taipei' }} product={product} onClose={vi.fn()} onSaved={vi.fn()} />);
     expect(container).not.toHaveTextContent(/金币|钻石/);
     const coins = screen.getByLabelText(content.coinPrice);
     const diamonds = screen.getByLabelText(content.diamondPrice);

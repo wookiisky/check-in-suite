@@ -52,15 +52,13 @@ func TestAccountsKeepShopOwnershipSeparate(t *testing.T) {
 	requireShopCode(t, err, "NOT_FOUND")
 	_, err = f.Service.SetTitle(ctx, second, &bought.Purchase.ID)
 	requireShopCode(t, err, "NOT_FOUND")
-	_, err = f.Service.UpdateProduct(ctx, second, firstOffer.ID, shop.ProductUpdate{ProductInput: input, ExpectedVersion: firstOffer.Version})
-	requireShopCode(t, err, "NOT_FOUND")
-	err = f.Service.DeleteProduct(ctx, second, firstOffer.ID, firstOffer.Version)
+	_, err = f.Service.UpdateProduct(ctx, second, firstOffer.ID, shop.ProductUpdate{ProductTerms: input.terms(), ExpectedVersion: firstOffer.Version})
 	requireShopCode(t, err, "NOT_FOUND")
 	paged, err := f.Service.ListProductsPage(ctx, second, true, shop.ProductQuery{Limit: 10})
 	if err != nil || len(paged.Items) != 0 {
 		t.Fatalf("paged catalog leaked: %+v, %v", paged, err)
 	}
-	secondOffer, err := f.Service.CreateProduct(ctx, second, "shared-key", productInput(shop.TypeTitle))
+	secondOffer, err := f.Service.CreateProduct(ctx, second, "shared-key", catalogCharacterProduct(t).createInput())
 	if err != nil {
 		t.Fatal(err)
 	}

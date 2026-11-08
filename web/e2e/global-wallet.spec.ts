@@ -72,7 +72,10 @@ test('全局余额在普通页面右上常驻，打卡购买删除即时同步�
 
   for (const route of ['stats', 'shop', 'appearance', 'camp'] as const) {
     await page.getByRole('navigation', { name: content.navigation.label }).getByRole('button', { name: content.navigation[route], exact: true }).click();
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    const pageMarker = route === 'shop'
+      ? page.getByRole('tablist', { name: shop.categoryGroupLabel, exact: true })
+      : page.getByRole('heading', { level: 1 });
+    await expect(pageMarker).toBeVisible();
     await expectWallet(page, initial.wallet);
   }
   await page.getByRole('button', { name: content.navigation.achievements, exact: true }).click();
@@ -81,9 +84,11 @@ test('全局余额在普通页面右上常驻，打卡购买删除即时同步�
   await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  for (const section of ['account', 'tasks', 'records', 'products', 'achievements'] as const) {
-    const label = section === 'achievements' ? content.navigation.achievementManagement : content.navigation[section];
-    await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: label, exact: true }).click();
+  const management = page.getByRole('tablist', { name: content.navigation.management, exact: true });
+  const tabs = management.getByRole('tab');
+  await expect(tabs).toHaveCount(7);
+  for (const tab of await tabs.all()) {
+    await tab.click();
     await expectWallet(page, initial.wallet);
   }
   const taskName = `全局余额打卡-${testInfo.project.name}`;
@@ -96,8 +101,7 @@ test('全局余额在普通页面右上常驻，打卡购买删除即时同步�
   });
   const wearable = (await api<components['schemas']['ShopPage']>(page, '/shop/products?group=appearance&category=back')).items[0]!;
   const product = await api<Product>(page, `/management/products/${wearable.id}`, 'PATCH', {
-    type: 'wearable', wearable_key: wearable.wearable_key, name: wearable.name, asset_key: wearable.asset_key,
-    description: wearable.description, coin_price: 2, diamond_price: 1, stock: wearable.stock,
+    name: wearable.name, coin_price: 2, diamond_price: 1, stock: wearable.stock,
     enabled: true, expected_version: wearable.version,
   });
   await page.getByRole('button', { name: content.navigation.camp, exact: true }).click();

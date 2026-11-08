@@ -133,20 +133,65 @@ func requireShopCode(t *testing.T, err error, code string) {
 	}
 }
 
-// productInput supplies valid controlled artwork for each product type.
-func productInput(kind string) shop.ProductInput {
-	keys := map[string]string{"title": "title-crown-v1", "reward": "reward-gift-v1"}
-	return shop.ProductInput{Type: kind, Name: "测试商品", AssetKey: keys[kind], Enabled: true}
+// productFixture records expected identities alongside a request's commercial terms.
+type productFixture struct {
+	Type         string // Type expected from the material or historical fixture.
+	SceneKey     string // Expected scene identity.
+	CharacterKey string // Expected character identity.
+	WearableKey  string // Expected wearable identity.
+	Name         string // Display name.
+	AssetKey     string // Controlled thumbnail.
+	Description  string // Description in a historical offer.
+	CoinPrice    int64  // Coin price.
+	DiamondPrice int64  // Diamond price.
+	Stock        *int64 // Nullable stock.
+	Enabled      bool   // Whether the quote is active.
 }
 
-// createProduct creates a managed product through the actual business service.
-func createProduct(t *testing.T, f shopFixture, input shop.ProductInput) shop.Product {
+// productInput supplies controlled artwork for historical text products.
+func productInput(kind string) productFixture {
+	keys := map[string]string{"title": "title-crown-v1", "reward": "reward-gift-v1"}
+	return productFixture{Type: kind, Name: "测试商品", AssetKey: keys[kind], Enabled: true}
+}
+
+// terms returns the fields managers can change independently of material identity.
+func (f productFixture) terms() shop.ProductTerms {
+	return shop.ProductTerms{Name: f.Name, CoinPrice: f.CoinPrice, DiamondPrice: f.DiamondPrice, Stock: f.Stock, Enabled: f.Enabled}
+}
+
+// createInput submits only the material and the commercial terms.
+func (f productFixture) createInput() shop.ProductCreate {
+	return shop.ProductCreate{AssetKey: f.AssetKey, ProductTerms: f.terms()}
+}
+
+// createProduct creates a current managed product or explicitly seeds a historical quote.
+func createProduct(t *testing.T, f shopFixture, input productFixture) shop.Product {
 	t.Helper()
-	p, err := f.Service.CreateProduct(context.Background(), f.Principal, core.ID(), input)
+	if input.Type == shop.TypeTitle || input.Type == shop.TypeReward {
+		id := core.ID()
+		_, err := f.DB.Exec(`INSERT INTO products(id,account_id,type,name,asset_key,description,coin_price,diamond_price,stock,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
+			id, f.Principal.AccountID, input.Type, input.Name, input.AssetKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, f.Now.UnixMilli(), f.Now.UnixMilli())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return shop.Product{ID: id, Type: input.Type, Name: input.Name, AssetKey: input.AssetKey, Description: input.Description, CoinPrice: input.CoinPrice, DiamondPrice: input.DiamondPrice, Stock: input.Stock, Enabled: input.Enabled, Version: 1}
+	}
+	p, err := f.Service.CreateProduct(context.Background(), f.Principal, core.ID(), input.createInput())
 	if err != nil {
 		t.Fatal(err)
 	}
+	if p.Type != input.Type || p.CharacterKey != input.CharacterKey || p.WearableKey != input.WearableKey || p.SceneKey != input.SceneKey {
+		t.Fatalf("unexpected material binding: %+v, fixture=%+v", p, input)
+	}
 	return p
+}
+
+// retireHistoricalProduct recreates a prior soft deletion without restoring the removed management action.
+func retireHistoricalProduct(t *testing.T, f shopFixture, id string) {
+	t.Helper()
+	if _, err := f.DB.Exec("UPDATE products SET deleted_at=?,enabled=0,version=version+1 WHERE account_id=? AND id=?", f.Now.UnixMilli(), f.Principal.AccountID, id); err != nil {
+		t.Fatal(err)
+	}
 }
 
 // buyProduct executes one fresh purchase using the currently confirmed wallet.

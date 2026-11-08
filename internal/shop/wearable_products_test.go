@@ -19,7 +19,7 @@ func TestDefaultWearableCannotBeSold(t *testing.T) {
 			if !ok {
 				t.Fatal(key)
 			}
-			_, err := f.Service.CreateProduct(context.Background(), f.Principal, core.ID(), shop.ProductInput{Type: shop.TypeWearable, Name: "默认服装", AssetKey: item.ThumbnailAssetKey, WearableKey: key, Enabled: true})
+			_, err := f.Service.CreateProduct(context.Background(), f.Principal, core.ID(), productFixture{Name: "默认服装", AssetKey: item.ThumbnailAssetKey, Enabled: true}.createInput())
 			requireShopCode(t, err, "INVALID_REQUEST")
 		}
 	}
@@ -122,9 +122,7 @@ func TestSeedWearableProductsPreservesManagedOffers(t *testing.T) {
 		t.Fatal(err)
 	}
 	deleted := offers.Items[1]
-	if err = f.Service.DeleteProduct(ctx, f.Principal, deleted.ID, deleted.Version); err != nil {
-		t.Fatal(err)
-	}
+	retireHistoricalProduct(t, f, deleted.ID)
 	if err = shop.SeedWearableProducts(ctx, f.Other, f.Now.UnixMilli()+1); err != nil {
 		t.Fatal(err)
 	}

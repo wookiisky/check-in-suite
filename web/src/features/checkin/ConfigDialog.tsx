@@ -8,6 +8,7 @@ import type { Session } from '../../api/types';
 import type { Category, CheckinClient, Task } from './types';
 import { checkinError, isDefiniteFailure } from './format';
 import { createIdempotencyKey } from '../../api/idempotency-key';
+import { TaskIcon } from './TaskIcon';
 import content from './content.json';
 
 /** 配置新增也保留原命令，关闭弹窗后仍可按原键恢复。 */
@@ -25,17 +26,18 @@ interface ConfigDialogProps {
   kind: 'category' | 'task'; // 当前编辑实体。
   item: Category | Task | null; // 空值表示新增。
   categories: Category[]; // 任务可选择的类别。
+  initialCategoryID?: string; // 新增项目时沿用列表当前选中的类别。
   onClose: () => void; // 关闭并让父页面显示待核对状态。
   onSaved: () => void; // 写成功后只刷新读取。
 }
 
 /** 配置提交保留草稿，未知新增结果不能换键重建。 */
-export function ConfigDialog({ client, session, kind, item, categories, onClose, onSaved }: ConfigDialogProps) {
+export function ConfigDialog({ client, session, kind, item, categories, initialCategoryID = '', onClose, onSaved }: ConfigDialogProps) {
   const task = item && 'weekdays' in item ? item : null;
   const category = item && 'sort_order' in item ? item : null;
   const [name, setName] = useState(item?.name ?? '');
   const [sortOrder, setSortOrder] = useState(category?.sort_order ?? 0);
-  const [categoryID, setCategoryID] = useState(task?.category_id ?? '');
+  const [categoryID, setCategoryID] = useState(task ? task.category_id ?? '' : initialCategoryID);
   const [categoryOptions, setCategoryOptions] = useState(categories);
   const [icon, setIcon] = useState(task?.icon_key ?? '');
   const [assets, setAssets] = useState<components['schemas']['Asset'][]>([]);
@@ -124,18 +126,25 @@ export function ConfigDialog({ client, session, kind, item, categories, onClose,
   }
 
   return <Modal title={title} closeDisabled={busy} onClose={() => { if (dirty && !unknown) setDiscard(true); else onClose(); }}>
-    {discard ? <div className="checkin-stack"><p>{content.discardQuestion}</p><button onClick={() => setDiscard(false)}>{content.keepEditing}</button><button className="secondary" onClick={onClose}>{content.discard}</button></div> : <form className="checkin-stack" onChange={() => setDirty(true)} onSubmit={(event) => { event.preventDefault(); void save(); }}>
+    {discard ? <div className="checkin-stack"><p>{content.discardQuestion}</p><button onClick={() => setDiscard(false)}>{content.keepEditing}</button><button className="secondary" onClick={onClose}>{content.discard}</button></div> : <form className="checkin-stack checkin-config-form" onChange={() => setDirty(true)} onSubmit={(event) => { event.preventDefault(); void save(); }}>
       <label>{content.name}<input required value={name} disabled={unknown} onChange={(event) => setName(event.target.value)} /></label><FieldError error={error} field="name" />
       {kind === 'category' ? <label>{content.sortOrder}<input type="number" step="1" value={sortOrder} disabled={unknown} onChange={(event) => setSortOrder(Number(event.target.value))} /></label> : <>
         <div className="checkin-form-grid"><label>{content.category}<select value={categoryID} disabled={unknown} onChange={(event) => setCategoryID(event.target.value)}><option value="">{content.uncategorized}</option>{categoryID && !categoryOptions.some((entry) => entry.id === categoryID) && <option value={categoryID}>{content.unavailableCategory}</option>}{categoryOptions.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
-          <label>{content.icon}<select required value={icon} disabled={unknown} onChange={(event) => setIcon(event.target.value)}>{assets.map((asset) => <option key={asset.key} value={asset.key}>{asset.name}</option>)}</select></label>
           <label><CurrencyIcon currency="coins" /><input aria-label={content.coins} type="number" min="0" max={session.limits.reward_max} step="1" value={coins} disabled={unknown} onChange={(event) => setCoins(Number(event.target.value))} /></label>
           <label><CurrencyIcon currency="diamonds" /><input aria-label={content.diamonds} type="number" min="0" max={session.limits.reward_max} step="1" value={diamonds} disabled={unknown} onChange={(event) => setDiamonds(Number(event.target.value))} /></label>
           <label>{content.dailyLimit}<input type="number" min="1" max={session.limits.daily_limit_max} step="1" value={dailyLimit} disabled={unknown} onChange={(event) => setDailyLimit(Number(event.target.value))} /></label></div>
+        <fieldset className="checkin-icon-picker" disabled={unknown || busy}>
+          <legend>{content.icon}</legend>
+          <div className="checkin-icon-options">{assets.map((asset) => <label key={asset.key} className="checkin-icon-option" title={asset.name}>
+            <input type="radio" name="task-icon" value={asset.key} aria-label={asset.name} checked={icon === asset.key} onChange={() => setIcon(asset.key)} />
+            <TaskIcon name={asset.key} />
+          </label>)}</div>
+        </fieldset>
+        <FieldError error={error} field="icon_key" />
         <fieldset className="checkin-checks" disabled={unknown}><legend>{content.weekdaysLabel}</legend>{content.weekdays.map((label, index) => <label key={label}><input type="checkbox" checked={weekdays.includes(index + 1)} onChange={(event) => setWeekdays((values) => event.target.checked ? [...values, index + 1].sort() : values.filter((value) => value !== index + 1))} />{label}</label>)}</fieldset>
         {weekdays.length === 0 && <p role="alert">{content.weekdayRequired}</p>}<FieldError error={error} field="weekdays" />
         <fieldset className="checkin-checks" disabled={unknown}><legend>{content.unlockActivities}</legend>{activityOptions.map((activity) => <label key={activity}><input type="checkbox" checked={unlockActivities.includes(activity)} onChange={(event) => setUnlockActivities((values) => event.target.checked ? [...values, activity] : values.filter((value) => value !== activity))} />{content.activityLabels[activity]}</label>)}</fieldset>
-        <p>{content.unlockActivitiesHelp}</p><FieldError error={error} field="unlock_activities" />
+        <FieldError error={error} field="unlock_activities" />
         <label className="checkin-toggle"><input type="checkbox" checked={enabled} disabled={unknown} onChange={(event) => setEnabled(event.target.checked)} />{content.enabled}</label>
       </>}
       {unknown && <p role="status">{content.configUnknown}</p>}{error !== null && <p role="alert" className="checkin-error">{checkinError(error)}</p>}

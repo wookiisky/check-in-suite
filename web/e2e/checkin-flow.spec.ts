@@ -28,29 +28,30 @@ test('真实打卡、编辑删除、响应丢失恢复和历史补录闭环', as
     await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
     await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
     await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-    await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+    await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toBeVisible();
   };
   await enterManagement();
-  await page.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.categories, exact: true }).click();
   await page.getByRole('button', { name: checkin.newCategory, exact: true }).click();
   await page.getByRole('dialog').getByLabel(checkin.name, { exact: true }).fill(categoryName);
   await page.getByRole('dialog').getByRole('button', { name: checkin.save, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await page.getByRole('button', { name: checkin.newTask, exact: true }).click();
   const taskDialog = page.getByRole('dialog');
   // 图标异步加载完成后再输入草稿，选择本流程实际需要的书本图标。
-  await taskDialog.getByRole('combobox', { name: checkin.icon, exact: true }).selectOption('book-v1');
+  await taskDialog.getByRole('group', { name: checkin.icon, exact: true }).getByRole('radio', { name: '读书', exact: true }).check();
   const taskNameInput = taskDialog.getByLabel(checkin.name, { exact: true });
   await taskNameInput.fill(taskName);
   await expect(taskNameInput).toHaveValue(taskName);
   await taskDialog.getByRole('combobox', { name: checkin.category, exact: true }).selectOption({ label: categoryName });
-  await taskDialog.getByLabel(checkin.coins, { exact: true }).fill('7');
-  await taskDialog.getByLabel(checkin.diamonds, { exact: true }).fill('3');
+  await taskDialog.getByRole('spinbutton', { name: checkin.coins, exact: true }).fill('7');
+  await taskDialog.getByRole('spinbutton', { name: checkin.diamonds, exact: true }).fill('3');
   await taskDialog.getByLabel(checkin.dailyLimit, { exact: true }).fill('2');
   await expect(taskNameInput).toHaveValue(taskName);
   await taskDialog.getByRole('button', { name: checkin.save, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+  await page.getByRole('navigation', { name: content.navigation.label, exact: true }).getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await expect(page.getByRole('tab', { name: checkin.allCategories, exact: true })).toHaveAttribute('aria-selected', 'true');
   const categoryTab = page.getByRole('tab', { name: categoryName, exact: true });
   await categoryTab.click();
@@ -110,7 +111,7 @@ test('真实打卡、编辑删除、响应丢失恢复和历史补录闭环', as
   await page.unroute('**/api/v1/checkins');
 
   await enterManagement();
-  await page.getByRole('button', { name: content.navigation.records, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.records, exact: true }).click();
   const yesterday = new Date(`${initialCamp.today}T00:00:00Z`); yesterday.setUTCDate(yesterday.getUTCDate() - 1);
   const businessDate = yesterday.toISOString().slice(0, 10);
   await page.getByLabel(checkin.date, { exact: true }).fill(businessDate);
@@ -127,7 +128,7 @@ test('真实打卡、编辑删除、响应丢失恢复和历史补录闭环', as
 
   // 关闭后隐藏入口、保留记录与余额；重新开启仍沿用同一个任务身份。
   const beforeDisable = await (await page.request.get('/api/v1/camp')).json() as Camp;
-  await page.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await page.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   const disable = page.getByRole('button', { name: `${checkin.disableTask} ${taskName}`, exact: true });
   await disable.focus();
   await disable.press('Enter');
@@ -146,7 +147,7 @@ test('真实打卡、编辑删除、响应丢失恢复和历史补录闭环', as
   const enabledCamp = await (await page.request.get('/api/v1/camp')).json() as Camp;
   expect(enabledCamp.tasks.find((item) => item.id === task.id)).toMatchObject({ enabled: true, version: task.version + 2 });
   expect(enabledCamp.wallet).toEqual(beforeDisable.wallet);
-  await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+  await page.getByRole('navigation', { name: content.navigation.label, exact: true }).getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await expect(page.getByRole('heading', { name: checkin.todayTasks, exact: true })).toBeVisible();
   const layout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: window.innerWidth, controls: [...document.querySelectorAll('main button,main select')].map((element) => ({ tag: element.tagName, height: element.getBoundingClientRect().height, width: element.getBoundingClientRect().width })) }));
   expect(layout.width).toBeLessThanOrEqual(layout.viewport);

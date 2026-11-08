@@ -11,13 +11,13 @@ import (
 )
 
 // 场景商品使用正式场景身份，缩略图必须与目录一致。
-func catalogSceneProduct(t *testing.T, key string) shop.ProductInput {
+func catalogSceneProduct(t *testing.T, key string) productFixture {
 	t.Helper()
 	scene, found := island.SpatialSceneFind(key)
 	if !found || scene.Free {
 		t.Fatalf("missing paid scene %q", key)
 	}
-	return shop.ProductInput{Type: shop.TypeScene, SceneKey: scene.Key, Name: scene.Name, AssetKey: scene.ThumbnailAssetKey, Enabled: true}
+	return productFixture{Type: shop.TypeScene, SceneKey: scene.Key, Name: scene.Name, AssetKey: scene.ThumbnailAssetKey, Enabled: true}
 }
 
 // 永久场景资格来自成交快照，不依赖仍在上架的报价，也不产生可摆放实例。
@@ -36,9 +36,7 @@ func TestScenePurchaseRetainsIdentityAndPreventsDuplicateOffers(t *testing.T) {
 	if result.Purchase.SceneKey != input.SceneKey || result.Purchase.TypeSnapshot != shop.TypeScene || result.Purchase.IslandItemKey != "" {
 		t.Fatalf("scene ownership snapshot=%+v", result.Purchase)
 	}
-	if err = f.Service.DeleteProduct(ctx, f.Principal, first.ID, first.Version); err != nil {
-		t.Fatal(err)
-	}
+	retireHistoricalProduct(t, f, first.ID)
 	replay, err := f.Service.Buy(ctx, f.Principal, key, request)
 	if err != nil || replay.Purchase.ID != result.Purchase.ID || replay.Purchase.SceneKey != input.SceneKey {
 		t.Fatalf("scene replay=%+v err=%v", replay, err)
@@ -92,27 +90,26 @@ func TestSceneConcurrentOffersHaveSinglePurchase(t *testing.T) {
 	}
 }
 
-// 免费海边不能出售，其他商品不能携带场景身份，已售报价不能换场景。
-func TestSceneProductsValidateIdentityAndLockSoldScene(t *testing.T) {
+// 免费海边不能出售，编辑场景报价只会改变交易条件。
+func TestSceneProductsBindSceneFromMaterial(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
-	input := catalogSceneProduct(t, "forest-courtyard-v1")
-	other := catalogSceneProduct(t, "lakeside-garden-v1")
-	for _, invalid := range []shop.ProductInput{
-		{Type: shop.TypeScene, SceneKey: "seaside-v1", Name: input.Name, AssetKey: input.AssetKey},
-		{Type: shop.TypeScene, SceneKey: "missing-scene", Name: input.Name, AssetKey: input.AssetKey},
-		{Type: shop.TypeScene, SceneKey: input.SceneKey, Name: input.Name, AssetKey: "title-star-v1"},
-		{Type: shop.TypeScene, SceneKey: input.SceneKey, Name: input.Name, AssetKey: other.AssetKey},
-		{Type: shop.TypeIsland, SceneKey: input.SceneKey, Name: input.Name, AssetKey: input.AssetKey},
-	} {
-		if _, err := f.Service.CreateProduct(ctx, f.Principal, core.ID(), invalid); err == nil {
-			t.Fatalf("invalid scene product accepted: %+v", invalid)
-		}
+	free, ok := island.SpatialSceneFind("seaside-v1")
+	if !ok || !free.Free {
+		t.Fatal("expected free seaside scene")
 	}
+	input := catalogSceneProduct(t, "forest-courtyard-v1")
+	invalid := input.createInput()
+	invalid.AssetKey = free.ThumbnailAssetKey
+	_, err := f.Service.CreateProduct(ctx, f.Principal, core.ID(), invalid)
+	requireShopCode(t, err, "INVALID_REQUEST")
 	product := createProduct(t, f, input)
 	buyProduct(t, f, product)
-	_, err := f.Service.UpdateProduct(ctx, f.Principal, product.ID, shop.ProductUpdate{ProductInput: other, ExpectedVersion: product.Version})
-	requireShopCode(t, err, "PRODUCT_ITEM_LOCKED")
+	input.CoinPrice = 3
+	updated, err := f.Service.UpdateProduct(ctx, f.Principal, product.ID, shop.ProductUpdate{ProductTerms: input.terms(), ExpectedVersion: product.Version})
+	if err != nil || updated.SceneKey != input.SceneKey || updated.AssetKey != input.AssetKey || updated.CoinPrice != 3 {
+		t.Fatalf("scene quote=%+v err=%v", updated, err)
+	}
 }
 
 // 重试初始化保留管理员价格、库存、上下架和删除状态。
@@ -135,9 +132,7 @@ func TestSceneSeedPreservesManagedOffers(t *testing.T) {
 	if _, err := f.DB.Exec("UPDATE products SET coin_price=7,stock=3,enabled=0 WHERE id=?", first.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := f.Service.DeleteProduct(ctx, f.Principal, list.Items[1].ID, list.Items[1].Version); err != nil {
-		t.Fatal(err)
-	}
+	retireHistoricalProduct(t, f, list.Items[1].ID)
 	if err := shop.SeedSceneProducts(ctx, f.DB, 2); err != nil {
 		t.Fatal(err)
 	}

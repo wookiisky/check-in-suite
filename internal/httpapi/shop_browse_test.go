@@ -11,7 +11,7 @@ import (
 
 // 购买同一稳定物件后，所有报价在按页码切片前都从商店排除。
 func TestShopBrowseFiltersOwnershipBeforePagination(t *testing.T) {
-	_, request := shopHTTPRequest(t)
+	app, request := shopHTTPRequest(t)
 	furniture := make([]island.SpatialDefinition, 0, 4)
 	for _, item := range island.SpatialCatalog() {
 		if item.Category == "furniture" && item.Repeatable {
@@ -25,9 +25,9 @@ func TestShopBrowseFiltersOwnershipBeforePagination(t *testing.T) {
 		t.Fatal("fixture needs four repeatable furniture items")
 	}
 
-	create := func(name, asset string, kind string) shop.Product {
+	create := func(name, asset string) shop.Product {
 		t.Helper()
-		body, err := json.Marshal(shop.ProductInput{Type: kind, Name: name, AssetKey: asset, Enabled: true})
+		body, err := json.Marshal(shop.ProductCreate{AssetKey: asset, ProductTerms: shop.ProductTerms{Name: name, Enabled: true}})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -41,13 +41,13 @@ func TestShopBrowseFiltersOwnershipBeforePagination(t *testing.T) {
 	offers := []shop.Product{}
 	var alias shop.Product
 	for index, item := range furniture {
-		offers = append(offers, create(item.Key, item.ThumbnailAssetKey, shop.TypeIsland))
+		offers = append(offers, create(item.Key, item.ThumbnailAssetKey))
 		if index == 0 {
-			alias = create("same-item-other-offer", item.ThumbnailAssetKey, shop.TypeIsland)
+			alias = create("same-item-other-offer", item.ThumbnailAssetKey)
 		}
 	}
-	create("old-title", "title-crown-v1", shop.TypeTitle)
-	create("old-reward", "reward-gift-v1", shop.TypeReward)
+	seedHistoricalOfferHTTP(t, app, "old-title", shop.TypeTitle, "old-title", "title-crown-v1")
+	seedHistoricalOfferHTTP(t, app, "old-reward", shop.TypeReward, "old-reward", "reward-gift-v1")
 
 	read := func(query string) shop.ShopPage {
 		t.Helper()

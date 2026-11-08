@@ -20,7 +20,7 @@ async function unlock(page: Page, password = managementPassword) {
   await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill(password);
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toBeVisible();
 }
 
 // 两种密码表单使用相同字段，限定区域以免把另一种密码一起填写。
@@ -74,11 +74,11 @@ test('管理密码错误可重试，姓名校验和更名刷新形成完整闭�
     await page.getByRole('button', { name: content.account.saveName, exact: true }).click();
     await expect(page.getByText(content.account.nameSaved, { exact: true })).toBeVisible();
     await expect(name).toHaveValue(renamed);
-    await expect(page.getByRole('banner').getByText(renamed, { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-    await expect(page.getByRole('heading', { name: renamed, exact: true })).toBeVisible();
+    const saved = await (await page.request.get('/api/v1/session')).json() as components['schemas']['SessionResponse'];
+    expect(saved.account.display_name).toBe(renamed);
+    await page.getByRole('navigation', { name: content.navigation.label, exact: true }).getByRole('button', { name: content.navigation.camp, exact: true }).click();
+    await expect(page.getByRole('heading', { name: content.navigation.campTitle, exact: true })).toBeVisible();
     await page.reload();
-    await expect(page.getByRole('banner').getByText(renamed, { exact: true })).toBeVisible();
     await unlock(page);
     await expect(name).toHaveValue(renamed);
   } finally {
@@ -101,21 +101,21 @@ test('账户草稿切分区、跨页和退出登录均可继续编辑或明确�
   await unlock(page);
   const name = page.getByLabel(content.account.displayName, { exact: true });
   const originalName = await name.inputValue();
-  const configuration = page.getByRole('navigation', { name: content.navigation.management, exact: true });
+  const configuration = page.getByRole('tablist', { name: content.navigation.management, exact: true });
   const discardDialog = page.getByRole('dialog', { name: content.account.discardTitle, exact: true });
 
   await name.fill('尚未保存的姓名');
-  await configuration.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await configuration.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await expect(discardDialog).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('account-draft-confirmation.png'), fullPage: false, animations: 'disabled' });
   await discardDialog.getByRole('button', { name: content.account.keepEditing, exact: true }).click();
   await expect(name).toHaveValue('尚未保存的姓名');
-  await expect(configuration.getByRole('button', { name: content.navigation.account, exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(configuration.getByRole('tab', { name: content.navigation.account, exact: true })).toHaveAttribute('aria-selected', 'true');
 
-  await configuration.getByRole('button', { name: content.navigation.tasks, exact: true }).click();
+  await configuration.getByRole('tab', { name: content.navigation.tasks, exact: true }).click();
   await discardDialog.getByRole('button', { name: content.account.discard, exact: true }).click();
-  await expect(configuration.getByRole('button', { name: content.navigation.tasks, exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await configuration.getByRole('button', { name: content.navigation.account, exact: true }).click();
+  await expect(configuration.getByRole('tab', { name: content.navigation.tasks, exact: true })).toHaveAttribute('aria-selected', 'true');
+  await configuration.getByRole('tab', { name: content.navigation.account, exact: true }).click();
   await expect(name).toHaveValue(originalName);
 
   const loginForm = page.getByRole('region', { name: content.account.loginPasswordTitle, exact: true });
@@ -123,7 +123,7 @@ test('账户草稿切分区、跨页和退出登录均可继续编辑或明确�
   await page.getByRole('banner').getByRole('button', { name: content.navigation.shop, exact: true }).click();
   await discardDialog.getByRole('button', { name: content.account.keepEditing, exact: true }).click();
   await expect(loginForm.getByLabel(content.account.newPassword, { exact: true })).toHaveValue('Unsaved-Login-2026');
-  await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+  await page.getByRole('navigation', { name: content.navigation.label, exact: true }).getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await discardDialog.getByRole('button', { name: content.account.discard, exact: true }).click();
   await expect(page.getByRole('heading', { name: content.navigation.campTitle, exact: true })).toBeVisible();
   await unlock(page);
@@ -205,7 +205,7 @@ for (const kind of ['login', 'management'] as const) {
         expect((await page.request.get('/api/v1/session')).status()).toBe(200);
         await page.getByLabel(content.account.managementPassword, { exact: true }).fill(replacement);
         await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
-        await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
+        await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toBeVisible();
       }
 
       await fillPassword(form, replacement, original);

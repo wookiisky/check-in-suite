@@ -49,11 +49,12 @@ func TestPasswordResetWinsAgainstVerifiedRedemption(t *testing.T) {
 		t.Fatal(err)
 	}
 	service := New(db, cfg, accounts)
-	product, err := service.CreateProduct(ctx, principal, "product", ProductInput{Type: TypeReward, Name: "奖励", AssetKey: "reward-gift-v1", Enabled: true})
+	const productID = "historical-reward"
+	_, err = db.Exec(`INSERT INTO products(id,account_id,type,name,asset_key,coin_price,diamond_price,enabled,created_at,updated_at) VALUES(?,?,'reward','奖励','reward-gift-v1',0,0,1,1,1)`, productID, principal.AccountID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	order, err := service.Buy(ctx, principal, "purchase", BuyInput{ProductID: product.ID, ExpectedProductVersion: 1, ExpectedWalletVersion: 1})
+	order, err := service.Buy(ctx, principal, "purchase", BuyInput{ProductID: productID, ExpectedProductVersion: 1, ExpectedWalletVersion: 1})
 	if err != nil {
 		t.Fatal(err)
 	}

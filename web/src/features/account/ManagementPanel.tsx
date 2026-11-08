@@ -56,11 +56,13 @@ export function ManagementPanel({ client, session, onAccount, onPasswordChanged,
     } catch (reason) { setError(reason); }
     finally { setBusy(false); }
   }
-  return <div className="settings-stack">
+  return <div className="management-account-grid">
     <section className="panel" aria-labelledby="settings-title">
-      <h1 id="settings-title">{content.account.settingsTitle}</h1>
-      <p>{content.account.username} <strong>{session.account.username}</strong></p>
-      <p className="muted">{content.account.usernameReadonly}</p>
+      <h2 id="settings-title">{content.account.profileTitle}</h2>
+      <dl className="management-account-name">
+        <dt>{content.account.username}</dt>
+        <dd>{session.account.username}</dd>
+      </dl>
       <form className="form-stack" onSubmit={submitName}>
         <label htmlFor="display-name">{content.account.displayName}</label><input id="display-name" autoComplete="nickname" value={name} onChange={(event) => { setName(event.target.value); setSaved(false); }} required aria-describedby="display-name-error" />
         <FieldError error={error} field="display_name" id="display-name-error" /><FormFeedback error={error} />
@@ -101,14 +103,27 @@ function PasswordForm({ kind, client, onChanged, onStateChange }: { kind: 'login
     finally { setBusy(false); }
   }
   return <section className="panel" aria-labelledby={`${kind}-title`}>
-    <h2 id={`${kind}-title`}>{title}</h2><p className="muted">{content.account.passwordHint}</p>
+    <h2 id={`${kind}-title`}>{title}</h2>
     <form onSubmit={submit} className="form-stack">
-      <label htmlFor={`${kind}-old`}>{content.account.oldPassword}</label><input id={`${kind}-old`} type="password" autoComplete="current-password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} required aria-describedby={`${kind}-old-error`} />
-      <FieldError error={error} field="old_password" id={`${kind}-old-error`} />
-      <label htmlFor={`${kind}-new`}>{content.account.newPassword}</label><input id={`${kind}-new`} type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required aria-describedby={`${kind}-new-error`} />
-      <FieldError error={error} field="new_password" id={`${kind}-new-error`} />
-      <label htmlFor={`${kind}-confirm`}>{content.account.confirmPassword}</label><input id={`${kind}-confirm`} type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required aria-describedby={`${kind}-confirm-error`} />
-      <FieldError error={error} field="confirm_password" id={`${kind}-confirm-error`} /><FormFeedback error={error} />
+      <div className="management-password-field">
+        <label htmlFor={`${kind}-old`}>{content.account.oldPassword}</label>
+        <input id={`${kind}-old`} type="password" autoComplete="current-password" value={oldPassword}
+          onChange={(event) => setOldPassword(event.target.value)} required aria-describedby={`${kind}-old-error`} />
+        <FieldError error={error} field="old_password" id={`${kind}-old-error`} />
+      </div>
+      <div className="management-password-field">
+        <label htmlFor={`${kind}-new`}>{content.account.newPassword}</label>
+        <input id={`${kind}-new`} type="password" autoComplete="new-password" value={newPassword}
+          onChange={(event) => setNewPassword(event.target.value)} required aria-describedby={`${kind}-new-error`} />
+        <FieldError error={error} field="new_password" id={`${kind}-new-error`} />
+      </div>
+      <div className="management-password-field">
+        <label htmlFor={`${kind}-confirm`}>{content.account.confirmPassword}</label>
+        <input id={`${kind}-confirm`} type="password" autoComplete="new-password" value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)} required aria-describedby={`${kind}-confirm-error`} />
+        <FieldError error={error} field="confirm_password" id={`${kind}-confirm-error`} />
+      </div>
+      <FormFeedback error={error} />
       <button type="submit" disabled={busy}>{busy ? content.common.saving : action}</button>
     </form>
   </section>;

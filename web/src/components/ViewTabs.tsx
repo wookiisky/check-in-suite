@@ -12,10 +12,11 @@ interface ViewTabsProps<T extends string> {
   className?: string; // 可替换默认的标签栏布局。
   actions?: ReactNode; // 标签栏旁的普通操作，不参与标签键盘导航。
   panelClassName?: string; // 当前页面为共用面板补充的布局。
+  disabled?: boolean; // 当前面板提交中，暂时禁止切换。
 }
 
 // 标签组保留一个 Tab 键停靠点，方向键、Home 和 End 同步移动焦点并切换。
-export function ViewTabs<T extends string>({ label, items, value, onChange, children, className = 'view-tabs', actions, panelClassName }: ViewTabsProps<T>) {
+export function ViewTabs<T extends string>({ label, items, value, onChange, children, className = 'view-tabs', actions, panelClassName, disabled }: ViewTabsProps<T>) {
   const id = useId();
   const panelID = `${id}-panel`;
 
@@ -43,6 +44,7 @@ export function ViewTabs<T extends string>({ label, items, value, onChange, chil
       className="secondary"
       aria-selected={item.id === value}
       aria-controls={panelID}
+      disabled={disabled}
       tabIndex={item.id === value ? 0 : -1}
       onClick={() => onChange(item.id)}
     >{item.label}</button>)}

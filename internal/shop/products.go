@@ -15,13 +15,7 @@ import (
 	"github.com/wookiisky/check-in-suite/internal/island"
 )
 
-// productIslandItemKey resolves the controlled three-dimensional placement identity.
-func productIslandItemKey(assetKey string) string {
-	if item, ok := island.SpatialForThumbnail(assetKey); ok {
-		return item.Key
-	}
-	return ""
-}
+const manageableOffers = " AND p.type IN ('character','wearable','island','scene')"
 
 const productColumns = "p.id,p.type,p.name,p.asset_key,p.wearable_key,p.character_key,p.scene_key,p.description,p.coin_price,p.diamond_price,p.stock,p.enabled,p.version,p.deleted_at,p.created_at"
 
@@ -65,55 +59,18 @@ func readProduct(ctx context.Context, tx *sql.Tx, accountID int64, id string, in
 
 // validType uses the declared product behaviors, never inferred display text.
 func validType(kind string) bool {
-	return kind == TypeScene || kind == TypeCharacter || kind == TypeWearable || kind == TypeIsland || kind == TypeTitle || kind == TypeReward
+	return manageableProductType(kind) || kind == TypeTitle || kind == TypeReward
 }
 
-// validateProduct applies configured numeric and Unicode bounds before any product write.
-func (s *Service) validateProduct(input ProductInput) error {
-	if !validType(input.Type) {
-		return core.Invalid("type", "INVALID_VALUE")
-	}
+// manageableProductType restricts management to current shop behaviors.
+func manageableProductType(kind string) bool {
+	return kind == TypeScene || kind == TypeCharacter || kind == TypeWearable || kind == TypeIsland
+}
+
+// validateProductTerms applies configured numeric and Unicode bounds before writing.
+func (s *Service) validateProductTerms(input ProductTerms) error {
 	if err := core.Text("name", input.Name, 1, s.Config.Limits.NameMax); err != nil {
 		return err
-	}
-	if err := core.Text("description", input.Description, 0, s.Config.Limits.TextMax); err != nil {
-		return err
-	}
-	if input.Type == TypeScene {
-		scene, found := island.SpatialSceneFind(input.SceneKey)
-		if !found || scene.Free {
-			return core.Invalid("scene_key", "INVALID_VALUE")
-		}
-		artwork, found := assets.Get(input.AssetKey)
-		if !found || scene.ThumbnailAssetKey != input.AssetKey || (artwork.Kind != assets.Kind(TypeScene) && artwork.Kind != assets.KindIsland) {
-			return core.Invalid("asset_key", "INVALID_ASSET")
-		}
-	} else {
-		if input.SceneKey != "" {
-			return core.Invalid("scene_key", "INVALID_VALUE")
-		}
-		if artwork, ok := assets.Get(input.AssetKey); !ok || artwork.Kind != assets.Kind(input.Type) || artwork.Free {
-			return core.Invalid("asset_key", "INVALID_ASSET")
-		}
-	}
-	if item, ok := island.SpatialForThumbnail(input.AssetKey); ok && input.Type != TypeScene && (input.Type != TypeIsland || item.Free) {
-		return core.Invalid("asset_key", "INVALID_ASSET")
-	}
-	if input.Type == TypeWearable {
-		wearable, ok := character.GetWearable(input.WearableKey)
-		if !ok || wearable.Empty || wearable.ThumbnailAssetKey != input.AssetKey || isDefaultWearable(wearable) {
-			return core.Invalid("wearable_key", "INVALID_VALUE")
-		}
-	} else if input.WearableKey != "" {
-		return core.Invalid("wearable_key", "INVALID_VALUE")
-	}
-	if input.Type == TypeCharacter {
-		body, ok := character.Get(input.CharacterKey)
-		if !ok || body.Key == character.DefaultCharacterKey || body.ThumbnailAssetKey != input.AssetKey {
-			return core.Invalid("character_key", "INVALID_VALUE")
-		}
-	} else if input.CharacterKey != "" {
-		return core.Invalid("character_key", "INVALID_VALUE")
 	}
 	if input.CoinPrice < 0 || input.CoinPrice > s.Config.Limits.PriceMax {
 		return core.Invalid("coin_price", "INVALID_VALUE")
@@ -140,7 +97,9 @@ func (s *Service) ListProducts(ctx context.Context, p account.Principal, include
 		return result, err
 	}
 	query := "SELECT " + productColumns + " FROM products p WHERE p.account_id=? AND p.deleted_at IS NULL"
-	if !includeInactive {
+	if includeInactive {
+		query += manageableOffers
+	} else {
 		query += " AND p.enabled=1"
 	}
 	query += " ORDER BY p.created_at,p.id"
@@ -161,14 +120,14 @@ func (s *Service) ListProducts(ctx context.Context, p account.Principal, include
 	if err != nil {
 		return result, err
 	}
-	if err = applyProductOwnership(ctx, tx, accountID, result.Items, false); err != nil {
+	if err = applyProductOwnership(ctx, tx, accountID, result.Items, includeInactive); err != nil {
 		return result, err
 	}
 	return result, tx.Commit()
 }
 
 // CreateProduct uses identity-only replay so product descriptions are not copied into receipts.
-func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key string, input ProductInput) (Product, error) {
+func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key string, input ProductCreate) (Product, error) {
 	accountID := p.AccountID
 	input.Name = strings.TrimSpace(input.Name)
 	hash, err := idempotency.Hash("product.create", input)
@@ -195,11 +154,24 @@ func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key st
 		}
 		return item, tx.Commit()
 	}
-	if err = s.validateProduct(input); err != nil {
+	if err = s.validateProductTerms(input.ProductTerms); err != nil {
 		return Product{}, err
 	}
+	binding, ok := materialCatalog().byAsset[input.AssetKey]
+	if !ok {
+		return Product{}, core.Invalid("asset_key", "INVALID_ASSET")
+	}
+	var wearableKey, characterKey, sceneKey string
+	switch binding.productType {
+	case TypeWearable:
+		wearableKey = binding.definitionKey
+	case TypeCharacter:
+		characterKey = binding.definitionKey
+	case TypeScene:
+		sceneKey = binding.definitionKey
+	}
 	id := core.ID()
-	_, err = tx.ExecContext(ctx, "INSERT INTO products(id,account_id,type,name,asset_key,wearable_key,character_key,scene_key,description,coin_price,diamond_price,stock,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, accountID, input.Type, input.Name, input.AssetKey, input.WearableKey, input.CharacterKey, input.SceneKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), now.UnixMilli())
+	_, err = tx.ExecContext(ctx, "INSERT INTO products(id,account_id,type,name,asset_key,wearable_key,character_key,scene_key,description,coin_price,diamond_price,stock,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, accountID, binding.productType, input.Name, input.AssetKey, wearableKey, characterKey, sceneKey, "", input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), now.UnixMilli())
 	if err != nil {
 		return Product{}, err
 	}
@@ -213,7 +185,7 @@ func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key st
 	return item, tx.Commit()
 }
 
-// UpdateProduct replaces only current configuration and prevents changing sold product behavior.
+// UpdateProduct changes the commercial terms without replacing the material or its type.
 func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id string, input ProductUpdate) (Product, error) {
 	accountID := p.AccountID
 	input.Name = strings.TrimSpace(input.Name)
@@ -230,42 +202,16 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 	if err != nil {
 		return Product{}, err
 	}
+	if !manageableProductType(current.Type) {
+		return Product{}, core.Fail(404, "NOT_FOUND")
+	}
 	if current.Version != input.ExpectedVersion {
 		return Product{}, core.VersionConflict(current.Version)
 	}
-	if err = s.validateProduct(input.ProductInput); err != nil {
+	if err = s.validateProductTerms(input.ProductTerms); err != nil {
 		return Product{}, err
 	}
-	oldItemKey, newItemKey := "", ""
-	if current.Type == TypeIsland {
-		oldItemKey = productIslandItemKey(current.AssetKey)
-	}
-	if input.Type == TypeIsland {
-		newItemKey = productIslandItemKey(input.AssetKey)
-	}
-	identityChanged := ((oldItemKey != "" || newItemKey != "") && oldItemKey != newItemKey) ||
-		(current.Type == TypeWearable && input.Type == TypeWearable && current.WearableKey != input.WearableKey) ||
-		(current.Type == TypeCharacter && input.Type == TypeCharacter && current.CharacterKey != input.CharacterKey) ||
-		(current.Type == TypeScene && input.Type == TypeScene && current.SceneKey != input.SceneKey)
-	if identityChanged {
-		var sold bool
-		if err = tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM purchases WHERE account_id=? AND product_id=?)", accountID, id).Scan(&sold); err != nil {
-			return Product{}, err
-		}
-		if sold {
-			return Product{}, core.Fail(409, "PRODUCT_ITEM_LOCKED")
-		}
-	}
-	if input.Type != current.Type {
-		var sold bool
-		if err = tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM purchases WHERE account_id=? AND product_id=?)", accountID, id).Scan(&sold); err != nil {
-			return Product{}, err
-		}
-		if sold {
-			return Product{}, core.Fail(409, "PRODUCT_TYPE_LOCKED")
-		}
-	}
-	_, err = tx.ExecContext(ctx, "UPDATE products SET type=?,name=?,asset_key=?,wearable_key=?,character_key=?,scene_key=?,description=?,coin_price=?,diamond_price=?,stock=?,enabled=?,version=version+1,updated_at=? WHERE account_id=? AND id=?", input.Type, input.Name, input.AssetKey, input.WearableKey, input.CharacterKey, input.SceneKey, input.Description, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), accountID, id)
+	_, err = tx.ExecContext(ctx, "UPDATE products SET name=?,coin_price=?,diamond_price=?,stock=?,enabled=?,version=version+1,updated_at=? WHERE account_id=? AND id=?", input.Name, input.CoinPrice, input.DiamondPrice, input.Stock, input.Enabled, now.UnixMilli(), accountID, id)
 	if err != nil {
 		return Product{}, err
 	}
@@ -274,32 +220,4 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 		return Product{}, err
 	}
 	return item, tx.Commit()
-}
-
-// DeleteProduct removes an offer while preserving all ownership and transaction snapshots.
-func (s *Service) DeleteProduct(ctx context.Context, p account.Principal, id string, version int64) error {
-	accountID := p.AccountID
-	tx, err := s.DB.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	now := s.Now()
-	if err = account.Authorize(ctx, tx, p, true, now); err != nil {
-		return err
-	}
-	current, err := readProduct(ctx, tx, accountID, id, true, false)
-	if err != nil {
-		return err
-	}
-	if current.Deleted {
-		return tx.Commit()
-	}
-	if current.Version != version {
-		return core.VersionConflict(current.Version)
-	}
-	if _, err = tx.ExecContext(ctx, "UPDATE products SET deleted_at=?,enabled=0,version=version+1,updated_at=? WHERE account_id=? AND id=?", now.UnixMilli(), now.UnixMilli(), accountID, id); err != nil {
-		return err
-	}
-	return tx.Commit()
 }

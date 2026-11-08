@@ -11,15 +11,15 @@ import (
 )
 
 // 新角色测试使用正式导入目录，确保商品不是只有字段而没有实际资源。
-func catalogCharacterProduct(t *testing.T) shop.ProductInput {
+func catalogCharacterProduct(t *testing.T) productFixture {
 	t.Helper()
 	for _, item := range character.Definitions() {
 		if item.Key != character.DefaultCharacterKey {
-			return shop.ProductInput{Type: shop.TypeCharacter, CharacterKey: item.Key, Name: item.Name, AssetKey: item.ThumbnailAssetKey, Enabled: true}
+			return productFixture{Type: shop.TypeCharacter, CharacterKey: item.Key, Name: item.Name, AssetKey: item.ThumbnailAssetKey, Enabled: true}
 		}
 	}
 	t.Fatal("正式目录缺少可购买的新角色")
-	return shop.ProductInput{}
+	return productFixture{}
 }
 
 // 完整角色所有权来自成交快照，删除报价后依然可换装且未购买时不能保存。
@@ -34,9 +34,7 @@ func TestCharacterPurchaseOwnershipAndSharedWardrobe(t *testing.T) {
 	if purchase.CharacterKey != input.CharacterKey {
 		t.Fatalf("snapshot=%+v", purchase)
 	}
-	if err := f.Service.DeleteProduct(ctx, f.Principal, product.ID, product.Version); err != nil {
-		t.Fatal(err)
-	}
+	retireHistoricalProduct(t, f, product.ID)
 	hair := buyProduct(t, f, createProduct(t, f, appearanceProduct("head", "barbarian"))).Purchase
 	saved, err := f.Service.SaveAppearance(ctx, f.Principal, shop.SaveAppearanceInput{ExpectedVersion: 1, CharacterKey: input.CharacterKey, HeadPurchaseID: &hair.ID})
 	if err != nil || saved.CharacterKey != input.CharacterKey || saved.HeadPurchaseID == nil || *saved.HeadPurchaseID != hair.ID {
@@ -113,31 +111,25 @@ func TestCharacterConcurrentOffersHaveSinglePurchase(t *testing.T) {
 	}
 }
 
-// 已售角色报价不能改指其他角色，默认免费人物也不能包装出售。
-func TestCharacterProductRejectsInvalidIdentityAndRebinding(t *testing.T) {
+// 基础人物和原始模型不可出售，商品从当前人物缩略图取得角色身份。
+func TestCharacterProductBindsSaleableBody(t *testing.T) {
 	f := newShopFixture(t)
 	ctx := context.Background()
+	defaultBody, ok := character.Get(character.DefaultCharacterKey)
+	if !ok {
+		t.Fatal("missing default character")
+	}
 	input := catalogCharacterProduct(t)
-	invalid := input
-	invalid.CharacterKey = character.DefaultCharacterKey
-	if _, err := f.Service.CreateProduct(ctx, f.Principal, core.ID(), invalid); err == nil {
-		t.Fatal("default character can be sold")
-	}
-	invalid = input
-	invalid.CharacterKey = "missing"
-	if _, err := f.Service.CreateProduct(ctx, f.Principal, core.ID(), invalid); err == nil {
-		t.Fatal("missing character accepted")
-	}
-	invalid = input
-	invalid.AssetKey = "wearable-hair-barbarian-v1"
-	if _, err := f.Service.CreateProduct(ctx, f.Principal, core.ID(), invalid); err == nil {
-		t.Fatal("wrong artwork accepted")
+	for _, key := range []string{defaultBody.ThumbnailAssetKey, defaultBody.ModelAssetKey, "missing"} {
+		invalid := input.createInput()
+		invalid.AssetKey = key
+		_, err := f.Service.CreateProduct(ctx, f.Principal, core.ID(), invalid)
+		requireShopCode(t, err, "INVALID_REQUEST")
 	}
 	product := createProduct(t, f, input)
-	buyProduct(t, f, product)
-	changed := appearanceProduct("upper", "barbarian")
-	_, err := f.Service.UpdateProduct(ctx, f.Principal, product.ID, shop.ProductUpdate{ProductInput: changed, ExpectedVersion: product.Version})
-	requireShopCode(t, err, "PRODUCT_TYPE_LOCKED")
+	if product.CharacterKey != input.CharacterKey || product.AssetKey != input.AssetKey {
+		t.Fatalf("body offer=%+v", product)
+	}
 }
 
 // 插入角色订单失败不能留下扣款、权益或幂等成功回执；原请求可在故障修复后恢复。

@@ -64,32 +64,33 @@ type Product struct {
 	Deleted       bool   `json:"-"`                         // Internal soft-deletion marker, never a client authorization flag.
 }
 
-// ProductInput is the complete mutable merchandise configuration.
-type ProductInput struct {
-	SceneKey     string `json:"scene_key,omitempty"`     // Required for scene products, empty for other types.
-	CharacterKey string `json:"character_key,omitempty"` // Required for character products; empty for other behaviors.
-	WearableKey  string `json:"wearable_key,omitempty"`  // Required for three-dimensional clothing, empty for other types.
-	Type         string `json:"type"`                    // Selected product type.
-	Name         string `json:"name"`                    // Required name, trimmed before storage.
-	AssetKey     string `json:"asset_key"`               // Artwork of the matching controlled kind.
-	Description  string `json:"description"`             // Optional plain text.
-	CoinPrice    int64  `json:"coin_price"`              // Coins required for a new purchase.
-	DiamondPrice int64  `json:"diamond_price"`           // Diamonds required at the same time.
-	Stock        *int64 `json:"stock"`                   // Unlimited or nonnegative finite stock.
-	Enabled      bool   `json:"enabled"`                 // Whether the product is currently purchasable.
+// ProductTerms contains the commercial fields editable after a material is bound.
+type ProductTerms struct {
+	Name         string `json:"name"`          // Required display name, trimmed before storage.
+	CoinPrice    int64  `json:"coin_price"`    // Coins required for a new purchase.
+	DiamondPrice int64  `json:"diamond_price"` // Diamonds required at the same time.
+	Stock        *int64 `json:"stock"`         // Nil means unlimited; zero means sold out.
+	Enabled      bool   `json:"enabled"`       // Whether the product is currently purchasable.
 }
 
-// ProductUpdate carries the version the household reviewed before editing.
+// ProductCreate binds an offer to a material from the current catalog.
+type ProductCreate struct {
+	ProductTerms        // Initial commercial fields.
+	AssetKey     string `json:"asset_key"` // Controlled artwork identity.
+}
+
+// ProductUpdate carries only commercial fields and the version reviewed before editing.
 type ProductUpdate struct {
-	ProductInput          // All mutable product fields.
+	ProductTerms          // The fields that can change without affecting the material.
 	ExpectedVersion int64 `json:"expected_version"` // Rejects a stale configuration form.
 }
 
 // ProductList always emits an array, including for an empty shop.
 type ProductList struct {
-	Items      []Product      `json:"items"`            // Current undeleted offers or managed configuration.
-	NextCursor *string        `json:"next_cursor"`      // Null when the selected product query is exhausted.
-	Facets     *ProductFacets `json:"facets,omitempty"` // Complete visible source choices independent of this page.
+	CampCategories []string       `json:"camp_categories,omitempty"` // Stable camp categories across all pages.
+	Items          []Product      `json:"items"`                     // Current undeleted offers or managed configuration.
+	NextCursor     *string        `json:"next_cursor"`               // Null when the selected product query is exhausted.
+	Facets         *ProductFacets `json:"facets,omitempty"`          // Complete visible source choices independent of this page.
 }
 
 // ProductPack identifies a visible source pack without deriving it from current page contents.
@@ -108,7 +109,8 @@ type ProductFacets struct {
 // ProductQuery binds pagination to explicit catalog filters.
 type ProductQuery struct {
 	Type     string // Optional exact behavior.
-	Group    string // Optional appearance group.
+	Group    string // Optional appearance or camp group.
+	Category string // Stable category within the selected group.
 	Slot     string // Optional wearable slot.
 	Search   string // Case-insensitive display name search.
 	Provider string // Optional controlled provider identity.
@@ -157,7 +159,8 @@ type PurchaseResult struct {
 
 // PurchaseQuery filters immutable orders using stable keyset pagination.
 type PurchaseQuery struct {
-	Group    string // Optional appearance group.
+	Group    string // Optional appearance or camp group.
+	Category string // Stable category within the selected group.
 	Slot     string // Optional wearable attachment slot.
 	Search   string // Display name substring across all matching orders.
 	Provider string // Optional current controlled source.

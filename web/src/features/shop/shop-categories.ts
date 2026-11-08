@@ -1,37 +1,26 @@
-import type { Asset, CharacterDefinition, CharacterSlot, CharacterWearable, Product, SceneOption } from './types';
+import type { CharacterSlot } from './types';
 import content from './content.json';
 
-export type ShopCategory = CharacterSlot | 'character' | 'title' | 'reward' | 'island' | 'scene';
+export type ShopGroup = 'appearance' | 'camp';
 
-// 商品用途由正式类型及服装定义决定，不从名称或素材key推测。
-export const appearanceCategories: ShopCategory[] = ['character', 'face', 'head', 'upper', 'lower', 'shoes', 'back'];
-export const shopCategories: ShopCategory[] = [...appearanceCategories, 'title', 'reward', 'island', 'scene'];
+export const shopGroups = [
+  { id: 'appearance', label: content.categoryGroups.appearance },
+  { id: 'camp', label: content.shopCamp },
+] as const;
 
-// 六个槽位共用人物目录的稳定类型。
-export function isWearableSlot(value: string): value is CharacterSlot {
-  return Object.hasOwn(content.wearableSlots, value);
+const appearanceCategories: readonly ('character' | CharacterSlot)[] = ['character', 'face', 'head', 'upper', 'lower', 'shoes', 'back'];
+
+// 商店、管理商品与素材库共用分类文案，保留未预置的目录分类名称。
+export function shopCategoryName(group: ShopGroup, category: string) {
+  if (group === 'camp') return (content.campCategories as Readonly<Record<string, string>>)[category] ?? category;
+  if (category === 'character') return content.types.character;
+  return (content.wearableSlots as Readonly<Record<string, string>>)[category] ?? category;
 }
 
-// 用户可见分类名集中维护，交易类型仍保留在商品中。
-export function categoryLabel(category: ShopCategory): string {
-  return isWearableSlot(category) ? content.wearableSlots[category] : content.types[category];
-}
-
-// 定义缺失的服装不猜测部位，等待目录读取或报告读取失败。
-export function itemCategory(item: Product, wearables: readonly CharacterWearable[] = []): ShopCategory | null {
-  return item.type === 'wearable' ? wearables.find((definition) => definition.wearable_key === item.wearable_key)?.slot ?? null : item.type;
-}
-
-// 默认服装来自身体定义，不依靠缩略图的免费标志。
-export function matchesAssetCategory(asset: Asset, category: ShopCategory, wearables: readonly CharacterWearable[] = [], characters: readonly CharacterDefinition[] = [], scenes: readonly SceneOption[] = []): boolean {
-  if (category === 'scene') return scenes.some((scene) => !scene.free && scene.thumbnail_asset_key === asset.key);
-  if (category === 'character') return asset.kind === 'character' && !asset.free && characters.some((character) => character.thumbnail_asset_key === asset.key);
-  if (!isWearableSlot(category)) return asset.kind === category && !asset.free;
-  const defaults = new Set(characters.flatMap((character) => Object.values(character.defaults)));
-  return wearables.some((definition) => definition.slot === category && definition.thumbnail_asset_key === asset.key && !defaults.has(definition.wearable_key));
-}
-
-// 所有穿戴槽位共用服装交易类型。
-export function categoryPurchaseType(category: ShopCategory): string {
-  return isWearableSlot(category) ? 'wearable' : category;
+// 装扮部位固定，营地分类由完整目录提供。
+export function shopCategoryTabs(group: ShopGroup, campCategories: readonly string[]) {
+  return [
+    { id: '', label: content.categoryGroups.all },
+    ...(group === 'appearance' ? appearanceCategories : campCategories).map((id) => ({ id, label: shopCategoryName(group, id) })),
+  ];
 }

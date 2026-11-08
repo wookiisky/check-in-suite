@@ -98,8 +98,6 @@ export function AchievementEditor({ client, session, item, assets, options, onCl
         {draft.window_days !== null && <><label>{content.windowDays}<input type="number" min={1} max={Number.MAX_SAFE_INTEGER} step={1} required value={draft.window_days} onChange={(event) => update({ window_days: Number(event.target.value) })} /></label><FieldError error={error} field="window_days" /></>}
         <label className="achievement-check"><input type="checkbox" checked={draft.enabled} onChange={(event) => update({ enabled: event.target.checked })} />{content.enabled}</label>
       </fieldset>
-      <p className="achievement-hint">{draft.metric === 'streak' ? content.streakHint : draft.metric === 'coins' || draft.metric === 'diamonds' ? content.currencyHint : content.scopeHint}</p>
-      <p className="achievement-hint">{content.changeHint}</p>
       {pending && !busy && <p role="status">{content.pendingCreate}</p>}
       {error !== null && <p role="alert">{achievementError(error)}</p>}
       {conflict && <p role="status">{content.conflict}</p>}

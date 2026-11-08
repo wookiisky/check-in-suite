@@ -75,7 +75,7 @@ func (app *App) RegisterShop(service *shop.Service) {
 		query := r.URL.Query()
 		var result shop.ProductList
 		paged := false
-		for _, field := range []string{"limit", "cursor", "type", "group", "slot", "search", "provider", "pack_key"} {
+		for _, field := range []string{"limit", "cursor", "type", "group", "category", "slot", "search", "provider", "pack_key"} {
 			paged = paged || query.Has(field)
 		}
 		if paged {
@@ -88,7 +88,7 @@ func (app *App) RegisterShop(service *shop.Service) {
 					return
 				}
 			}
-			result, err = service.ListProductsPage(r.Context(), p, inactive, shop.ProductQuery{Limit: limit, Cursor: query.Get("cursor"), Type: query.Get("type"), Group: query.Get("group"), Slot: query.Get("slot"), Search: query.Get("search"), Provider: query.Get("provider"), PackKey: query.Get("pack_key")})
+			result, err = service.ListProductsPage(r.Context(), p, inactive, shop.ProductQuery{Limit: limit, Cursor: query.Get("cursor"), Type: query.Get("type"), Group: query.Get("group"), Category: query.Get("category"), Slot: query.Get("slot"), Search: query.Get("search"), Provider: query.Get("provider"), PackKey: query.Get("pack_key")})
 		} else {
 			result, err = service.ListProducts(r.Context(), p, inactive)
 		}
@@ -104,8 +104,8 @@ func (app *App) RegisterShop(service *shop.Service) {
 			WriteError(w, r, err)
 			return
 		}
-		var input shop.ProductInput
-		if err = decodeRequiredJSON(w, r, &input, []string{"type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled"}, "stock"); err != nil {
+		var input shop.ProductCreate
+		if err = decodeRequiredJSON(w, r, &input, []string{"asset_key", "name", "coin_price", "diamond_price", "stock", "enabled"}, "stock"); err != nil {
 			WriteError(w, r, err)
 			return
 		}
@@ -123,7 +123,7 @@ func (app *App) RegisterShop(service *shop.Service) {
 			return
 		}
 		var input shop.ProductUpdate
-		if err = decodeRequiredJSON(w, r, &input, []string{"type", "name", "asset_key", "description", "coin_price", "diamond_price", "stock", "enabled", "expected_version"}, "stock"); err != nil {
+		if err = decodeRequiredJSON(w, r, &input, []string{"name", "coin_price", "diamond_price", "stock", "enabled", "expected_version"}, "stock"); err != nil {
 			WriteError(w, r, err)
 			return
 		}
@@ -134,24 +134,18 @@ func (app *App) RegisterShop(service *shop.Service) {
 		}
 		WriteJSON(w, 200, result)
 	})
-	app.Mux.HandleFunc("DELETE /api/v1/management/products/{id}", func(w http.ResponseWriter, r *http.Request) {
-		p, err := app.authenticatedWrite(r)
+	app.Mux.HandleFunc("GET /api/v1/management/materials", func(w http.ResponseWriter, r *http.Request) {
+		principal, err := app.Authenticate(r)
 		if err != nil {
 			WriteError(w, r, err)
 			return
 		}
-		var input struct {
-			ExpectedVersion int64 `json:"expected_version"`
-		} // Reviewed product version.
-		if err = decodeRequiredJSON(w, r, &input, []string{"expected_version"}); err != nil {
+		result, err := service.ListManagementMaterials(r.Context(), principal)
+		if err != nil {
 			WriteError(w, r, err)
 			return
 		}
-		if err = service.DeleteProduct(r.Context(), p, r.PathValue("id"), input.ExpectedVersion); err != nil {
-			WriteError(w, r, err)
-			return
-		}
-		WriteJSON(w, 204, nil)
+		WriteJSON(w, http.StatusOK, result)
 	})
 	app.Mux.HandleFunc("POST /api/v1/purchases", func(w http.ResponseWriter, r *http.Request) {
 		p, err := app.authenticatedWrite(r)

@@ -211,7 +211,7 @@ func TestAppearanceHTTPRequiredFieldsAndAuthorization(t *testing.T) {
 
 // TestAppearanceHTTPOwnedWearable keeps purchase facts and all-or-nothing slot writes visible on the wire.
 func TestAppearanceHTTPOwnedWearable(t *testing.T) {
-	_, request := shopHTTPRequest(t)
+	app, request := shopHTTPRequest(t)
 	initialResponse := request(http.MethodGet, "/api/v1/appearance", "", "")
 	var initial appearanceHTTPState
 	if initialResponse.Code != http.StatusOK || json.Unmarshal(initialResponse.Body.Bytes(), &initial) != nil || len(initial.Characters) == 0 {
@@ -231,7 +231,7 @@ func TestAppearanceHTTPOwnedWearable(t *testing.T) {
 	if wearableKey == "" {
 		t.Fatal("fixture has no purchasable upper garment")
 	}
-	created := request(http.MethodPost, "/api/v1/management/products", fmt.Sprintf(`{"type":"wearable","name":"上衣","asset_key":%q,"wearable_key":%q,"description":"","coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`, thumbnailKey, wearableKey), "appearance-create-upper")
+	created := request(http.MethodPost, "/api/v1/management/products", fmt.Sprintf(`{"name":"上衣","asset_key":%q,"coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`, thumbnailKey), "appearance-create-upper")
 	var product struct {
 		ID          string `json:"id"`           // 当前商品身份。
 		WearableKey string `json:"wearable_key"` // 商品的稳定服装定义。
@@ -261,23 +261,18 @@ func TestAppearanceHTTPOwnedWearable(t *testing.T) {
 	if response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, invalid), ""); response.Code != http.StatusBadRequest && response.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("wrong slot accepted: %d %s", response.Code, response.Body)
 	}
-	if response := request(http.MethodDelete, "/api/v1/management/products/"+product.ID, `{"expected_version":1}`, ""); response.Code != http.StatusNoContent {
-		t.Fatalf("delete product: %d %s", response.Code, response.Body)
+	if response := request(http.MethodPatch, "/api/v1/management/products/"+product.ID, `{"name":"上衣","coin_price":0,"diamond_price":0,"stock":null,"enabled":false,"expected_version":1}`, ""); response.Code != http.StatusOK {
+		t.Fatalf("disable product: %d %s", response.Code, response.Body)
 	}
 	body["expected_version"] = state.Version
 	response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, body), "")
-	var afterDelete appearanceHTTPState
-	if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &afterDelete) != nil || afterDelete.Version != state.Version+1 || afterDelete.UpperPurchaseID == nil || *afterDelete.UpperPurchaseID != purchase.Purchase.ID {
-		t.Fatalf("deleted product lost owned garment or invalid save changed revision: %d %s", response.Code, response.Body)
+	var afterDisable appearanceHTTPState
+	if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &afterDisable) != nil || afterDisable.Version != state.Version+1 || afterDisable.UpperPurchaseID == nil || *afterDisable.UpperPurchaseID != purchase.Purchase.ID {
+		t.Fatalf("disabled product lost owned garment or invalid save changed revision: %d %s", response.Code, response.Body)
 	}
-	titleCreated := request(http.MethodPost, "/api/v1/management/products", `{"type":"title","name":"称号","asset_key":"title-crown-v1","description":"","coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`, "appearance-create-title")
-	var titleProduct struct {
-		ID string `json:"id"` // 称号商品。
-	}
-	if titleCreated.Code != http.StatusCreated || json.Unmarshal(titleCreated.Body.Bytes(), &titleProduct) != nil {
-		t.Fatalf("create non-wearable title: %d %s", titleCreated.Code, titleCreated.Body)
-	}
-	titleBought := request(http.MethodPost, "/api/v1/purchases", fmt.Sprintf(`{"product_id":%q,"expected_product_version":1,"expected_wallet_version":2}`, titleProduct.ID), "appearance-buy-title")
+	const titleProductID = "historical-wearable-test-title"
+	seedHistoricalOfferHTTP(t, app, titleProductID, shop.TypeTitle, "称号", "title-crown-v1")
+	titleBought := request(http.MethodPost, "/api/v1/purchases", fmt.Sprintf(`{"product_id":%q,"expected_product_version":1,"expected_wallet_version":2}`, titleProductID), "appearance-buy-title")
 	var titlePurchase struct {
 		Purchase struct {
 			ID string `json:"id"` // 称号购买实例。
@@ -286,7 +281,7 @@ func TestAppearanceHTTPOwnedWearable(t *testing.T) {
 	if titleBought.Code != http.StatusCreated || json.Unmarshal(titleBought.Body.Bytes(), &titlePurchase) != nil {
 		t.Fatalf("buy title: %d %s", titleBought.Code, titleBought.Body)
 	}
-	invalid = appearanceHTTPRequest(afterDelete.Version, initial.CharacterKey)
+	invalid = appearanceHTTPRequest(afterDisable.Version, initial.CharacterKey)
 	invalid["head_purchase_id"] = titlePurchase.Purchase.ID
 	if response := request(http.MethodPut, "/api/v1/appearance", appearanceHTTPBody(t, invalid), ""); response.Code != http.StatusBadRequest && response.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("title purchase accepted by character appearance: %d %s", response.Code, response.Body)
@@ -320,7 +315,7 @@ func TestAppearanceHTTPSixSlotOwnedSelections(t *testing.T) {
 		if wearable.Key == "" {
 			t.Fatalf("no independent %s product", slot)
 		}
-		input := shop.ProductInput{Type: shop.TypeWearable, Name: wearable.Name, AssetKey: wearable.ThumbnailAssetKey, WearableKey: wearable.Key, Enabled: true}
+		input := shop.ProductCreate{AssetKey: wearable.ThumbnailAssetKey, ProductTerms: shop.ProductTerms{Name: wearable.Name, Enabled: true}}
 		payload, _ := json.Marshal(input)
 		response := request(http.MethodPost, "/api/v1/management/products", string(payload), "six-slot-create-"+string(slot))
 		var product shop.Product

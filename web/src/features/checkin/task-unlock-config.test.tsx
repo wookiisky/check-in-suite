@@ -14,7 +14,7 @@ describe('任务关联小岛活动', () => {
     const request = vi.fn(async (_path: string, options?: { method?: string }) => options?.method === 'PATCH' ? patch(options) : assets);
     const saved = vi.fn();
     render(<ConfigDialog client={{ request }} session={testSession as Session} kind="task" item={taskFixture} categories={[]} onClose={vi.fn()} onSaved={saved} />);
-    await screen.findByRole('option', { name: '书本图标' });
+    await screen.findByRole('radio', { name: '书本图标' });
     fireEvent.click(screen.getByLabelText('阅读活动'));
     fireEvent.click(screen.getByLabelText('玩球活动'));
     fireEvent.click(screen.getByRole('button', { name: content.save }));
@@ -31,7 +31,7 @@ describe('任务关联小岛活动', () => {
     const post = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(taskFixture);
     const request = vi.fn(async (_path: string, options?: { method?: string }) => options?.method === 'POST' ? post(options) : assets);
     render(<ConfigDialog client={{ request }} session={testSession as Session} kind="task" item={null} categories={[]} onClose={vi.fn()} onSaved={vi.fn()} />);
-    await screen.findByRole('option', { name: '书本图标' });
+    await screen.findByRole('radio', { name: '书本图标' });
     fireEvent.change(screen.getByLabelText(content.name), { target: { value: '晨间任务' } });
     fireEvent.click(screen.getByLabelText('运动活动'));
     fireEvent.click(screen.getByRole('button', { name: content.save }));

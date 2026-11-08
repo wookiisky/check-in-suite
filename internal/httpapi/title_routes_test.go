@@ -12,12 +12,9 @@ import (
 // 称号只通过独立入口保存，响应不再夹带已退出的二维装备字段。
 func TestTitleHTTPRequiresOwnedPurchaseAndExplicitNull(t *testing.T) {
 	app, request := shopHTTPRequest(t)
-	created := request(http.MethodPost, "/api/v1/management/products", `{"type":"title","name":"成长称号","asset_key":"title-crown-v1","description":"","coin_price":0,"diamond_price":0,"stock":null,"enabled":true}`, "title-create")
-	var product shop.Product
-	if created.Code != http.StatusCreated || json.Unmarshal(created.Body.Bytes(), &product) != nil {
-		t.Fatalf("create=%d %s", created.Code, created.Body)
-	}
-	bought := request(http.MethodPost, "/api/v1/purchases", fmt.Sprintf(`{"product_id":%q,"expected_product_version":1,"expected_wallet_version":1}`, product.ID), "title-buy")
+	const productID = "historical-growth-title"
+	seedHistoricalOfferHTTP(t, app, productID, shop.TypeTitle, "成长称号", "title-crown-v1")
+	bought := request(http.MethodPost, "/api/v1/purchases", fmt.Sprintf(`{"product_id":%q,"expected_product_version":1,"expected_wallet_version":1}`, productID), "title-buy")
 	var purchase shop.PurchaseResult
 	if bought.Code != http.StatusCreated || json.Unmarshal(bought.Body.Bytes(), &purchase) != nil {
 		t.Fatalf("buy=%d %s", bought.Code, bought.Body)

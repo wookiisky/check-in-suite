@@ -11,7 +11,7 @@ async function clickOutside(page: Page, dialog: Locator, touch: boolean) {
   if (touch) await page.touchscreen.tap(2, y);
   else await page.mouse.click(2, y);
   // 页头换行时按钮中心可能被弹窗覆盖，仍可点击露在弹窗外的真实按钮部分。
-  const background = await page.locator('.site-header nav button:not([aria-current="page"]), .management-sections button:not([aria-pressed="true"])').evaluateAll((elements, bounds) => {
+  const background = await page.locator('.site-header nav button:not([aria-current="page"]), .management-tabs button:not([aria-selected="true"])').evaluateAll((elements, bounds) => {
     for (const element of elements) {
       if (element.closest('dialog') || element.matches(':disabled, [aria-current="page"]')) continue;
       const rect = element.getBoundingClientRect();
@@ -50,7 +50,7 @@ test('弹窗外部点击无响应，主动关闭仍确认草稿并恢复焦点',
   await expect(unlock).toBeVisible();
   await expect(page.locator('dialog[open]')).toHaveCount(1);
   await expect(password).toHaveValue('Manage-Test-2026');
-  await expect(page.getByRole('heading', { name: content.navigation.camp, exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: content.navigation.campTitle, exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(unlock).toHaveCount(0);
   await expect(opener).toBeFocused();
@@ -58,10 +58,10 @@ test('弹窗外部点击无响应，主动关闭仍确认草稿并恢复焦点',
   await opener.click();
   await password.fill('Manage-Test-2026');
   await unlock.getByRole('button', { name: content.account.unlock, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
-  const tasks = page.getByRole('navigation', { name: content.navigation.management, exact: true })
-    .getByRole('button', { name: content.navigation.tasks, exact: true });
-  await tasks.click();
+  await expect(page.getByRole('tab', { name: content.navigation.account, exact: true })).toBeVisible();
+  const categories = page.getByRole('tablist', { name: content.navigation.management, exact: true })
+    .getByRole('tab', { name: content.navigation.categories, exact: true });
+  await categories.click();
   const newCategory = page.getByRole('button', { name: checkin.newCategory, exact: true });
   await expect(newCategory).toBeEnabled();
   await newCategory.focus();
@@ -75,7 +75,7 @@ test('弹窗外部点击无响应，主动关闭仍确认草稿并恢复焦点',
   await expect(page.locator('dialog[open]')).toHaveCount(1);
   await expect(name).toHaveValue(draft);
   await expect(editor.getByText(checkin.discardQuestion, { exact: true })).toHaveCount(0);
-  await expect(tasks).toHaveAttribute('aria-pressed', 'true');
+  await expect(categories).toHaveAttribute('aria-selected', 'true');
 
   await editor.getByRole('button', { name: content.common.close, exact: true }).click();
   const question = editor.getByText(checkin.discardQuestion, { exact: true });
@@ -83,7 +83,7 @@ test('弹窗外部点击无响应，主动关闭仍确认草稿并恢复焦点',
   await clickOutside(page, editor, touch);
   await expect(question).toBeVisible();
   await expect(page.locator('dialog[open]')).toHaveCount(1);
-  await expect(tasks).toHaveAttribute('aria-pressed', 'true');
+  await expect(categories).toHaveAttribute('aria-selected', 'true');
   await editor.getByRole('button', { name: checkin.keepEditing, exact: true }).click();
   await expect(name).toHaveValue(draft);
 
@@ -92,5 +92,5 @@ test('弹窗外部点击无响应，主动关闭仍确认草稿并恢复焦点',
   await editor.getByRole('button', { name: checkin.discard, exact: true }).click();
   await expect(editor).toHaveCount(0);
   await expect(newCategory).toBeFocused();
-  await expect(tasks).toHaveAttribute('aria-pressed', 'true');
+  await expect(categories).toHaveAttribute('aria-selected', 'true');
 });

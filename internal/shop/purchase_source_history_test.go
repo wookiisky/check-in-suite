@@ -61,7 +61,7 @@ func TestPurchaseSourcePreservesCurrentArtworkAndOrdinaryOffers(t *testing.T) {
 	if !found || artwork.Provider == "" || artwork.PackKey == "" {
 		t.Fatal("missing current source fixture")
 	}
-	spatial := createProduct(t, f, shop.ProductInput{Type: shop.TypeIsland, Name: current.Name, AssetKey: current.ThumbnailAssetKey, Enabled: true})
+	spatial := createProduct(t, f, productFixture{Type: shop.TypeIsland, Name: current.Name, AssetKey: current.ThumbnailAssetKey, Enabled: true})
 	owned := buyProduct(t, f, spatial).Purchase
 	ordinary := buyProduct(t, f, createProduct(t, f, productInput(shop.TypeTitle))).Purchase
 	page, err := f.Service.ListPurchases(ctx, f.Principal, shop.PurchaseQuery{})
