@@ -150,12 +150,6 @@
     "diamond_price": 0
   },
   {
-    "wearable_key": "kaykit-adventurers-rogue-shoes",
-    "name": "浅棕皮靴",
-    "coin_price": 15,
-    "diamond_price": 0
-  },
-  {
     "wearable_key": "kaykit-adventurers-rogue-hooded-head",
     "name": "绿兜帽",
     "coin_price": 20,
@@ -171,12 +165,6 @@
     "wearable_key": "kaykit-adventurers-rogue-hooded-lower",
     "name": "深绿短裤",
     "coin_price": 25,
-    "diamond_price": 0
-  },
-  {
-    "wearable_key": "kaykit-adventurers-rogue-hooded-shoes",
-    "name": "浅棕翻边靴",
-    "coin_price": 15,
     "diamond_price": 0
   },
   {
@@ -282,45 +270,9 @@
     "diamond_price": 0
   },
   {
-    "wearable_key": "kaykit-skeletons-warrior-upper",
-    "name": "骷髅胸甲",
-    "coin_price": 35,
-    "diamond_price": 0
-  },
-  {
-    "wearable_key": "kaykit-skeletons-warrior-lower",
-    "name": "骷髅腰甲",
-    "coin_price": 25,
-    "diamond_price": 0
-  },
-  {
-    "wearable_key": "kaykit-legacy-skeleton-minion-upper",
-    "name": "银臂环",
-    "coin_price": 35,
-    "diamond_price": 0
-  },
-  {
-    "wearable_key": "kaykit-legacy-skeleton-minion-lower",
-    "name": "金属扣束腰",
-    "coin_price": 25,
-    "diamond_price": 0
-  },
-  {
     "wearable_key": "kaykit-legacy-skeleton-archer-head",
     "name": "紫兜帽",
     "coin_price": 20,
-    "diamond_price": 0
-  },
-  {
-    "wearable_key": "kaykit-legacy-skeleton-archer-upper",
-    "name": "弓手胸甲",
-    "coin_price": 35,
-    "diamond_price": 0
-  },
-  {
-    "wearable_key": "kaykit-legacy-skeleton-archer-lower",
-    "name": "侧腰包",
-    "coin_price": 25,
     "diamond_price": 0
   },
   {
@@ -357,12 +309,6 @@
     "wearable_key": "kaykit-legacy-skeleton-warrior-upper",
     "name": "战士胸甲",
     "coin_price": 35,
-    "diamond_price": 0
-  },
-  {
-    "wearable_key": "kaykit-legacy-skeleton-warrior-lower",
-    "name": "银方扣束腰",
-    "coin_price": 25,
     "diamond_price": 0
   },
   {

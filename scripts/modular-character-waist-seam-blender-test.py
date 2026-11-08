@@ -1,4 +1,4 @@
-"""从实际 GLB 扫描上装和下装的腰线，并验证棕色短裤与银扣腰带。"""
+"""从实际 GLB 扫描上装和下装的腰线，并验证保留款的腰口搭接。"""
 
 import argparse
 from collections import defaultdict
@@ -16,16 +16,18 @@ from mathutils.bvhtree import BVHTree
 ROOT = Path(__file__).resolve().parents[1]
 SHORTS = "skeleton-minion-lower-v1"
 REFERENCE = "upper-rogue-v1"
-FITTED_LEGACY = (
-    "kaykit-legacy-skeleton-archer-upper",
-    "kaykit-legacy-skeleton-warrior-upper",
-    "kaykit-legacy-skeleton-minion-lower",
-    "kaykit-legacy-skeleton-archer-lower",
-    "kaykit-legacy-skeleton-mage-lower",
-    "kaykit-legacy-skeleton-warrior-lower",
-)
 DIRECTIONS = 72
 SEAM_BAND = (0.715, 0.720, 0.724)
+MAGE_OVERLAP = (0.720, 0.724)
+OVERLAP_SECTIONS = {
+    "kaykit-legacy-skeleton-warrior-upper": SEAM_BAND,
+    "kaykit-legacy-skeleton-mage-lower": SEAM_BAND,
+    "lower-rogue-v1": SEAM_BAND,
+    "kaykit-adventurers-mage-upper": MAGE_OVERLAP,
+    "kaykit-adventurers-mage-lower": MAGE_OVERLAP,
+    "kaykit-skeletons-mage-upper": MAGE_OVERLAP,
+    "kaykit-skeletons-mage-lower": MAGE_OVERLAP,
+}
 REFERENCE_HEIGHT = 0.725
 SCAN_HEIGHTS = (0.58, 0.59, 0.60, 0.62, 0.64, 0.66, 0.68, 0.70, 0.71,
                 *SEAM_BAND, REFERENCE_HEIGHT, 0.73, 0.74, 0.75, 0.76, 0.78)
@@ -111,12 +113,12 @@ def check_shorts(result):
     return failures
 
 
-# 旧胸甲下摆、独立腰带和默认绿短裤都必须跨过各自原来的空档。
+# 红紫上下装覆盖同一段腰线，保留的其他部件继续跨过各自原来的空档。
 def check_waist_overlap(result):
     failures = []
-    for key in (*FITTED_LEGACY, "lower-rogue-v1"):
+    for key, heights in OVERLAP_SECTIONS.items():
         for section in result[key]["sections"]:
-            if section["height"] in SEAM_BAND and section["covered"] != DIRECTIONS:
+            if section["height"] in heights and section["covered"] != DIRECTIONS:
                 failures.append(f"{key} z={section['height']:.3f} 腰部仅覆盖 {section['covered']}/{DIRECTIONS} 个方向")
     return failures
 

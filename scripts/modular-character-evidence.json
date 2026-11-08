@@ -56,8 +56,64 @@
     "body": "kaykit-medium-v1",
     "selection": {
       "head": "kaykit-adventurers-barbarian-head",
-      "upper": "kaykit-skeletons-warrior-upper",
+      "upper": "kaykit-adventurers-knight-upper",
       "back": "kaykit-legacy-skeleton-mage-back-cloak"
+    }
+  },
+  {
+    "key": "human-purple-upper-red-lower",
+    "name": "人形：紫尖帽、紫色长衫和红色衣摆",
+    "body": "kaykit-medium-v1",
+    "selection": {
+      "head": "kaykit-adventurers-mage-head",
+      "upper": "kaykit-adventurers-mage-upper",
+      "lower": "kaykit-skeletons-mage-lower"
+    }
+  },
+  {
+    "key": "human-red-upper-purple-lower",
+    "name": "人形：棕顶牛角盔、红色立领衣和紫色衣摆",
+    "body": "kaykit-medium-v1",
+    "selection": {
+      "head": "kaykit-legacy-skeleton-warrior-head",
+      "upper": "kaykit-skeletons-mage-upper",
+      "lower": "kaykit-adventurers-mage-lower"
+    }
+  },
+  {
+    "key": "skeleton-red-lower",
+    "name": "骷髅：棕顶牛角盔、单穿红色衣摆",
+    "body": "kaykit-skeleton-v1",
+    "selection": {
+      "head": "kaykit-legacy-skeleton-warrior-head",
+      "lower": "kaykit-skeletons-mage-lower"
+    }
+  },
+  {
+    "key": "skeleton-purple-lower",
+    "name": "骷髅：紫尖帽、单穿紫色衣摆",
+    "body": "kaykit-skeleton-v1",
+    "selection": {
+      "head": "kaykit-adventurers-mage-head",
+      "lower": "kaykit-adventurers-mage-lower"
+    }
+  },
+  {
+    "key": "human-red-outfit",
+    "name": "人形：红色立领衣和红色衣摆",
+    "body": "kaykit-medium-v1",
+    "selection": {
+      "upper": "kaykit-skeletons-mage-upper",
+      "lower": "kaykit-skeletons-mage-lower"
+    }
+  },
+  {
+    "key": "human-purple-outfit",
+    "name": "人形：紫色长衫和紫色衣摆",
+    "body": "kaykit-medium-v1",
+    "selection": {
+      "upper": "kaykit-adventurers-mage-upper",
+      "lower": "kaykit-adventurers-mage-lower"
     }
   }
 ]

@@ -216,6 +216,16 @@ def prepare(options):
         hood_fit_spec = importlib.util.spec_from_file_location('modular_hood_fit', ROOT / 'scripts/modular-character-hood-fit.py')
         hood_fit_module = importlib.util.module_from_spec(hood_fit_spec)
         hood_fit_spec.loader.exec_module(hood_fit_module)
+    helmet_opening = config.get('helmet_opening', {})
+    if helmet_opening:
+        helmet_spec = importlib.util.spec_from_file_location('modular_headwear_adjustments', ROOT / 'scripts/modular-character-headwear-adjustments.py')
+        helmet_module = importlib.util.module_from_spec(helmet_spec)
+        helmet_spec.loader.exec_module(helmet_module)
+    mage_waist = config.get('mage_waist', {})
+    if mage_waist:
+        mage_spec = importlib.util.spec_from_file_location('modular_mage_waist', ROOT / 'scripts/modular-character-mage-waist.py')
+        mage_module = importlib.util.module_from_spec(mage_spec)
+        mage_spec.loader.exec_module(mage_module)
     waist_fit_module = None
     if config.get('skeleton_waist_fit'):
         waist_fit_spec = importlib.util.spec_from_file_location('modular_skeleton_waist_fit', ROOT / 'scripts/modular-character-skeleton-waist-fit.py')
@@ -244,6 +254,7 @@ def prepare(options):
     back_fit_evidence = []
     neck_support_evidence = {}
     head_fit_evidence = []
+    mage_waist_evidence = []
     human_waist_evidence = None
     hand_surface = None
     aliases = {}
@@ -282,12 +293,16 @@ def prepare(options):
         mesh.free()
         return obj
 
-    # 按已审核源色块拆开人体与衣物，禁止将裸露皮肤或骨骼出售。
-    def anatomical(source, source_key, keep_body, name):
+    # UV 区域声明用于辨认已审核的来源部件。
+    def in_uv_regions(uv, regions):
+        return any(u0 <= uv[0] < u1 and v0 <= uv[1] <= v1 for u0, u1, v0, v1 in regions)
+
+    # 按已审核源色块拆开人体与衣物，也可排除不属于穿戴的人工封盖。
+    def anatomical(source, source_key, keep_body, name, excluded_uv=()):
         def chosen(face, layer):
             uv = sum((loop[layer].uv for loop in face.loops), Vector((0, 0))) / len(face.loops) if layer else (0, 0)
             material = source.data.materials[face.material_index].name if source.data.materials else ''
-            return body_surface(source_key, material, uv) == keep_body
+            return body_surface(source_key, material, uv) == keep_body and not in_uv_regions(uv, excluded_uv)
         return select(source, name, chosen)
 
     # 腕切面的人工封盖不属于手套，保留源衣物的真实开放接口。
@@ -675,9 +690,13 @@ def prepare(options):
                         return True
                     # 标准化头饰已合并原帽和源脸的附属网格；沿用当初拆分源脸的 UV 区域。
                     uv = sum((loop[layer].uv for loop in face.loops), Vector((0, 0))) / len(face.loops)
-                    return not any(a <= uv.x < b and c <= uv.y <= d for a, b, c, d in excluded_regions)
+                    return not in_uv_regions(uv, excluded_regions)
 
                 head = select(hair, 'head_provider', keep_headwear)
+                helmet_settings = helmet_opening.get(key + '-head')
+                if helmet_settings:
+                    moved = helmet_module.fit_helmet_opening(head, helmet_settings, connected_faces)
+                    head_fit_evidence.append({'wearable_key': key + '-head', 'node': head.name, 'settings': helmet_settings, 'moved_vertices': moved})
                 if hood is not None:
                     head = join([head, hood], 'head_provider')
                 head_parts = [head]
@@ -730,12 +749,20 @@ def prepare(options):
         # 原上装已经三角化，删除与独立背部同位置的真实三角面。
         upper_only = select(upper, 'upper_outfit', lambda face, uv: tuple(sorted(tuple(round(c, 4) for c in vertex.co) for vertex in face.verts)) not in excluded_triangles)
         lower = objects.get('lower_native') if 'lower' in spec.get('default_wearables', {}) else objects.get('lower_provider')
+        if key in mage_waist:
+            lower = select(lower, 'mage_lower_waist', lambda f, uv: True)
+            fitted = mage_module.split_mage_waist(
+                upper_only, lower, mage_waist[key], garment_waist['height'], garment_waist['weights'],
+            )
+            mage_waist_evidence.append({'source': key, **fitted})
         for slot, original in [('upper', upper_only), ('lower', lower), ('shoes', objects.get('shoes_provider'))]:
             if original is None or slot in source.get('excluded_slots', []):
                 continue
-            garment = anatomical(original, key, False, slot + '_outfit')
+            excluded_uv = source.get('garment_excluded_uv', {}).get(slot, ())
+            garment = anatomical(original, key, False, slot + '_outfit', excluded_uv)
             if garment.data.polygons:
-                removed_body_faces = len(original.data.polygons) - len(garment.data.polygons)
+                removed_faces = len(original.data.polygons) - len(garment.data.polygons)
+                removed_body_faces = len(anatomical(original, key, True, '_body_source').data.polygons) if excluded_uv else removed_faces
                 garment_key = 'skeleton-minion-lower-v1' if key == 'kaykit-skeletons-minion' and slot == 'lower' else key + '-' + slot
                 pieces = [garment]
                 hands = None
@@ -748,6 +775,8 @@ def prepare(options):
                 entry = item(garment_key, config['names'][key][slot], slot, pieces, key, meta, config['wearable_covers'][garment_key] if slot == 'shoes' else [], hand_objects=[hands] if hands is not None else ())
                 items.append(entry)
                 evidence.append({'wearable_key': garment_key, 'slot': slot, 'native': slot + '_native' in objects, 'removed_body_faces': removed_body_faces, 'remaining_body_faces': len(anatomical(garment, key, True, '_body_check').data.polygons), 'hand_faces': len(hands.data.polygons) if hands is not None else 0})
+                if excluded_uv:
+                    evidence[-1]['removed_cap_faces'] = removed_faces - removed_body_faces
         # 新版侍从提供真实肋骨和四肢；缺失的髋部与大腿根在同一骨架离线补齐。
         extra = []
         if key == 'kaykit-skeletons-minion':
@@ -873,6 +902,8 @@ def prepare(options):
     retained = [entry for entry in previous_assets if entry['key'] not in old_character_asset_keys and not (entry.get('provider') == 'kenney' and entry['kind'] in ['character', 'wearable']) and not (entry.get('kind') == 'wearable')]
     dedup_assets = {entry['key']: entry for entry in retained + assets}
     manifest = {'recipe': config['recipe'], 'body_key': config['body_key'], 'characters': [{'definition': entry, 'provider': 'kaykit', 'status': 'imported'} for entry in body_definitions], 'sources': [{key: value for key, value in entry.items() if key not in ['asset', 'spec']} for entry in config['sources']], 'assets': assets, 'wearable_evidence': evidence, 'face_completions': face_completions, 'human_body': human_body_evidence, 'clothing_fit_evidence': clothing_fit_evidence, 'back_fit_evidence': back_fit_evidence, 'neck_support_evidence': neck_support_evidence, 'head_fit_evidence': head_fit_evidence, 'human_waist_evidence': human_waist_evidence, 'skeleton_body': skeleton_report, 'aliases': aliases, 'processing_complete': True, 'validation_status': 'not_run', 'failures': [], 'verified_inputs': verified_inputs, 'archive_verification': 'Archive checksums are retained source records; archive bytes were not rehashed in this run.'}
+    if mage_waist_evidence:
+        manifest['mage_waist_evidence'] = mage_waist_evidence
     updates = {ROOT / 'internal/character/character-catalog.json': catalog, ROOT / 'internal/shop/wearable-products.json': offers, BUILTIN / 'catalog.json': list(dedup_assets.values()), previous_manifest_path: manifest}
     write_candidate(staging, output, {path: (json.dumps(value, ensure_ascii=False, indent=2) + '\n').encode() for path, value in updates.items()}, retained, ROOT, baseline, dependencies)
     print('人物候选生成完成', len(body_definitions), len(wearables), len(offers), flush=True)

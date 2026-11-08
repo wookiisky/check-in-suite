@@ -7759,54 +7759,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-mage-446ba36492f2",
-    "name": "kaykit-adventurers-mage",
-    "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-446ba36492f2",
-    "format": "glb"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-mage-head-9edf0520b6bb",
-    "name": "紫色尖帽与黑色长发",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-head-9edf0520b6bb",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-adventurers",
     "key": "modular-kaykit-adventurers-mage-back-cape-f32d75388ae9",
     "name": "紫红色披风",
     "kind": "wearable",
     "url": "/api/v1/assets/modular-kaykit-adventurers-mage-back-cape-f32d75388ae9",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-mage-upper-6e0c093c29f5",
-    "name": "紫色纽扣长袖上衣与灰色袖口",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-upper-6e0c093c29f5",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-mage-lower-84ace2d52e3e",
-    "name": "紫色衣摆与挂袋腰带",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-lower-84ace2d52e3e",
     "format": "png"
   },
   {
@@ -7819,17 +7775,6 @@
     "kind": "wearable",
     "url": "/api/v1/assets/modular-kaykit-adventurers-mage-shoes-f90a3b25da53",
     "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-9eba8422e7a4",
-    "name": "kaykit-adventurers-rogue",
-    "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-9eba8422e7a4",
-    "format": "glb"
   },
   {
     "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
@@ -7880,28 +7825,6 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-shoes-989607bafe6a",
-    "name": "浅棕色皮靴",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-shoes-989607bafe6a",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-hooded-293208a9b609",
-    "name": "kaykit-adventurers-rogue-hooded",
-    "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-293208a9b609",
-    "format": "glb"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-adventurers",
     "key": "modular-kaykit-adventurers-rogue-hooded-head-c99a7cd5bda5",
     "name": "绿色兜帽与面巾",
     "kind": "wearable",
@@ -7928,17 +7851,6 @@
     "name": "深绿色腰带短裤",
     "kind": "wearable",
     "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-lower-50c085cfb3ff",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-adventurers",
-    "key": "modular-kaykit-adventurers-rogue-hooded-shoes-6e782a87f2dc",
-    "name": "浅棕色翻边靴",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-shoes-6e782a87f2dc",
     "format": "png"
   },
   {
@@ -8023,17 +7935,6 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-minion-ac07eb81b29e",
-    "name": "kaykit-skeletons-minion",
-    "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-minion-ac07eb81b29e",
-    "format": "glb"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeletons",
     "key": "modular-face-kaykit-skeletons-minion-8b227f6f0076",
     "name": "裂纹骷髅",
     "kind": "wearable",
@@ -8056,39 +7957,6 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-skeleton-minion-lower-v1-f2f79101a879",
-    "name": "棕色短裤与银扣腰带",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-skeleton-minion-lower-v1-f2f79101a879",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeletons",
-    "key": "modular-skeleton-thumbnail-v1-56d66a434093",
-    "name": "基础骷髅",
-    "kind": "character",
-    "url": "/api/v1/assets/modular-skeleton-thumbnail-v1-56d66a434093",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-mage-98d701bbb501",
-    "name": "kaykit-skeletons-mage",
-    "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-98d701bbb501",
-    "format": "glb"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeletons",
     "key": "modular-face-kaykit-skeletons-mage-d6373859ef3c",
     "name": "红纹骷髅",
     "kind": "wearable",
@@ -8104,28 +7972,6 @@
     "name": "红色尖顶帽",
     "kind": "wearable",
     "url": "/api/v1/assets/modular-kaykit-skeletons-mage-head-58b3544a4dfe",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-mage-upper-76a35ce7b582",
-    "name": "红色立领上衣与肩甲",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-upper-76a35ce7b582",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-mage-lower-de2f888762af",
-    "name": "红色衣摆与药水腰带",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-lower-de2f888762af",
     "format": "png"
   },
   {
@@ -8199,17 +8045,6 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
-    "name": "kaykit-skeletons-warrior",
-    "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-warrior-4fb4c88ff1e4",
-    "format": "glb"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeletons",
     "key": "modular-kaykit-skeletons-warrior-head-8ef90b99f3fe",
     "name": "银灰色牛角盔",
     "kind": "wearable",
@@ -8228,39 +8063,6 @@
     "format": "png"
   },
   {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-warrior-upper-76f95e86e457",
-    "name": "银灰色胸甲与金属护手",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-warrior-upper-76f95e86e457",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeletons",
-    "key": "modular-kaykit-skeletons-warrior-lower-738b9fd66f2a",
-    "name": "银灰色腰甲与棕色腰带",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-skeletons-warrior-lower-738b9fd66f2a",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
-    "name": "kaykit-legacy-skeleton-minion",
-    "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-5a253ba3877b",
-    "format": "glb"
-  },
-  {
     "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
     "license": "CC0-1.0",
     "provider": "kaykit",
@@ -8276,65 +8078,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-minion-upper-717609183137",
-    "name": "成对银灰色臂环",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-upper-717609183137",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-minion-lower-a5985a808d6d",
-    "name": "棕色腰带与金属扣",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-lower-a5985a808d6d",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-archer-14f70736321a",
-    "name": "kaykit-legacy-skeleton-archer",
-    "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-14f70736321a",
-    "format": "glb"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeleton-pack",
     "key": "modular-kaykit-legacy-skeleton-archer-head-5371bfed7710",
     "name": "紫色兜帽与面巾",
     "kind": "wearable",
     "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-head-5371bfed7710",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-archer-upper-12c9ad51ed03",
-    "name": "灰色胸甲、金属护臂与棕色手套",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-upper-12c9ad51ed03",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-archer-lower-b1c8f03f1479",
-    "name": "棕色腰带与侧腰包",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-lower-b1c8f03f1479",
     "format": "png"
   },
   {
@@ -8397,43 +8144,10 @@
     "license": "CC0-1.0",
     "provider": "kaykit",
     "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
-    "name": "kaykit-legacy-skeleton-warrior",
-    "kind": "model",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-27ec27cbc53f",
-    "format": "glb"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-warrior-head-e7ae82db0c81",
-    "name": "棕顶牛角铁盔",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-head-e7ae82db0c81",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeleton-pack",
     "key": "modular-kaykit-legacy-skeleton-warrior-upper-69b57ed84c9e",
     "name": "灰色胸甲、棕色臂环与银灰色护臂",
     "kind": "wearable",
     "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-upper-69b57ed84c9e",
-    "format": "png"
-  },
-  {
-    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "kaykit-skeleton-pack",
-    "key": "modular-kaykit-legacy-skeleton-warrior-lower-e3528182e8c8",
-    "name": "棕色腰带与银色方扣",
-    "kind": "wearable",
-    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-lower-e3528182e8c8",
     "format": "png"
   },
   {
@@ -8500,6 +8214,193 @@
     "name": "基础人形",
     "kind": "character",
     "url": "/api/v1/assets/modular-human-thumbnail-v1-d09cb4f10097",
+    "format": "png"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-adventurers",
+    "key": "modular-kaykit-adventurers-mage-8269d6502a23",
+    "name": "kaykit-adventurers-mage",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-8269d6502a23",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-adventurers",
+    "key": "modular-kaykit-adventurers-mage-head-196b91cb4ca8",
+    "name": "紫尖帽",
+    "kind": "wearable",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-head-196b91cb4ca8",
+    "format": "png"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-adventurers",
+    "key": "modular-kaykit-adventurers-mage-upper-4c7fdc0df221",
+    "name": "紫色长衫",
+    "kind": "wearable",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-upper-4c7fdc0df221",
+    "format": "png"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-adventurers",
+    "key": "modular-kaykit-adventurers-mage-lower-2cf27cf9f634",
+    "name": "紫色衣摆",
+    "kind": "wearable",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-mage-lower-2cf27cf9f634",
+    "format": "png"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-adventurers",
+    "key": "modular-kaykit-adventurers-rogue-b33bd49e0830",
+    "name": "kaykit-adventurers-rogue",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-b33bd49e0830",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-adventurers",
+    "key": "modular-kaykit-adventurers-rogue-hooded-40c173bdc575",
+    "name": "kaykit-adventurers-rogue-hooded",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-kaykit-adventurers-rogue-hooded-40c173bdc575",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeletons",
+    "key": "modular-kaykit-skeletons-minion-735119d9638b",
+    "name": "kaykit-skeletons-minion",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-minion-735119d9638b",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeletons",
+    "key": "modular-skeleton-minion-lower-v1-abc392d180b5",
+    "name": "棕短裤",
+    "kind": "wearable",
+    "url": "/api/v1/assets/modular-skeleton-minion-lower-v1-abc392d180b5",
+    "format": "png"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeletons",
+    "key": "modular-skeleton-thumbnail-v1-6ed192b02ab0",
+    "name": "基础骷髅",
+    "kind": "character",
+    "url": "/api/v1/assets/modular-skeleton-thumbnail-v1-6ed192b02ab0",
+    "format": "png"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeletons",
+    "key": "modular-kaykit-skeletons-mage-0e9eaa4bdfba",
+    "name": "kaykit-skeletons-mage",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-0e9eaa4bdfba",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeletons",
+    "key": "modular-kaykit-skeletons-mage-upper-894585b62b4f",
+    "name": "红色立领衣",
+    "kind": "wearable",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-upper-894585b62b4f",
+    "format": "png"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeletons",
+    "key": "modular-kaykit-skeletons-mage-lower-45ab3332f15b",
+    "name": "红色衣摆",
+    "kind": "wearable",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-mage-lower-45ab3332f15b",
+    "format": "png"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeletons",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeletons",
+    "key": "modular-kaykit-skeletons-warrior-0f475ede201a",
+    "name": "kaykit-skeletons-warrior",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-kaykit-skeletons-warrior-0f475ede201a",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeleton-pack",
+    "key": "modular-kaykit-legacy-skeleton-minion-f680ecbb5f22",
+    "name": "kaykit-legacy-skeleton-minion",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-minion-f680ecbb5f22",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeleton-pack",
+    "key": "modular-kaykit-legacy-skeleton-archer-c57aa354a50b",
+    "name": "kaykit-legacy-skeleton-archer",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-archer-c57aa354a50b",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeleton-pack",
+    "key": "modular-kaykit-legacy-skeleton-warrior-fa4458b2ceab",
+    "name": "kaykit-legacy-skeleton-warrior",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-fa4458b2ceab",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://kaylousberg.itch.io/kaykit-skeleton-pack",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "kaykit-skeleton-pack",
+    "key": "modular-kaykit-legacy-skeleton-warrior-head-22edda11f645",
+    "name": "棕顶牛角盔",
+    "kind": "wearable",
+    "url": "/api/v1/assets/modular-kaykit-legacy-skeleton-warrior-head-22edda11f645",
     "format": "png"
   }
 ]

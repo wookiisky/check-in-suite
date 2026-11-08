@@ -164,7 +164,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--catalog', type=Path, default=ROOT / 'internal/character/character-catalog.json')
     parser.add_argument('--assets', type=Path, default=ROOT / 'internal/assets/builtin')
-    parser.add_argument('--wearable-key', default='kaykit-legacy-skeleton-archer-upper')
+    parser.add_argument('--wearable-key', required=True)
     parser.add_argument('--report', type=Path, required=True)
     arguments = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
     verify(parser.parse_args(arguments))

@@ -93,24 +93,31 @@ test('骷髅身体保留真实骨骼，独立衣物已剥离来源身体', async
   assert.ok(manifest.skeleton_body?.source_bone_faces > 0);
   assert.ok(manifest.skeleton_body?.completed_regions?.includes('pelvis'));
   assert.ok(manifest.wearable_evidence.length > 10);
+  const shorts = manifest.wearable_evidence.find((item) => item.wearable_key === 'skeleton-minion-lower-v1');
+  assert.ok(shorts?.removed_cap_faces > 0, '棕短裤应剥离腰口多余的灰色封面');
   for (const item of manifest.wearable_evidence) {
     if (!['upper', 'lower', 'shoes'].includes(item.slot)) continue;
     assert.equal(item.remaining_body_faces, 0, item.wearable_key);
   }
 });
 
-// 腰带和护腕必须发布原生网格，不再以备用裤装替代或整类排除。
-test('旧版骷髅的完整原生护腕和腰带进入穿戴目录', async () => {
+// 配方决定哪些部件出货，保留的原生部件应有真实网格。
+test('穿戴目录与报价遵守配方的槽位排除', async () => {
   const catalog = await readJSON('internal/character/character-catalog.json');
   const manifest = await readJSON('internal/assets/provider-character-manifest.json');
-  for (const source of ['minion', 'archer', 'mage', 'warrior']) {
-    const key = `kaykit-legacy-skeleton-${source}-upper`;
+  const configuration = await readJSON('scripts/modular-character-sources.json');
+  const offers = await readJSON('internal/shop/wearable-products.json');
+  const published = new Set([...catalog.wearables, ...offers, ...manifest.wearable_evidence].map((item) => item.wearable_key));
+  for (const source of configuration.sources) {
+    for (const slot of source.excluded_slots ?? []) {
+      const key = `${source.key}-${slot}`;
+      assert.ok(!published.has(key), key);
+    }
+  }
+  for (const key of ['kaykit-legacy-skeleton-mage-upper', 'kaykit-legacy-skeleton-mage-lower', 'kaykit-legacy-skeleton-warrior-upper']) {
     assert.ok(catalog.wearables.some((entry) => entry.wearable_key === key && entry.nodes.length), key);
     assert.equal(manifest.wearable_evidence.find((entry) => entry.wearable_key === key)?.native, true, key);
   }
-  const belt = 'kaykit-legacy-skeleton-minion-lower';
-  assert.ok(catalog.wearables.some((entry) => entry.wearable_key === belt && entry.nodes.length), belt);
-  assert.equal(manifest.wearable_evidence.find((entry) => entry.wearable_key === belt)?.native, true, belt);
 });
 
 // 只有实际包住头顶的物件才遮盖头皮，胡须和围领必须保留所选脸的头顶。

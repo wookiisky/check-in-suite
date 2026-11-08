@@ -633,22 +633,20 @@ def surface_properties(obj):
 
 
 # 每个源顶点都遵守同一可逆矩阵，证明没有逐点径向扩张和厚度塌陷。
-def verify(catalog_path):
+def verify_source_clothing_fit():
     import bpy
     from mathutils import Matrix
 
     specification = importlib.util.spec_from_file_location('real_clothing_fit', ROOT / 'scripts/modular-character-clothing-fit.py')
     module = importlib.util.module_from_spec(specification)
     specification.loader.exec_module(module)
-    catalog = json.loads(catalog_path.read_text())
     recipe = json.loads((ROOT / 'scripts/modular-character-sources.json').read_text())
     cases = {
-        'kaykit-legacy-skeleton-mage-upper': [{'selector': {'materials': ['PurpleDark', 'WoodDark'], 'bone_region': 'upperarm'}, 'scale': [1, 1.35, 1], 'translation': [0, 0, -.035]}],
-        'kaykit-legacy-skeleton-archer-upper': [{'selector': {'materials': ['Stone'], 'bone_region': 'forearm'}, 'scale': [1, 1, 1.45]}],
+        'kaykit-legacy-skeleton-mage': [{'selector': {'materials': ['PurpleDark', 'WoodDark'], 'bone_region': 'upperarm'}, 'scale': [1, 1.35, 1], 'translation': [0, 0, -.035]}],
+        'kaykit-legacy-skeleton-archer': [{'selector': {'materials': ['Stone'], 'bone_region': 'forearm'}, 'scale': [1, 1, 1.45]}],
     }
     for key, adjustments in cases.items():
-        assert any(item['wearable_key'] == key for item in catalog['wearables']), '目录缺少需要验收的旧版上装'
-        source = next(source for source in recipe['sources'] if source['key'] + '-upper' == key)
+        source = next(source for source in recipe['sources'] if source['key'] == key)
         path = ROOT / source['normalized_model']
         bpy.ops.wm.read_factory_settings(use_empty=True)
         # 原组件分区/面数是归一化原件的契约；最终GLB已移动腕筒并开孔，不能再次当原件使用。
@@ -683,7 +681,7 @@ def verify(catalog_path):
         for obj in objects:
             assert surface_properties(obj) == properties[obj], key + ': 源UV、材质或开口改变'
             assert [[(obj.vertex_groups[group.group].name, group.weight) for group in vertex.groups] for vertex in obj.data.vertices] == weights[obj], key + ': 未声明的蒙皮发生改变'
-        if key.endswith('archer-upper'):
+        if key.endswith('archer'):
             before_badge = {obj: [vertex.co.copy() for vertex in obj.data.vertices] for obj in objects}
             badge_report = module.fit_upper_clothing(objects, rig, [{'selector': {'materials': ['Stone'], 'bone_region': 'forearm', 'face_count': 16}, 'translation': [0, 0, .004]}])
             assert sum(operation['faces'] for operation in badge_report['operations']) == 32, '独立装饰件选择混入主袖管'
@@ -694,7 +692,7 @@ def verify(catalog_path):
             crossing = module.fit_upper_clothing(objects, rig, [{'selector': selector, 'translation': [.30, 0, 0]}, {'selector': selector, 'translation': [-.30, 0, 0]}])
             assert len(crossing['operations']) == 4, '跨过关节后第二个调整丢失原部件'
             assert all(((obj.matrix_world @ vertex.co) - unchanged[obj][index]).length < .000001 for obj in objects for index, vertex in enumerate(obj.data.vertices)), '选择条件没有保持原始部件语义'
-        if key.endswith('archer-upper'):
+        if key.endswith('archer'):
             node = objects[0]
             previous_name = node.name
             node.name = 'upper_source.001'
@@ -892,7 +890,7 @@ if __name__ == '__main__':
     verify_arm_surface_fit(args.catalog, args.assets)
     verify_palm_prepass(args.catalog, args.assets)
     verify_transform_weight(args.catalog, args.assets)
-    verify(args.catalog)
+    verify_source_clothing_fit()
     verify_hand_restoration(args.normalized_directory)
     if args.baseline_normalized:
         verify_unchanged_parts(args.baseline_normalized, args.normalized_directory)

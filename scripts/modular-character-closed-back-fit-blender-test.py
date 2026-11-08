@@ -1,4 +1,4 @@
-"""最终GLB的Warrior背甲和Rogue腰背回归；Skeleton清除可见穿出，Human严格对照原输入。"""
+"""最终GLB的Rogue腰背回归；Skeleton清除可见穿出，Human严格对照原输入。"""
 import argparse
 from collections import Counter
 import hashlib
@@ -97,39 +97,39 @@ def main(options):
             'required_skeleton_clearance':options.minimum_clearance,'requested_bodies':options.body,'cases':[],
             'tools':{name:sha(ROOT/'scripts'/name) for name in ['verify-modular-character-appearance.py','verify-modular-character-arms.py','modular-character-torso-back-fit-blender-test.py','modular-character-clothing-fit.py','asset-pipeline-rules.json']},
             'baseline_report':{'path':str(options.baseline_report),'sha256':sha(options.baseline_report)} if options.baseline_report else None}
-    for key in ['kaykit-skeletons-warrior-upper','upper-rogue-v1']:
-        for body_key in options.body:
-            paths={}
-            body,rig,selected,hashes,selection,sources=assembly.load_appearance({'body':body_key,'selection':{'upper':key}},bodies,wearables,options.asset_directory,paths)
-            item=wearables[key]
-            armor=sources[item['model_asset_key']][item['nodes'][0]]
-            original=[vertex.co.copy() for vertex in armor.data.vertices]
-            armor.data.calc_loop_triangles()
-            polygons={index for component in clothing.mesh_components(armor) if clothing.component_region(component['center'],rig)=='torso' for index in component['faces']}
-            domain=[]
-            for tri in armor.data.loop_triangles:
-                points=[armor.matrix_world@armor.data.vertices[index].co for index in tri.vertices]
-                normal=(points[1]-points[0]).cross(points[2]-points[0]).normalized()
-                if tri.polygon_index in polygons and normal.y>.45:domain.append(tri.index)
-            if not domain:raise ValueError('背向来源衣片域为空')
-            base=sources[body['model_asset_key']]
-            under=[base[name] for name in body['fixed_nodes']+[node for nodes in body['body_regions'].values() for node in nodes] if name in base and base[name] in selected]
-            occluders=[obj for obj in selected if obj not in under and obj is not armor]
-            actions=arm.load_actions(bpy,body,hashes,options.asset_directory,paths,poses)
-            actual_inputs={name:{'path':paths[name],'sha256':value} for name,value in hashes.items()}
-            for motion,frame in poses:
-                arm.apply_pose(bpy,rig,body,actions,motion,frame)
-                row=focused_check(armor,original,domain,under,occluders,[.72,1.0],64)
-                if not row['samples']:raise ValueError('闭面域未执行任何采样')
-                row.update(body=body_key,wearable_key=key,motion=motion,frame=frame,actual_inputs=actual_inputs)
-                if body_key=='kaykit-skeleton-v1':
-                    row['status']='passed' if row['exposed']==0 and row['minimum_clearance'] is not None and row['minimum_clearance']>=options.minimum_clearance else 'failed'
-                elif baseline:
-                    prior=old_rows.get(identity(row))
-                    row['status']='unchanged_baseline_contact' if prior and compare_human(row,prior) else 'failed_human_changed'
-                else:row['status']='baseline_contact_recorded'
-                report['cases'].append(row)
-                print('实际背部闭面检查',body_key,key,motion,frame,row['status'],row['samples'],row['exposed'],row['minimum_clearance'],flush=True)
+    key='upper-rogue-v1'
+    for body_key in options.body:
+        paths={}
+        body,rig,selected,hashes,selection,sources=assembly.load_appearance({'body':body_key,'selection':{'upper':key}},bodies,wearables,options.asset_directory,paths)
+        item=wearables[key]
+        armor=sources[item['model_asset_key']][item['nodes'][0]]
+        original=[vertex.co.copy() for vertex in armor.data.vertices]
+        armor.data.calc_loop_triangles()
+        polygons={index for component in clothing.mesh_components(armor) if clothing.component_region(component['center'],rig)=='torso' for index in component['faces']}
+        domain=[]
+        for tri in armor.data.loop_triangles:
+            points=[armor.matrix_world@armor.data.vertices[index].co for index in tri.vertices]
+            normal=(points[1]-points[0]).cross(points[2]-points[0]).normalized()
+            if tri.polygon_index in polygons and normal.y>.45:domain.append(tri.index)
+        if not domain:raise ValueError('背向来源衣片域为空')
+        base=sources[body['model_asset_key']]
+        under=[base[name] for name in body['fixed_nodes']+[node for nodes in body['body_regions'].values() for node in nodes] if name in base and base[name] in selected]
+        occluders=[obj for obj in selected if obj not in under and obj is not armor]
+        actions=arm.load_actions(bpy,body,hashes,options.asset_directory,paths,poses)
+        actual_inputs={name:{'path':paths[name],'sha256':value} for name,value in hashes.items()}
+        for motion,frame in poses:
+            arm.apply_pose(bpy,rig,body,actions,motion,frame)
+            row=focused_check(armor,original,domain,under,occluders,[.72,1.0],64)
+            if not row['samples']:raise ValueError('闭面域未执行任何采样')
+            row.update(body=body_key,wearable_key=key,motion=motion,frame=frame,actual_inputs=actual_inputs)
+            if body_key=='kaykit-skeleton-v1':
+                row['status']='passed' if row['exposed']==0 and row['minimum_clearance'] is not None and row['minimum_clearance']>=options.minimum_clearance else 'failed'
+            elif baseline:
+                prior=old_rows.get(identity(row))
+                row['status']='unchanged_baseline_contact' if prior and compare_human(row,prior) else 'failed_human_changed'
+            else:row['status']='baseline_contact_recorded'
+            report['cases'].append(row)
+            print('实际背部闭面检查',body_key,key,motion,frame,row['status'],row['samples'],row['exposed'],row['minimum_clearance'],flush=True)
     skeleton=[row for row in report['cases'] if row['body']=='kaykit-skeleton-v1']
     human=[row for row in report['cases'] if row['body']!='kaykit-skeleton-v1']
     report['summary']={'cases':len(report['cases']),'samples':sum(row['samples'] for row in report['cases']),
