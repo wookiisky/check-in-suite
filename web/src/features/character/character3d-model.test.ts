@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Matrix4, Mesh, SkinnedMesh, Vector3 } from 'three';
+import { Matrix4, Mesh, MeshBasicMaterial, SkinnedMesh, Vector3 } from 'three';
 import { GltfResourceCache } from '../../graphics/gltf-resources';
 import { activityBookSource, appearanceFixture, characterSource, characterWithBookBone, deferred } from './character3d-test-fixtures';
 import { draftFromAppearance, resolveAppearance } from './character3d-appearance';
@@ -52,6 +52,62 @@ describe('正式人物组装与动画', () => {
     expect(selected.skeleton.bones[0]).toBe(face.skeleton.bones[0]);
     expect(selected.skeleton.bones[0]).not.toBe((shirt.scene.getObjectByName('upper-b') as SkinnedMesh).skeleton.bones[0]);
     instance.dispose(); expect(cache.size).toBe(0);
+  });
+
+  it.each(['/base.glb', '/shirt.glb'])('配色只修改 %s 中选定衣物的实例材质', async (url) => {
+    const snapshot = appearanceFixture();
+    const garment = snapshot.wearables.find((item) => item.wearable_key === 'upper-a')!;
+    Object.assign(garment, { model_url: url, dye_material: 'fabric', default_color_key: 'ivory' });
+    snapshot.wearable_colors = [{ key: 'blue', name: '蓝', hex: '#4179BE' }];
+    const body = characterSource();
+    const shirt = url === '/base.glb' ? body : characterSource(['upper-a']);
+    const mesh = shirt.scene.getObjectByName('upper-a') as SkinnedMesh;
+    const fabric = mesh.material as MeshBasicMaterial;
+    fabric.name = 'fabric'; fabric.color.set('#F2E8D5');
+    const trim = new MeshBasicMaterial({ name: 'trim', color: '#26262A' });
+    mesh.material = [fabric, trim];
+    const disposeFabric = vi.spyOn(fabric, 'dispose');
+    const cache = new GltfResourceCache(async (path) => path === '/base.glb' ? body : shirt);
+    const original = await prepareCharacter(resolveAppearance(snapshot), cache);
+    const changed = await prepareCharacter(resolveAppearance({ ...snapshot, upper_color_key: 'blue' }), cache);
+    const clothingMesh = (model: typeof original) => model.root.getObjectsByProperty('name', 'upper-a').find((node) => node.visible) as SkinnedMesh;
+    const changedMesh = clothingMesh(changed);
+    const [dyed, retained] = changedMesh.material as MeshBasicMaterial[];
+    const disposeDye = vi.spyOn(dyed!, 'dispose');
+    expect(changed.key).not.toBe(original.key);
+    expect(changedMesh.geometry).toBe(mesh.geometry);
+    expect(dyed).not.toBe(fabric);
+    expect(dyed!.color.getHexString()).toBe('4179be');
+    expect(retained).toBe(trim);
+    const originalMaterials = clothingMesh(original).material as MeshBasicMaterial[];
+    expect(originalMaterials[0]).toBe(fabric);
+    expect(originalMaterials[1]).toBe(trim);
+    if (body === shirt) expect((changed.root.getObjectByName('face') as SkinnedMesh).material).toBe(fabric);
+    expect(fabric.color.getHexString()).toBe('f2e8d5');
+    changed.dispose(); changed.dispose();
+    expect(disposeDye).toHaveBeenCalledOnce();
+    expect(disposeFabric).not.toHaveBeenCalled();
+    original.dispose();
+    expect(disposeFabric).toHaveBeenCalledOnce();
+    expect(cache.size).toBe(0);
+  });
+
+  it('换色后发生准备错误也释放实例材质和源资源引用', async () => {
+    const snapshot = appearanceFixture();
+    Object.assign(snapshot.wearables.find((item) => item.wearable_key === 'upper-a')!, { dye_material: 'fabric', default_color_key: 'ivory' });
+    snapshot.wearable_colors = [{ key: 'blue', name: '蓝', hex: '#4179BE' }];
+    snapshot.upper_color_key = 'blue';
+    const body = characterSource();
+    const source = (body.scene.getObjectByName('upper-a') as SkinnedMesh).material as MeshBasicMaterial;
+    source.name = 'fabric';
+    const copy = source.clone();
+    vi.spyOn(source, 'clone').mockReturnValue(copy);
+    const disposeCopy = vi.spyOn(copy, 'dispose');
+    const cache = new GltfResourceCache(async () => body);
+    const attachment = { model_url: '/base.glb', bone: 'absent', matrix: new Matrix4().elements };
+    await expect(prepareCharacter(resolveAppearance(snapshot, undefined, [attachment]), cache)).rejects.toThrow('CHARACTER_ATTACHMENT_BONE_MISSING');
+    expect(disposeCopy).toHaveBeenCalledOnce();
+    expect(cache.size).toBe(0);
   });
 
   it('先显示动作首帧，暂停与恢复不补算时间', async () => {

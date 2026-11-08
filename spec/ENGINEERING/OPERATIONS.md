@@ -118,6 +118,10 @@ npm run test:assets
 
 `scripts/modular-character-sources.json` 声明人物来源与拆分配方，模型和六槽定义由 `internal/character/character-catalog.json` 管理。人形和骷髅是基础身体，职业不再进入角色目录；脸与头皮属于形象，帽子和头发属于头部，披风和箭袋属于背部。中箭只制作头部插箭，使用来源包中的独立箭模型，不把整个战损头骨当成头饰。身体、脸、衣物与缩略图分别保留来源依据，新字节和元数据使用新资源身份。
 
+可换色服装的制作配方指定独立材质与默认色，预设色来自 `internal/character/wearable-colors.json`。加工只替换布料的底色来源，缩略图使用默认配色。退役背部部件仍从原套装的上衣网格分离，以免披风或披肩重新混入上装。
+
+默认背心沿实际身体表面裁出圆领。领口沿左右对称的圆弧分段，切出的顶点沿原网格插值蒙皮权重。
+
 原有 `scripts/prepare-3d-resources.py` 不再负责生成正式人物，避免重新引入旧四槽目录。模型与动作的来源和权利分别登记，原始 FBX 与加工工程仍留在 `.local/3d-sources/`。
 
 家具与户外模型使用 `scripts/prepare-camp-assets.py` 整理，来源包分别放在 `.local/3d-sources/kenney-furniture/`、`kenney-nature/`、`kenney-survival/`。生活动作与书本工程保存在 `.local/3d-sources/living-actions/`，Mixamo 原始动作位于 `.local/3d-sources/mixamo/`。正式模型的实际边界、地面锚点、来源与加工参数分别登记在 `internal/assets/camp-source-manifest.json`、`camp-asset-metadata.json` 和 `camp-living-source.json`；座姿的靠近点与根位置由共享场景目录使用，不在浏览器按模型名称猜测。

@@ -55,6 +55,12 @@ def load_recipe(path=None):
     return json.loads((path or CONFIG).read_text())
 
 
+# glTF 的底色因子使用线性值，目录色板使用 sRGB。
+def linear_rgba(hex_color):
+    rgb = [int(hex_color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
+    return tuple(value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4 for value in rgb) + (1,)
+
+
 # 按焊接位置取得连通面，材质或UV接缝不应把同一脸壳拆成碎片。
 def connected_faces(obj):
     import bmesh
@@ -182,6 +188,8 @@ def prepare(options):
     work.mkdir(parents=True, exist_ok=True)
     recipe = getattr(options, 'recipe', CONFIG)
     config = load_recipe(recipe)
+    dye_defaults = config.get('dye_defaults', {})
+    retired_back_wearables = set(config.get('retired_back_wearables', []))
     verified_inputs = verify_inputs(config)
     face_order = config.get('face_order')
     smile_source = config.get('human_face_source')
@@ -191,6 +199,10 @@ def prepare(options):
         smile_module = importlib.util.module_from_spec(smile_spec)
         smile_spec.loader.exec_module(smile_module)
     dependency_paths = [recipe, Path(__file__), *[path for path in ROOT.glob('scripts/modular-character-*.py') if 'test' not in path.name]]
+    if dye_defaults:
+        palette_path = ROOT / 'internal/character/wearable-colors.json'
+        palette = {entry['key']: linear_rgba(entry['hex']) for entry in json.loads(palette_path.read_text())}
+        dependency_paths.append(palette_path)
     for path in verified_inputs:
         dependency_paths.extend(candidate_module().source_dependencies(ROOT/path))
     dependency_paths = list(dict.fromkeys(dependency_paths))
@@ -503,6 +515,20 @@ def prepare(options):
             return None
         fingerprints[signature] = key
         result = dict(wearable_key=key, name=name, slot=slot, character_key='kaykit-medium-v1', body_key=config['body_key'], rig_key=config['rig_key'], provider='kaykit', pack_key=metadata['pack_key'], nodes=[obj.name for obj in objects], covers=covers or [])
+        if key in dye_defaults:
+            # 三件纯色布料各有独立材质。复制材质后修改底色，避免影响同图集的其他部件。
+            cloth, = objects
+            material_index, = {face.material_index for face in cloth.data.polygons}
+            material = cloth.data.materials[material_index].copy()
+            material.name = 'wearable_dye'
+            shader = next(node for node in material.node_tree.nodes if node.type == 'BSDF_PRINCIPLED')
+            base_color = shader.inputs['Base Color']
+            for link in list(base_color.links):
+                material.node_tree.links.remove(link)
+            default_color = dye_defaults[key]
+            material.diffuse_color = base_color.default_value = palette[default_color]
+            cloth.data.materials[material_index] = material
+            result.update(dye_material=material.name, default_color_key=default_color)
         if regions is not None:
             result['_regions'] = regions
         elif slot == 'face':
@@ -745,7 +771,10 @@ def prepare(options):
                 excluded_triangles.add(tuple(sorted(tuple(round(c, 4) for c in part.data.vertices[index].co) for index in triangle.vertices)))
             suffix = name.split('_')[-1].lower()
             part.name = 'back_' + suffix
-            items.append(item(key + '-back-' + suffix, config['names'][key]['back'][suffix], 'back', [part], key, meta))
+            wearable_key = key + '-back-' + suffix
+            # 退役披风和披肩仍从原上装中剥离，但不进入出货模型或目录。
+            if wearable_key not in retired_back_wearables:
+                items.append(item(wearable_key, config['names'][key]['back'][suffix], 'back', [part], key, meta))
         # 原上装已经三角化，删除与独立背部同位置的真实三角面。
         upper_only = select(upper, 'upper_outfit', lambda face, uv: tuple(sorted(tuple(round(c, 4) for c in vertex.co) for vertex in face.verts)) not in excluded_triangles)
         lower = objects.get('lower_native') if 'lower' in spec.get('default_wearables', {}) else objects.get('lower_provider')

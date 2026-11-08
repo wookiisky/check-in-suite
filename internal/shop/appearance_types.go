@@ -4,6 +4,9 @@ import "github.com/wookiisky/check-in-suite/internal/character"
 
 // SaveAppearanceInput replaces all six slots under one appearance version.
 type SaveAppearanceInput struct {
+	UpperColorKey *string `json:"upper_color_key"` // 省略或空值使用上衣素材底色。
+	BackColorKey  *string `json:"back_color_key"`  // 省略或空值使用背部素材底色。
+
 	FaceFreeWearableKey  *string `json:"face_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.
 	HeadFreeWearableKey  *string `json:"head_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.
 	UpperFreeWearableKey *string `json:"upper_free_wearable_key"` // Optional default part of an acquired body, shared across compatible bodies.
@@ -21,10 +24,10 @@ type SaveAppearanceInput struct {
 	ShoesPurchaseID *string `json:"shoes_purchase_id"` // Nil restores default footwear.
 }
 
-// AppearanceOwnedItem links an owned instance to its immutable wearable definition.
+// AppearanceOwnedItem 将保留的购买身份关联到当前可装备的服装定义。
 type AppearanceOwnedItem struct {
 	PurchaseID  string `json:"purchase_id"`  // Permanent owned purchase identity.
-	WearableKey string `json:"wearable_key"` // Definition copied when the item was bought.
+	WearableKey string `json:"wearable_key"` // 购买时记录的穿戴定义。
 }
 
 // AppearanceOwnedCharacter preserves each permanently acquired character identity.
@@ -35,7 +38,10 @@ type AppearanceOwnedCharacter struct {
 
 // AppearanceState is one snapshot of saved choices, definitions and complete ownership.
 type AppearanceState struct {
-	PreviewAnimations []character.Animation `json:"preview_animations"` // 标准身体共用的检查动作目录，不随人物数量重复。
+	PreviewAnimations []character.Animation     `json:"preview_animations"` // 标准身体共用的检查动作目录，不随人物数量重复。
+	WearableColors    []character.WearableColor `json:"wearable_colors"`    // 支持换色的部件共用的预设色。
+	UpperColorKey     *string                   `json:"upper_color_key"`    // 空值使用上衣素材底色。
+	BackColorKey      *string                   `json:"back_color_key"`     // 空值使用背部素材底色。
 
 	FaceFreeWearableKey  *string `json:"face_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.
 	HeadFreeWearableKey  *string `json:"head_free_wearable_key"`  // Optional default part of an acquired body, shared across compatible bodies.

@@ -1,5 +1,7 @@
 """从实际裸身表面裁出贴身的默认背心和内裤，沿用对应部位的蒙皮。"""
 
+from math import cos, pi, sin
+
 import bmesh
 import bpy
 from mathutils import Matrix
@@ -38,6 +40,24 @@ def trim(mesh, point, normal):
     )
 
 
+# 在同一蒙皮表面上分段裁出椭圆领口，领口以外仍使用原肩带与袖窿切面。
+def neckline_sections(half, side, neckline):
+    width = neckline['half_width']
+    center = neckline['center_height']
+    depth = neckline['shoulder_height'] - center
+    profile = [(width * sin(angle), center + depth * (1 - cos(angle)))
+               for angle in (step * pi / 16 for step in range(9))]
+    for (left, bottom), (right, top) in zip(profile, profile[1:]):
+        section = half.copy()
+        trim(section, (side * left, 0, 0), (side, 0, 0))
+        trim(section, (side * right, 0, 0), (-side, 0, 0))
+        slope = (top - bottom) / (right - left)
+        trim(section, (side * left, 0, bottom), (side * slope, 0, -1))
+        yield section
+    trim(half, (side * width, 0, 0), (side, 0, 0))
+    yield half
+
+
 # 左右各自裁出领口或裤脚，再在正中焊接，避免画面出现缝隙。
 def garment(name, rig, sources, settings, seam=None):
     mesh, groups = body_surface(sources, settings['clearance'], seam)
@@ -47,18 +67,20 @@ def garment(name, rig, sources, settings, seam=None):
         trim(half, (0, 0, 0), (side, 0, 0))
         for height, x_slope, z_direction in settings['cuts']:
             trim(half, (0, 0, height), (side * x_slope, 0, z_direction))
-        skin = half.verts.layers.deform.active
-        for face in half.faces:
-            corners = []
-            for vertex in face.verts:
-                key = tuple(round(value, 6) for value in vertex.co)
-                if key not in indices:
-                    indices[key] = len(points)
-                    points.append(vertex.co.copy())
-                    weights.append(dict(vertex[skin]))
-                corners.append(indices[key])
-            faces.append(corners)
-        half.free()
+        sections = neckline_sections(half, side, settings['neckline']) if 'neckline' in settings else (half,)
+        for section in sections:
+            skin = section.verts.layers.deform.active
+            for face in section.faces:
+                corners = []
+                for vertex in face.verts:
+                    key = tuple(round(value, 6) for value in vertex.co)
+                    if key not in indices:
+                        indices[key] = len(points)
+                        points.append(vertex.co.copy())
+                        weights.append(dict(vertex[skin]))
+                    corners.append(indices[key])
+                faces.append(corners)
+            section.free()
     mesh.free()
 
     data = bpy.data.meshes.new(name + '_mesh')
@@ -84,6 +106,13 @@ def garment(name, rig, sources, settings, seam=None):
         total = sum(skinning.values())
         for group, weight in skinning.items():
             obj.vertex_groups[group].add([index], weight / total, 'REPLACE')
+    if 'neckline' in settings:
+        # 独立切面求交有浮点误差，封边前将相邻裁片的切口焊接。
+        stitched = bmesh.new()
+        stitched.from_mesh(data)
+        bmesh.ops.remove_doubles(stitched, verts=list(stitched.verts), dist=3e-6)
+        stitched.to_mesh(data)
+        stitched.free()
     lining = obj.modifiers.new('ClothEdge', 'SOLIDIFY')
     lining.thickness = 0.004
     with bpy.context.temp_override(object=obj, active_object=obj):

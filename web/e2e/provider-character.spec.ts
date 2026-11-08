@@ -42,7 +42,12 @@ test('只提供人形与骷髅，职业部件独立混穿，中箭与帽子互�
   expect(bodies.items.every((item) => item.character_key === skeleton.character_key)).toBe(true);
   const skeletonOffer = bodies.items.find((item) => item.character_key === skeleton.character_key)!;
   const clothing = await shopAPI<{ items: Product[] }>(page, '/products?type=wearable&limit=100');
-  const representativeKeys = { face: 'face-kaykit-skeletons-mage', head: 'kaykit-adventurers-knight-head', upper: 'kaykit-adventurers-knight-upper', lower: 'lower-barbarian-v1', shoes: 'shoes-barbarian-v1', back: 'kaykit-adventurers-mage-back-cape' };
+  const dyeableBack = initial.wearables.filter((item) => item.slot === 'back' && item.dye_material);
+  expect(dyeableBack).toHaveLength(2);
+  for (const wearable of dyeableBack) {
+    expect(clothing.items.find((offer) => offer.wearable_key === wearable.wearable_key)?.name).toBe(wearable.name);
+  }
+  const representativeKeys = { face: 'face-kaykit-skeletons-mage', head: 'kaykit-adventurers-knight-head', upper: 'kaykit-adventurers-knight-upper', lower: 'lower-barbarian-v1', shoes: 'shoes-barbarian-v1', back: 'kaykit-adventurers-knight-back-cape' };
   const selections = characterSlots.map((slot) => {
     const item = clothing.items.find((offer) => offer.wearable_key === representativeKeys[slot]);
     expect(item, `${slot}需要独立商品`).toBeDefined(); return item!;

@@ -1,0 +1,10 @@
+[
+  {"key": "ivory", "name": "米白", "hex": "#F3E4BF"},
+  {"key": "black", "name": "黑", "hex": "#39393D"},
+  {"key": "red", "name": "红", "hex": "#BE3E3E"},
+  {"key": "orange", "name": "橙", "hex": "#DC7933"},
+  {"key": "yellow", "name": "黄", "hex": "#FFD21F"},
+  {"key": "blue", "name": "蓝", "hex": "#4179BE"},
+  {"key": "green", "name": "绿", "hex": "#47885C"},
+  {"key": "brown", "name": "棕色", "hex": "#80573D"}
+]

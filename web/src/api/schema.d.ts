@@ -1585,6 +1585,10 @@ export interface components {
             };
         };
         CharacterWearable: {
+            /** @description 模型中可更换底色的材质名。 */
+            dye_material?: string;
+            /** @description 模型底色对应的预设身份。 */
+            default_color_key?: string;
             /** @description 可被其他穿戴部件覆盖的子区域，例如形象的头皮。 */
             regions?: {
                 [key: string]: string[];
@@ -1607,6 +1611,14 @@ export interface components {
             nodes: string[];
             covers: string[];
         };
+        WearableColor: {
+            /** @description 保存使用的预设身份。 */
+            key: string;
+            /** @description 预设色的显示名称。 */
+            name: string;
+            /** @description 用于色块和材质的 sRGB 色值。 */
+            hex: string;
+        };
         AppearanceOwnedItem: {
             purchase_id: string;
             wearable_key: string;
@@ -1616,6 +1628,12 @@ export interface components {
             character_key: string;
         };
         AppearanceState: {
+            /** @description 可换色部件共用的预设色目录。 */
+            wearable_colors?: components["schemas"]["WearableColor"][];
+            /** @description 已保存的上衣预设色，null 或省略使用模型底色。 */
+            upper_color_key?: string | null;
+            /** @description 已保存的背部预设色，null 或省略使用模型底色。 */
+            back_color_key?: string | null;
             /** @description 统一骨架共用的原始动作目录，只返回一份，选中动作后才加载模型。 */
             preview_animations?: components["schemas"]["CharacterAnimation"][];
             /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
@@ -1648,6 +1666,10 @@ export interface components {
             inventory: components["schemas"]["AppearanceOwnedItem"][];
         };
         AppearanceSave: {
+            /** @description 所选上衣的预设色，null 或省略使用模型底色。 */
+            upper_color_key?: string | null;
+            /** @description 所选背部部件的预设色，null 或省略使用模型底色。 */
+            back_color_key?: string | null;
             /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */
             face_free_wearable_key?: string | null;
             /** @description 显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。 */

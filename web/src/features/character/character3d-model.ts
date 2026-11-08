@@ -1,12 +1,12 @@
-import { Bone, Group, Matrix4, Mesh, Skeleton, SkinnedMesh } from 'three';
-import type { AnimationAction, AnimationClip, Object3D } from 'three';
+import { Bone, Group, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Skeleton, SkinnedMesh } from 'three';
+import type { AnimationAction, AnimationClip, Material, Object3D } from 'three';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { createAnimatedModel } from '../../graphics/animated-model';
 import { characterResources } from '../../graphics/gltf-resources';
 import type { GLTFSource, GltfResourceCache } from '../../graphics/gltf-resources';
-import type { ResolvedAppearance } from './character3d-appearance';
+import type { ResolvedAppearance, ResolvedWearableDye } from './character3d-appearance';
 
-// 准备好的实例独占骨骼和播放器，通过 dispose 归还其使用的共享源资源。
+// 准备好的实例独占骨骼、播放器和换色材质，通过 dispose 归还共享源资源。
 export interface PreparedCharacter {
   key: string; // 当前人物与活动道具的完整准备身份。
   root: Object3D; // 可放入任意营地或预览 Canvas 的根节点。
@@ -45,12 +45,30 @@ function attachWearables(root: Object3D, source: GLTFSource, visibleNames: Set<s
   part.traverse((node) => { if (node instanceof Bone && !(node.parent instanceof Bone)) boneRoots.push(node); });
   for (const bone of boneRoots) bone.removeFromParent();
   root.add(part);
+  return part;
+}
+
+// 只复制所选部件的染色材质；贴图、几何与其他部件的材质仍归缓存持有。
+function applyWearableDye(meshes: Set<Mesh>, dye: ResolvedWearableDye, ownedMaterials: Set<Material>) {
+  const clones = new Map<Material, Material>();
+  const replace = (material: Material) => {
+    if (material.name !== dye.material || !(material instanceof MeshStandardMaterial || material instanceof MeshBasicMaterial)) return material;
+    const existing = clones.get(material);
+    if (existing) return existing;
+    const dyed = material.clone();
+    dyed.color.set(dye.hex);
+    clones.set(material, dyed);
+    ownedMaterials.add(dyed);
+    return dyed;
+  };
+  for (const mesh of meshes) mesh.material = Array.isArray(mesh.material) ? mesh.material.map(replace) : replace(mesh.material);
+  if (!clones.size) throw new Error(`CHARACTER_DYE_MATERIAL_MISSING: ${dye.material}`);
 }
 
 // 先取得全部资源并验证节点，再返回完整实例；错误不会交付半套人物。
 export async function prepareCharacter(resolved: ResolvedAppearance, cache: GltfResourceCache = characterResources, signal?: AbortSignal): Promise<PreparedCharacter> {
   if (signal?.aborted) throw signal.reason;
-  const { definition, wearables, attachments } = resolved;
+  const { definition, wearables, dyes, attachments } = resolved;
   const attachmentMatrices = attachments.map((attachment) => {
     const values = attachment.matrix;
     if (values.length !== 16 || !values.every(Number.isFinite) || values[3] !== 0 || values[7] !== 0 || values[11] !== 0 || values[15] !== 1) throw new Error('CHARACTER_ATTACHMENT_MATRIX_INVALID');
@@ -62,8 +80,15 @@ export async function prepareCharacter(resolved: ResolvedAppearance, cache: Gltf
   const urls = [...new Set([definition.model_url, ...wearables.map((item) => item.model_url), ...Object.values(definition.animations).map((item) => item.url), ...attachments.map((item) => item.model_url)])];
   const leases = urls.map((url) => cache.acquire(url));
   const attachedRoots: Object3D[] = [];
+  const dyedMaterials = new Set<Material>();
   let instance: ReturnType<typeof createAnimatedModel> | undefined;
   let abortListener: (() => void) | undefined;
+  const dispose = () => {
+    for (const attachment of attachedRoots) attachment.removeFromParent();
+    for (const material of dyedMaterials) material.dispose();
+    instance?.dispose();
+    for (const lease of leases) lease.release();
+  };
   try {
     const loading = Promise.all(leases.map((lease) => lease.ready));
     // 取消只归还本次引用，不中断其他视图仍在使用的共享下载。
@@ -97,9 +122,19 @@ export async function prepareCharacter(resolved: ResolvedAppearance, cache: Gltf
     for (const name of baseNames) if (!meshesInNode(root,name).length) throw new Error(`CHARACTER_BODY_MISSING: ${name}`);
     const baseMeshes=new Set([...baseNames].flatMap(name=>meshesInNode(root,name)));
     root.traverse((node) => { if (node instanceof Mesh) node.visible = baseMeshes.has(node); });
+    const modelRoots = new Map([[definition.model_url, root]]);
     for (const url of new Set(wearables.map((item) => item.model_url))) {
       if (url === definition.model_url) continue;
-      attachWearables(root, sources.get(url)!, new Set(wearables.filter((item) => item.model_url === url).flatMap((item) => selectedNodes.get(item)!)));
+      const part = attachWearables(root, sources.get(url)!, new Set(wearables.filter((item) => item.model_url === url).flatMap((item) => selectedNodes.get(item)!)));
+      modelRoots.set(url, part);
+    }
+    for (const dye of dyes) {
+      const names = selectedNodes.get(dye.wearable)!;
+      if (!names.length) continue;
+      const model = modelRoots.get(dye.wearable.model_url)!;
+      // 主模型下已挂接外部服装；只允许对其原有的可见网格应用颜色。
+      const meshes = names.flatMap((name) => meshesInNode(model, name)).filter((mesh) => model !== root || baseMeshes.has(mesh));
+      applyWearableDye(new Set(meshes), dye, dyedMaterials);
     }
     for (const [index, attachment] of attachments.entries()) {
       const bone = root.getObjectByName(attachment.bone);
@@ -139,15 +174,14 @@ export async function prepareCharacter(resolved: ResolvedAppearance, cache: Gltf
       dispose() {
         if (disposed) return;
         disposed = true;
-        for (const attachment of attachedRoots) attachment.removeFromParent();
-        animated.dispose(); for (const lease of leases) lease.release();
+        dispose();
       },
     };
     prepared.play('idle', true);
     return prepared;
   } catch (error) {
-    for (const attachment of attachedRoots) attachment.removeFromParent();
-    instance?.dispose(); for (const lease of leases) lease.release(); throw error;
+    dispose();
+    throw error;
   } finally {
     if (abortListener) signal?.removeEventListener('abort', abortListener);
   }

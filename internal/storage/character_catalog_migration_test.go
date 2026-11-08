@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"io/fs"
 	"path/filepath"
 	"testing"
@@ -54,6 +55,10 @@ func TestCharacterCatalogMigrationPreservesPurchasesAndReferences(t *testing.T) 
 	}
 	if name != "旧名字" || head != "kept-purchase" || ledger != head || face != "face-purchase" || back != "back-purchase" {
 		t.Fatalf("lost snapshot: %s %s %s %s %s", name, head, face, back, ledger)
+	}
+	var upperColor, backColor sql.NullString
+	if err := db.QueryRowContext(ctx, `SELECT upper_color_key,back_color_key FROM appearance_state WHERE id=1`).Scan(&upperColor, &backColor); err != nil || upperColor.Valid || backColor.Valid {
+		t.Fatalf("old appearance must use the baked colors: %v %v %v", upperColor, backColor, err)
 	}
 	_, err = db.ExecContext(ctx, `INSERT INTO products(id,type,name,asset_key,character_key,coin_price,diamond_price,enabled,created_at,updated_at) VALUES('new-character','character','新角色','new-art','new-character',95,0,1,2,2)`)
 	if err != nil {

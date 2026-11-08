@@ -22,7 +22,67 @@ async function loadedDialog(handler?: Parameters<typeof appearanceClient>[0]) {
   return { ...fake, onClose, onSaved, view };
 }
 
+// 上装使用默认背心，背部使用已购部件，两者都可以换色。
+function dyeableAppearance() {
+  const state = appearanceFixture();
+  state.wearable_colors = [
+    { key: 'ivory', name: '米白', hex: '#F2E8D5' },
+    { key: 'red', name: '红', hex: '#BE3E3E' },
+    { key: 'blue', name: '蓝', hex: '#4179BE' },
+  ];
+  Object.assign(state.wearables.find((item) => item.wearable_key === 'upper-default')!, { dye_material: 'fabric', default_color_key: 'ivory' });
+  Object.assign(state.wearables.find((item) => item.wearable_key === 'back-owned')!, { dye_material: 'fabric', default_color_key: 'red' });
+  state.back_purchase_id = 'back-purchase';
+  return state;
+}
+
 describe('三维外观编辑弹窗', () => {
+  it('试色、保存及重开保留两个槽的颜色，换下衣物清除对应颜色', async () => {
+    let state = dyeableAppearance();
+    const { client, request, onSaved, view } = await loadedDialog(async (_path, options) => {
+      if (options.method === 'PUT') state = { ...dyeableAppearance(), ...options.body as object, version: state.version + 1 };
+      return state;
+    });
+    const palette = (slot: string) => within(within(screen.getByRole('group', { name: slot })).getByRole('group', { name: '颜色' }));
+    expect(palette('上装').getByRole('radio', { name: '米白' })).toBeChecked();
+    expect(palette('背部').getByRole('radio', { name: '红' })).toBeChecked();
+    fireEvent.click(palette('上装').getByRole('radio', { name: '蓝' }));
+    fireEvent.click(palette('背部').getByRole('radio', { name: '米白' }));
+    expect(JSON.parse(screen.getByTestId('appearance-preview-draft').textContent!)).toMatchObject({ upper_color_key: 'blue', back_color_key: 'ivory' });
+    expect(onSaved).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+    expect(request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1]?.body).toMatchObject({ upper_color_key: 'blue', back_color_key: 'ivory', back_purchase_id: 'back-purchase' });
+
+    view.unmount();
+    render(<AppearanceDialog client={client} onClose={() => {}} onSaved={onSaved} />);
+    await screen.findByRole('radio', { name: '头部新款' });
+    expect(palette('上装').getByRole('radio', { name: '蓝' })).toBeChecked();
+    expect(palette('背部').getByRole('radio', { name: '米白' })).toBeChecked();
+    fireEvent.click(screen.getByRole('radio', { name: '上装新款' }));
+    expect(within(screen.getByRole('group', { name: '上装' })).queryByRole('group', { name: '颜色' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('radio', { name: '上装默认款' }));
+    expect(palette('上装').getByRole('radio', { name: '米白' })).toBeChecked();
+    expect(palette('背部').getByRole('radio', { name: '米白' })).toBeChecked();
+  });
+
+  it('未知写入核对时识别只有颜色不同的服务器外观', async () => {
+    const state = dyeableAppearance();
+    let reads = 0;
+    const { onSaved } = await loadedDialog(async (_path, options) => {
+      if (options.method === 'PUT') throw new Error('NETWORK_INTERRUPTED');
+      return ++reads === 1 ? state : { ...state, version: 2, upper_color_key: 'red' };
+    });
+    const upper = within(screen.getByRole('group', { name: '上装' }));
+    fireEvent.click(upper.getByRole('radio', { name: '蓝' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
+    fireEvent.click(await screen.findByRole('button', { name: '核对保存结果' }));
+    const server = await screen.findByRole('region', { name: '当前已保存的外观' });
+    expect(within(server).getByText(/上装默认款.*红/)).toBeVisible();
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(upper.getByRole('radio', { name: '蓝' })).toBeChecked();
+  });
+
   it('选择只修改草稿，取消时可以继续编辑或明确放弃且不写入', async () => {
     const { request, onSaved, onClose } = await loadedDialog();
     fireEvent.click(screen.getByRole('radio', { name: '头部新款' }));

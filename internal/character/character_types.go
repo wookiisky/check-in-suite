@@ -54,22 +54,24 @@ type Definition struct {
 
 // Wearable describes geometry, body coverage and compatibility independently from ownership.
 type Wearable struct {
-	Regions           map[string][]string `json:"regions,omitempty"`   // 可被其他穿戴部件覆盖的子区域，例如形象的头皮。
-	Empty             bool                `json:"empty,omitempty"`     // 明确不穿戴的默认项允许没有网格，形象必须有几何。
-	Key               string              `json:"wearable_key"`        // 穿戴定义身份。
-	BodyKey           string              `json:"body_key"`            // 适配身体规格，不以角色外观身份限制共用。
-	Provider          string              `json:"provider,omitempty"`  // 素材官方来源。
-	PackKey           string              `json:"pack_key,omitempty"`  // 来源素材包稳定身份。
-	Name              string              `json:"name"`                // 目录提供的服装显示名称。
-	Slot              Slot                `json:"slot"`                // 唯一所属部位。
-	CharacterKey      string              `json:"character_key"`       // 兼容身体身份。
-	RigKey            string              `json:"rig_key"`             // 兼容骨架和绑定姿势。
-	ModelAssetKey     string              `json:"model_asset_key"`     // 穿戴模型资源身份。
-	ModelURL          string              `json:"model_url"`           // 同源 GLB。
-	ThumbnailAssetKey string              `json:"thumbnail_asset_key"` // 实际模型渲染的缩略图身份。
-	ThumbnailURL      string              `json:"thumbnail_url"`       // 同源缩略图路径。
-	Nodes             []string            `json:"nodes"`               // 该部件的实际网格。
-	Covers            []string            `json:"covers"`              // 显示时隐藏的身体区域。
+	DyeMaterial       string              `json:"dye_material,omitempty"`      // GLB 内用于切换底色的材质名。
+	DefaultColorKey   string              `json:"default_color_key,omitempty"` // 素材底色对应的预设身份。
+	Regions           map[string][]string `json:"regions,omitempty"`           // 可被其他穿戴部件覆盖的子区域，例如形象的头皮。
+	Empty             bool                `json:"empty,omitempty"`             // 明确不穿戴的默认项允许没有网格，形象必须有几何。
+	Key               string              `json:"wearable_key"`                // 穿戴定义身份。
+	BodyKey           string              `json:"body_key"`                    // 适配身体规格，不以角色外观身份限制共用。
+	Provider          string              `json:"provider,omitempty"`          // 素材官方来源。
+	PackKey           string              `json:"pack_key,omitempty"`          // 来源素材包稳定身份。
+	Name              string              `json:"name"`                        // 目录提供的服装显示名称。
+	Slot              Slot                `json:"slot"`                        // 唯一所属部位。
+	CharacterKey      string              `json:"character_key"`               // 兼容身体身份。
+	RigKey            string              `json:"rig_key"`                     // 兼容骨架和绑定姿势。
+	ModelAssetKey     string              `json:"model_asset_key"`             // 穿戴模型资源身份。
+	ModelURL          string              `json:"model_url"`                   // 同源 GLB。
+	ThumbnailAssetKey string              `json:"thumbnail_asset_key"`         // 实际模型渲染的缩略图身份。
+	ThumbnailURL      string              `json:"thumbnail_url"`               // 同源缩略图路径。
+	Nodes             []string            `json:"nodes"`                       // 该部件的实际网格。
+	Covers            []string            `json:"covers"`                      // 显示时隐藏的身体区域。
 }
 
 // Slots returns the complete order used for appearance validation and defaults.

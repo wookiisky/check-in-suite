@@ -1592,6 +1592,8 @@ components:
       additionalProperties: false
       required: ["wearable_key", "name", "slot", "character_key", "rig_key", "model_asset_key", "model_url", "thumbnail_asset_key", "thumbnail_url", "nodes", "covers"]
       properties:
+        dye_material: {"type": "string", "minLength": 1, "description": "模型中可更换底色的材质名。"}
+        default_color_key: {"type": "string", "minLength": 1, "description": "模型底色对应的预设身份。"}
         regions: {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string", "minLength": 1}}, "description": "可被其他穿戴部件覆盖的子区域，例如形象的头皮。"}
         empty: {"type": "boolean", "description": "明确不穿戴的默认定义，其 nodes 与 covers 为空，不能单独作为商品出售；形象不可为空。"}
         body_key: {"type": "string", "description": "统一身体比例和绑定姿势的兼容身份。"}
@@ -1606,6 +1608,14 @@ components:
         thumbnail_url: {"type": "string", "minLength": 1}
         nodes: {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "实际网格节点；仅明确 empty 的不穿戴定义可为空。"}
         covers: {"type": "array", "items": {"type": "string", "minLength": 1}}
+    WearableColor:
+      type: "object"
+      additionalProperties: false
+      required: ["key", "name", "hex"]
+      properties:
+        key: {"type": "string", "minLength": 1, "description": "保存使用的预设身份。"}
+        name: {"type": "string", "minLength": 1, "description": "预设色的显示名称。"}
+        hex: {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$", "description": "用于色块和材质的 sRGB 色值。"}
     AppearanceOwnedItem:
       type: "object"
       additionalProperties: false
@@ -1625,6 +1635,9 @@ components:
       additionalProperties: false
       required: ["version", "character_key", "face_purchase_id", "head_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "back_purchase_id", "characters", "wearables", "inventory"]
       properties:
+        wearable_colors: {"type": "array", "items": {"$ref": "#/components/schemas/WearableColor"}, "description": "可换色部件共用的预设色目录。"}
+        upper_color_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "已保存的上衣预设色，null 或省略使用模型底色。"}
+        back_color_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "已保存的背部预设色，null 或省略使用模型底色。"}
         preview_animations: {"type": "array", "items": {"$ref": "#/components/schemas/CharacterAnimation"}, "description": "统一骨架共用的原始动作目录，只返回一份，选中动作后才加载模型。"}
         face_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
         back_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
@@ -1650,6 +1663,8 @@ components:
       additionalProperties: false
       required: ["expected_version", "character_key", "face_purchase_id", "head_purchase_id", "upper_purchase_id", "lower_purchase_id", "shoes_purchase_id", "back_purchase_id"]
       properties:
+        upper_color_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "所选上衣的预设色，null 或省略使用模型底色。"}
+        back_color_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "所选背部部件的预设色，null 或省略使用模型底色。"}
         face_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
         back_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}
         head_free_wearable_key: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}], "description": "显式选择已取得基础身体在该槽的默认部件，供所有兼容人物共用；与该槽 purchase_id 互斥，省略或 null 使用所选人物自身默认部件。"}

@@ -1,5 +1,19 @@
 {
   "recipe": "modular-six-slots-v4-fit-repairs",
+  "dye_defaults": {
+    "upper-human-tank-v1": "ivory",
+    "kaykit-adventurers-knight-back-cape": "red",
+    "kaykit-skeletons-minion-back-cloak": "brown"
+  },
+  "retired_back_wearables": [
+    "kaykit-adventurers-mage-back-cape",
+    "kaykit-adventurers-rogue-back-cape",
+    "kaykit-adventurers-rogue-hooded-back-cape",
+    "kaykit-adventurers-ranger-back-cape",
+    "kaykit-skeletons-rogue-back-cape",
+    "kaykit-skeletons-warrior-back-cloak",
+    "kaykit-legacy-skeleton-mage-back-cloak"
+  ],
   "upper_clothing_fit": {
     "upper-rogue-v1": [
       {
@@ -2383,7 +2397,7 @@
       "lower": "骑士腰甲",
       "shoes": "骑士铁靴",
       "back": {
-        "cape": "红披风"
+        "cape": "披风"
       }
     },
     "kaykit-adventurers-barbarian": {
@@ -2440,7 +2454,7 @@
       "lower": "棕短裤",
       "shoes": "无鞋",
       "back": {
-        "cloak": "棕披肩"
+        "cloak": "披肩"
       }
     },
     "kaykit-skeletons-mage": {
@@ -2614,7 +2628,8 @@
       "name": "米白背心",
       "color": [0.80, 0.74, 0.62, 1],
       "clearance": 0.014,
-      "cuts": [[0.82, 0, 1], [1.28, 0, -1], [1.105, 0.89, -1], [2.10, -4, -1]]
+      "cuts": [[0.82, 0, 1], [1.28, 0, -1], [2.10, -4, -1]],
+      "neckline": {"half_width": 0.173, "center_height": 1.11, "shoulder_height": 1.28}
     },
     "lower": {
       "key": "lower-human-briefs-v1",

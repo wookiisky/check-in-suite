@@ -22,6 +22,103 @@ type Funding = { task: Task; record: Checkin };
 test.setTimeout(120_000);
 test.use({ actionTimeout: 15_000 });
 
+// 只改颜色也进入正式外观版本，首页和营地都能准备保存后的同一套穿戴。
+test('背心换色可放弃，保存后同步首页和营地', async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await loginMain(page);
+  const original = await shopAPI<Appearance>(page, '/appearance');
+  try {
+    const state = await shopAPI<Appearance>(page, '/appearance', 'PUT', {
+      expected_version: original.version, character_key: original.default_character_key,
+      face_purchase_id: null, head_purchase_id: null, upper_purchase_id: null,
+      lower_purchase_id: null, shoes_purchase_id: null, back_purchase_id: null,
+    });
+    expect(state.wearable_colors?.map((item) => item.key)).toEqual(['ivory', 'black', 'red', 'orange', 'yellow', 'blue', 'green', 'brown']);
+    expect(state.wearables.filter((item) => item.dye_material).map((item) => item.wearable_key).sort()).toEqual([
+      'kaykit-adventurers-knight-back-cape', 'kaykit-skeletons-minion-back-cloak', 'upper-human-tank-v1',
+    ]);
+    const home = page.getByRole('region', { name: character.label, exact: true }).locator('.character3d-preview');
+    const stage = page.getByRole('region', { name: spatial.scene, exact: true });
+    const islandButton = page.getByRole('navigation', { name: content.navigation.label }).getByRole('button', { name: content.navigation.island, exact: true });
+    const leaveIsland = page.getByRole('button', { name: spatial.back, exact: true });
+    await openAppearance(page);
+    const wardrobe = page.locator('.appearance-page');
+    const model = wardrobe.locator('.character3d-preview');
+    const color = (name: string) => wardrobe.getByRole('radio', { name, exact: true });
+    const upper = wardrobe.getByRole('tab', { name: appearance.slots.upper, exact: true });
+    await upper.click();
+    await expect(color('米白')).toBeChecked();
+    const colorCard = (name: string) => wardrobe.locator('.appearance-color-option').filter({ has: page.getByRole('radio', { name, exact: true }) });
+    const ivory = colorCard('米白');
+    const name = ivory.getByText('米白', { exact: true });
+    const [nameBounds, swatchBounds] = await Promise.all([name.boundingBox(), ivory.locator('.appearance-color-sample').boundingBox()]);
+    expect(nameBounds!.y).toBeGreaterThanOrEqual(swatchBounds!.y);
+    expect(nameBounds!.y + nameBounds!.height).toBeLessThanOrEqual(swatchBounds!.y + swatchBounds!.height);
+    expect(swatchBounds!.width).toBeLessThanOrEqual(44);
+    expect(swatchBounds!.height).toBeCloseTo(swatchBounds!.width, 0);
+    const cards = await wardrobe.locator('.appearance-color-option').evaluateAll((options) =>
+      options.map((option) => ({ top: option.getBoundingClientRect().top, width: option.getBoundingClientRect().width })),
+    );
+    expect(cards).toHaveLength(8);
+    expect(new Set(cards.map((card) => card.top)).size).toBe(1);
+    expect(Math.min(...cards.map((card) => card.width))).toBeGreaterThanOrEqual(24);
+    const palette = wardrobe.locator('.appearance-colors');
+    await palette.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    await palette.screenshot({ path: testInfo.outputPath('color-options.png') });
+    await expect(model).toHaveAttribute('data-character-status', 'ready');
+    const canvas = model.locator('canvas');
+    await canvas.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    const base = await canvas.screenshot({ path: testInfo.outputPath('round-neck-ivory.png') });
+    await colorCard('黄').locator('.appearance-color-sample').click();
+    await expect(color('黄')).toBeChecked();
+    await expect(colorCard('黄')).not.toHaveCSS('border-top-color', 'rgba(0, 0, 0, 0)');
+    await expect(ivory).toHaveCSS('border-top-color', 'rgba(0, 0, 0, 0)');
+    await expect(model).toHaveAttribute('data-character-status', 'ready');
+    await canvas.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    await expect.poll(async () => (await canvas.screenshot()).equals(base)).toBe(false);
+    await goHome(page);
+    await page.getByRole('dialog', { name: appearance.discardTitle }).getByRole('button', { name: appearance.discard, exact: true }).click();
+    expect(appearanceRequest(await shopAPI<Appearance>(page, '/appearance'))).toEqual(appearanceRequest(state));
+    await expect(home).toHaveAttribute('data-character-status', 'ready');
+    const homeBefore = await home.locator('canvas').screenshot();
+    await islandButton.click();
+    await expect(stage).toHaveAttribute('data-character-status', 'ready', { timeout: 20_000 });
+    const islandBefore = await stage.locator('canvas').screenshot();
+    await leaveIsland.click();
+
+    await openAppearance(page);
+    await upper.click();
+    await expect(color('米白')).toBeChecked();
+    await color('黄').check();
+    await wardrobe.getByRole('button', { name: appearance.save, exact: true }).click();
+    await expect(wardrobe.getByText(appearance.saved, { exact: true })).toBeVisible();
+    const saved = await shopAPI<Appearance>(page, '/appearance');
+    expect(saved.version).toBe(state.version + 1);
+    expect(saved.upper_purchase_id).toBeNull();
+    expect(saved.upper_color_key).toBe('yellow');
+    await expect(model).toHaveAttribute('data-character-status', 'ready');
+    await model.locator('canvas').screenshot({ path: testInfo.outputPath('round-neck-yellow.png') });
+    await goHome(page);
+    await expect(home).toHaveAttribute('data-appearance-version', String(saved.version));
+    await expect(home).toHaveAttribute('data-character-status', 'ready');
+    const homeAfter = await home.locator('canvas').screenshot();
+    expect(homeAfter.equals(homeBefore)).toBe(false);
+    await testInfo.attach('saved-yellow-vest-home', { body: homeAfter, contentType: 'image/png' });
+    await islandButton.click();
+    await expect(stage).toHaveAttribute('data-character-status', 'ready', { timeout: 20_000 });
+    const islandAfter = await stage.locator('canvas').screenshot();
+    expect(islandAfter.equals(islandBefore)).toBe(false);
+    await testInfo.attach('saved-yellow-vest-island', { body: islandAfter, contentType: 'image/png' });
+    await leaveIsland.click();
+    await openAppearance(page);
+    await upper.click();
+    await expect(color('黄')).toBeChecked();
+  } finally {
+    const current = await shopAPI<Appearance>(page, '/appearance');
+    await shopAPI(page, '/appearance', 'PUT', { ...appearanceRequest(original), expected_version: current.version });
+  }
+});
+
 // 余额来自真实打卡奖励，购买仍由页面提交完整价格和版本。
 async function fundPurchase(page: Page, product: Product, name: string): Promise<Funding> {
   await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });

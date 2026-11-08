@@ -53,6 +53,91 @@ func appearanceHTTPBody(t *testing.T, input map[string]any) string {
 	return string(body)
 }
 
+// 配色随外观整套保存，缺省或 null 恢复素材底色。
+func TestAppearanceHTTPColorPresets(t *testing.T) {
+	_, request := shopHTTPRequest(t)
+	const path = "/api/v1/appearance"
+	read := func() map[string]json.RawMessage {
+		t.Helper()
+		response := request(http.MethodGet, path, "", "")
+		var state map[string]json.RawMessage
+		if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &state) != nil {
+			t.Fatalf("read appearance: %d %s", response.Code, response.Body)
+		}
+		return state
+	}
+	initial := read()
+	var palette []struct {
+		Key  string `json:"key"`  // 预设身份。
+		Name string `json:"name"` // 界面色名。
+		Hex  string `json:"hex"`  // 供渲染器与色块使用的 sRGB 色值。
+	}
+	if err := json.Unmarshal(initial["wearable_colors"], &palette); err != nil || len(palette) != 8 {
+		t.Fatalf("palette = %s, %v", initial["wearable_colors"], err)
+	}
+	seen := make(map[string]bool, len(palette))
+	for _, color := range palette {
+		if color.Key == "" || color.Name == "" || len(color.Hex) != 7 || color.Hex[0] != '#' || seen[color.Key] {
+			t.Fatalf("invalid wire color: %+v", color)
+		}
+		seen[color.Key] = true
+	}
+	if string(initial["upper_color_key"]) != "null" || string(initial["back_color_key"]) != "null" {
+		t.Fatalf("initial colors = %s, %s", initial["upper_color_key"], initial["back_color_key"])
+	}
+	body := appearanceHTTPRequest(1, character.DefaultCharacterKey)
+	for _, scenario := range []struct {
+		field string // 请求字段。
+		value any    // 应拒绝的值。
+		code  int    // 预期 HTTP 状态。
+	}{
+		{"upper_color_key", "#00FF00", http.StatusBadRequest},
+		{"upper_color_key", "", http.StatusBadRequest},
+		{"back_color_key", "blue", http.StatusUnprocessableEntity},
+	} {
+		body[scenario.field] = scenario.value
+		response := request(http.MethodPut, path, appearanceHTTPBody(t, body), "")
+		if response.Code != scenario.code {
+			t.Fatalf("invalid %s = %v: %d %s", scenario.field, scenario.value, response.Code, response.Body)
+		}
+		delete(body, scenario.field)
+	}
+	body["upper_color_key"] = "blue"
+	if response := request(http.MethodPut, path, appearanceHTTPBody(t, body), ""); response.Code != http.StatusOK {
+		t.Fatalf("save default vest color: %d %s", response.Code, response.Body)
+	}
+	if state := read(); string(state["version"]) != "2" || string(state["upper_color_key"]) != `"blue"` || string(state["upper_purchase_id"]) != "null" {
+		t.Fatalf("color-only save = %s %s %s", state["version"], state["upper_color_key"], state["upper_purchase_id"])
+	}
+	body["upper_color_key"] = "green"
+	if response := request(http.MethodPut, path, appearanceHTTPBody(t, body), ""); response.Code != http.StatusConflict {
+		t.Fatalf("stale color save: %d %s", response.Code, response.Body)
+	}
+	if state := read(); string(state["upper_color_key"]) != `"blue"` {
+		t.Fatalf("stale request replaced color: %s", state["upper_color_key"])
+	}
+	body["expected_version"] = 2
+	body["upper_color_key"] = nil
+	if response := request(http.MethodPut, path, appearanceHTTPBody(t, body), ""); response.Code != http.StatusOK {
+		t.Fatalf("restore color: %d %s", response.Code, response.Body)
+	}
+	if state := read(); string(state["upper_color_key"]) != "null" {
+		t.Fatalf("restored color = %s", state["upper_color_key"])
+	}
+	body["expected_version"] = 3
+	body["upper_color_key"] = "green"
+	if response := request(http.MethodPut, path, appearanceHTTPBody(t, body), ""); response.Code != http.StatusOK {
+		t.Fatalf("save color before legacy write: %d %s", response.Code, response.Body)
+	}
+	legacy := appearanceHTTPRequest(4, character.DefaultCharacterKey)
+	if response := request(http.MethodPut, path, appearanceHTTPBody(t, legacy), ""); response.Code != http.StatusOK {
+		t.Fatalf("legacy write without colors: %d %s", response.Code, response.Body)
+	}
+	if state := read(); string(state["upper_color_key"]) != "null" {
+		t.Fatalf("legacy write restored color = %s", state["upper_color_key"])
+	}
+}
+
 // TestAppearanceHTTPRequiredFieldsAndAuthorization checks the HTTP boundary on a real database.
 func TestAppearanceHTTPRequiredFieldsAndAuthorization(t *testing.T) {
 	app, request := shopHTTPRequest(t)

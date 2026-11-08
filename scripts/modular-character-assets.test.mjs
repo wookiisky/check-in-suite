@@ -162,6 +162,70 @@ async function readWearableMesh(item) {
   return { primitives, scalars };
 }
 
+// 圆领应在中线附近逐渐升高，左右肩带保留完整高度。
+test('背心实际网格保留对称圆领和两侧肩带', async () => {
+  const { wearables } = await readJSON('internal/character/character-catalog.json');
+  const tank = wearables.find((item) => item.wearable_key === 'upper-human-tank-v1');
+  const { primitives, scalars } = await readWearableMesh(tank);
+  const positions = primitives.flatMap(({ attributes }) => scalars(attributes.POSITION, 3));
+  const center = Math.max(...positions.filter(([x]) => Math.abs(x) < 0.005).map(([, height]) => height));
+  for (const side of [-1, 1]) {
+    const inner = Math.max(...positions.filter(([x]) => x * side > 0.03 && x * side < 0.07).map(([, height]) => height));
+    const shoulder = Math.max(...positions.filter(([x]) => x * side > 0.16 && x * side < 0.22).map(([, height]) => height));
+    assert.ok(inner > center && inner - center < 0.035, `领口在中线旁应平缓上升：${side}`);
+    assert.ok(shoulder - center > 0.1, `领口与肩带应有明显高差：${side}`);
+  }
+  const weldedEdges = new Map();
+  for (const primitive of primitives) {
+    const vertices = scalars(primitive.attributes.POSITION, 3).map((position) => position.map((value) => Math.round(value * 1e6)).join(','));
+    const indices = scalars(primitive.indices, 1).flat();
+    for (let first = 0; first < indices.length; first += 3) {
+      for (let corner = 0; corner < 3; corner += 1) {
+        const edge = [vertices[indices[first + corner]], vertices[indices[first + (corner + 1) % 3]]].sort().join('|');
+        weldedEdges.set(edge, (weldedEdges.get(edge) ?? 0) + 1);
+      }
+    }
+  }
+  assert.ok([...weldedEdges.values()].every((count) => count === 2), '圆领裁片和下摆封边必须焊成封闭布料');
+});
+
+// 验证出货 GLB 的底色，确保染色材质仅属于目标布料。
+test('背心、披风和披肩以独立的无贴图材质提供预设换色', async () => {
+  const { wearables } = await readJSON('internal/character/character-catalog.json');
+  const offers = await readJSON('internal/shop/wearable-products.json');
+  const palette = await readJSON('internal/character/wearable-colors.json');
+  const defaults = new Map([
+    ['upper-human-tank-v1', 'ivory'],
+    ['kaykit-adventurers-knight-back-cape', 'red'],
+    ['kaykit-skeletons-minion-back-cloak', 'brown'],
+  ]);
+  const toLinear = (channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  const backs = [...wearables.filter((item) => item.slot === 'back'), ...offers];
+  assert.deepEqual([...new Set(backs.map((item) => item.wearable_key).filter((key) => /-back-(cape|cloak)$/.test(key)))].sort(),
+    [...defaults.keys()].slice(1).sort());
+  assert.deepEqual(wearables.filter((item) => item.dye_material).map((item) => item.wearable_key).sort(), [...defaults.keys()].sort());
+  for (const item of wearables.filter((item) => item.dye_material)) {
+    assert.equal(item.default_color_key, defaults.get(item.wearable_key));
+    const color = palette.find((entry) => entry.key === item.default_color_key);
+    const bytes = await readFile(new URL(`internal/assets/builtin/${item.model_asset_key}.glb`, root));
+    const model = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
+    const materialIndex = model.materials.findIndex((material) => material.name === item.dye_material);
+    assert.notEqual(materialIndex, -1, item.wearable_key);
+    const material = model.materials[materialIndex].pbrMetallicRoughness;
+    assert.equal(material.baseColorTexture, undefined);
+    for (const [index, channel] of color.hex.slice(1).match(/../g).entries()) {
+      assert.ok(Math.abs(material.baseColorFactor[index] - toLinear(parseInt(channel, 16) / 255)) < 1e-6, item.wearable_key);
+    }
+    for (const node of model.nodes.filter((entry) => entry.mesh !== undefined)) {
+      const isCloth = item.nodes.includes(node.name);
+      for (const primitive of model.meshes[node.mesh].primitives) {
+        assert.equal(primitive.material === materialIndex, isCloth, node.name);
+        if (isCloth) assert.equal(primitive.attributes.COLOR_0, undefined, node.name);
+      }
+    }
+  }
+});
+
 // BearHat 源节点有 1030 个三角面，胡须来自另一个节点的独立 UV 区域。
 test('棕色熊帽保留原帽网格，去除灰色胡须', async () => {
   const catalog = await readJSON('internal/character/character-catalog.json');

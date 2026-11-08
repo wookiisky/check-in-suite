@@ -12,23 +12,23 @@
     "selection": {}
   },
   {
-    "key": "human-knight-mage",
-    "name": "人形：微笑脸、灰色铁盔与胸甲、紫红色披风",
+    "key": "human-knight-cape",
+    "name": "人形：微笑脸、灰色铁盔与胸甲、红披风",
     "body": "kaykit-medium-v1",
     "selection": {
       "head": "kaykit-adventurers-knight-head",
       "upper": "kaykit-adventurers-knight-upper",
-      "back": "kaykit-adventurers-mage-back-cape"
+      "back": "kaykit-adventurers-knight-back-cape"
     }
   },
   {
-    "key": "skeleton-knight-mage",
-    "name": "骷髅：灰色铁盔与胸甲、紫红色披风",
+    "key": "skeleton-knight-cape",
+    "name": "骷髅：灰色铁盔与胸甲、红披风",
     "body": "kaykit-skeleton-v1",
     "selection": {
       "head": "kaykit-adventurers-knight-head",
       "upper": "kaykit-adventurers-knight-upper",
-      "back": "kaykit-adventurers-mage-back-cape"
+      "back": "kaykit-adventurers-knight-back-cape"
     }
   },
   {
@@ -42,22 +42,22 @@
   },
   {
     "key": "skeleton-arrow",
-    "name": "骷髅：头部插箭、灰色胸甲与紫红色披风",
+    "name": "骷髅：头部插箭、灰色胸甲与红披风",
     "body": "kaykit-skeleton-v1",
     "selection": {
       "head": "head-arrow-v1",
       "upper": "kaykit-adventurers-knight-upper",
-      "back": "kaykit-adventurers-mage-back-cape"
+      "back": "kaykit-adventurers-knight-back-cape"
     }
   },
   {
-    "key": "human-bear-purple",
-    "name": "人形：棕色熊帽、金属胸甲、紫色披肩",
+    "key": "human-bear-shawl",
+    "name": "人形：棕色熊帽、金属胸甲、棕披肩",
     "body": "kaykit-medium-v1",
     "selection": {
       "head": "kaykit-adventurers-barbarian-head",
       "upper": "kaykit-adventurers-knight-upper",
-      "back": "kaykit-legacy-skeleton-mage-back-cloak"
+      "back": "kaykit-skeletons-minion-back-cloak"
     }
   },
   {

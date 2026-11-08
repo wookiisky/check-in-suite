@@ -2,7 +2,9 @@ import type { components } from '../../api/schema';
 
 export type AppearanceState = components['schemas']['AppearanceState'];
 export type FreeWearableSelection = Partial<Record<`${CharacterSlot}_free_wearable_key`, string | null>>;
-export type AppearanceDraft = Pick<AppearanceState, 'character_key' | `${CharacterSlot}_purchase_id`> & FreeWearableSelection;
+export type WearableColorField = 'upper_color_key' | 'back_color_key';
+export const wearableColorFields: Partial<Record<CharacterSlot, WearableColorField>> = { upper: 'upper_color_key', back: 'back_color_key' };
+export type AppearanceDraft = Pick<AppearanceState, 'character_key' | `${CharacterSlot}_purchase_id` | WearableColorField> & FreeWearableSelection;
 export type CharacterDefinition = components['schemas']['CharacterDefinition'];
 export type CharacterWearable = components['schemas']['CharacterWearable'];
 export type CharacterLoadStatus = { phase: 'loading' } | { phase: 'ready' } | { phase: 'error'; error: unknown };
@@ -17,11 +19,13 @@ export interface CharacterAttachment {
 }
 
 // 外观编辑只持有选择，库存和目录继续来自确认后的服务器快照。
-export function draftFromAppearance(snapshot: AppearanceState & FreeWearableSelection): AppearanceDraft {
+export function draftFromAppearance(snapshot: AppearanceDraft): AppearanceDraft {
   const draft: AppearanceDraft = { character_key: snapshot.character_key, face_purchase_id: snapshot.face_purchase_id, back_purchase_id: snapshot.back_purchase_id, head_purchase_id: snapshot.head_purchase_id, upper_purchase_id: snapshot.upper_purchase_id, lower_purchase_id: snapshot.lower_purchase_id, shoes_purchase_id: snapshot.shoes_purchase_id };
   for (const slot of characterSlots) {
     const field = `${slot}_free_wearable_key` as const;
     if (snapshot[field] != null) draft[field] = snapshot[field];
+    const colorField = wearableColorFields[slot];
+    if (colorField && snapshot[colorField] != null) draft[colorField] = snapshot[colorField];
   }
   return draft;
 }
@@ -42,11 +46,19 @@ export function freeCharacterDefinitions(snapshot: AppearanceState): CharacterDe
   return snapshot.characters.filter((item) => item.character_key === initial || owned.has(item.character_key));
 }
 
+// 目录颜色在解析时转换为渲染使用的材质名与 sRGB 色值。
+export interface ResolvedWearableDye {
+  wearable: CharacterWearable; // 颜色只作用于该部件的节点。
+  material: string; // GLB 中可染色的材质名。
+  hex: string; // 色板中的 sRGB 色值。
+}
+
 // 解析结果由资源身份决定，与购买分页、名称和图片前缀无关。
 export interface ResolvedAppearance {
-  key: string; // 人物定义、所选部件和活动道具组成的准备身份。
+  key: string; // 人物定义、所选部件、配色和活动道具组成的准备身份。
   definition: CharacterDefinition; // 同一个实例使用的规范身体。
   wearables: CharacterWearable[]; // 按六个固定部位排序。
+  dyes: ResolvedWearableDye[]; // 需要覆盖模型底色的部件。
   attachments: readonly CharacterAttachment[]; // 与人物一起准备和切换的活动道具。
 }
 
@@ -70,8 +82,17 @@ export function resolveAppearance(snapshot: AppearanceState, draft = draftFromAp
     return wearable;
   });
   const preparedAttachments = attachments.map((item) => ({ model_url: item.model_url, bone: item.bone, matrix: [...item.matrix] }));
+  const dyes = wearables.flatMap((wearable) => {
+    const field = wearableColorFields[wearable.slot];
+    const colorKey = field && draft[field];
+    if (colorKey == null || colorKey === wearable.default_color_key) return [];
+    const color = snapshot.wearable_colors?.find((item) => item.key === colorKey);
+    if (!wearable.dye_material || !color) throw new Error('CHARACTER_WEARABLE_COLOR_INVALID');
+    return [{ wearable, material: wearable.dye_material, hex: color.hex }];
+  });
   const body = [definition.character_key, definition.model_asset_key, definition.model_url, definition.scale, definition.fixed_nodes, definition.body_regions];
   const animations = Object.entries(definition.animations).sort(([first], [second]) => first.localeCompare(second));
   const parts = wearables.map((item) => [item.wearable_key, item.model_asset_key, item.model_url, item.nodes, item.covers, item.regions]);
-  return { key: JSON.stringify([body, animations, parts, preparedAttachments]), definition, wearables, attachments: preparedAttachments };
+  const dyeIdentity = dyes.map(({ wearable, material, hex }) => [wearable.wearable_key, material, hex]);
+  return { key: JSON.stringify([body, animations, parts, dyeIdentity, preparedAttachments]), definition, wearables, dyes, attachments: preparedAttachments };
 }

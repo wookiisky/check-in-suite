@@ -49,7 +49,7 @@
   },
   {
     "wearable_key": "kaykit-adventurers-knight-back-cape",
-    "name": "红披风",
+    "name": "披风",
     "coin_price": 25,
     "diamond_price": 0
   },
@@ -102,12 +102,6 @@
     "diamond_price": 0
   },
   {
-    "wearable_key": "kaykit-adventurers-mage-back-cape",
-    "name": "紫红披风",
-    "coin_price": 25,
-    "diamond_price": 0
-  },
-  {
     "wearable_key": "kaykit-adventurers-mage-upper",
     "name": "紫色长衫",
     "coin_price": 35,
@@ -129,12 +123,6 @@
     "wearable_key": "kaykit-adventurers-rogue-head",
     "name": "棕色长发",
     "coin_price": 20,
-    "diamond_price": 0
-  },
-  {
-    "wearable_key": "kaykit-adventurers-rogue-back-cape",
-    "name": "绿披风",
-    "coin_price": 25,
     "diamond_price": 0
   },
   {
@@ -174,12 +162,6 @@
     "diamond_price": 0
   },
   {
-    "wearable_key": "kaykit-adventurers-ranger-back-cape",
-    "name": "蓝披风",
-    "coin_price": 25,
-    "diamond_price": 0
-  },
-  {
     "wearable_key": "kaykit-adventurers-ranger-back-quiver",
     "name": "蓝羽箭袋",
     "coin_price": 25,
@@ -205,7 +187,7 @@
   },
   {
     "wearable_key": "kaykit-skeletons-minion-back-cloak",
-    "name": "棕披肩",
+    "name": "披肩",
     "coin_price": 25,
     "diamond_price": 0
   },
@@ -234,12 +216,6 @@
     "diamond_price": 0
   },
   {
-    "wearable_key": "kaykit-skeletons-rogue-back-cape",
-    "name": "紫红短披风",
-    "coin_price": 25,
-    "diamond_price": 0
-  },
-  {
     "wearable_key": "kaykit-skeletons-rogue-upper",
     "name": "交叉胸带",
     "coin_price": 35,
@@ -264,12 +240,6 @@
     "diamond_price": 0
   },
   {
-    "wearable_key": "kaykit-skeletons-warrior-back-cloak",
-    "name": "紫红披肩",
-    "coin_price": 25,
-    "diamond_price": 0
-  },
-  {
     "wearable_key": "kaykit-legacy-skeleton-archer-head",
     "name": "紫兜帽",
     "coin_price": 20,
@@ -279,12 +249,6 @@
     "wearable_key": "kaykit-legacy-skeleton-mage-head",
     "name": "紫色围领",
     "coin_price": 20,
-    "diamond_price": 0
-  },
-  {
-    "wearable_key": "kaykit-legacy-skeleton-mage-back-cloak",
-    "name": "紫色披肩",
-    "coin_price": 25,
     "diamond_price": 0
   },
   {

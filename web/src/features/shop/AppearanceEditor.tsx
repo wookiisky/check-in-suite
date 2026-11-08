@@ -8,8 +8,8 @@ import { Modal } from '../../components/Modal';
 import { NumberedPagination } from '../../components/NumberedPagination';
 import { ViewTabs } from '../../components/ViewTabs';
 import { CharacterPreview3D } from '../character/CharacterPreview3D';
-import { draftFromAppearance, freeCharacterDefinitions, wearableFitsCharacter } from '../character/character3d-appearance';
-import type { AppearanceDraft, CharacterLoadStatus } from '../character/character3d-appearance';
+import { draftFromAppearance, freeCharacterDefinitions, wearableColorFields, wearableFitsCharacter } from '../character/character3d-appearance';
+import type { AppearanceDraft, CharacterLoadStatus, WearableColorField } from '../character/character3d-appearance';
 import { shopError, uncertainResult } from './helpers';
 import { useReducedMotion } from './useReducedMotion';
 import content from './appearance-content.json';
@@ -43,7 +43,7 @@ const slots = [
   { slot: 'shoes', field: 'shoes_purchase_id', freeField: 'shoes_free_wearable_key' },
   { slot: 'back', field: 'back_purchase_id', freeField: 'back_free_wearable_key' },
 ] as const;
-type Slot = typeof slots[number]['slot'];
+type SlotConfiguration = typeof slots[number];
 const pageSize = 12;
 const categoryTabs = [{ id: '', label: content.allCategories }, { id: 'body', label: content.characterTitle },
   ...slots.map(({ slot }) => ({ id: slot, label: content.slots[slot] }))];
@@ -67,6 +67,15 @@ interface EditorCategory {
   disabled: boolean; // 当前是否可编辑。
   emptyOwned: boolean; // 素材验证入口用来提示只有默认款。
   options: EditorOption[]; // 按该类别的既定顺序展示。
+  dye?: EditorDye | undefined; // 只有当前穿戴允许换色时提供色板。
+}
+
+/** 色块组跟随该部位当前选择的衣物。 */
+interface EditorDye {
+  field: WearableColorField; // 随整套外观提交的字段。
+  defaultKey: string; // 模型自身使用的颜色。
+  selectedKey: string; // 当前草稿显示的颜色。
+  colors: NonNullable<AppearanceState['wearable_colors']>; // 服务端允许的预设颜色。
 }
 
 /** App 将导航、品牌和登出统一交给编辑器确认。 */
@@ -82,21 +91,30 @@ export interface AppearanceEditorProps {
 
 // 选择字段的逐项比较不依赖 JSON 键顺序，也不混入目录或版本字段。
 function sameDraft(first: AppearanceDraft, second: AppearanceDraft) {
-  return first.character_key === second.character_key && slots.every(({ field, freeField }) => first[field] === second[field] && (first[freeField] ?? null) === (second[freeField] ?? null));
+  return first.character_key === second.character_key && slots.every(({ slot, field, freeField }) => {
+    const colorField = wearableColorFields[slot];
+    return first[field] === second[field] && (first[freeField] ?? null) === (second[freeField] ?? null)
+      && (!colorField || (first[colorField] ?? null) === (second[colorField] ?? null));
+  });
 }
 
-// 结果核对比较实际选择，不要求“本请求回执”这一接口并未提供的能力。
-function draftFromInput(input: AppearanceSave): AppearanceDraft {
-  return { character_key: input.character_key, face_purchase_id: input.face_purchase_id, back_purchase_id: input.back_purchase_id, head_purchase_id: input.head_purchase_id, upper_purchase_id: input.upper_purchase_id, lower_purchase_id: input.lower_purchase_id, shoes_purchase_id: input.shoes_purchase_id, ...Object.fromEntries(slots.flatMap(({ freeField }) => input[freeField] ? [[freeField, input[freeField]]] : [])) };
+// 比较目录身份时，默认款、显式免费选择和订单可以指向同一件衣物。
+function selectedWearableKey(snapshot: AppearanceState, draft: AppearanceDraft, { slot, field, freeField }: SlotConfiguration) {
+  const purchaseID = draft[field];
+  if (purchaseID !== null) return snapshot.inventory.find((item) => item.purchase_id === purchaseID)?.wearable_key;
+  const character = snapshot.characters.find((candidate) => candidate.character_key === draft.character_key);
+  return draft[freeField] ?? character?.defaults[slot];
 }
 
-// 名称来自定义，实例选择保留购买身份，不根据名称或资源前缀推断部位。
-function partName(snapshot: AppearanceState, slot: Slot): string {
-  const character = snapshot.characters.find((candidate) => candidate.character_key === snapshot.character_key);
-  const { field, freeField } = slots.find((candidate) => candidate.slot === slot)!;
-  const id = snapshot[field];
-  const key = id === null ? snapshot[freeField] ?? character?.defaults[slot] : snapshot.inventory.find((item) => item.purchase_id === id && snapshot.wearables.find((definition) => definition.wearable_key === item.wearable_key)?.slot === slot)?.wearable_key;
-  return snapshot.wearables.find((item) => item.wearable_key === key)?.name ?? content.unavailablePart;
+// 冲突核对展示服务器的衣物和配色，方便分辨只改了颜色的外观。
+function partName(snapshot: AppearanceState, configuration: SlotConfiguration): string {
+  const key = selectedWearableKey(snapshot, snapshot, configuration);
+  const wearable = snapshot.wearables.find((item) => item.wearable_key === key && item.slot === configuration.slot);
+  if (!wearable) return content.unavailablePart;
+  const field = wearableColorFields[configuration.slot];
+  const colorKey = (field && snapshot[field]) ?? wearable.default_color_key;
+  const color = snapshot.wearable_colors?.find((item) => item.key === colorKey);
+  return color ? content.partWithColor.replace('{name}', wearable.name).replace('{color}', color.name) : wearable.name;
 }
 
 // 编辑器只写整套外观；共享层由 onSaved 发布确认结果，草稿始终留在本组件。
@@ -147,8 +165,8 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
     void client.request<AppearanceState>('/appearance', { signal: controller.signal }).then((next) => {
       if (controller.signal.aborted || generation.current !== request) return;
       if (!original) { setSnapshot(next); setDraft(draftFromAppearance(next)); return; }
-      if (next.version > original.input.expected_version && sameDraft(draftFromAppearance(next), draftFromInput(original.input))) { acceptSaved(next, true); return; }
-      setSnapshot(original.snapshot); setDraft(draftFromInput(original.input));
+      if (next.version > original.input.expected_version && sameDraft(draftFromAppearance(next), draftFromAppearance(original.input))) { acceptSaved(next, true); return; }
+      setSnapshot(original.snapshot); setDraft(draftFromAppearance(original.input));
       if (next.version > original.input.expected_version) {
         pendingWrites.delete(accountID); setPending(null); setConflict(true); setLatest(next);
       } else { setPending(original); setRetryOriginal(true); }
@@ -172,20 +190,31 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
   useImperativeHandle(leaveGuardRef, () => requestLeave);
 
   // 每次新选择只改草稿，仍允许模型加载中继续选择下一套。
-  function choose(field: typeof slots[number]['field'], purchaseID: string | null) {
-    if (busy || pending) return;
-    const freeField = slots.find((item) => item.field === field)!.freeField;
+  function choose(configuration: SlotConfiguration, purchaseID: string | null, freeKey?: string) {
+    if (!snapshot || busy || pending) return;
+    const { slot, field, freeField } = configuration;
     setDraft((current) => {
       if (!current) return current;
-      const next = { ...current, [field]: purchaseID }; delete next[freeField]; return next;
+      const next = { ...current, [field]: purchaseID };
+      if (freeKey == null) delete next[freeField];
+      else next[freeField] = freeKey;
+      const colorField = wearableColorFields[slot];
+      if (colorField && selectedWearableKey(snapshot, current, configuration) !== selectedWearableKey(snapshot, next, configuration)) delete next[colorField];
+      return next;
     });
     setSaved(false); setConfirmed(false); setError(null);
   }
 
-  // 已取得身体的基础部件用定义身份保存，不伪造订单，也不能与购买实例同时选择。
-  function chooseFree(slot: typeof slots[number], wearableKey: string) {
+  // 选回模型原色时清除颜色覆盖。
+  function chooseColor(dye: EditorDye, colorKey: string) {
     if (busy || pending) return;
-    setDraft((current) => current ? { ...current, [slot.field]: null, [slot.freeField]: wearableKey } : current);
+    setDraft((current) => {
+      if (!current) return current;
+      const next = { ...current };
+      if (colorKey === dye.defaultKey) delete next[dye.field];
+      else next[dye.field] = colorKey;
+      return next;
+    });
     setSaved(false); setConfirmed(false); setError(null);
   }
 
@@ -226,7 +255,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
     try {
       const next = await client.request<AppearanceState>('/appearance', { signal: controller.signal });
       if (!mounted.current || controller.signal.aborted || request !== generation.current) return;
-      if (pending && next.version > pending.input.expected_version && sameDraft(draftFromAppearance(next), draftFromInput(pending.input))) { acceptSaved(next, true); return; }
+      if (pending && next.version > pending.input.expected_version && sameDraft(draftFromAppearance(next), draftFromAppearance(pending.input))) { acceptSaved(next, true); return; }
       if (pending && next.version === pending.input.expected_version) { setRetryOriginal(true); return; }
       pendingWrites.delete(accountID); setPending(null); setConflict(true); setLatest(next);
     } catch (reason) { if (mounted.current && !controller.signal.aborted && request === generation.current) setError(reason); }
@@ -279,7 +308,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
           wearable: defaultWearable,
           value: '',
           selected: draft[field] === null && (!draft[freeField] || draft[freeField] === defaultWearable.wearable_key),
-          onChoose: () => choose(field, null),
+          onChoose: () => choose(configuration, null),
         }] : []),
         ...freeWearables.map((wearable) => ({
           key: wearable.wearable_key,
@@ -288,7 +317,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
           wearable,
           value: wearable.wearable_key,
           selected: draft[field] === null && draft[freeField] === wearable.wearable_key,
-          onChoose: () => chooseFree(configuration, wearable.wearable_key),
+          onChoose: () => choose(configuration, null, wearable.wearable_key),
         })),
         ...owned.map(({ item, wearable }) => {
           const count = (instances.get(wearable.wearable_key) ?? 0) + 1;
@@ -301,7 +330,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
             wearable,
             value: item.purchase_id,
             selected: draft[field] === item.purchase_id,
-            onChoose: () => choose(field, item.purchase_id),
+            onChoose: () => choose(configuration, item.purchase_id),
           };
         }),
       ];
@@ -312,7 +341,14 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
         // 空穿戴可能来自另一已解锁的身体，仍排在当前身体的默认衣物前。
         options.sort((first, second) => Number(second.wearable.empty ?? false) - Number(first.wearable.empty ?? false));
       }
-      categories.push({ key: slot, field, label: content.slots[slot], disabled: disabled || !character, emptyOwned: !owned.length, options });
+      const selected = options.find((option) => option.selected)?.wearable;
+      const colorField = wearableColorFields[slot];
+      const defaultKey = selected?.default_color_key;
+      const colors = snapshot.wearable_colors;
+      const dye = colorField && selected?.dye_material && defaultKey && colors?.length ? {
+        field: colorField, defaultKey, selectedKey: draft[colorField] ?? defaultKey, colors,
+      } : undefined;
+      categories.push({ key: slot, field, label: content.slots[slot], disabled: disabled || !character, emptyOwned: !owned.length, options, dye });
     }
   }
   const browsable = categories.filter((group) => !category || group.key === category);
@@ -341,6 +377,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
         <div className="appearance-options">
           {group.options.map(({ key, ...option }) => <AppearanceOption key={key} {...option} group={group.field} />)}
         </div>
+        {group.dye && <AppearanceColors dye={group.dye} onChoose={chooseColor} error={error} />}
         {onClose && group.emptyOwned && <p className="appearance-hint">{content.emptyOwned}</p>}
         <FieldError error={error} field={group.field} />
       </fieldset>)}
@@ -373,7 +410,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
         {conflict && <div className="appearance-recovery"><p role="alert">{content.conflict}</p>{!latest && <button disabled={busy} onClick={() => void readLatest()}>{checking ? content.checking : content.readLatest}</button>}</div>}
         {pending && !saving && <div className="appearance-recovery"><p role="alert">{retryOriginal ? content.notConfirmed : content.uncertain}</p><button disabled={busy} onClick={() => void readLatest()}>{checking ? content.checking : content.checkResult}</button></div>}
         {latest && <section className="appearance-recovery" aria-label={content.latestTitle}>
-          <h3>{content.latestTitle}</h3><dl><div><dt>{content.characterTitle}</dt><dd>{latest.characters.find((item) => item.character_key === latest.character_key)?.name ?? content.unavailablePart}</dd></div>{slots.map(({ slot }) => <div key={slot}><dt>{content.slots[slot]}</dt><dd>{partName(latest, slot)}</dd></div>)}</dl>
+          <h3>{content.latestTitle}</h3><dl><div><dt>{content.characterTitle}</dt><dd>{latest.characters.find((item) => item.character_key === latest.character_key)?.name ?? content.unavailablePart}</dd></div>{slots.map((configuration) => <div key={configuration.slot}><dt>{content.slots[configuration.slot]}</dt><dd>{partName(latest, configuration)}</dd></div>)}</dl>
           <div className="button-row"><button disabled={busy} onClick={() => useCurrent(true)}>{content.keepDraft}</button><button className="secondary" disabled={busy} onClick={() => useCurrent(false)}>{content.useLatest}</button></div>
         </section>}
         <div className="appearance-actions"><button disabled={busy || conflict || !character || !dirty || preview.phase !== 'ready' || Boolean(pending && !retryOriginal)} onClick={() => void save()}>{saving ? content.saving : pending ? content.retryOriginal : content.save}</button>{onClose && <button className="secondary" disabled={busy} onClick={() => requestLeave(onClose)}>{content.cancel}</button>}</div>
@@ -385,6 +422,33 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
     {editor}
     {leaveConfirmation}
   </section>;
+}
+
+// 按色块的 sRGB 亮度选择浅字或深字，让名称直接显示在颜色上。
+function swatchTextColor(hex: string) {
+  const rgb = Number.parseInt(hex.slice(1), 16);
+  const linear = (channel: number) => {
+    const value = channel / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = 0.2126 * linear(rgb >> 16) + 0.7152 * linear((rgb >> 8) & 255) + 0.0722 * linear(rgb & 255);
+  return luminance > 0.179 ? '#000' : '#fff';
+}
+
+// 原生单选提供键盘导航，当前颜色使用高亮边框。
+function AppearanceColors({ dye, onChoose, error }: { dye: EditorDye; onChoose: (dye: EditorDye, key: string) => void; error: unknown }) {
+  return <fieldset className="appearance-colors">
+    <legend>{content.colorLabel}</legend>
+    <div className="appearance-color-options">
+      {dye.colors.map(({ key, name, hex }) => <label key={key} className="appearance-color-option">
+        <input type="radio" name={dye.field} value={key} checked={dye.selectedKey === key} onChange={() => onChoose(dye, key)} />
+        <span className="appearance-color-sample" style={{ backgroundColor: hex, color: swatchTextColor(hex) }}>
+          <span>{name}</span>
+        </span>
+      </label>)}
+    </div>
+    <FieldError error={error} field={dye.field} />
+  </fieldset>;
 }
 
 // 预览图只是目录缩略图；人物 Canvas 在旁边统一创建，不为每张卡另建。
