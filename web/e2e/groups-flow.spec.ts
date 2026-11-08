@@ -3,6 +3,7 @@ import type { APIRequestContext } from '@playwright/test';
 import type { components } from '../src/api/schema';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import groups from '../src/features/groups/content.json' with { type: 'json' };
+import reports from '../src/features/reports/content.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
 import { openConfigurationSettings, closeConfigurationSettings } from './configuration-navigation';
 
@@ -33,7 +34,7 @@ test('同组查看独立任务、打卡附件和统计，退出后拒绝继续�
     await page.getByLabel(content.account.username).fill('island-group-viewer');
     await page.getByLabel(content.account.loginPassword).fill('Island-Test-2026');
     await page.getByRole('button', { name: content.account.login, exact: true }).click();
-    await expect(page.getByRole('heading', { name: content.navigation.camp, exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: content.navigation.campTitle, exact: true })).toBeVisible();
     const viewerSession = await (await page.request.get('/api/v1/session')).json() as components['schemas']['SessionResponse'];
     const viewerHeaders = { Origin: 'http://127.0.0.1:15173', 'X-CSRF-Token': viewerSession.csrf_token };
     expect(viewerSession.account.id).not.toBe(peer.session.account.id);
@@ -72,13 +73,15 @@ test('同组查看独立任务、打卡附件和统计，退出后拒绝继续�
     await page.keyboard.press('Escape');
     expect((await page.request.patch(`/api/v1/checkins/${created.checkin.id}`, { headers: viewerHeaders, data: { expected_version: created.checkin.version, text: '不能修改', photo_media_id: photo.id, audio_media_id: null } })).ok()).toBe(false);
 
-    await page.getByRole('button', { name: content.navigation.calendar, exact: true }).click();
+    await page.getByRole('button', { name: content.navigation.stats, exact: true }).click();
     await page.getByLabel(groups.memberLabel).selectOption(String(peer.session.account.id));
     await page.locator('.calendar-day[data-today=true]').click();
     await expect(page.getByRole('dialog').locator('.checkin-record').filter({ hasText: taskName })).toBeVisible();
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: content.navigation.stats, exact: true }).click();
-    await page.getByLabel(groups.memberLabel).selectOption(String(peer.session.account.id));
+    await page.getByRole('tab', { name: reports.weekView, exact: true }).click();
+    await expect(page.locator('.reports-week-day').getByRole('button', { name: taskName })).toContainText('与小伙伴分享的成长记录');
+    await page.getByRole('tab', { name: reports.statsView, exact: true }).click();
+    await expect(page.getByLabel(groups.memberLabel)).toHaveValue(String(peer.session.account.id));
     await expect(page.locator('.reports-bars li').filter({ hasText: taskName })).toContainText('1');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: `.local/previews/groups-${testInfo.project.name}.png`, fullPage: true, animations: 'disabled' });

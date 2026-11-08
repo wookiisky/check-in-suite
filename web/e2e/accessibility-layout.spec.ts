@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
 import family from '../src/features/family/content.json' with { type: 'json' };
-import island from '../src/features/island/three/spatial-content.json' with { type: 'json' };
+import reports from '../src/features/reports/content.json' with { type: 'json' };
 
 // 自动化检查实际布局和键盘焦点；手机项目只是WebKit仿真，不是真机验收。
 test('全页面大字触控、键盘焦点、减少动效和无横向溢出', async ({ page }, testInfo) => {
@@ -14,7 +14,10 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
   await expect(page.getByRole('heading', { name: checkin.todayTasks })).toBeVisible();
   const audit = async (label: string, minFontSize = 22) => {
     const layout = await page.evaluate((minSize) => {
-      const visible = (element: Element) => { const box = element.getBoundingClientRect(); return box.width > 0 && box.height > 0 && getComputedStyle(element).visibility !== 'hidden'; };
+      const visible = (element: Element) => {
+        const box = element.getBoundingClientRect();
+        return box.width > 0 && box.height > 0 && getComputedStyle(element).visibility !== 'hidden' && !element.classList.contains('sr-only');
+      };
       return {
         width: document.documentElement.scrollWidth, viewport: innerWidth,
         smallText: [...document.querySelectorAll('body *')].filter((element) => visible(element) && [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) && parseFloat(getComputedStyle(element).fontSize) < minSize).map((element) => `${element.tagName}.${element.className}:${getComputedStyle(element).fontSize}`),
@@ -32,32 +35,42 @@ test('全页面大字触控、键盘焦点、减少动效和无横向溢出', as
     expect(layout.smallControls, label).toEqual([]);
     expect(layout.animated, label).toEqual([]);
   };
-  for (const route of ['camp', 'island', 'calendar', 'stats', 'shop', 'achievements'] as const) {
-    await page.getByRole('button', { name: content.navigation[route], exact: true }).click();
+  const primaryRoutes = ['camp', 'island', 'stats', 'shop', 'appearance'] as const;
+  const navigation = page.getByRole('navigation', { name: content.navigation.label, exact: true });
+  for (const route of primaryRoutes) {
+    await navigation.getByRole('button', { name: content.navigation[route], exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(navigation.getByRole('button')).toHaveText(primaryRoutes.map((item) => content.navigation[item]));
     if (route === 'island') await expect(page.locator('.spatial-stage')).toBeVisible();
-    if (route === 'calendar') await expect(page.locator('.calendar-day').first()).toBeVisible();
-    if (route === 'camp') { await expect(page.getByRole('heading', { name: checkin.todayTasks })).toBeVisible(); await expect(page.getByRole('heading', { name: family.title })).toBeVisible(); }
-    if (route === 'stats') await expect(page.locator('.reports-summary')).toBeVisible();
     if (route === 'shop') await expect(page.locator('.global-wallet')).toBeVisible();
-    if (route === 'achievements') await expect(page.locator('.achievement-grid')).toBeVisible();
-    await audit(route);
+    if (route === 'stats') {
+      await expect(page.locator('.calendar-day').first()).toBeVisible();
+      await audit('month');
+      await page.getByRole('tab', { name: reports.weekView, exact: true }).click();
+      await expect(page.locator('.reports-week-day')).toHaveCount(7);
+      await audit('week');
+      if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.screenshot({ path: `.local/previews/week-${testInfo.project.name}.png`, fullPage: false });
+      await page.getByRole('tab', { name: reports.statsView, exact: true }).click();
+      await expect(page.locator('.reports-summary')).toBeVisible();
+    }
     if (route === 'camp') {
+      await expect(page.getByRole('heading', { name: checkin.todayTasks })).toBeVisible();
+      await expect(page.getByRole('heading', { name: family.title })).toBeVisible();
+      await expect(page.getByRole('tab', { name: checkin.allCategories, exact: true })).toHaveAttribute('aria-selected', 'true');
       const records = await page.locator('.checkin-records-panel').boundingBox();
       const sidebar = await page.locator('.checkin-sidebar').boundingBox();
       const tasks = await page.locator('.checkin-tasks-panel').boundingBox();
       expect(tasks!.y - (records!.y + records!.height)).toBeLessThanOrEqual(25);
       if (testInfo.project.name === 'desktop-chromium') expect(sidebar!.x).toBeGreaterThan(records!.x + records!.width);
-      else expect(sidebar!.y).toBeGreaterThan(records!.y + records!.height);
-      await page.getByRole('button', { name: checkin.weekView, exact: true }).click();
-      await expect(page.locator('.checkin-week-day')).toHaveCount(7);
-      await audit('week');
-      if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.screenshot({ path: `.local/previews/week-${testInfo.project.name}.png`, fullPage: false });
-      await page.getByRole('button', { name: checkin.dayView, exact: true }).click();
+      else expect(sidebar!.y).toBeGreaterThan(tasks!.y + tasks!.height);
     }
+    await audit(route);
     if (process.env.ISLAND_CAPTURE_PREVIEWS) await page.screenshot({ path: `.local/previews/${route}-layout-${testInfo.project.name}.png`, fullPage: false });
-    if (route === 'island') await page.getByRole('button', { name: island.back, exact: true }).click();
   }
+  await navigation.getByRole('button', { name: content.navigation.camp, exact: true }).click();
+  await page.getByRole('button', { name: content.navigation.achievements, exact: true }).click();
+  await expect(page.locator('.achievement-grid')).toBeVisible();
+  await audit('achievements');
   const opener = page.getByRole('button', { name: content.navigation.management, exact: true });
   await opener.focus();
   await page.keyboard.press('Enter');

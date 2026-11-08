@@ -34,7 +34,7 @@ describe('成就浏览和佩戴', () => {
   it('营地详情展示全部指定任务，包括已删除的历史任务', () => {
     const tasks = achievementOptions.tasks.slice(0, 2);
     const item = { ...achievementFixture, scope: 'tasks' as const, task_ids: tasks.map((task) => task.id), category: null, tasks, equipped: true };
-    render(<AchievementStrip items={[item]} onViewAll={vi.fn()} />);
+    render(<AchievementStrip items={[item]} accountID={1} renderCharacter={(toggle) => toggle} />);
     fireEvent.click(screen.getByRole('button', { name: `${content.details} ${item.name}` }));
     const targets = within(screen.getByRole('dialog')).getAllByRole('listitem');
     expect(targets).toHaveLength(2);
@@ -43,37 +43,30 @@ describe('成就浏览和佩戴', () => {
     expect(targets[1]).toHaveTextContent(content.deleted);
   });
 
-  it('未获得成就只能查看进度，已获得可佩戴且以服务端结果更新', async () => {
+  it('成就卡只供浏览，文本选择以服务端结果更新', async () => {
     const locked = { ...achievementFixture, id: 'locked', name: '未来徽章', qualified: false, earned_at: null, progress: 2 };
-    const request = vi.fn().mockImplementation(async (path: string) => path.includes('/equipment') ? { ...achievementFixture, equipped: true } : { items: [achievementFixture, locked] });
+    const title = { id: achievementFixture.id, name: achievementFixture.name };
+    const request = vi.fn().mockImplementation(async (path: string) => path.endsWith('/title') ? { title } : { items: [achievementFixture, locked], title: null });
     render(<AchievementPage client={{ request }} session={session} />);
     await screen.findByRole('heading', { name: achievementFixture.name });
     const owned = screen.getByRole('heading', { name: achievementFixture.name }).closest('article')!;
-    const pending = screen.getByRole('heading', { name: locked.name }).closest('article')!;
-    expect(within(pending).queryByRole('button', { name: content.equip })).not.toBeInTheDocument();
-    fireEvent.click(within(owned).getByRole('button', { name: content.equip }));
-    await waitFor(() => expect(request).toHaveBeenCalledWith(`/achievements/${achievementFixture.id}/equipment`, { method: 'PUT', body: { equipped: true } }));
-    await within(owned).findByRole('button', { name: content.unequip });
+    expect(within(owned).getAllByRole('button')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: content.chooseTitle }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).queryByRole('button', { name: locked.name })).not.toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: title.name }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: title.name })).toBeVisible();
   });
 
   it('首页只放徽章图片，点击后才展示名称和条件', () => {
-    render(<AchievementStrip items={[{ ...achievementFixture, equipped: true }]} onViewAll={vi.fn()} />);
+    render(<AchievementStrip items={[achievementFixture]} accountID={1} renderCharacter={(toggle) => toggle} />);
     expect(screen.queryByRole('heading', { name: achievementFixture.name })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: `${content.details} ${achievementFixture.name}` }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: achievementFixture.name })).toBeInTheDocument();
   });
 
-  it('佩戴失败保留原状态并允许重试', async () => {
-    const request = vi.fn().mockImplementation(async (path: string) => {
-      if (path.includes('/equipment')) throw new TypeError('offline');
-      return { items: [achievementFixture] };
-    });
-    render(<AchievementPage client={{ request }} session={session} />);
-    fireEvent.click(await screen.findByRole('button', { name: content.equip }));
-    await screen.findByRole('alert');
-    expect(screen.getByRole('button', { name: content.equip })).toBeEnabled();
-  });
 });
 
 describe('成就配置', () => {

@@ -8,7 +8,8 @@ import type { components } from '../src/api/schema';
 import { closeConfigurationSettings, openConfigurationSettings } from './configuration-navigation';
 
 // 只在临时测试服务创建数据，随后通过实际页面完成查询、留言与媒体闭环。
-test('真实日月统计、留言恢复、偏好持久与照片附件', async ({ page, context }, testInfo) => {
+test('真实月周记录和统计、留言恢复、偏好持久与照片附件', async ({ page, context }, testInfo) => {
+  test.setTimeout(60_000);
   if (testInfo.project.name === 'desktop-chromium') await context.grantPermissions(['microphone']);
   const recordAudio = async () => {
     await page.getByRole('dialog').getByRole('button', { name: new RegExp(`${media.startRecording}|${media.recordAgain}`) }).click();
@@ -96,7 +97,7 @@ test('真实日月统计、留言恢复、偏好持久与照片附件', async ({
   await expect(page.locator('body')).toHaveAttribute('data-reduce-motion', 'true');
   await closeConfigurationSettings(page);
 
-  await page.getByRole('button', { name: content.navigation.calendar, exact: true }).click();
+  await page.getByRole('button', { name: content.navigation.stats, exact: true }).click();
   await page.locator('.calendar-day[data-today=true]').click();
   await expect(page.getByRole('dialog').locator('.checkin-record').filter({ hasText: taskName })).toBeVisible();
   await page.getByRole('dialog').locator('.checkin-record').filter({ hasText: taskName }).click();
@@ -104,7 +105,9 @@ test('真实日月统计、留言恢复、偏好持久与照片附件', async ({
   await expect.poll(async () => page.getByRole('dialog').locator(`img[src*="${replaced.photo_media_id}"]`).evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: content.navigation.stats, exact: true }).click();
+  await page.getByRole('tab', { name: reports.weekView, exact: true }).click();
+  await expect(page.locator('.reports-week-day').getByRole('button', { name: taskName })).toContainText('带照片的成长记录');
+  await page.getByRole('tab', { name: reports.statsView, exact: true }).click();
   await page.getByRole('combobox', { name: reports.range, exact: true }).selectOption('custom');
   await page.getByLabel(reports.start, { exact: true }).fill(session.today);
   await page.getByLabel(reports.end, { exact: true }).fill(session.today);

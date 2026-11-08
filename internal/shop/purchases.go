@@ -52,6 +52,16 @@ type purchaseReceipt struct {
 	Wallet wallet.Balance `json:"wallet"` // Original confirmed post-purchase balance.
 }
 
+// insertPurchase saves the purchased item and its actual price as a durable order snapshot.
+func insertPurchase(ctx context.Context, tx *sql.Tx, accountID int64, product Product, now time.Time) (string, error) {
+	id, status := core.ID(), StatusOwned
+	if product.Type == TypeReward {
+		status = StatusPending
+	}
+	_, err := tx.ExecContext(ctx, "INSERT INTO purchases(id,account_id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,repeatable,item_key_snapshot,wearable_key_snapshot,character_key_snapshot,scene_key_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, accountID, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli(), product.Repeatable, product.IslandItemKey, product.WearableKey, product.CharacterKey, product.SceneKey)
+	return id, err
+}
+
 // Buy commits ownership, both currency debits, stock and the replay receipt atomically.
 func (s *Service) Buy(ctx context.Context, p account.Principal, key string, input BuyInput) (PurchaseResult, error) {
 	accountID := p.AccountID
@@ -84,12 +94,15 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 		}
 		return PurchaseResult{Purchase: purchase, Wallet: receipt.Wallet}, tx.Commit()
 	}
-	product, err := readProduct(ctx, tx, accountID, input.ProductID, false)
+	product, err := readProduct(ctx, tx, accountID, input.ProductID, false, input.RequireUnowned)
 	if err != nil {
 		return result, err
 	}
 	if !product.Enabled {
 		return result, core.Fail(409, "PRODUCT_UNAVAILABLE")
+	}
+	if input.RequireUnowned && product.Owned {
+		return result, core.Fail(409, "ALREADY_OWNED")
 	}
 	if product.Version != input.ExpectedProductVersion {
 		return result, core.Fail(409, "PRODUCT_CHANGED")
@@ -110,11 +123,7 @@ func (s *Service) Buy(ctx context.Context, p account.Principal, key string, inpu
 	if product.Owned && !product.Repeatable {
 		return result, core.Fail(409, "ALREADY_OWNED")
 	}
-	id, status := core.ID(), StatusOwned
-	if product.Type == TypeReward {
-		status = StatusPending
-	}
-	_, err = tx.ExecContext(ctx, "INSERT INTO purchases(id,account_id,product_id,type_snapshot,name_snapshot,description_snapshot,asset_key_snapshot,coin_price,diamond_price,status,created_at,repeatable,item_key_snapshot,wearable_key_snapshot,character_key_snapshot,scene_key_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, accountID, product.ID, product.Type, product.Name, product.Description, product.AssetKey, product.CoinPrice, product.DiamondPrice, status, now.UnixMilli(), product.Repeatable, product.IslandItemKey, product.WearableKey, product.CharacterKey, product.SceneKey)
+	id, err := insertPurchase(ctx, tx, accountID, product, now)
 	if err != nil {
 		return result, err
 	}

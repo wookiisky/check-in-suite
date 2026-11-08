@@ -143,9 +143,10 @@ type Purchase struct {
 
 // BuyInput binds the final confirmation to the displayed merchandise and balance versions.
 type BuyInput struct {
-	ProductID              string `json:"product_id"`               // Confirmed product.
-	ExpectedProductVersion int64  `json:"expected_product_version"` // Confirmed price and stock version.
-	ExpectedWalletVersion  int64  `json:"expected_wallet_version"`  // Confirmed balance version.
+	ProductID              string `json:"product_id"`                // Confirmed product.
+	ExpectedProductVersion int64  `json:"expected_product_version"`  // Confirmed price and stock version.
+	ExpectedWalletVersion  int64  `json:"expected_wallet_version"`   // Confirmed balance version.
+	RequireUnowned         bool   `json:"require_unowned,omitempty"` // Public shop purchases only an unowned stable item.
 }
 
 // PurchaseResult combines current order state with the original economic receipt on replay.

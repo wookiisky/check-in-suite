@@ -89,6 +89,11 @@ func Reconcile(ctx context.Context, tx *sql.Tx, accountID int64, now time.Time) 
 		if err != nil {
 			return err
 		}
+		if item.Qualified && !qualified {
+			if _, err := tx.ExecContext(ctx, "UPDATE accounts SET achievement_title_id=NULL WHERE id=? AND achievement_title_id=?", accountID, item.ID); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

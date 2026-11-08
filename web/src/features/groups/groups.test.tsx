@@ -1,7 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ApiFailure } from '../../api/client';
-import { shiftDate } from '../../api/dates';
 import type { Session } from '../../api/types';
 import { testSession } from '../../test/account-fixtures';
 import { recordFixture } from '../checkin/test-fixtures';
@@ -72,6 +71,8 @@ describe('组与成员查看', () => {
     fireEvent.click(await screen.findByRole('button', { name: /跑步记录/ }));
     expect(screen.getByText('原始文字')).toBeInTheDocument();
     expect(within(screen.getByRole('dialog')).queryByRole('button', { name: '编辑内容' })).not.toBeInTheDocument();
+    expect(request).toHaveBeenCalledWith('/checkins?start_date=2026-10-29&end_date=2026-10-29&account_id=2', expect.anything());
+    expect(screen.queryByRole('button', { name: '周视图' })).not.toBeInTheDocument();
     expect(request.mock.calls.every(([path]) => path !== '/camp')).toBe(true);
   });
 
@@ -81,10 +82,7 @@ describe('组与成员查看', () => {
     expect(screen.queryByRole('button', { name: '删除记录' })).not.toBeInTheDocument();
   });
 
-  it.each([
-    { navigation: '前一天', lateResult: 'success' },
-    { navigation: '周视图', lateResult: 'abort' },
-  ])('分页中切换 $navigation 后可继续分页，旧请求不能影响新查询', async ({ navigation, lateResult }) => {
+  it.each(['success', 'abort'])('分页中切换成员后可继续分页，旧请求不能影响新查询（%s）', async (lateResult) => {
     let oldSignal: AbortSignal | undefined;
     let finishOld!: (page: CheckinPage) => void;
     let rejectOld!: (reason: unknown) => void;
@@ -96,17 +94,18 @@ describe('组与成员查看', () => {
       const query = new URL(path, 'http://localhost').searchParams;
       if (query.get('cursor') === 'old-next') { oldSignal = options?.signal; return oldPage; }
       if (query.get('cursor') === 'new-next') return newPage;
-      const initial = query.get('start_date') === session.today && query.get('end_date') === session.today;
+      const initial = query.get('account_id') === '2';
       return Promise.resolve({
         items: [{ ...recordFixture, id: initial ? 'old-first' : 'new-first', business_date: query.get('start_date')!, task_name_snapshot: initial ? '原日期记录' : '新日期记录' }],
         next_cursor: initial ? 'old-next' : 'new-next',
       });
     });
     const onAccessDenied = vi.fn();
-    render(<MemberCheckins client={{ request }} session={session} accountID={2} onAccessDenied={onAccessDenied} />);
+    const client = { request };
+    const { rerender } = render(<MemberCheckins client={client} session={session} accountID={2} onAccessDenied={onAccessDenied} />);
     fireEvent.click(await screen.findByRole('button', { name: '加载更多记录' }));
     expect(oldSignal?.aborted).toBe(false);
-    fireEvent.click(screen.getByRole('button', { name: navigation }));
+    rerender(<MemberCheckins client={client} session={session} accountID={3} onAccessDenied={onAccessDenied} />);
     await screen.findByRole('button', { name: /新日期记录/ });
     expect(oldSignal?.aborted).toBe(true);
     const more = screen.getByRole('button', { name: /加载更多记录|正在加载…/ });
@@ -121,7 +120,7 @@ describe('组与成员查看', () => {
     expect(more).toBeDisabled();
     expect(screen.queryByRole('button', { name: /旧分页记录/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    await act(async () => finishNew({ items: [{ ...recordFixture, id: 'new-last', business_date: navigation === '前一天' ? shiftDate(session.today, -1) : session.today, task_name_snapshot: '新分页记录' }], next_cursor: null }));
+    await act(async () => finishNew({ items: [{ ...recordFixture, id: 'new-last', business_date: session.today, task_name_snapshot: '新分页记录' }], next_cursor: null }));
     expect(screen.getByRole('button', { name: /新分页记录/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '加载更多记录' })).not.toBeInTheDocument();
     expect(onAccessDenied).not.toHaveBeenCalled();

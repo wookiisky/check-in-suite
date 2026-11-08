@@ -11,7 +11,7 @@
   ],
   "task_name": "%s练习",
   "achievement_name": "%s挑战",
-  "product_description": "测试商品，可在商店购买并体验装扮、营地建设或奖励兑现。",
+  "product_description": "测试商品。",
   "checkin_text": [
     "今天也认真完成了，记录一点进步。",
     "和家人一起完成，感觉很开心。",
@@ -20,7 +20,7 @@
   "messages": [
     "欢迎来到测试营地！任务、商店和装扮已经准备好啦。",
     "试着完成今天的任务，再去商店选一件喜欢的物品。",
-    "管理密码与登录密码相同，可进入管理页体验历史补录和奖励兑现。"
+    "管理密码与登录密码相同，可进入配置页体验历史补录。"
   ],
   "history_days": 30,
   "coin_reward": 30,
@@ -43,11 +43,13 @@
     20,
     10000
   ],
+  "owned_wearables": [
+    "hair-barbarian-v1",
+    "upper-barbarian-v1",
+    "lower-barbarian-v1",
+    "shoes-barbarian-v1"
+  ],
   "owned_assets": [
-    "modular-hair-barbarian-v1-3950e09a5692",
-    "modular-upper-barbarian-v1-9cd152dd6c44",
-    "modular-lower-barbarian-v1-16400445e8b8",
-    "modular-shoes-barbarian-v1-78c74487b5eb",
     "title-crown-v1",
     "camp-tree-v1-thumbnail",
     "camp-ball-v1-thumbnail",

@@ -5,7 +5,6 @@ import { loginMain, purchaseProduct, selectShopCategory, shopAPI } from './shop-
 import spatial from '../src/features/island/three/spatial-content.json' with { type: 'json' };
 import sceneContent from '../src/features/island/three/scene-picker-content.json' with { type: 'json' };
 import browserContent from '../src/features/island/three/spatial-inventory-content.json' with { type: 'json' };
-import shop from '../src/features/shop/content.json' with { type: 'json' };
 
 export type SpatialState=components['schemas']['SpatialIslandState'];
 export type Placement=components['schemas']['SpatialPlacement'];
@@ -54,8 +53,6 @@ export async function prepareScenes(page:Page,viaUI=false) {
     if(offer.owned)continue;
     if(viaUI) {
       await selectShopCategory(page,offer.type==='scene'?'scene':'island');
-      await page.getByLabel(shop.searchLabel,{exact:true}).fill(offer.name);
-      await page.getByRole('button',{name:shop.search,exact:true}).click();
       await purchaseProduct(page,offer);
     } else {
       const camp=await shopAPI<Camp>(page,'/camp');

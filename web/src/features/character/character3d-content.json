@@ -6,6 +6,7 @@
   "unsupported": "此浏览器暂不支持三维显示。",
   "rotation": {
     "hint": "左右拖动或使用按钮，360° 查看装扮。",
+    "keyboardHint": "横向拖动或按左右方向键旋转人物，按 Home 恢复视角。",
     "left": "向左旋转",
     "right": "向右旋转",
     "reset": "恢复视角"

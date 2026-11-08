@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
 import { ApiClient, ApiFailure } from '../../api/client';
 import { PurchaseDialog } from './PurchaseDialog';
-import { RedeemDialog } from './RedeemDialog';
 import { camp, product, purchase, wallet } from './test-fixtures';
 import type { ShopClient } from './types';
 import content from './content.json';
@@ -29,7 +28,7 @@ describe('购买确认与恢复', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
-    await waitFor(() => expect(onPurchased).toHaveBeenCalledWith(purchase));
+    await waitFor(() => expect(onPurchased).toHaveBeenCalledWith(purchase, wallet));
     expect(fetchMock).toHaveBeenCalledOnce();
     const request = fetchMock.mock.calls[0]?.[1];
     expect((request?.headers as Headers).get('Idempotency-Key')).toMatch(
@@ -94,7 +93,7 @@ describe('购买确认与恢复', () => {
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: content.recoverPurchase }));
-    await waitFor(() => expect(onPurchased).toHaveBeenCalledWith(rewardPurchase));
+    await waitFor(() => expect(onPurchased).toHaveBeenCalledWith(rewardPurchase, wallet));
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(feedback).toHaveBeenCalledTimes(1);
     expect(feedback.mock.calls[0]?.[0].detail).toBe('purchase');
@@ -160,7 +159,7 @@ describe('购买确认与恢复', () => {
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: content.recoverPurchase }));
-    await waitFor(() => expect(onPurchased).toHaveBeenCalledWith(purchase));
+    await waitFor(() => expect(onPurchased).toHaveBeenCalledWith(purchase, wallet));
     expect(request.mock.calls).toHaveLength(2);
     expect(request.mock.calls[1]).toEqual(request.mock.calls[0]);
     expect(request.mock.calls[0]?.[1].body.expected_product_version).toBe(1);
@@ -205,41 +204,5 @@ describe('购买确认与恢复', () => {
     expect(writes[1]?.[1].body.expected_product_version).toBe(2);
     expect(writes[1]?.[1].body.expected_wallet_version).toBe(2);
     expect(writes[1]?.[1].idempotencyKey).not.toBe(writes[0]?.[1].idempotencyKey);
-  });
-});
-
-describe('奖励兑现', () => {
-  it('每次兑现都提交本次密码，错误密码保留表单重试', async () => {
-    const reward = { ...purchase, type_snapshot: 'reward' as const, status: 'pending' as const };
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(
-        new ApiFailure(422, { code: 'INVALID_CREDENTIALS', field_errors: {}, request_id: '' }),
-      )
-      .mockResolvedValueOnce({ ...reward, status: 'redeemed' });
-    const onRedeemed = vi.fn();
-    render(
-      <RedeemDialog
-        client={{ request }}
-        purchase={reward}
-        onClose={vi.fn()}
-        onRedeemed={onRedeemed}
-      />,
-    );
-    fireEvent.change(screen.getByLabelText(content.redeemPassword), {
-      target: { value: 'wrong password' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: content.confirmRedeem }));
-    await screen.findByText(content.errors.INVALID_CREDENTIALS);
-    expect(screen.getByLabelText(content.redeemPassword)).toHaveValue('wrong password');
-    fireEvent.change(screen.getByLabelText(content.redeemPassword), {
-      target: { value: 'correct password' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: content.confirmRedeem }));
-    await waitFor(() => expect(onRedeemed).toHaveBeenCalled());
-    expect(request.mock.calls[1]).toEqual([
-      `/purchases/${purchase.id}/redeem`,
-      { method: 'POST', body: { password: 'correct password' } },
-    ]);
   });
 });

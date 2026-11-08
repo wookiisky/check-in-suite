@@ -1,201 +1,188 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Session } from '../../api/types';
+import { expect, it, vi } from 'vitest';
+import { errorMessage } from '../../api/client';
 import { testSession } from '../../test/account-fixtures';
-import { FEEDBACK_EVENT } from '../../feedback/feedback-events';
 import { ShopPage } from './ShopPage';
 import { camp, product, purchase } from './test-fixtures';
 import content from './content.json';
-import { useAppearance } from '../character/AppearanceProvider';
-import { appearanceFixture } from './appearance-test-fixtures';
+import pagination from '../../components/numbered-pagination-content.json';
 
-vi.mock('../character/AppearanceProvider', async () => {
-  const { appearanceFixture } = await import('./appearance-test-fixtures');
-  return { useAppearance: vi.fn(() => ({ snapshot: appearanceFixture(), loading: false, error: null, refresh: vi.fn(), publishSaved: vi.fn() })) };
+const first = { ...product, id: 'a', type: 'island' as const, island_item_key: 'desk', name: '书桌', repeatable: true };
+const alias = { ...first, id: 'a2', name: '另一报价' };
+const second = { ...first, id: 'b', island_item_key: 'stool', name: '凳子' };
+const third = { ...first, id: 'c', island_item_key: 'bed', name: '床' };
+const fourth = { ...first, id: 'd', island_item_key: 'sofa', name: '沙发' };
+const session = { ...testSession, timezone: 'Asia/Taipei' as const };
+
+it('按营地分类直接跳页，装扮入口替代原来的背包入口', async () => {
+  const onAppearance = vi.fn();
+  const request = vi.fn().mockImplementation(async (path: string) => {
+    const url = new URL(path, 'https://example.test');
+    if (url.pathname !== '/shop/products') throw new Error(path);
+    const page = Number(url.searchParams.get('page'));
+    return { items: page === 3 ? [third] : [first], page, total: 51, camp_categories: ['scene', 'furniture'], wallet: camp.wallet };
+  });
+  render(<ShopPage client={{ request }} session={session} onAppearance={onAppearance} />);
+
+  expect(within(screen.getByRole('tablist', { name: content.categoryGroupLabel })).getAllByRole('tab')).toHaveLength(2);
+  expect(screen.queryByRole('heading', { name: content.title })).not.toBeInTheDocument();
+  expect(within(screen.getByRole('tablist', { name: content.categoryGroupLabel })).queryByRole('button')).not.toBeInTheDocument();
+  expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: content.backpack })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '装扮' }));
+  expect(onAppearance).toHaveBeenCalledOnce();
+  fireEvent.click(screen.getByRole('tab', { name: '营地' }));
+  fireEvent.click(await screen.findByRole('tab', { name: '家具' }));
+  await screen.findByRole('heading', { name: first.name });
+  expect(screen.queryByRole('button', { name: '一键购买' })).not.toBeInTheDocument();
+
+  fireEvent.change(screen.getByRole('spinbutton', { name: pagination.page }), { target: { value: '3' } });
+  fireEvent.click(screen.getByRole('button', { name: pagination.jump }));
+  await screen.findByRole('heading', { name: third.name });
+  expect(request.mock.calls.at(-1)?.[0]).toContain('group=camp&category=furniture&page=3');
+  expect(screen.getByRole('tab', { name: '家具' })).toHaveAttribute('aria-selected', 'true');
 });
 
-const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
+it('开发环境允许从一级分类栏一键购买，完成后重读当前分类', async () => {
+  let bought = false;
+  let complete = () => {};
+  const nextWallet = { ...camp.wallet, version: camp.wallet.version + 1 };
+  const request = vi.fn().mockImplementation(async (path: string) => {
+    if (path === '/shop/development/buy-all') {
+      await new Promise<void>((resolve) => { complete = resolve; });
+      bought = true;
+      return nextWallet;
+    }
+    return {
+      items: bought ? [] : [first],
+      page: 1, total: bought ? 0 : 1, camp_categories: ['furniture'],
+      wallet: bought ? nextWallet : camp.wallet, development_buy_all: true,
+    };
+  });
+  render(<ShopPage client={{ request }} session={session} onAppearance={vi.fn()} />);
+  fireEvent.click(screen.getByRole('tab', { name: '营地' }));
+  const action = await screen.findByRole('button', { name: '一键购买' });
+  expect(action.parentElement).toContainElement(screen.getByRole('button', { name: content.openAppearance }));
+  expect(action.parentElement?.previousElementSibling).toBe(screen.getByRole('tablist', { name: content.categoryGroupLabel }));
 
-beforeEach(() => {
-  vi.mocked(useAppearance).mockReturnValue({ snapshot: appearanceFixture(), loading: false, error: null, refresh: vi.fn(), publishSaved: vi.fn() });
+  fireEvent.click(action);
+  expect(action).toBeDisabled();
+  expect(screen.getByRole('button', { name: `${content.buy} ${first.name}` })).toBeDisabled();
+  fireEvent.click(action);
+  expect(request.mock.calls.filter(([path]) => path === '/shop/development/buy-all')).toEqual([
+    ['/shop/development/buy-all', { method: 'POST' }],
+  ]);
+  complete();
+
+  await screen.findByText(content.emptyCategoryProducts);
+  expect(screen.queryByRole('heading', { name: first.name })).not.toBeInTheDocument();
+  expect(screen.getByRole('tab', { name: '营地' })).toHaveAttribute('aria-selected', 'true');
+  expect(request.mock.calls.at(-1)?.[0]).toContain('group=camp&category=&page=1');
 });
 
-describe('商店页面读取与动作边界', () => {
-  it.each([
-    { diamond_price: 2, owned_count: 3, owned: true, repeatable: true },
-    { diamond_price: 0, owned_count: 0, owned: false, repeatable: true },
-    { diamond_price: 0, owned_count: undefined, owned: true, repeatable: false },
-  ])('商品卡片只展示名称、图片和图标旁的价格及已有数量：%j', async (ownership) => {
-    const item = { ...product, ...ownership, island_item_key: 'book' };
-    const request = vi.fn().mockImplementation(async (path: string) => {
-      if (path === '/camp') return camp;
-      if (path.startsWith('/products')) return { items: [item] };
-      throw new Error(`Unexpected path ${path}`);
-    });
-    render(<ShopPage client={{ request }} session={session} />);
-    await screen.findByRole('heading', { name: item.name });
-    const card = within(screen.getByRole('article'));
-    expect(card.getByRole('img', { name: content.coins }).parentElement).toHaveTextContent(String(item.coin_price));
-    expect(card.getByRole('img', { name: content.ownedCount }).parentElement).toHaveTextContent(
-      String(item.owned_count ?? (item.owned ? 1 : 0)),
-    );
-    if (item.diamond_price > 0) {
-      expect(card.getByRole('img', { name: content.diamonds }).parentElement).toHaveTextContent(String(item.diamond_price));
-    } else {
-      expect(card.queryByRole('img', { name: content.diamonds })).not.toBeInTheDocument();
+it('一键购买失败后保留商品并允许重试', async () => {
+  const failure = new Error('disconnected');
+  const buyAll = vi.fn().mockRejectedValueOnce(failure).mockResolvedValue(camp.wallet);
+  const request = vi.fn().mockImplementation(async (path: string) => {
+    if (path === '/shop/development/buy-all') return buyAll();
+    const bought = buyAll.mock.calls.length > 1;
+    return {
+      items: bought ? [] : [first],
+      page: 1, total: bought ? 0 : 1, camp_categories: [], wallet: camp.wallet,
+      development_buy_all: true,
+    };
+  });
+  render(<ShopPage client={{ request }} session={session} />);
+  fireEvent.click(await screen.findByRole('button', { name: content.buyAll }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(errorMessage(failure));
+  expect(screen.getByRole('heading', { name: first.name })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: content.buyAll }));
+  await screen.findByText(content.buyAllSuccess);
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+it('购买后当页置灰、补齐页边界，继续翻页不漏商品', async () => {
+  let bought = false;
+  const afterPurchase = { ...camp.wallet, coins: 90, diamonds: 18, version: 2 };
+  const request = vi.fn().mockImplementation(async (path: string) => {
+    if (path === '/purchases') {
+      bought = true;
+      return { purchase: { ...purchase, product_id: first.id, type_snapshot: 'island', island_item_key: first.island_item_key }, wallet: afterPurchase };
     }
-    expect(card.queryByText(item.description)).not.toBeInTheDocument();
-    expect(card.queryByText(content.types[item.type])).not.toBeInTheDocument();
-    expect(card.queryByText(content.repeatableHint)).not.toBeInTheDocument();
-    expect(card.queryByText(new RegExp(content.stock))).not.toBeInTheDocument();
-    const buy = card.getByRole('button', { name: `${content.buy} ${item.name}` });
-    expect(buy).toHaveAccessibleDescription(expect.stringContaining(`${content.coins} ${item.coin_price}`));
-    expect(within(buy).getByRole('img', { name: content.coins })).toBeInTheDocument();
-    expect(within(buy).queryByRole('img', { name: content.ownedCount })).not.toBeInTheDocument();
-    expect(buy).not.toHaveTextContent(content.buy);
-    expect(buy).not.toHaveTextContent(content.buyAnother);
-    if (item.diamond_price > 0) {
-      expect(within(buy).getByRole('img', { name: content.diamonds })).toBeInTheDocument();
-      expect(buy).toHaveAccessibleDescription(expect.stringContaining(`${content.diamonds} ${item.diamond_price}`));
-    } else {
-      expect(buy).not.toHaveAccessibleDescription(expect.stringContaining(content.diamonds));
+    const url = new URL(path, 'https://example.test');
+    if (url.pathname !== '/shop/products') throw new Error(path);
+    const page = Number(url.searchParams.get('page'));
+    const items = page === 2 ? [fourth] : bought ? [second, third] : [first, alias, second];
+    return { items, page, total: bought ? 25 : 27, camp_categories: ['scene', 'furniture'], wallet: bought ? afterPurchase : camp.wallet };
+  });
+  render(<ShopPage client={{ request }} session={session} />);
+  fireEvent.click(screen.getByRole('tab', { name: '营地' }));
+  fireEvent.click(await screen.findByRole('button', { name: `${content.buy} ${first.name}` }));
+  fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
+
+  await screen.findByText(content.islandPurchased);
+  expect(screen.getByRole('button', { name: `${content.buy} ${first.name}` })).toBeDisabled();
+  expect(screen.getByRole('button', { name: `${content.buy} ${alias.name}` })).toBeDisabled();
+  await screen.findByRole('heading', { name: third.name });
+  expect(screen.getAllByRole('article')[0]).toHaveTextContent(first.name);
+  expect(screen.getAllByRole('article')[1]).toHaveTextContent(alias.name);
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: pagination.next }));
+  await screen.findByRole('heading', { name: fourth.name });
+  expect(screen.queryByRole('heading', { name: first.name })).not.toBeInTheDocument();
+  expect(request.mock.calls.filter(([path]) => path === '/purchases')).toHaveLength(1);
+});
+
+it.each([
+  { changes: { stock: 0 }, reason: content.soldOut },
+  { changes: { coin_price: camp.wallet.coins + 1 }, reason: content.insufficient },
+])('不可购买的价格按钮保留原因：$reason', async ({ changes, reason }) => {
+  const item = { ...first, ...changes };
+  const request = vi.fn().mockResolvedValue({ items: [item], page: 1, total: 1, camp_categories: [], wallet: camp.wallet });
+  render(<ShopPage client={{ request }} session={session} />);
+  const buy = await screen.findByRole('button', { name: `${content.buy} ${item.name}` });
+  expect(buy).toBeDisabled();
+  expect(buy).toHaveAccessibleDescription(expect.stringContaining(reason));
+  expect(within(buy).getByRole('img', { name: content.coins })).toBeInTheDocument();
+  expect(buy).not.toHaveTextContent(reason);
+});
+
+it('切换分类后丢弃较早的迟到响应', async () => {
+  let resolveAppearance: (response: unknown) => void = () => {};
+  const request = vi.fn().mockImplementation(async (path: string) => {
+    if (path.includes('group=appearance')) return new Promise((resolve) => { resolveAppearance = resolve; });
+    return { items: [first], page: 1, total: 1, camp_categories: ['furniture'], wallet: camp.wallet };
+  });
+  render(<ShopPage client={{ request }} session={session} />);
+  fireEvent.click(screen.getByRole('tab', { name: '营地' }));
+  await screen.findByRole('heading', { name: first.name });
+  resolveAppearance({ items: [second], page: 1, total: 1, camp_categories: [], wallet: camp.wallet });
+  await waitFor(() => expect(screen.getByRole('tab', { name: '营地' })).toHaveAttribute('aria-selected', 'true'));
+  expect(screen.getByRole('heading', { name: first.name })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: second.name })).not.toBeInTheDocument();
+});
+
+it('末页售完仍显示成交卡片，可以返回仍有商品的上一页', async () => {
+  let bought = false;
+  const request = vi.fn().mockImplementation(async (path: string) => {
+    if (path === '/purchases') {
+      bought = true;
+      return { purchase: { ...purchase, product_id: second.id, type_snapshot: 'island' }, wallet: camp.wallet };
     }
-    if (item.owned && !item.repeatable) expect(buy).toBeDisabled();
-    else expect(buy).toBeEnabled();
+    const requestedPage = Number(new URL(path, 'https://example.test').searchParams.get('page'));
+    const page = bought ? 1 : requestedPage;
+    return { items: page === 2 ? [second] : [first], page, total: bought ? 24 : 25, camp_categories: [], wallet: camp.wallet };
   });
-
-  it.each([
-    { changes: { owned: true }, reason: content.owned },
-    { changes: { stock: 0 }, reason: content.soldOut },
-    { changes: { coin_price: camp.wallet.coins + 1 }, reason: content.insufficient },
-  ])('价格按钮保留不可购买的原因：$reason', async ({ changes, reason }) => {
-    const request = vi.fn().mockImplementation(async (path: string) =>
-      path === '/camp' ? camp : { items: [{ ...product, ...changes }] },
-    );
-    render(<ShopPage client={{ request }} session={session} />);
-    const buy = await screen.findByRole('button', { name: `${content.buy} ${product.name}` });
-    expect(buy).toBeDisabled();
-    expect(buy).toHaveAccessibleDescription(expect.stringContaining(reason));
-    expect(within(buy).getByRole('img', { name: content.coins })).toBeInTheDocument();
-    expect(buy).not.toHaveTextContent(reason);
-  });
-
-  it('购买后保留两级分类；读取失败只重读，不重复购买或自动装备', async () => {
-    const garment = { ...product, type: 'wearable' as const, wearable_key: 'upper-owned', name: '远足上装' };
-    const ownedGarment = { ...purchase, type_snapshot: 'wearable' as const, wearable_key: 'upper-owned' };
-    const feedback = vi.fn();
-    window.addEventListener(FEEDBACK_EVENT, feedback);
-    let purchased = false;
-    let failedRead = false;
-    const request = vi.fn().mockImplementation(async (path: string) => {
-      if (path === '/purchases') {
-        purchased = true;
-        return { purchase: ownedGarment, wallet: camp.wallet };
-      }
-      if (path === '/camp') {
-        if (purchased && !failedRead) {
-          failedRead = true;
-          throw new TypeError('read offline');
-        }
-        return camp;
-      }
-      if (path.startsWith('/products')) return { items: [{ ...garment, owned: purchased, owned_count: purchased ? 1 : 0 }] };
-      throw new Error(`Unexpected path ${path}`);
-    });
-    render(<ShopPage client={{ request }} session={session} />);
-    await screen.findByRole('button', { name: `${content.buy} ${garment.name}` });
-    fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
-    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.upper }));
-    await screen.findByRole('button', { name: `${content.buy} ${garment.name}` });
-    fireEvent.click(screen.getByRole('button', { name: `${content.buy} ${garment.name}` }));
-    fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
-    await screen.findByText(content.purchaseSuccess);
-    fireEvent.click(await screen.findByRole('button', { name: content.reload }));
-    await waitFor(() => expect(screen.getByRole('button', { name: `${content.buy} ${garment.name}` })).toBeDisabled());
-    expect(screen.getByRole('tab', { name: '角色装扮' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: content.wearableSlots.upper })).toHaveAttribute('aria-selected', 'true');
-    expect(within(screen.getByRole('article')).getByRole('img', { name: content.ownedCount }).parentElement).toHaveTextContent('1');
-    expect(request.mock.calls.filter(([path]) => path === '/purchases')).toHaveLength(1);
-    expect(feedback).toHaveBeenCalledTimes(1);
-    expect(feedback.mock.calls[0]?.[0].detail).toBe('purchase');
-    expect(screen.getByRole('status')).toHaveClass('feedback-success');
-    window.removeEventListener(FEEDBACK_EVENT, feedback);
-    expect(request.mock.calls.some(([path]) => String(path).startsWith('/equipment'))).toBe(false);
-  });
-
-  it.each([
-    { type: 'reward' as const, group: '奖励', message: content.rewardPurchased, island_item_key: undefined },
-    { type: 'island' as const, group: '营地物品', message: content.islandPurchased, island_item_key: 'book' },
-  ])('$group 购买后仍在当前商店分类', async ({ type, group, message, island_item_key }) => {
-    let purchased = false;
-    const item = { ...product, type, island_item_key, repeatable: true };
-    const request = vi.fn().mockImplementation(async (path: string) => {
-      if (path === '/camp') return camp;
-      if (path.startsWith('/products')) return { items: [{ ...item, owned_count: purchased ? 1 : 0 }] };
-      if (path === '/purchases') {
-        purchased = true;
-        return { purchase: { ...purchase, type_snapshot: type, island_item_key }, wallet: camp.wallet };
-      }
-      throw new Error(`Unexpected path ${path}`);
-    });
-    render(<ShopPage client={{ request }} session={session} />);
-    await screen.findByRole('heading', { name: item.name });
-    fireEvent.click(screen.getByRole('tab', { name: group }));
-    await screen.findByRole('button', { name: `${content.buy} ${item.name}` });
-    fireEvent.click(screen.getByRole('button', { name: `${content.buy} ${item.name}` }));
-    fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
-    await screen.findByText(message);
-    await waitFor(() => expect(within(screen.getByRole('article')).getByRole('img', { name: content.ownedCount }).parentElement).toHaveTextContent('1'));
-    expect(screen.getByRole('tab', { name: group })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(request.mock.calls.some(([path]) => String(path).startsWith('/purchases?'))).toBe(false);
-  });
-
-  it('商店按服装定义分类，营地物品不混入角色装扮', async () => {
-    const head = { ...product, id: 'head', name: '短发', type: 'wearable' as const, wearable_key: 'head-owned' };
-    const island = { ...product, id: 'island', type: 'island' as const, name: '营地树木', island_item_key: 'star' };
-    const reward = { ...product, id: 'reward', name: '家庭奖励', type: 'reward' as const };
-    const request = vi.fn().mockImplementation(async (path: string) => path === '/camp' ? camp : { items: [head, island, reward] });
-    render(<ShopPage client={{ request }} session={session} />);
-    await screen.findByRole('heading', { name: head.name });
-    fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
-    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.head }));
-    expect(await screen.findByRole('heading', { name: head.name })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: island.name })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: '营地物品' }));
-    expect(await screen.findByRole('heading', { name: island.name })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: head.name })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: '角色装扮' }));
-    expect(within(screen.getByRole('tablist', { name: '装扮分类' })).getByRole('tab', { name: content.allTypes })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.queryByRole('heading', { name: island.name })).not.toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: head.name })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: reward.name })).not.toBeInTheDocument();
-  });
-
-  it('服装目录加载与失败单独反馈，恢复后沿用已选分类显示商品', async () => {
-    const garment = { ...product, type: 'wearable' as const, wearable_key: 'head-owned' };
-    const refresh = vi.fn();
-    const unavailable = { snapshot: null, loading: true, error: null, refresh, publishSaved: vi.fn() };
-    vi.mocked(useAppearance).mockReturnValue(unavailable);
-    const request = vi.fn().mockImplementation(async (path: string) => path === '/camp' ? camp : { items: [garment] });
-    const props = { client: { request }, session };
-    const view = render(<ShopPage {...props} />);
-    await screen.findByRole('heading', { name: garment.name });
-    fireEvent.click(screen.getByRole('tab', { name: content.categoryGroups.appearance }));
-    fireEvent.click(screen.getByRole('tab', { name: content.wearableSlots.head }));
-    expect(screen.getByRole('status')).toHaveTextContent(content.loading);
-    expect(screen.queryByText(content.emptyCategoryProducts)).not.toBeInTheDocument();
-    vi.mocked(useAppearance).mockReturnValue({ ...unavailable, loading: false, error: new TypeError('offline') });
-    view.rerender(<ShopPage {...props} />);
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.queryByText(content.emptyCategoryProducts)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: content.reload }));
-    expect(refresh).toHaveBeenCalledOnce();
-    vi.mocked(useAppearance).mockReturnValue({ ...unavailable, snapshot: appearanceFixture(), loading: false });
-    view.rerender(<ShopPage {...props} />);
-    expect(await screen.findByRole('heading', { name: garment.name })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: content.wearableSlots.head })).toHaveAttribute('aria-selected', 'true');
-    expect(request.mock.calls.filter(([path]) => path === '/camp')).toHaveLength(1);
-  });
-
+  render(<ShopPage client={{ request }} session={session} />);
+  fireEvent.click(await screen.findByRole('button', { name: pagination.next }));
+  fireEvent.click(await screen.findByRole('button', { name: `${content.buy} ${second.name}` }));
+  fireEvent.click(screen.getByRole('button', { name: content.confirmPurchase }));
+  await screen.findByText(content.islandPurchased);
+  const previous = screen.getByRole('button', { name: pagination.previous });
+  await waitFor(() => expect(previous).toBeEnabled());
+  expect(screen.getByRole('button', { name: `${content.buy} ${second.name}` })).toBeDisabled();
+  expect(screen.queryByRole('heading', { name: first.name })).not.toBeInTheDocument();
+  fireEvent.click(previous);
+  await screen.findByRole('heading', { name: first.name });
+  expect(screen.queryByRole('navigation', { name: pagination.label })).not.toBeInTheDocument();
 });

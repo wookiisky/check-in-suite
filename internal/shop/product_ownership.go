@@ -16,7 +16,23 @@ type ownershipIdentity struct {
 	Product   string // Quote identity, empty for aggregate stable identities.
 	Item      string // Stable island item identity.
 	Character string // Stable character identity.
+	Wearable  string // Stable wearable identity.
 	Scene     string // Stable scene identity.
+}
+
+// stableOwnershipIdentity groups different offers for the same owned item.
+func stableOwnershipIdentity(item Product, matchWearables bool) ownershipIdentity {
+	switch item.Type {
+	case TypeScene:
+		return ownershipIdentity{Scene: item.SceneKey}
+	case TypeCharacter:
+		return ownershipIdentity{Character: item.CharacterKey}
+	case TypeWearable:
+		if matchWearables {
+			return ownershipIdentity{Wearable: item.WearableKey}
+		}
+	}
+	return ownershipIdentity{Item: item.IslandItemKey}
 }
 
 // addOwnership combines disjoint order groups while retaining permanent ownership.
@@ -25,16 +41,16 @@ func addOwnership(first, second ownershipCount) ownershipCount {
 }
 
 // applyProductOwnership resolves all visible quotes with one grouped order query.
-func applyProductOwnership(ctx context.Context, tx *sql.Tx, accountID int64, items []Product) error {
+func applyProductOwnership(ctx context.Context, tx *sql.Tx, accountID int64, items []Product, matchWearables bool) error {
 	counts := map[ownershipIdentity]ownershipCount{}
-	rows, err := tx.QueryContext(ctx, `SELECT product_id,item_key_snapshot,character_key_snapshot,scene_key_snapshot,type_snapshot,status,count(*) FROM purchases WHERE account_id=? GROUP BY product_id,item_key_snapshot,character_key_snapshot,scene_key_snapshot,type_snapshot,status`, accountID)
+	rows, err := tx.QueryContext(ctx, `SELECT product_id,item_key_snapshot,character_key_snapshot,wearable_key_snapshot,scene_key_snapshot,type_snapshot,status,count(*) FROM purchases WHERE account_id=? GROUP BY product_id,item_key_snapshot,character_key_snapshot,wearable_key_snapshot,scene_key_snapshot,type_snapshot,status`, accountID)
 	if err != nil {
 		return err
 	}
 	for rows.Next() {
-		var product, item, body, scene, kind, status string
+		var product, item, body, wearable, scene, kind, status string
 		var count int64
-		if err := rows.Scan(&product, &item, &body, &scene, &kind, &status, &count); err != nil {
+		if err := rows.Scan(&product, &item, &body, &wearable, &scene, &kind, &status, &count); err != nil {
 			rows.Close()
 			return err
 		}
@@ -48,6 +64,9 @@ func applyProductOwnership(ctx context.Context, tx *sql.Tx, accountID int64, ite
 		}
 		if body != "" {
 			keys = append(keys, ownershipIdentity{Character: body}, ownershipIdentity{Product: product, Character: body})
+		}
+		if matchWearables && wearable != "" {
+			keys = append(keys, ownershipIdentity{Wearable: wearable}, ownershipIdentity{Product: product, Wearable: wearable})
 		}
 		if scene != "" {
 			keys = append(keys, ownershipIdentity{Scene: scene}, ownershipIdentity{Product: product, Scene: scene})
@@ -64,19 +83,11 @@ func applyProductOwnership(ctx context.Context, tx *sql.Tx, accountID int64, ite
 	for index := range items {
 		item := &items[index]
 		value := counts[ownershipIdentity{Product: item.ID}]
-		var stable, intersection ownershipIdentity
-		if item.Type == TypeScene {
-			stable.Scene = item.SceneKey
-			intersection = ownershipIdentity{Product: item.ID, Scene: item.SceneKey}
-		} else if item.Type == TypeCharacter {
-			stable.Character = item.CharacterKey
-			intersection = ownershipIdentity{Product: item.ID, Character: item.CharacterKey}
-		} else if item.IslandItemKey != "" {
-			stable.Item = item.IslandItemKey
-			intersection = ownershipIdentity{Product: item.ID, Item: item.IslandItemKey}
-		}
-		if stable.Item != "" || stable.Character != "" || stable.Scene != "" {
+		stable := stableOwnershipIdentity(*item, matchWearables)
+		if stable != (ownershipIdentity{}) {
 			other := counts[stable]
+			intersection := stable
+			intersection.Product = item.ID
 			value.Count += other.Count - counts[intersection].Count
 			value.Owned = value.Owned || other.Owned
 		}

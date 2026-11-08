@@ -19,6 +19,7 @@
 .checkin-record-attachments { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 12px; vertical-align: middle; }
 .checkin-attachment-icon { width: 28px; height: 28px; display: inline-block; vertical-align: middle; }
 .checkin-record strong { display: block; }
+.checkin-record-text { display: block; white-space: pre-wrap; font-weight: 400; }
 .checkin-empty { padding: 24px 0; color: var(--muted); }
 .checkin-hint { color: var(--muted); font-size: 22px; }
 .management-workspace .checkin-hint { font-size: 18px; }
@@ -78,30 +79,11 @@
   .checkin-reward-particles, .checkin-reward-featured::after { display: none; }
 }
 
-/* DOM顺序固定为记录、任务、侧栏，切换视图不会卸载留言草稿。 */
-.checkin-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
-.checkin-day-layout { grid-template-rows: min-content 1fr; }
+/* 手机按文档顺序显示记录、任务、侧栏。 */
+.checkin-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); grid-template-rows: min-content 1fr; gap: 24px; align-items: start; }
 .checkin-records-panel, .checkin-tasks-panel { grid-column: 1; }
 .checkin-sidebar { grid-column: 2; grid-row: 1 / span 2; display: grid; gap: 24px; min-width: 0; }
-.checkin-week-layout .checkin-records-panel { grid-column: 1 / -1; }
-.checkin-week-layout .checkin-tasks-panel { grid-row: 2; }
-.checkin-week-layout .checkin-sidebar { grid-row: 2; }
-.checkin-date-heading { margin-bottom: 16px; }
-.checkin-week-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-top: 22px; }
-.checkin-week-day { min-width: 0; border: 1px solid var(--line); border-radius: 16px; padding: 10px; }
-.checkin-week-day h3 { font-size: 22px; margin: 0; }
-.checkin-week-day time { display: block; font-size: 22px; font-weight: 400; overflow-wrap: anywhere; }
-.checkin-week-day.is-today { border: 2px solid var(--forest); background: #f0f5e5; }
-.checkin-today-label { font-size: 22px; color: var(--forest-dark); font-weight: 700; }
-.checkin-week-grid .checkin-record { flex-direction: column; align-items: flex-start; padding: 10px; }
-.checkin-week-grid .checkin-empty { font-size: 22px; }
-@media (max-width: 900px) {
-  .checkin-week-grid { grid-template-columns: 1fr; }
-  .checkin-week-grid .checkin-record { flex-direction: row; align-items: center; padding: 14px; }
-  .checkin-week-day { padding: 16px; }
-}
 @media (max-width: 700px) {
   .checkin-layout { grid-template-columns: 1fr; grid-template-rows: none; }
-  .checkin-records-panel, .checkin-tasks-panel, .checkin-sidebar,
-  .checkin-week-layout .checkin-records-panel, .checkin-week-layout .checkin-tasks-panel, .checkin-week-layout .checkin-sidebar { grid-column: 1; grid-row: auto; }
+  .checkin-records-panel, .checkin-tasks-panel, .checkin-sidebar { grid-column: 1; grid-row: auto; }
 }

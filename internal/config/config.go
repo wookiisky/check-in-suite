@@ -17,6 +17,7 @@ import (
 
 // Config contains explicit startup settings; file paths are relative to the working directory.
 type Config struct {
+	Development          bool           `yaml:"-"`                      // Development-only tools require APP_ENV=development.
 	PublicOrigin         string         `yaml:"public_origin"`          // Deprecated: accepted from old files but ignored; requests determine the site origin.
 	StaticDirectory      string         `yaml:"static_directory"`       // Built SPA files, never private data.
 	AssetsDirectory      string         `yaml:"assets_directory"`       // Persistent versioned artwork directory.
@@ -45,6 +46,7 @@ func Load(path string) (Config, error) {
 	}
 	defer file.Close()
 	cfg := Defaults()
+	cfg.Development = os.Getenv("APP_ENV") == "development"
 	decoder := yaml.NewDecoder(file)
 	decoder.KnownFields(true)
 	if err := decoder.Decode(&cfg); err != nil {

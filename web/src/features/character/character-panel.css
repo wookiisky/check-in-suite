@@ -1,7 +1,15 @@
 .character-panel { min-width: 0; text-align: center; }
-.character-panel h3 { margin: 0 0 12px; overflow-wrap: anywhere; }
-.character-panel-title { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 0 0 12px; overflow-wrap: anywhere; }
-.character-panel-title img { flex: 0 0 56px; width: 56px; height: 56px; object-fit: contain; }
-.character-panel-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
-.character-panel-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; }
-.character-panel-actions button img { width: 36px; height: 36px; object-fit: contain; }
+.character-panel-heading { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 12px; margin-bottom: 12px; }
+.character-panel h3 { margin: 0; overflow-wrap: anywhere; }
+.character-panel-title {
+  font-family: "Kaiti SC", STKaiti, KaiTi, "楷体", serif;
+  font-weight: 700;
+  font-synthesis: weight;
+  overflow-wrap: anywhere;
+}
+.character-achievements { display: grid; place-items: center; min-width: 56px; padding: 8px; }
+.character-achievements img { width: 32px; height: 32px; object-fit: contain; }
+.character-panel-preview { position: relative; }
+.character-panel-badge-toggle { display: flex; justify-content: flex-end; }
+.character-panel-preview .character3d-preview + .character-panel-badge-toggle { position: absolute; right: 12px; bottom: 12px; }
+.character-panel-preview:has(.character-panel-badge-toggle) .character3d-notice { right: 80px; }

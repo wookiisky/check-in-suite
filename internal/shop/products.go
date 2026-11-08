@@ -50,14 +50,14 @@ func scanProduct(row rowScanner) (Product, error) {
 }
 
 // readProduct keeps deleted source rows available only for successful creation replay.
-func readProduct(ctx context.Context, tx *sql.Tx, accountID int64, id string, includeDeleted bool) (Product, error) {
+func readProduct(ctx context.Context, tx *sql.Tx, accountID int64, id string, includeDeleted, matchWearables bool) (Product, error) {
 	p, err := scanProduct(tx.QueryRowContext(ctx, "SELECT "+productColumns+" FROM products p WHERE p.account_id=? AND p.id=?", accountID, id))
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && p.Deleted && !includeDeleted) {
 		return Product{}, core.Fail(404, "NOT_FOUND")
 	}
 	if err == nil {
 		items := []Product{p}
-		err = applyProductOwnership(ctx, tx, accountID, items)
+		err = applyProductOwnership(ctx, tx, accountID, items, matchWearables)
 		p = items[0]
 	}
 	return p, err
@@ -161,7 +161,7 @@ func (s *Service) ListProducts(ctx context.Context, p account.Principal, include
 	if err != nil {
 		return result, err
 	}
-	if err = applyProductOwnership(ctx, tx, accountID, result.Items); err != nil {
+	if err = applyProductOwnership(ctx, tx, accountID, result.Items, false); err != nil {
 		return result, err
 	}
 	return result, tx.Commit()
@@ -189,7 +189,7 @@ func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key st
 		return Product{}, err
 	}
 	if saved != nil {
-		item, err := readProduct(ctx, tx, accountID, saved.ResourceID, true)
+		item, err := readProduct(ctx, tx, accountID, saved.ResourceID, true, false)
 		if err != nil {
 			return Product{}, err
 		}
@@ -203,7 +203,7 @@ func (s *Service) CreateProduct(ctx context.Context, p account.Principal, key st
 	if err != nil {
 		return Product{}, err
 	}
-	item, err := readProduct(ctx, tx, accountID, id, false)
+	item, err := readProduct(ctx, tx, accountID, id, false, false)
 	if err != nil {
 		return Product{}, err
 	}
@@ -226,7 +226,7 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 	if err = account.Authorize(ctx, tx, p, true, now); err != nil {
 		return Product{}, err
 	}
-	current, err := readProduct(ctx, tx, accountID, id, false)
+	current, err := readProduct(ctx, tx, accountID, id, false, false)
 	if err != nil {
 		return Product{}, err
 	}
@@ -269,7 +269,7 @@ func (s *Service) UpdateProduct(ctx context.Context, p account.Principal, id str
 	if err != nil {
 		return Product{}, err
 	}
-	item, err := readProduct(ctx, tx, accountID, id, false)
+	item, err := readProduct(ctx, tx, accountID, id, false, false)
 	if err != nil {
 		return Product{}, err
 	}
@@ -288,7 +288,7 @@ func (s *Service) DeleteProduct(ctx context.Context, p account.Principal, id str
 	if err = account.Authorize(ctx, tx, p, true, now); err != nil {
 		return err
 	}
-	current, err := readProduct(ctx, tx, accountID, id, true)
+	current, err := readProduct(ctx, tx, accountID, id, true, false)
 	if err != nil {
 		return err
 	}

@@ -109,6 +109,61 @@ func TestAchievementEquipmentCannotSurviveConcurrentRevocation(t *testing.T) {
 	}
 }
 
+// TestAchievementTitleCannotSurviveConcurrentRevocation checks writer ordering and account isolation.
+func TestAchievementTitleCannotSurviveConcurrentRevocation(t *testing.T) {
+	f := setup(t)
+	ctx := context.Background()
+	s := achievementService(f)
+	otherAccount := addAccount(t, f, "second")
+	task := createTask(t, f, 1)
+	record := achievementRecord(t, f, task, "record", "2026-10-29")
+	input := achievementInput()
+	input.Target = 1
+	badge, err := s.Create(ctx, f.p, "badge", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = s.SetTitle(ctx, otherAccount, &badge.ID)
+	code(t, err, "NOT_FOUND")
+	if _, err = s.SetTitle(ctx, f.p, &badge.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	otherDB, err := storage.Open(ctx, f.path, time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer otherDB.Close()
+	other := achievement.New(otherDB, account.New(otherDB, f.s.Config), f.s.Config)
+	other.Now = f.s.Now
+	gate, err := f.s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ready sync.WaitGroup
+	ready.Add(2)
+	start := make(chan struct{})
+	deleted := make(chan error, 1)
+	selected := make(chan error, 1)
+	go func() { ready.Done(); <-start; _, err := f.s.Delete(ctx, f.p, false, record.ID, 1); deleted <- err }()
+	go func() { ready.Done(); <-start; _, err := other.SetTitle(ctx, f.p, &badge.ID); selected <- err }()
+	ready.Wait()
+	close(start)
+	if err = gate.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	if err = <-deleted; err != nil {
+		t.Fatal(err)
+	}
+	if err = <-selected; err != nil {
+		code(t, err, "ACHIEVEMENT_NOT_EARNED")
+	}
+	var cleared bool
+	if err = f.s.DB.QueryRowContext(ctx, "SELECT achievement_title_id IS NULL FROM accounts WHERE id=?", f.p.AccountID).Scan(&cleared); err != nil || !cleared {
+		t.Fatalf("revoked title persisted: cleared=%v err=%v", cleared, err)
+	}
+}
+
 // TestAchievementDeletionFailureKeepsRecordWalletAndEquipment prevents partial revocation.
 func TestAchievementDeletionFailureKeepsRecordWalletAndEquipment(t *testing.T) {
 	f := setup(t)

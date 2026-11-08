@@ -30,9 +30,8 @@ export function GroupBrowse({ client, session, children }: { client: GroupClient
     <div className="group-browse">
       {state?.current_group ? <><strong>{state.current_group.name}</strong><label>{content.memberLabel}<select value={selected} onChange={(event) => { setSelected(Number(event.target.value)); setAccessChanged(false); }}>
         <option value={session.account.id}>{content.myself}</option>{state.members.filter((member) => member.id !== session.account.id).map((member) => <option key={member.id} value={member.id}>{member.display_name}</option>)}
-      </select></label></> : state && <p>{content.noGroup}</p>}
+      </select></label></> : null}
       <FormFeedback error={error} />{error !== null && <button className="secondary" onClick={() => setAttempt((value) => value + 1)}>{content.retry}</button>}
-      {selected !== session.account.id && <p>{content.readOnly}</p>}
       {accessChanged && <p role="status">{content.accessChanged}</p>}
     </div>
     <div key={selected}>{children(selected, accessDenied)}</div>

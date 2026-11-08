@@ -92,6 +92,28 @@ func (app *App) RegisterAchievements(service *achievement.Service) {
 		}
 		WriteJSON(w, http.StatusNoContent, nil)
 	})
+	app.Mux.HandleFunc("PUT /api/v1/achievements/title", func(w http.ResponseWriter, r *http.Request) {
+		principal, err := app.authenticatedWrite(r)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		var input struct {
+			AchievementID *string `json:"achievement_id"` // Null clears the current title.
+		}
+		if err := decodeRequiredJSON(w, r, &input, []string{"achievement_id"}, "achievement_id"); err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		title, err := service.SetTitle(r.Context(), principal, input.AchievementID)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		WriteJSON(w, http.StatusOK, struct {
+			Title *achievement.Title `json:"title"` // Confirmed selection.
+		}{Title: title})
+	})
 	app.Mux.HandleFunc("PUT /api/v1/achievements/{id}/equipment", func(w http.ResponseWriter, r *http.Request) {
 		principal, err := app.authenticatedWrite(r)
 		if err != nil {

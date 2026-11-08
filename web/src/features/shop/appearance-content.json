@@ -1,7 +1,10 @@
 {
   "title": "我的三维形象",
+  "pageTitle": "装扮",
+  "categoryLabel": "装扮分类",
+  "allCategories": "全部",
+  "emptyCategory": "暂无可用装扮",
   "characterTitle": "身体",
-  "sharedClothingHint": "人形和骷髅分别提供基础身体，形象、头部、服装和背部可以独立搭配。头部一次只能选择发型、帽子或中箭中的一件。",
   "loading": "正在读取已保存外观…",
   "readRetry": "重新读取外观",
   "save": "保存外观",

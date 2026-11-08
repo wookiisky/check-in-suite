@@ -15,7 +15,7 @@
     "test": "npm run test:go && npm run test:web && npm run test:assets && npm run test:asset-tools && npm run test:deploy && npm run test:spec",
     "check": "npm run check:spec && npm run check:go && npm run typecheck",
     "dev": "concurrently --kill-others --success first --names api,web \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": "go run ./cmd/island serve -config config/app.example.yaml",
+    "dev:api": "APP_ENV=development go run ./cmd/island serve -config config/app.example.yaml",
     "dev:web": "npm run dev --workspace @island/web --",
     "db:migrate": "go run ./cmd/island migrate -config config/app.example.yaml",
     "api:generate": "openapi-typescript api/openapi.yaml -o web/src/api/schema.d.ts",

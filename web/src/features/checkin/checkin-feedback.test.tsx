@@ -39,8 +39,6 @@ describe('打卡奖励反馈', () => {
       expect(success).toHaveBeenCalledTimes(1);
       expect(success.mock.calls[0]![0].detail).toEqual({ recordId: confirmed.id, coins: 7, diamonds: 3 });
       walletVersion = 3;
-      fireEvent.click(screen.getByRole('button', { name: content.previousDay }));
-      await waitFor(() => expect(task).toBeEnabled());
       await waitFor(() => expect(task).toBeEnabled());
       fireEvent.click(task);
       fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: content.checkin }));
@@ -48,8 +46,8 @@ describe('打卡奖励反馈', () => {
       expect(success).toHaveBeenCalledTimes(1);
       expect(screen.queryByText('+7')).not.toBeInTheDocument();
       expect(view.container.querySelectorAll('.checkin-reward-particle')).toHaveLength(0);
-      fireEvent.click(screen.getByRole('button', { name: content.previousDay }));
-      await screen.findByText('2026-10-27');
+      await waitFor(() => expect(task).toBeEnabled());
+      expect(request.mock.calls.filter(([path]) => path === '/camp')).toHaveLength(3);
       expect(success).toHaveBeenCalledTimes(1);
     } finally { view.unmount(); window.removeEventListener(CHECKIN_SUCCESS_EVENT, success); }
   });

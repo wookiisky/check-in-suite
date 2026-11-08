@@ -58,6 +58,13 @@ type Achievement struct {
 // ListResult preserves a non-null list even for an empty new installation.
 type ListResult struct {
 	Items []Achievement `json:"items"` // Visible definitions and retained qualified badges.
+	Title *Title        `json:"title"` // Current selected achievement, or null.
+}
+
+// Title identifies the currently selected achievement and its current display text.
+type Title struct {
+	ID   string `json:"id"`   // Account-owned achievement identity.
+	Name string `json:"name"` // Name from the current achievement definition.
 }
 
 // CategoryOption retains deleted category identities for existing rule forms.

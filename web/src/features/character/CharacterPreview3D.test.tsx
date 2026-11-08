@@ -53,6 +53,22 @@ describe('装扮预览水平旋转', () => {
     expect(screen.getByTestId('character-test-model')).toHaveAttribute('data-paused', 'true');
   });
 
+  it('打卡页无旋转按钮，仍可拖动、使用方向键和回正', () => {
+    render(<CharacterPreview3D snapshot={appearanceFixture()} rotatable showRotationControls={false} />);
+    const preview = screen.getByRole('region', { name: '人物三维预览' });
+    expect(screen.queryByRole('button', { name: /向左旋转|向右旋转|恢复视角/ })).not.toBeInTheDocument();
+    preview.focus();
+    expect(preview).toHaveFocus();
+    fireEvent.keyDown(preview, { key: 'ArrowRight' });
+    expect(modelRotation()).toBeCloseTo(Math.PI / 4);
+    const stage = rotationStage();
+    fireEvent.pointerDown(stage, { pointerId: 1, clientX: 20, clientY: 50 });
+    fireEvent.pointerMove(stage, { pointerId: 1, clientX: 180, clientY: 50 });
+    expect(modelRotation()).not.toBeCloseTo(Math.PI / 4);
+    fireEvent.keyDown(preview, { key: 'Home' });
+    expect(modelRotation()).toBe(0);
+  });
+
   it.each(['mouse', 'touch'])('%s 横拖可跨边界继续旋转，松手后停止', (pointerType) => {
     render(<CharacterPreview3D snapshot={appearanceFixture()} rotatable />);
     const stage = rotationStage();

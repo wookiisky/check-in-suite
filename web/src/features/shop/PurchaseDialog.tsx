@@ -17,12 +17,14 @@ export function PurchaseDialog({
   wallet: initialWallet,
   onClose,
   onPurchased,
+  allowOwned = true,
 }: {
   client: ShopClient;
   product: Product;
   wallet: Wallet;
-  onClose: () => void;
-  onPurchased: (purchase: Purchase) => void;
+  onClose: (offerChanged: boolean) => void;
+  onPurchased: (purchase: Purchase, wallet: Wallet) => void;
+  allowOwned?: boolean;
 }) {
   const publishWallet = useWalletSync();
   const original = pendingPurchases.get(client);
@@ -35,6 +37,8 @@ export function PurchaseDialog({
   const [reviewed, setReviewed] = useState(false);
   const [available, setAvailable] = useState(true);
   const completed = useRef(false); // 已确认成交后不再提交或重播成功反馈。
+  const alreadyOwned = product.owned && (!allowOwned || !product.repeatable);
+  const purchasable = !alreadyOwned && canBuy(product, wallet);
   // 结果未知沿用原命令，只有第一次确认成交才发出反馈。
   async function submit() {
     if (busy || completed.current) return;
@@ -46,6 +50,7 @@ export function PurchaseDialog({
         product_id: product.id,
         expected_product_version: product.version,
         expected_wallet_version: wallet.version,
+        ...(!allowOwned && { require_unowned: true }),
       }),
     };
     pendingPurchases.set(client, command);
@@ -63,13 +68,15 @@ export function PurchaseDialog({
       setPending(null);
       completed.current = true;
       dispatchFeedback('purchase');
-      onPurchased(result.purchase);
+      onPurchased(result.purchase, result.wallet);
     } catch (reason) {
       setError(reason);
       if (!uncertainResult(reason)) {
         pendingPurchases.delete(client);
         setPending(null);
-        if (
+        if (reason instanceof ApiFailure && reason.detail.code === 'ALREADY_OWNED' && !allowOwned) {
+          setAvailable(false);
+        } else if (
           reason instanceof ApiFailure &&
           [
             'PRODUCT_CHANGED',
@@ -110,8 +117,12 @@ export function PurchaseDialog({
       setBusy(false);
     }
   }
+  // 明确过期的报价在关闭时从商店重读，普通取消保留当页。
+  function close() {
+    onClose(!available || needsRefresh || reviewed);
+  }
   return (
-    <Modal title={content.confirmPurchase} onClose={onClose} closeDisabled={busy}>
+    <Modal title={content.confirmPurchase} onClose={close} closeDisabled={busy}>
       <div className="shop-confirm-item">
         <img src={assetURL(product.asset_key)} alt="" />
         <h3>{product.name}</h3>
@@ -123,9 +134,9 @@ export function PurchaseDialog({
         coins={wallet.coins - product.coin_price}
         diamonds={wallet.diamonds - product.diamond_price}
       />
-      {!canBuy(product, wallet) && !pending && (
+      {!purchasable && !pending && (
         <p className="shop-hint">
-          {product.owned && !product.repeatable
+          {alreadyOwned
             ? content.owned
             : product.stock === 0
               ? content.soldOut
@@ -134,7 +145,7 @@ export function PurchaseDialog({
       )}
       {pending && !busy && <p className="shop-warning">{content.purchasePending}</p>}
       {reviewed && <p className="shop-warning">{content.reviewOffer}</p>}
-      {!available && <p role="alert">{content.purchaseClosed}</p>}
+      {!available && error === null && <p role="alert">{content.purchaseClosed}</p>}
       {error !== null && (
         <p className="shop-error" role="alert">
           {shopError(error)}
@@ -148,12 +159,12 @@ export function PurchaseDialog({
         )}
         <button
           type="button"
-          disabled={busy || completed.current || (!pending && (needsRefresh || !available || !canBuy(product, wallet)))}
+          disabled={busy || completed.current || (!pending && (needsRefresh || !available || !purchasable))}
           onClick={() => void submit()}
         >
           {busy ? content.purchasing : pending ? content.recoverPurchase : content.confirmPurchase}
         </button>
-        <button className="secondary" type="button" disabled={busy} onClick={onClose}>
+        <button className="secondary" type="button" disabled={busy} onClick={close}>
           {content.close}
         </button>
       </div>

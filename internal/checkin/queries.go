@@ -87,7 +87,17 @@ func (s *Service) Camp(ctx context.Context, p account.Principal, categoryID stri
 	if err != nil {
 		return out, err
 	}
-	out.Achievements, err = achievement.ReadEquipped(ctx, tx, p.AccountID)
+	out.EarnedAchievements, err = achievement.ReadEarned(ctx, tx, p.AccountID)
+	if err != nil {
+		return out, err
+	}
+	out.Achievements = []achievement.Achievement{}
+	for _, item := range out.EarnedAchievements {
+		if item.Equipped {
+			out.Achievements = append(out.Achievements, item)
+		}
+	}
+	out.AchievementTitle, err = achievement.ReadTitle(ctx, tx, p.AccountID)
 	if err != nil {
 		return out, err
 	}

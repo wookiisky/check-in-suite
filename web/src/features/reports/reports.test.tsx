@@ -1,8 +1,11 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { CalendarPage } from './CalendarPage';
 import { StatsPage } from './StatsPage';
+import { ReportsPage } from './ReportsPage';
+import { WeeklyRecords } from './WeeklyRecords';
 import { recordFixture } from '../checkin/test-fixtures';
+import checkinContent from '../checkin/content.json';
 import { testSession } from '../../test/account-fixtures';
 import type { Session } from '../../api/types';
 const session: Session = { ...testSession, timezone: 'Asia/Taipei' };
@@ -85,4 +88,53 @@ it('历史日期详情保留时间及附件线索，不展示奖励或普通编�
   expect(screen.getByRole('img', { name: '照片' })).toHaveAttribute('src', '/api/v1/media/photo');
   expect(screen.queryByRole('button', { name: '编辑内容' })).not.toBeInTheDocument();
   expect(screen.queryByText(/金币/)).not.toBeInTheDocument();
+});
+
+it('统计入口用月、周、统计标签切换，周记录直接显示文字并可分页打开详情', async () => {
+  const request = vi.fn().mockImplementation(async (path: string) => {
+    if (path.startsWith('/calendar')) return { month: '2026-10', days: [{ date: recordFixture.business_date, count: 4, icons: ['book-v1'], more_count: 3 }] };
+    if (path.startsWith('/stats')) return emptyStats;
+    if (path.includes('cursor=')) return { items: [{ ...recordFixture, id: 'next-record', business_date: '2026-10-30', text: '下一页文字' }], next_cursor: null };
+    return { items: [recordFixture], next_cursor: 'next-page' };
+  });
+  render(<ReportsPage client={{ request }} session={session} />);
+  const month = screen.getByRole('tab', { name: '月视图' });
+  expect(month).toHaveAttribute('aria-selected', 'true');
+  const day = await screen.findByRole('button', { name: /2026-10-29.*4 次打卡/ });
+  expect(day).toHaveTextContent(/^29$/);
+  expect(day.querySelector('img')).toHaveAttribute('src', '/api/v1/assets/book-v1');
+  expect(day.querySelector('svg')).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('tab', { name: '周视图' }));
+  const thursday = await screen.findByRole('region', { name: '周四 2026-10-29' });
+  expect(within(thursday).getByRole('button', { name: /阅读.*原始文字/ })).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: '周日 2026-11-01' })).toBeInTheDocument();
+  expect(request).toHaveBeenCalledWith('/checkins?start_date=2026-10-26&end_date=2026-11-01', expect.anything());
+  fireEvent.click(screen.getByRole('button', { name: '加载更多记录' }));
+  const next = await screen.findByRole('button', { name: /阅读.*下一页文字/ });
+  fireEvent.click(next);
+  expect(within(screen.getByRole('dialog')).getByText('下一页文字')).toBeInTheDocument();
+
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '关闭' }));
+  fireEvent.click(screen.getByRole('tab', { name: '统计' }));
+  expect(await screen.findByText('总打卡次数')).toBeInTheDocument();
+});
+
+it('周记录跨台北午夜刷新时保留已打开的编辑和草稿', async () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-10-29T15:59:59Z'));
+  const request = vi.fn().mockResolvedValue({ items: [recordFixture], next_cursor: null });
+  const view = render(<WeeklyRecords client={{ request, now: () => new Date() }} session={session} />);
+  try {
+    await act(async () => {});
+    fireEvent.click(screen.getByRole('button', { name: /阅读.*原始文字/ }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: checkinContent.edit }));
+    const draft = within(screen.getByRole('dialog')).getByLabelText(checkinContent.text);
+    fireEvent.change(draft, { target: { value: '跨日仍在编辑' } });
+
+    await act(async () => vi.advanceTimersByTime(1001));
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(within(screen.getByRole('dialog')).getByLabelText(checkinContent.text)).toBe(draft);
+    expect(draft).toHaveValue('跨日仍在编辑');
+  } finally { view.unmount(); vi.useRealTimers(); }
 });

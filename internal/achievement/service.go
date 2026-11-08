@@ -220,3 +220,33 @@ func (s *Service) SetEquipped(ctx context.Context, p account.Principal, id strin
 	item.Equipped = equipped
 	return item, tx.Commit()
 }
+
+// SetTitle replaces the single title after rechecking qualification in the write transaction.
+func (s *Service) SetTitle(ctx context.Context, p account.Principal, id *string) (*Title, error) {
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	if err = account.Authorize(ctx, tx, p, false, s.Now()); err != nil {
+		return nil, err
+	}
+	var title *Title
+	if id != nil {
+		if *id == "" {
+			return nil, core.Invalid("achievement_id", "REQUIRED")
+		}
+		item, err := readAchievement(ctx, tx, p.AccountID, *id)
+		if err != nil {
+			return nil, err
+		}
+		if !item.Qualified {
+			return nil, core.Fail(409, "ACHIEVEMENT_NOT_EARNED")
+		}
+		title = &Title{ID: item.ID, Name: item.Name}
+	}
+	if _, err := tx.ExecContext(ctx, "UPDATE accounts SET achievement_title_id=? WHERE id=?", id, p.AccountID); err != nil {
+		return nil, err
+	}
+	return title, tx.Commit()
+}

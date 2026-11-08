@@ -4,6 +4,8 @@ import { ApiFailure, errorMessage } from '../../api/client';
 import type { Session } from '../../api/types';
 import { Modal } from '../../components/Modal';
 import { CurrencyAmount } from '../../components/CurrencyAmount';
+import { MainNavigation } from '../../components/MainNavigation';
+import type { PrimaryPage } from '../../components/MainNavigation';
 import { useGraphicsMotion } from '../../graphics/useGraphicsMotion';
 import type { CharacterLoadStatus } from '../character/character3d-appearance';
 import { useAppearance } from '../character/AppearanceProvider';
@@ -35,12 +37,13 @@ export interface IslandPage3DProps {
   onShop?:(group?:'scene')=>void; // 场景购买入口可直接打开商店的场景分类。
   onCamp?:()=>void; // 进入已有打卡页面。
   onSettings?:()=>void; // 打开共享设置。
+  onNavigate?: (page: PrimaryPage) => void; // 通过同一离开流程前往标题栏页面。
 }
-type Destination='back'|'shop'|'camp'|{sceneKey:string}|{shopGroup:'scene'};
+type Destination='back'|'shop'|'camp'|{sceneKey:string}|{shopGroup:'scene'}|{page:PrimaryPage};
 const defaultSceneKey='seaside-v1';
 
 // 页面只保存业务状态，人物和镜头的逐帧变化留在Canvas内部。
-export function IslandPage3D({client,session,initialSceneKey,onBack,onShop,onCamp,onSettings}:IslandPage3DProps){
+export function IslandPage3D({client,session,initialSceneKey,onBack,onShop,onCamp,onSettings,onNavigate}:IslandPage3DProps){
   const [sceneKey,setSceneKey]=useState(defaultSceneKey),[scenes,setScenes]=useState<SpatialSceneChoice[]>([]);
   const [scenePickerOpen,setScenePickerOpen]=useState(false),[scenesLoading,setScenesLoading]=useState(true),[scenesError,setScenesError]=useState<unknown>(null),[scenesAttempt,setScenesAttempt]=useState(0);
   const layout=useSpatialLayout(client,sceneKey),appearance=useAppearance(),access=useIslandActivityAccess(client);
@@ -143,6 +146,7 @@ export function IslandPage3D({client,session,initialSceneKey,onBack,onShop,onCam
   function navigate(destination:Destination){
     if(typeof destination==='string'){(destination==='back'?onBack:destination==='shop'?onShop:onCamp)?.();return;}
     if('shopGroup' in destination){onShop?.(destination.shopGroup);return;}
+    if ('page' in destination) { onNavigate?.(destination.page); return; }
     setSceneKey(destination.sceneKey);setSelected(null);setSpace('outdoor');setManualIndoor(false);setIntent(undefined);setActor({phase:'idle',activity:'rest',space:'outdoor'});setMessage('');setModelError(false);setLocked(null);
     lastActorSpace.current='outdoor';outsideCamera.current=null;
     camera.current={x:0,z:0,zoom:window.innerWidth<=760?2.6:2.2,direction};
@@ -238,6 +242,7 @@ export function IslandPage3D({client,session,initialSceneKey,onBack,onShop,onCam
       <button className="secondary spatial-back" aria-label={content.back} title={content.back} disabled={layout.saving} onClick={()=>leave('back')}><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
       <div className="spatial-heading"><h1>{scenes.find(item=>item.scene_key===sceneKey)?.name??content.title}</h1><button className="secondary spatial-scene-choice" disabled={layout.saving} onClick={()=>setScenePickerOpen(true)}>{sceneContent.open}</button></div>
       <button className="secondary spatial-camera-toggle" aria-label={cameraOpen?content.hideCamera:content.showCamera} aria-expanded={cameraOpen} aria-controls="spatial-camera-controls" onClick={()=>{setCameraOpen(value=>!value);if(!cameraOpen&&editing&&window.innerWidth<=760)setPanelOpen(false);}}><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M12 1v6m0 10v6M1 12h6m10 0h6" fill="none" stroke="currentColor" strokeWidth="1.8"/></svg></button>
+      {onNavigate && <MainNavigation current="island" disabled={layout.saving} onNavigate={(page) => leave({ page })} />}
       <div className="spatial-header-end">{camp&&<section className="spatial-wallet" aria-label={content.balance}><CurrencyAmount currency="coins" amount={camp.wallet.coins}/><CurrencyAmount currency="diamonds" amount={camp.wallet.diamonds}/></section>}{onSettings&&<button className="secondary" onClick={onSettings} aria-label={content.settings}><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1 1-3Z" fill="none" stroke="currentColor" strokeWidth="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.7"/></svg></button>}</div>
     </header>
     {camp&&onCamp&&<aside ref={tasks} className={`spatial-checkins ${checkinsOpen?'is-expanded':''}`} aria-label={content.checkins}>
@@ -253,7 +258,7 @@ export function IslandPage3D({client,session,initialSceneKey,onBack,onShop,onCam
     {editing&&view&&<SpatialInventory feedback={feedback} state={view} selected={selection} space={space} expanded={panelOpen} busy={busy} saving={layout.saving} sceneNames={Object.fromEntries(scenes.map(item=>[item.scene_key,item.name]))} saveDisabled={!!issue||layout.conflict||layout.inventoryConflict||layout.review} panelRef={panel} onToggle={()=>setPanelOpen(value=>!value)} onSpace={focusSpace} onChoose={choose} onMove={nudge} onRotate={rotateItem} onStore={store} onSave={()=>void save()} onCancel={cancel} onEnvironment={layout.setEnvironment}/>}
     <footer ref={dock} className={`spatial-dock ${editing?'is-editing':''}`}>
       {!editing&&<div className="spatial-activities" aria-label={content.activitiesTitle}>{(Object.keys(content.activities) as SpatialActorActivity[]).map(key=><button className={`secondary ${key!=='walk'&&key!=='rest'&&!allowed.includes(key)?'is-locked':''}`} key={key} onClick={()=>activity(key)}>{content.activities[key]}</button>)}</div>}
-      <div className="spatial-toolbar">{!editing&&<button onClick={begin} disabled={!view||layout.loading}>{content.edit}</button>}<button className="secondary" aria-pressed={indoor} disabled={!view?.scene.house} onClick={()=>focusSpace(indoor?'outdoor':'indoor',true)}>{indoor?content.outdoor:content.indoor}</button>{!editing&&<button className="secondary" disabled={!view?.scene.house} onClick={()=>{setIntent(current=>({sequence:(current?.sequence??0)+1,activity:'walk',space:actor.space==='indoor'?'outdoor':'indoor'}));}}>{actor.space==='indoor'?content.exit:content.enter}</button>}{onShop&&<button className="secondary" disabled={layout.saving} onClick={()=>leave('shop')}>{content.shop}</button>}{!editing&&<button className="secondary" aria-pressed={paused} onClick={()=>setPaused(value=>!value)}>{paused?content.resume:content.pause}</button>}</div>
+      <div className="spatial-toolbar">{!editing&&<button onClick={begin} disabled={!view||layout.loading}>{content.edit}</button>}<button className="secondary" aria-pressed={indoor} disabled={!view?.scene.house} onClick={()=>focusSpace(indoor?'outdoor':'indoor',true)}>{indoor?content.outdoor:content.indoor}</button>{!editing&&<button className="secondary" disabled={!view?.scene.house} onClick={()=>{setIntent(current=>({sequence:(current?.sequence??0)+1,activity:'walk',space:actor.space==='indoor'?'outdoor':'indoor'}));}}>{actor.space==='indoor'?content.exit:content.enter}</button>}{onShop&&!onNavigate&&<button className="secondary" disabled={layout.saving} onClick={()=>leave('shop')}>{content.shop}</button>}{!editing&&<button className="secondary" aria-pressed={paused} onClick={()=>setPaused(value=>!value)}>{paused?content.resume:content.pause}</button>}</div>
       {!editing&&<p className={`spatial-actor-status ${stopped?'is-static':''}`} role="status">{stopped?(paused?content.paused:content.static):`${content.activities[actor.activity]} · ${content.phases[actor.phase]}`}</p>}
       {!editing&&access.pending&&<p>{content.accessPending}</p>}{!editing&&access.error!==null&&<div className="spatial-access-error"><span>{content.accessError}</span><button className="secondary" onClick={access.refresh}>{content.retry}</button></div>}
     </footer>

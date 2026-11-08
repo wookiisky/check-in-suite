@@ -23,8 +23,26 @@
 .appearance-recovery dd { margin: 3px 0 0; }
 .appearance-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 12px 0 0; border-top: 1px solid var(--line, #d1dbd4); }
 .appearance-actions button, .appearance-recovery button { min-height: 44px; }
+.appearance-page > h1 { margin: 0 0 16px; }
+.appearance-page .appearance-layout { grid-template-columns: minmax(0, 1fr) minmax(260px, 380px); }
+.appearance-page .appearance-preview { top: 88px; }
+.appearance-catalog { min-width: 0; }
+.appearance-page .appearance-slots { grid-template-columns: minmax(0, 1fr); }
+.appearance-page .appearance-options { grid-template-columns: repeat(auto-fill, minmax(min(142px, 100%), 1fr)); }
+.appearance-page .appearance-option { min-height: 140px; }
+.appearance-page .character3d-rotation-controls > p {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.appearance-page .appearance-actions button { min-height: 56px; }
+.appearance-page .appearance-recovery dt { font-size: 22px; }
 @media (max-width: 960px) {
   .appearance-layout { grid-template-columns: 1fr; gap: 12px; }
+  .appearance-page .appearance-layout { grid-template-columns: minmax(0, 1fr); }
+  .appearance-page .appearance-preview { grid-row: 1; }
   .appearance-preview { position: static; min-height: 250px; }
   .appearance-slots { gap: 10px; }
   .appearance-slots fieldset { padding: 10px; }

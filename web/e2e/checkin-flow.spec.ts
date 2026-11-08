@@ -51,6 +51,10 @@ test('真实打卡、编辑删除、响应丢失恢复和历史补录闭环', as
   await taskDialog.getByRole('button', { name: checkin.save, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
+  await expect(page.getByRole('tab', { name: checkin.allCategories, exact: true })).toHaveAttribute('aria-selected', 'true');
+  const categoryTab = page.getByRole('tab', { name: categoryName, exact: true });
+  await categoryTab.click();
+  await expect(categoryTab).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('.checkin-task').filter({ hasText: taskName })).toBeVisible();
   const initialCamp = await (await page.request.get('/api/v1/camp')).json() as Camp;
   const task = initialCamp.tasks.find((item) => item.name === taskName)!;

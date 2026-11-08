@@ -43,6 +43,7 @@ type settings struct {
 	Metrics            []string                  `json:"metrics"`             // Achievement metric examples.
 	Targets            []int64                   `json:"targets"`             // Mixed achieved and future thresholds.
 	OwnedAssets        []string                  `json:"owned_assets"`        // Offers with example purchase facts.
+	OwnedWearables     []string                  `json:"owned_wearables"`     // Stable wearable definitions for demo purchases.
 	Placements         []island.SpatialPlacement `json:"placements"`          // 追加到三维默认布局的已购物件位置。
 }
 

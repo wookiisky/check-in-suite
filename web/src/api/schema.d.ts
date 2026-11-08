@@ -561,6 +561,43 @@ export interface paths {
         patch: operations["updateTask"];
         trace?: never;
     };
+    "/api/v1/shop/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 按页码浏览尚未购买的商品 */
+        get: operations["browseShopProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shop/development/buy-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 在开发环境取得所有尚未拥有的上架商店商品
+         * @description 只对当前账户生效，保持余额和库存数量。同款只发一份，重复调用可补齐新上架的商品。服务端未启用开发环境时返回 404。
+         */
+        post: operations["developmentBuyAllShopProducts"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/products": {
         parameters: {
             query?: never;
@@ -867,6 +904,23 @@ export interface paths {
         head?: never;
         /** 修改成就并按新规则重算资格 */
         patch: operations["updateAchievement"];
+        trace?: never;
+    };
+    "/api/v1/achievements/title": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 选择一个已获得成就作为显示文本，或卸下当前文本 */
+        put: operations["selectAchievementTitle"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/achievements/{id}/equipment": {
@@ -1430,6 +1484,18 @@ export interface components {
             /** @description 全部可见商品的来源与包选项，不受当前页限制。 */
             facets?: components["schemas"]["ProductFacets"];
         };
+        ShopPage: {
+            items: components["schemas"]["Product"][];
+            /** @description 营地的稳定分类键，与当前页和所有权无关。角色装扮查询时为空。 */
+            camp_categories: string[];
+            /** @description 超过最后一页时返回最后可用页，空目录返回第一页。 */
+            page: number;
+            /** @description 分类及所有权过滤后的商品数。 */
+            total: number;
+            wallet: components["schemas"]["Wallet"];
+            /** @description 服务端启用开发环境时为 true，否则省略。 */
+            development_buy_all?: boolean;
+        };
         Purchase: {
             pack_name?: string;
             provider?: string;
@@ -1461,6 +1527,8 @@ export interface components {
             product_id: string;
             expected_product_version: number;
             expected_wallet_version: number;
+            /** @description 为 true 时在扣款事务内确认尚未拥有同一稳定物品，含原本可重复购买的物品。 */
+            require_unowned?: boolean;
         };
         PurchaseResult: {
             purchase: components["schemas"]["Purchase"];
@@ -1627,6 +1695,9 @@ export interface components {
             has_scheduled_tasks: boolean;
             equipment: components["schemas"]["Equipment"];
             achievements: components["schemas"]["Achievement"][];
+            /** @description 所有当前已获得成就。 */
+            earned_achievements?: components["schemas"]["Achievement"][];
+            achievement_title?: components["schemas"]["AchievementTitle"] | null;
         };
         Asset: {
             pack_name?: string;
@@ -1757,6 +1828,11 @@ export interface components {
         };
         AchievementList: {
             items: components["schemas"]["Achievement"][];
+            title?: components["schemas"]["AchievementTitle"] | null;
+        };
+        AchievementTitle: {
+            id: string;
+            name: string;
         };
         AchievementOptions: {
             categories: components["schemas"]["AchievementCategoryOption"][];
@@ -2793,6 +2869,56 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    browseShopProducts: {
+        parameters: {
+            query: {
+                group: "appearance" | "camp";
+                /** @description 省略表示该组的全部商品。装扮按人物及部位分类，营地按物件目录及场景分类。 */
+                category?: string;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShopPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    developmentBuyAllShopProducts: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功，返回当前钱包 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Wallet"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     listProducts: {
         parameters: {
             query?: {
@@ -3451,6 +3577,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Achievement"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    selectAchievementTitle: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    achievement_id: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        title: components["schemas"]["AchievementTitle"] | null;
+                    };
                 };
             };
             default: components["responses"]["Error"];

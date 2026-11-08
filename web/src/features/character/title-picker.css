@@ -1,8 +1,0 @@
-.title-picker { font-size: 22px; }
-.title-picker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 20px; }
-.title-picker-item { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px; min-width: 0; text-align: center; }
-.title-picker-item h3 { margin: 0; overflow-wrap: anywhere; font-size: 26px; }
-.title-picker-item img { width: 100%; height: 104px; object-fit: contain; }
-.title-picker button { min-height: 56px; font-size: 22px; }
-.title-picker button:focus-visible { outline: 3px solid #387147; outline-offset: 4px; }
-.title-picker-more { display: block; margin: 20px auto 0; }

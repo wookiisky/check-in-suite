@@ -3,6 +3,7 @@ package demo
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/wookiisky/check-in-suite/internal/character"
@@ -17,11 +18,21 @@ func seedPurchases(ctx context.Context, tx *sql.Tx, content settings, now time.T
 	layout := island.SpatialDefaultLayout()
 	placements := append(layout.Placements, content.Placements...)
 	appearance := shop.AppearanceState{Version: 1, CharacterKey: character.DefaultCharacterKey}
-	for index, key := range content.OwnedAssets {
+	// 服装的缩略图可替换，演示订单从当前目录取得正式报价使用的素材。
+	ownedAssets := make([]string, 0, len(content.OwnedWearables)+len(content.OwnedAssets))
+	for _, key := range content.OwnedWearables {
+		wearable, found := character.GetWearable(key)
+		if !found {
+			return fmt.Errorf("演示服装 %q 未登记", key)
+		}
+		ownedAssets = append(ownedAssets, wearable.ThumbnailAssetKey)
+	}
+	ownedAssets = append(ownedAssets, content.OwnedAssets...)
+	for index, key := range ownedAssets {
 		var productID, kind, name, description, wearableKey string
 		var coins, diamonds int64
 		if err := tx.QueryRowContext(ctx, `SELECT id,type,name,description,coin_price,diamond_price,wearable_key FROM products WHERE asset_key=?`, key).Scan(&productID, &kind, &name, &description, &coins, &diamonds, &wearableKey); err != nil {
-			return err
+			return fmt.Errorf("读取演示商品 %q: %w", key, err)
 		}
 		definition, hasIsland := island.SpatialForThumbnail(key)
 		itemKey, repeatable := "", false

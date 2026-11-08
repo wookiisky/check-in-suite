@@ -1,0 +1,5 @@
+.view-tabs { display: flex; flex-wrap: wrap; gap: 10px; min-width: 0; }
+.view-tabs-header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.view-tabs > button { max-width: 100%; overflow-wrap: anywhere; }
+.view-tabs > button[aria-selected="true"] { color: var(--paper); background: var(--forest-dark); border-color: var(--forest-dark); }
+.view-tab-panel { min-width: 0; }

@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
 import achievement from '../src/features/achievements/content.json' with { type: 'json' };
+import character from '../src/features/character/character-panel-content.json' with { type: 'json' };
 import type { components } from '../src/api/schema';
 
 type Product = components['schemas']['Product'];
@@ -35,7 +36,7 @@ async function searchCatalogProduct(page: Page, name: string) {
   await page.getByRole('button', { name: shop.search, exact: true }).click();
 }
 
-// 商品配置全部通过页面完成，普通商店再验证库存和上下架带来的行为。
+// 商品配置全部通过页面完成，并核对普通商店已移除文本奖励。
 test('商品管理的素材筛选、草稿、编辑、库存、上下架和删除闭环', async ({ page }, testInfo) => {
   test.setTimeout(90_000);
   const suffix = `${testInfo.project.name}-${Date.now()}`;
@@ -78,10 +79,11 @@ test('商品管理的素材筛选、草稿、编辑、库存、上下架和删�
 
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
     await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
-    await searchCatalogProduct(page, originalName);
-    const soldOut = page.getByRole('article').filter({ has: page.getByRole('heading', { name: originalName, exact: true }) });
-    await expect(soldOut.getByRole('button', { name: `${shop.buy} ${originalName}`, exact: true })).toBeDisabled();
-    await expect(soldOut.getByRole('button')).toHaveAttribute('aria-description', new RegExp(shop.soldOut));
+    await expect(page.getByRole('tablist', { name: shop.categoryGroupLabel, exact: true })).toBeVisible();
+    for (const group of ['appearance', 'camp']) {
+      const visible = await catalogAPI(page, `/shop/products?group=${group}`) as { items: Product[] };
+      expect(visible.items.some((item) => item.type === 'reward')).toBe(false);
+    }
 
     await enterManagement(page);
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation.products, exact: true }).click();
@@ -97,9 +99,7 @@ test('商品管理的素材筛选、草稿、编辑、库存、上下架和删�
     products = await catalogAPI(page, '/products?include_inactive=true') as { items: Product[] };
     expect(products.items.find((item) => item.id === created.id)).toMatchObject({ name: editedName, coin_price: 2, diamond_price: 1, stock: 3, enabled: false });
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-    await expect(page.getByRole('heading', { name: shop.title, exact: true })).toBeVisible();
-    await searchCatalogProduct(page, editedName);
-    await expect(page.getByRole('heading', { name: editedName, exact: true })).toHaveCount(0);
+    await expect(page.getByRole('tablist', { name: shop.categoryGroupLabel, exact: true })).toBeVisible();
 
     await enterManagement(page);
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation.products, exact: true }).click();
@@ -109,8 +109,9 @@ test('商品管理的素材筛选、草稿、编辑、库存、上下架和删�
     await dialog.getByRole('button', { name: shop.save, exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-    await searchCatalogProduct(page, editedName);
-    await expect(page.getByRole('heading', { name: editedName, exact: true })).toBeVisible();
+    await expect(page.getByRole('tablist', { name: shop.categoryGroupLabel, exact: true })).toBeVisible();
+    products = await catalogAPI(page, '/products') as { items: Product[] };
+    expect(products.items.find((item) => item.id === created.id)?.enabled).toBe(true);
 
     await enterManagement(page);
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation.products, exact: true }).click();
@@ -128,8 +129,6 @@ test('商品管理的素材筛选、草稿、编辑、库存、上下架和删�
     await expect(dialog).toHaveCount(0);
     await expect(page.getByRole('button', { name: `${shop.edit} ${editedName}`, exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-    await searchCatalogProduct(page, editedName);
-    await expect(page.getByRole('heading', { name: editedName, exact: true })).toHaveCount(0);
   } finally {
     await catalogAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
     const remaining = await catalogAPI(page, '/products?include_inactive=true') as { items: Product[] };
@@ -198,9 +197,12 @@ test('成就管理的天数指标、范围窗口、资格重算、启停和删�
     configured = await catalogAPI(page, '/management/achievements') as { items: Achievement[] };
     expect(configured.items.find((item) => item.id === created.id)).toMatchObject({ scope: 'category', category_id: category.id, target: 2, window_days: 2, qualified: true, progress: 2 });
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-    await page.getByRole('button', { name: content.navigation.achievements, exact: true }).click();
+    await page.getByRole('button', { name: character.achievements, exact: true }).click();
     const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
-    await expect(card.getByRole('button', { name: achievement.equip, exact: true })).toBeVisible();
+    await expect(card).toBeVisible();
+    await page.getByRole('button', { name: achievement.chooseTitle, exact: true }).click();
+    await dialog.getByRole('button', { name, exact: true }).click();
+    await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
 
     await enterManagement(page);
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation.achievementManagement, exact: true }).click();
@@ -211,7 +213,8 @@ test('成就管理的天数指标、范围窗口、资格重算、启停和删�
     const row = page.getByRole('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
     await expect(row.getByText(achievement.disabled, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-    await expect(card.getByRole('button', { name: achievement.equip, exact: true })).toBeVisible();
+    await page.getByRole('button', { name: content.navigation.camp, exact: true }).click();
+    await expect(page.getByRole('region', { name: character.label }).getByText(name, { exact: true })).toBeVisible();
 
     await enterManagement(page);
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation.achievementManagement, exact: true }).click();
@@ -222,7 +225,11 @@ test('成就管理的天数指标、范围窗口、资格重算、启停和删�
     await expect(dialog).toHaveCount(0);
     await expect(row.getByText(achievement.active, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-    await expect(card.getByText(achievement.unowned, { exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: character.label }).getByText(name, { exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: character.achievements, exact: true }).click();
+    await expect(page.getByRole('button', { name: achievement.chooseTitle, exact: true })).toBeVisible();
+    await page.getByRole('button', { name: achievement.unowned, exact: true }).click();
+    await expect(card).toBeVisible();
 
     await enterManagement(page);
     await page.getByRole('navigation', { name: content.navigation.management, exact: true }).getByRole('button', { name: content.navigation.achievementManagement, exact: true }).click();

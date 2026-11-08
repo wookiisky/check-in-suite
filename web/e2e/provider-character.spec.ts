@@ -1,16 +1,28 @@
 import { expect, test } from '@playwright/test';
+import type { Locator } from '@playwright/test';
+import type { CharacterSlot } from '../src/features/character/character3d-appearance';
 import type { components } from '../src/api/schema';
 import { loginMain, openAppearance, closeAppearance, selectShopCategory, purchaseProduct, shopAPI } from './shop-navigation';
 import { appearanceRequest } from './appearance-flow-fixtures';
 import { characterSlots } from '../src/features/character/character3d-appearance';
 import shop from '../src/features/shop/content.json' with { type: 'json' };
 import appearance from '../src/features/shop/appearance-content.json' with { type: 'json' };
+import pagination from '../src/components/numbered-pagination-content.json' with { type: 'json' };
 import preview from '../src/features/character/character-verification-content.json' with { type: 'json' };
 
 type Appearance = components['schemas']['AppearanceState'];
 type Product = components['schemas']['Product'];
 type Task = components['schemas']['Task'];
 type Camp = components['schemas']['CampResponse'];
+
+// 已有衣物的数量会影响页码，按真实分类和分页定位目标购买实例。
+async function ownedOption(editor: Locator, slot: CharacterSlot, purchaseID: string) {
+  await editor.getByRole('tab', { name: appearance.slots[slot], exact: true }).click();
+  const option = editor.locator(`input[name="${slot}_purchase_id"][value="${purchaseID}"]`);
+  const next = editor.getByRole('button', { name: pagination.next, exact: true });
+  while (!await option.isVisible() && await next.isVisible() && await next.isEnabled()) await next.click();
+  return option;
+}
 
 // 两个身体与六槽商品通过正式购买和外观编辑器验证，重开后再核对保存事实。
 test('只提供人形与骷髅，职业部件独立混穿，中箭与帽子互换且不改变脸和披风', async ({ page }, testInfo) => {
@@ -62,35 +74,38 @@ test('只提供人形与骷髅，职业部件独立混穿，中箭与帽子互�
   const purchase = (offer: Product) => owned.inventory.find((item) => item.wearable_key === offer.wearable_key)!.purchase_id;
   try {
     await page.reload(); await openAppearance(page);
-    let dialog = page.getByRole('dialog', { name: appearance.title, exact: true });
-    await dialog.getByRole('group', { name: appearance.characterTitle, exact: true }).getByRole('radio', { name: skeleton.name, exact: true }).check();
-    for (const [index, slot] of characterSlots.entries()) await dialog.locator(`input[name="${slot}_purchase_id"][value="${purchase(selections[index]!)}"]`).check();
-    await dialog.locator(`input[name="head_purchase_id"][value="${purchase(arrow)}"]`).check();
-    await expect(dialog.getByRole('button', { name: appearance.save, exact: true })).toBeEnabled();
-    await dialog.getByRole('button', { name: appearance.save, exact: true }).click();
-    await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
+    const editor = page.locator('.appearance-page');
+    await editor.getByRole('tab', { name: appearance.characterTitle, exact: true }).click();
+    await editor.getByRole('radio', { name: skeleton.name, exact: true }).check();
+    for (const [index, slot] of characterSlots.entries()) await (await ownedOption(editor, slot, purchase(selections[index]!))).check();
+    await (await ownedOption(editor, 'head', purchase(arrow))).check();
+    const save = editor.getByRole('button', { name: appearance.save, exact: true });
+    await expect(save).toBeEnabled();
+    await save.click();
+    await expect(editor.getByText(appearance.saved, { exact: true })).toBeVisible();
     let saved = await shopAPI<Appearance>(page, '/appearance');
     expect(saved.character_key).toBe(skeleton.character_key);
     expect(saved.head_purchase_id).toBe(purchase(arrow));
     expect(saved.face_purchase_id).toBe(purchase(selections[0]!));
     expect(saved.back_purchase_id).toBe(purchase(selections[5]!));
-    await dialog.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('skeleton-six-slot-arrow.png') });
+    await editor.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('skeleton-six-slot-arrow.png') });
     await closeAppearance(page); await openAppearance(page);
-    dialog = page.getByRole('dialog', { name: appearance.title, exact: true });
-    await expect(dialog.locator(`input[name="head_purchase_id"][value="${purchase(arrow)}"]`)).toBeChecked();
-    await dialog.locator(`input[name="head_purchase_id"][value="${purchase(hat)}"]`).check();
-    await expect(dialog.locator(`input[name="head_purchase_id"][value="${purchase(arrow)}"]`)).not.toBeChecked();
-    await expect(dialog.locator(`input[name="face_purchase_id"][value="${saved.face_purchase_id}"]`)).toBeChecked();
-    await expect(dialog.locator(`input[name="back_purchase_id"][value="${saved.back_purchase_id}"]`)).toBeChecked();
-    await expect(dialog.getByRole('button', { name: appearance.save, exact: true })).toBeEnabled();
-    await dialog.getByRole('button', { name: appearance.save, exact: true }).click();
-    await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
+    await expect(await ownedOption(editor, 'head', purchase(arrow))).toBeChecked();
+    await (await ownedOption(editor, 'head', purchase(hat))).check();
+    await expect(await ownedOption(editor, 'head', purchase(arrow))).not.toBeChecked();
+    await expect(await ownedOption(editor, 'face', saved.face_purchase_id!)).toBeChecked();
+    await expect(await ownedOption(editor, 'back', saved.back_purchase_id!)).toBeChecked();
+    await expect(save).toBeEnabled();
+    await save.click();
+    await expect(editor.getByText(appearance.saved, { exact: true })).toBeVisible();
     saved = await shopAPI<Appearance>(page, '/appearance');
     expect(saved.head_purchase_id).toBe(purchase(hat));
-    await dialog.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('skeleton-independent-face-hat-cape.png') });
+    await editor.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('skeleton-independent-face-hat-cape.png') });
     const human = owned.characters.find((item) => item.character_key === initial.default_character_key)!;
-    await dialog.getByRole('group', { name: appearance.characterTitle, exact: true }).getByRole('radio', { name: human.name, exact: true }).check();
-    const faceOptions = dialog.getByRole('group', { name: appearance.slots.face, exact: true }).getByRole('radio');
+    await editor.getByRole('tab', { name: appearance.characterTitle, exact: true }).click();
+    await editor.getByRole('radio', { name: human.name, exact: true }).check();
+    await editor.getByRole('tab', { name: appearance.slots.face, exact: true }).click();
+    const faceOptions = editor.getByRole('group', { name: appearance.slots.face, exact: true }).getByRole('radio');
     const faceOptionNames = faces.map((item) => {
       if (item.wearable_key === human.defaults.face) return appearance.defaultOption.replace('{name}', item.name);
       if (item.wearable_key === skeleton.defaults.face) return appearance.initialFreeOption.replace('{name}', item.name);
@@ -99,15 +114,15 @@ test('只提供人形与骷髅，职业部件独立混穿，中箭与帽子互�
     await expect(faceOptions).toHaveCount(faceOptionNames.length);
     expect(await faceOptions.evaluateAll((options) => options.map((item) => item.getAttribute('aria-label')))).toEqual(faceOptionNames);
     await expect(faceOptions.first()).toBeChecked();
-    for (const [index, slot] of characterSlots.entries()) if (slot !== 'head' && slot !== 'face') await dialog.locator(`input[name="${slot}_purchase_id"][value="${purchase(selections[index]!)}"]`).check();
-    await dialog.locator(`input[name="face_purchase_id"][value="${purchase(greenFace)}"]`).check();
-    await expect(dialog.getByRole('button', { name: appearance.save, exact: true })).toBeEnabled();
-    await dialog.getByRole('button', { name: appearance.save, exact: true }).click();
-    await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
+    for (const [index, slot] of characterSlots.entries()) if (slot !== 'head' && slot !== 'face') await (await ownedOption(editor, slot, purchase(selections[index]!))).check();
+    await (await ownedOption(editor, 'face', purchase(greenFace))).check();
+    await expect(save).toBeEnabled();
+    await save.click();
+    await expect(editor.getByText(appearance.saved, { exact: true })).toBeVisible();
     saved = await shopAPI<Appearance>(page, '/appearance');
     expect(saved.character_key).toBe(human.character_key); expect(saved.head_purchase_id).toBeNull();
     expect(saved.face_purchase_id).toBe(purchase(greenFace)); expect(saved.back_purchase_id).toBe(purchase(selections[5]!));
-    await dialog.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('human-shared-clothes-bare-head.png') });
+    await editor.locator('.appearance-preview').screenshot({ path: testInfo.outputPath('human-shared-clothes-bare-head.png') });
     expect(errors).toEqual([]);
   } finally {
     const current = await shopAPI<Appearance>(page, '/appearance');

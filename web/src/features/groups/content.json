@@ -1,7 +1,6 @@
 {
   "title": "我的组",
   "currentGroup": "当前组",
-  "noGroup": "还没有加入组。可在管理中的账户设置加入已有组。",
   "sharedScope": "同组成员可查看彼此的任务完成情况、历史打卡和附件；各人的任务和奖励独立。",
   "existingGroups": "已有组",
   "chooseGroup": "选择一个组",
@@ -15,7 +14,6 @@
   "leaveHint": "退出后，你和原组成员将不能继续查看彼此的数据；自己的记录会保留。",
   "memberLabel": "查看成员",
   "myself": "我自己",
-  "readOnly": "正在查看同组成员，仅可查看。",
   "accessChanged": "组成员关系已变化，已返回自己的页面。",
   "loading": "正在加载…",
   "saving": "正在提交…",

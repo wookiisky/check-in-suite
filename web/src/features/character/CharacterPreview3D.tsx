@@ -1,5 +1,5 @@
 import { Component, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import type { PointerEvent, ReactNode } from 'react';
+import type { KeyboardEvent, PointerEvent, ReactNode } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrthographicCamera, PCFShadowMap } from 'three';
 import { useGraphicsMotion } from '../../graphics/useGraphicsMotion';
@@ -18,7 +18,8 @@ export interface CharacterPreview3DProps {
   className?: string; // 宿主页面的布局样式。
   label?: string; // 该视图的可访问名称。
   attachments?: readonly CharacterAttachment[]; // 需要在预览中检查的活动道具。
-  rotatable?: boolean; // 仅装扮编辑器开放手动水平旋转。
+  rotatable?: boolean; // 是否开放手动水平旋转。
+  showRotationControls?: boolean; // 是否显示旋转按钮。
 }
 
 // 一次主指针拖动先确定方向，纵向意图交还给页面滚动。
@@ -66,9 +67,10 @@ function PreviewEnvironment({ onError }: { onError: (error: unknown) => void }) 
 }
 
 // 所有业务页面复用单人物取景，但每个视图持有自己的 Canvas 与骨架实例。
-export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = false, onStatus, className = '', label = content.label, attachments, rotatable = false }: CharacterPreview3DProps) {
+export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = false, onStatus, className = '', label = content.label, attachments, rotatable = false, showRotationControls = true }: CharacterPreview3DProps) {
   const stopped = useGraphicsMotion(paused);
   const hintID = useId();
+  const keyboardRotation = rotatable && !showRotationControls;
   const [rotation, setRotation] = useState(0);
   const [dragging, setDragging] = useState(false);
   const drag = useRef<PreviewDrag | null>(null);
@@ -115,7 +117,17 @@ export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = 
     setRotation((value) => normalizeRotation(value + delta));
   }
 
-  return <section className={`character3d-preview ${rotatable ? 'character3d-rotatable' : ''} ${className}`} aria-label={label} aria-describedby={rotatable ? hintID : undefined} data-appearance-version={snapshot.version} data-character-key={draft?.character_key ?? snapshot.character_key} data-character-status={status.phase} data-character-action={action} data-character-rotation={rotatable ? rotation : 0}>
+  // 只有预览本身获得焦点时才接管方向键和 Home。
+  function rotateWithKeyboard(event: KeyboardEvent<HTMLElement>) {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === 'Home') setRotation(0);
+    else if (event.key === 'ArrowLeft') setRotation((value) => normalizeRotation(value - Math.PI / 4));
+    else if (event.key === 'ArrowRight') setRotation((value) => normalizeRotation(value + Math.PI / 4));
+    else return;
+    event.preventDefault();
+  }
+
+  return <section className={`character3d-preview ${rotatable ? 'character3d-rotatable' : ''} ${className}`} aria-label={label} aria-describedby={rotatable ? hintID : undefined} tabIndex={keyboardRotation ? 0 : undefined} onKeyDown={keyboardRotation ? rotateWithKeyboard : undefined} data-appearance-version={snapshot.version} data-character-key={draft?.character_key ?? snapshot.character_key} data-character-status={status.phase} data-character-action={action} data-character-rotation={rotatable ? rotation : 0}>
     <div className={`character3d-stage ${dragging ? 'character3d-dragging' : ''}`} onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}>
       {!fatal && <CharacterCanvasBoundary key={canvasGeneration} onError={failed}>
         <Canvas orthographic shadows={{ type: PCFShadowMap }} dpr={[1, 1.5]} frameloop={stopped ? 'demand' : 'always'} camera={{ near: 0.1, far: 50 }} style={rotatable ? { touchAction: 'pan-y pinch-zoom' } : {}} fallback={<p>{content.unsupported}</p>}>
@@ -126,8 +138,8 @@ export function CharacterPreview3D({ snapshot, draft, action = 'idle', paused = 
       {status.phase === 'loading' && <p className="character3d-notice" role="status">{content.loading}</p>}
       {status.phase === 'error' && <div className="character3d-notice character3d-error" role="alert"><p>{content.error}</p><button type="button" onClick={retry}>{content.retry}</button></div>}
     </div>
-    {rotatable && <div className="character3d-rotation-controls">
-      <p id={hintID}>{content.rotation.hint}</p>
+    {rotatable && <p className="sr-only" id={hintID}>{keyboardRotation ? content.rotation.keyboardHint : content.rotation.hint}</p>}
+    {rotatable && showRotationControls && <div className="character3d-rotation-controls">
       <div className="character3d-rotation-buttons">
         <button type="button" onClick={() => setRotation((value) => normalizeRotation(value - Math.PI / 4))}>{content.rotation.left}</button>
         <button type="button" onClick={() => setRotation(0)}>{content.rotation.reset}</button>

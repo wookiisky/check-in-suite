@@ -3,6 +3,8 @@ import type { Session } from '../../api/types';
 import type { components } from '../../api/schema';
 
 export type Achievement = components['schemas']['Achievement'];
+export type AchievementTitle = components['schemas']['AchievementTitle'];
+export type AchievementList = components['schemas']['AchievementList'];
 export type AchievementInput = components['schemas']['AchievementCreate'];
 export type AchievementOptions = components['schemas']['AchievementOptions'];
 export type AchievementAsset = components['schemas']['Asset'];

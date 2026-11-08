@@ -27,7 +27,7 @@ export function ProductManagement({ client, session }: ShopProps) {
   const [editing, setEditing] = useState<Product | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Product | null>(null);
   const pending = pendingProducts.get(client);
-  const productCatalog = useProductCatalog(client, { filter: { group: 'all', category: '' }, search, revision, includeInactive: true });
+  const productCatalog = useProductCatalog(client, { search, revision, includeInactive: true });
   const products = productCatalog.products;
   const loading = assetLoading || productCatalog.loading;
   useEffect(() => {

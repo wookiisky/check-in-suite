@@ -178,7 +178,7 @@ func (s *Service) ListProductsPage(ctx context.Context, principal account.Princi
 	if readErr != nil {
 		return result, readErr
 	}
-	if err := applyProductOwnership(ctx, tx, accountID, result.Items); err != nil {
+	if err := applyProductOwnership(ctx, tx, accountID, result.Items, false); err != nil {
 		return result, err
 	}
 	result.Facets, err = visibleProductFacets(ctx, tx, accountID, includeInactive)

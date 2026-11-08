@@ -48,6 +48,9 @@
   pointer-events: none;
 }
 .spatial-header > * { pointer-events: auto; }
+.spatial-header .main-navigation { gap: 4px; flex-wrap: nowrap; }
+.spatial-header .nav-button { min-width: 0; padding-inline: 8px; white-space: nowrap; }
+.spatial-header .nav-button img { display: none; }
 .spatial-heading { min-width: 0; }
 .spatial-heading p { display: none; }
 .spatial-camera-toggle { display: inline-flex; align-items: center; justify-content: center; padding: 10px !important; }
@@ -122,6 +125,8 @@
   .spatial-header-end { display: contents; }
   .spatial-header-end > button { grid-column: 4; grid-row: 1; padding: 8px; }
   .spatial-wallet { grid-column: 1 / -1; grid-row: 2; justify-self: end; max-width: 100%; padding: 8px 12px; }
+  .spatial-header .main-navigation { grid-column: 1 / -1; grid-row: 3; width: 100%; }
+  .spatial-header .nav-button { flex: 1; padding-inline: 0; }
   .spatial-checkins { left: 12px; width: auto; max-width: 184px; }
   .spatial-checkins > button { justify-content: flex-start; width: 56px; }
   .spatial-checkins > button span { display: none; }
@@ -152,6 +157,7 @@
   .spatial-camera-toggle { grid-column: 1; grid-row: 2; }
   .spatial-header-end > button { grid-column: 3; grid-row: 2; }
   .spatial-wallet { grid-column: 1 / -1; grid-row: 3; }
+  .spatial-header .main-navigation { grid-row: 4; }
 }
 @media (prefers-reduced-motion: reduce) {
   .spatial-island button:active:not(:disabled) { transform: none; }

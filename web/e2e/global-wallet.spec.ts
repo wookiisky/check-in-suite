@@ -4,8 +4,10 @@ import type { components } from '../src/api/schema';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import currency from '../src/components/content.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
+import achievements from '../src/features/achievements/content.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
 import island from '../src/features/island/three/spatial-content.json' with { type: 'json' };
+import { selectShopCategory } from './shop-navigation';
 
 type Camp = components['schemas']['CampResponse'];
 type Wallet = Camp['wallet'];
@@ -68,13 +70,13 @@ test('全局余额在普通页面右上常驻，打卡购买删除即时同步�
   await expectWallet(page, initial.wallet);
   await expect(page.locator('.checkin-wallet, .shop-wallet')).toHaveCount(0);
 
-  for (const route of ['calendar', 'stats', 'shop', 'achievements', 'camp'] as const) {
-    await page.getByRole('button', { name: content.navigation[route], exact: true }).click();
+  for (const route of ['stats', 'shop', 'appearance', 'camp'] as const) {
+    await page.getByRole('navigation', { name: content.navigation.label }).getByRole('button', { name: content.navigation[route], exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expectWallet(page, initial.wallet);
   }
-  await page.getByRole('button', { name: shop.backpack, exact: true }).click();
-  await expect(page.getByRole('heading', { name: shop.backpack, exact: true })).toBeVisible();
+  await page.getByRole('button', { name: content.navigation.achievements, exact: true }).click();
+  await expect(page.getByRole('heading', { name: achievements.title, exact: true })).toBeVisible();
   await expectWallet(page, initial.wallet);
   await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
@@ -85,27 +87,31 @@ test('全局余额在普通页面右上常驻，打卡购买删除即时同步�
     await expectWallet(page, initial.wallet);
   }
   const taskName = `全局余额打卡-${testInfo.project.name}`;
+  // 浏览器项目共用账户，前序场景撤回打卡奖励后可能留下负余额。
+  const coinReward = Math.max(7, 2 - initial.wallet.coins);
+  const diamondReward = Math.max(3, 1 - initial.wallet.diamonds);
   await api(page, '/management/tasks', 'POST', {
-    category_id: null, name: taskName, icon_key: 'book-v1', coin_reward: 7, diamond_reward: 3,
+    category_id: null, name: taskName, icon_key: 'book-v1', coin_reward: coinReward, diamond_reward: diamondReward,
     daily_limit: 1, weekdays: [1, 2, 3, 4, 5, 6, 7], enabled: true,
   });
-  const product = await api<Product>(page, '/management/products', 'POST', {
-    type: 'reward', name: `全局余额购买-${testInfo.project.name}`, asset_key: 'reward-gift-v1', description: '',
-    coin_price: 2, diamond_price: 1, stock: null, enabled: true,
+  const wearable = (await api<components['schemas']['ShopPage']>(page, '/shop/products?group=appearance&category=back')).items[0]!;
+  const product = await api<Product>(page, `/management/products/${wearable.id}`, 'PATCH', {
+    type: 'wearable', wearable_key: wearable.wearable_key, name: wearable.name, asset_key: wearable.asset_key,
+    description: wearable.description, coin_price: 2, diamond_price: 1, stock: wearable.stock,
+    enabled: true, expected_version: wearable.version,
   });
   await page.getByRole('button', { name: content.navigation.camp, exact: true }).click();
   const task = page.locator('.checkin-task').filter({ hasText: taskName });
   await task.click();
-  const granted = { coins: initial.wallet.coins + 7, diamonds: initial.wallet.diamonds + 3 };
+  const granted = { coins: initial.wallet.coins + coinReward, diamonds: initial.wallet.diamonds + diamondReward };
   await expectReceiptWallet(page, granted, async () => {
     await page.getByRole('dialog').getByRole('button', { name: checkin.checkin, exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
-  await page.getByRole('button', { name: content.navigation.shop, exact: true }).click();
-  // 先搜索本用例创建的商品，分页后仍定位到真实报价。
-  await page.getByLabel(shop.searchLabel, { exact: true }).fill(product.name);
-  await page.getByRole('button', { name: shop.search, exact: true }).click();
-  await page.getByRole('button', { name: `${shop.buy} ${product.name}`, exact: true }).click();
+  await selectShopCategory(page, 'appearance', shop.wearableSlots.back);
+  const buy = page.getByRole('button', { name: `${shop.buy} ${product.name}`, exact: true });
+  await expect(buy).toBeEnabled();
+  await buy.click();
   const purchased = { coins: granted.coins - 2, diamonds: granted.diamonds - 1 };
   await expectReceiptWallet(page, purchased, async () => {
     await page.getByRole('dialog').getByRole('button', { name: shop.confirmPurchase, exact: true }).click();
@@ -114,7 +120,7 @@ test('全局余额在普通页面右上常驻，打卡购买删除即时同步�
   await page.getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await page.locator('.checkin-record').filter({ hasText: taskName }).click();
   await page.getByRole('dialog').getByRole('button', { name: checkin.delete, exact: true }).click();
-  const recovered = { coins: purchased.coins - 7, diamonds: purchased.diamonds - 3 };
+  const recovered = { coins: purchased.coins - coinReward, diamonds: purchased.diamonds - diamondReward };
   await expectReceiptWallet(page, recovered, async () => {
     await page.getByRole('dialog').getByRole('button', { name: checkin.confirmDelete, exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);

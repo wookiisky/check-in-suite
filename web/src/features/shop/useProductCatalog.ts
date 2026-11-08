@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Product, ShopClient } from './types';
-import { categoryPurchaseType, isWearableSlot, type CategoryFilter } from './shop-categories';
 
 // 目录筛选在服务端作用于全部商品，而不是仅在当前页查找。
 export interface CatalogSearch {
@@ -22,7 +21,6 @@ interface ProductPage {
 }
 
 interface CatalogOptions {
-  filter: CategoryFilter; // 页面所选用途与部位。
   search: CatalogSearch; // 搜索与来源。
   revision: number; // 购买或管理成功后重新读取。
   includeInactive?: boolean; // 管理页查看下架商品。
@@ -30,14 +28,9 @@ interface CatalogOptions {
 
 // 首次读取与翻页共享代次；切换任何条件都会放弃旧页和迟到响应。
 export function useProductCatalog(client: ShopClient, options: CatalogOptions) {
-  const { filter, search, revision, includeInactive } = options;
+  const { search, revision, includeInactive } = options;
   const query = new URLSearchParams({ limit: '48' });
   if (includeInactive) query.set('include_inactive', 'true');
-  if (filter.group === 'appearance') {
-    if (filter.category) query.set('type', categoryPurchaseType(filter.category));
-    else query.set('group', 'appearance');
-    if (isWearableSlot(filter.category)) query.set('slot', filter.category);
-  } else if (filter.group !== 'all') query.set('type', filter.group);
   if (search.search) query.set('search', search.search);
   if (search.provider) query.set('provider', search.provider);
   if (search.packKey) query.set('pack_key', search.packKey);

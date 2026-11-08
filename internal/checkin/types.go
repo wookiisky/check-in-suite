@@ -132,16 +132,18 @@ type AvailableTask struct {
 
 // Camp is read from one SQLite snapshot, even while another connection commits a write.
 type Camp struct {
-	Today             string                    `json:"today"`               // Taipei date used for every eligibility decision.
-	ServerNow         string                    `json:"server_now"`          // Single instant for the response.
-	Timezone          string                    `json:"timezone"`            // Fixed site timezone.
-	Tasks             []AvailableTask           `json:"tasks"`               // Eligible tasks with remaining allowance.
-	Categories        []Category                `json:"categories"`          // Current category choices.
-	Wallet            wallet.Balance            `json:"wallet"`              // Same-snapshot spendable balance.
-	Account           account.Account           `json:"account"`             // Same-snapshot current account profile and preferences.
-	HasScheduledTasks bool                      `json:"has_scheduled_tasks"` // Distinguishes no schedule from all completed.
-	Equipment         shop.Equipment            `json:"equipment"`           // Same-snapshot equipped ownership.
-	Achievements      []achievement.Achievement `json:"achievements"`        // Same-snapshot equipped earned badges.
+	Today              string                    `json:"today"`               // Taipei date used for every eligibility decision.
+	ServerNow          string                    `json:"server_now"`          // Single instant for the response.
+	Timezone           string                    `json:"timezone"`            // Fixed site timezone.
+	Tasks              []AvailableTask           `json:"tasks"`               // Eligible tasks with remaining allowance.
+	Categories         []Category                `json:"categories"`          // Current category choices.
+	Wallet             wallet.Balance            `json:"wallet"`              // Same-snapshot spendable balance.
+	Account            account.Account           `json:"account"`             // Same-snapshot current account profile and preferences.
+	HasScheduledTasks  bool                      `json:"has_scheduled_tasks"` // Distinguishes no schedule from all completed.
+	Equipment          shop.Equipment            `json:"equipment"`           // Same-snapshot equipped ownership.
+	Achievements       []achievement.Achievement `json:"achievements"`        // Same-snapshot equipped earned badges.
+	EarnedAchievements []achievement.Achievement `json:"earned_achievements"` // All same-snapshot earned badges.
+	AchievementTitle   *achievement.Title        `json:"achievement_title"`   // Same-snapshot selected achievement text.
 }
 
 // RecordPage declares whether more records remain instead of silently truncating a date range.

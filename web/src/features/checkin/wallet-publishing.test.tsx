@@ -15,7 +15,10 @@ import shopContent from '../shop/content.json';
 
 const session = testSession as Session;
 const publish = vi.hoisted(() => vi.fn());
-vi.mock('../../components/WalletContext', () => ({ useWalletSync: () => publish }));
+vi.mock('../../components/WalletContext', () => ({
+  useWalletSync: () => publish,
+  useWallet: () => ({ wallet: null, updateWallet: publish }),
+}));
 beforeEach(() => publish.mockReset());
 
 // 读取和写入在实际成功边界发布钱包，不从奖励、价格或前端余额差推算。
@@ -30,7 +33,7 @@ describe('全局钱包同步边界', () => {
   });
 
   it('商店读取发布钱包，页面只保留商品价格和购买确认', async () => {
-    const request = vi.fn().mockImplementation(async (path: string) => path === '/camp' ? camp : { items: [product] });
+    const request = vi.fn().mockResolvedValue({ items: [{ ...product, type: 'wearable' }], page: 1, total: 1, camp_categories: [], wallet: camp.wallet });
     render(<ShopPage client={{ request }} session={session} />);
     await screen.findByRole('button', { name: `${shopContent.buy} ${product.name}` });
     expect(publish).toHaveBeenCalledWith(camp.wallet);

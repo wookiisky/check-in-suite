@@ -5,9 +5,8 @@
 .character3d-rotatable .character3d-stage { height: 320px; touch-action: pan-y pinch-zoom; cursor: grab; user-select: none; }
 .character3d-rotatable .character3d-dragging { cursor: grabbing; }
 .character3d-rotation-controls { padding: 12px; background: var(--paper, #fff); color: var(--ink, #304c3c); }
-.character3d-rotation-controls p { margin: 0 0 10px; font-size: 14px; line-height: 1.5; color: var(--muted, #52645b); }
 .character3d-rotation-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
-.character3d-rotation-buttons button { flex: 1; min-height: 44px; min-width: 44px; padding: 8px; border: 1px solid var(--line, #afbfaf); border-radius: 8px; background: var(--paper, #fff); color: var(--ink, #304c3c); font: inherit; font-size: 14px; cursor: pointer; }
+.character3d-rotation-buttons button { flex: 1; min-height: 56px; min-width: 56px; padding: 8px; border: 1px solid var(--line, #afbfaf); border-radius: 8px; background: var(--paper, #fff); color: var(--ink, #304c3c); font: inherit; font-size: 22px; cursor: pointer; }
 .character3d-rotation-buttons button:hover { background: var(--mint, #edf6ee); }
 .character3d-rotation-buttons button:focus-visible { outline: 3px solid var(--accent, #35654e); outline-offset: 2px; }
 .character3d-notice { position: absolute; left: 12px; right: 12px; bottom: 12px; margin: 0; padding: 10px 12px; border-radius: 10px; background: #fffffff0; color: #3a5145; font-size: 22px; line-height: 1.5; }

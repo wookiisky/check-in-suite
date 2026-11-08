@@ -12,7 +12,7 @@ async function login(page: Page, password = loginPassword) {
   await page.getByLabel(content.account.username, { exact: true }).fill(username);
   await page.getByLabel(content.account.loginPassword, { exact: true }).fill(password);
   await page.getByRole('button', { name: content.account.login, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.navigation.camp, exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: content.navigation.campTitle, exact: true })).toBeVisible();
 }
 
 // 进入配置时每次提交当前管理密码，不依赖此前留下的授权。
@@ -125,7 +125,7 @@ test('账户草稿切分区、跨页和退出登录均可继续编辑或明确�
   await expect(loginForm.getByLabel(content.account.newPassword, { exact: true })).toHaveValue('Unsaved-Login-2026');
   await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
   await discardDialog.getByRole('button', { name: content.account.discard, exact: true }).click();
-  await expect(page.getByRole('heading', { name: content.navigation.camp, exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: content.navigation.campTitle, exact: true })).toBeVisible();
   await unlock(page);
   await expect(loginForm.getByLabel(content.account.newPassword, { exact: true })).toHaveValue('');
 

@@ -5,6 +5,7 @@ import content from './content/zh-CN.json';
 import { testSession } from './test/account-fixtures';
 import { campFixture } from './features/checkin/test-fixtures';
 import checkinContent from './features/checkin/content.json';
+import achievementContent from './features/achievements/content.json';
 import shopContent from './features/shop/content.json';
 import islandContent from './features/island/three/spatial-content.json';
 import sceneContent from './features/island/three/scene-picker-content.json';
@@ -12,8 +13,6 @@ import spatialConfiguration from '../../internal/island/spatial-scene.json';
 import { appearanceFixture } from './features/shop/appearance-test-fixtures';
 import appearanceContent from './features/shop/appearance-content.json';
 import characterContent from './features/character/character-panel-content.json';
-import titleContent from './features/character/title-picker-content.json';
-import { titlePurchase } from './features/character/character-panel-test-fixtures';
 import { characterTestMatchMedia } from './features/character/character3d-preview-test-fixtures';
 import familyContent from './features/family/content.json';
 import { sound } from './features/family/sound-preferences-test-fakes';
@@ -33,8 +32,10 @@ function installServer(loggedIn = false, managementExpiry: string | null = null)
     if (path.endsWith('/island/layout')) return Response.json({version:1,scene_key:spatialConfiguration.scene.scene_key,environment_key:'day',scene:spatialConfiguration.scene,catalog:spatialConfiguration.catalog,placements:spatialConfiguration.default_placements,inventory:spatialConfiguration.default_placements.map(item=>({instance_id:item.instance_id,item_key:item.item_key}))});
     if (path.endsWith('/island/activity-access')) return Response.json({today:'2026-11-01',expires_at:new Date(Date.now()+3_600_000).toISOString(),activity_access:[]});
     if (path.includes('/checkins?')) return Response.json({ items: [], next_cursor: null });
+    if (path.endsWith('/achievements')) return Response.json({ items: [], title: null });
     if (path.includes('/messages')) return Response.json({ items: [], next_cursor: null });
     if (path.includes('/purchases')) return Response.json({ items: [], next_cursor: null });
+    if (path.includes('/shop/products?')) return Response.json({ items: [], page: 1, total: 0, camp_categories: ['scene'], wallet: campFixture.wallet });
     if (path.includes('/products')) return Response.json({ items: [] });
     if (path.includes('/categories') || path.includes('/tasks')) return Response.json({ items: [] });
     if (path.endsWith('/auth/login')) { active = true; return Response.json(testSession); }
@@ -61,6 +62,18 @@ beforeEach(() => {vi.clearAllMocks();vi.stubGlobal('matchMedia',characterTestMat
 afterEach(() => vi.unstubAllGlobals());
 
 describe('账户页面与管理授权', () => {
+  it('普通顶栏里的配置和退出是带可访问名称的图标按钮', async () => {
+    installServer(true);
+    render(<IslandApp />);
+    await screen.findByRole('heading', { name: content.navigation.campTitle });
+    const header = within(screen.getByRole('banner'));
+    for (const name of [content.navigation.management, content.account.logout]) {
+      const button = await header.findByRole('button', { name });
+      expect(button.textContent).toBe('');
+      expect(button.querySelector('svg, img')).not.toBeNull();
+    }
+  });
+
   it.each(['section', 'navigation', 'brand', 'lock', 'logout'] as const)('账户姓名草稿在%s离开前确认，取消保留输入，放弃后再执行操作', async (target) => {
     const server = installServer(true);
     render(<IslandApp />);
@@ -162,7 +175,6 @@ describe('账户页面与管理授权', () => {
     installServer(true);
     render(<IslandApp />);
     const opener = await screen.findByRole('button', { name: content.navigation.management });
-    expect(within(screen.getByRole('banner')).getByRole('button', { name: content.navigation.management })).toBe(opener);
     expect(within(screen.getByRole('main')).queryByRole('button', { name: content.navigation.management })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: familyContent.sounds })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(familyContent.music)).not.toBeInTheDocument();
@@ -215,17 +227,19 @@ describe('账户页面与管理授权', () => {
     expect(sound.dispose).not.toHaveBeenCalled();
   });
 
-  it('进入小岛隐藏普通页框，独立返回回到进入前页面', async () => {
+  it('营地标题栏保留五个入口，独立返回回到进入前页面', async () => {
     installServer(true);
     render(<IslandApp />);
     fireEvent.click(await screen.findByRole('button', { name: content.navigation.shop }));
     fireEvent.click(screen.getByRole('button', { name: content.navigation.island }));
     await screen.findByRole('region', { name: islandContent.scene });
     expect(screen.getAllByRole('main')).toHaveLength(1);
-    expect(screen.queryByRole('navigation', { name: content.navigation.label })).not.toBeInTheDocument();
+    const navigation = screen.getByRole('navigation', { name: content.navigation.label });
+    expect(within(navigation).getAllByRole('button').map((item) => item.textContent)).toEqual(['打卡', '营地', '统计', '商店', '装扮']);
+    expect(within(navigation).getByRole('button', { name: '营地' })).toHaveAttribute('aria-current', 'page');
     expect(screen.queryByRole('button', { name: content.navigation.management })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: islandContent.back }));
-    await screen.findByRole('heading', { name: shopContent.title });
+    await screen.findByRole('tablist', { name: shopContent.categoryGroupLabel });
     expect(screen.getByRole('button', { name: content.navigation.shop })).toHaveAttribute('aria-current', 'page');
   });
 
@@ -347,7 +361,7 @@ describe('账户页面与管理授权', () => {
     await screen.findByRole('button', { name: shopContent.addProduct });
     expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(0);
     fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
-    await screen.findByRole('heading', { name: shopContent.title });
+    await screen.findByRole('tablist', { name: shopContent.categoryGroupLabel });
     fireEvent.click(screen.getByRole('button', { name: content.navigation.camp }));
     await screen.findByRole('heading', { name: checkinContent.todayTasks });
     await waitFor(() => expect(server.mock.calls.filter(([path]) => String(path).endsWith('/management/lock'))).toHaveLength(1));
@@ -372,116 +386,50 @@ describe('账户页面与管理授权', () => {
 });
 
 
-describe('背包、四槽形象与独立称号入口',()=>{
-  it.each([false,true])('背包明确目的地不依赖本地存储，之后重进不复用旧导航意图（禁用存储=%s）',async(storageDisabled)=>{
-    localStorage.clear();
-    const server=installServer(true),original=server.getMockImplementation()!;
-    const choices=[{scene_key:'seaside-v1',name:'海边营地',thumbnail_url:'/sea.png',free:true,owned:true},{scene_key:'forest-courtyard-v1',name:'林间草地庭院',thumbnail_url:'/forest.png',free:false,owned:true},{scene_key:'lakeside-garden-v1',name:'湖畔花园',thumbnail_url:'/lake.png',free:false,owned:true}];
-    server.mockImplementation(async(input,init)=>{
-      const path=String(input);
-      if(path.endsWith('/island/scenes'))return Response.json({items:choices});
-      if(path.includes('/island/layout?scene_key=')){
-        const key=new URL(path,'https://example.test').searchParams.get('scene_key')!;
-        return Response.json({version:1,scene_key:key,environment_key:'day',scene:{...spatialConfiguration.scene,scene_key:key,house:null},catalog:spatialConfiguration.catalog,placements:[],inventory:[]});
-      }
-      if(path.includes('/purchases'))return Response.json({items:[{...titlePurchase,id:'forest-purchase',type_snapshot:'scene',scene_key:'forest-courtyard-v1',name_snapshot:'林间草地庭院'}],next_cursor:null});
-      return original(input,init);
-    });
-    const write=storageDisabled?vi.spyOn(Storage.prototype,'setItem').mockImplementation(()=>{throw new DOMException('Storage blocked','SecurityError');}):null;
-    const read=storageDisabled?vi.spyOn(Storage.prototype,'getItem').mockImplementation(()=>{throw new DOMException('Storage blocked','SecurityError');}):null;
-    try{
-      render(<IslandApp/>);
-      fireEvent.click(await screen.findByRole('button',{name:shopContent.backpack}));
-      fireEvent.click(await screen.findByRole('button',{name:`${shopContent.enterScene} 林间草地庭院`}));
-      await screen.findByRole('heading',{name:'林间草地庭院'});
-      const requests=server.mock.calls.map(([path])=>String(path));
-      expect(requests.findIndex(path=>path.endsWith('/island/scenes'))).toBeLessThan(requests.findIndex(path=>path.includes('scene_key=forest-courtyard-v1')));
-      fireEvent.click(screen.getByRole('button',{name:sceneContent.open}));
-      fireEvent.click(await screen.findByRole('button',{name:sceneContent.go.replace('{name}','湖畔花园')}));
-      await screen.findByRole('heading',{name:'湖畔花园'});
-      fireEvent.click(screen.getByRole('button',{name:islandContent.back}));
-      await screen.findByRole('heading',{name:shopContent.backpack});
-      const calls=server.mock.calls.length;
-      fireEvent.click(screen.getByRole('button',{name:content.navigation.island}));
-      await screen.findByRole('heading',{name:storageDisabled?'海边营地':'湖畔花园'});
-      await waitFor(()=>expect(server.mock.calls.slice(calls).some(([path])=>String(path).endsWith('/island/scenes'))).toBe(true));
-      expect(server.mock.calls.slice(calls).some(([path])=>String(path).includes('scene_key=forest-courtyard-v1'))).toBe(false);
-    }finally{write?.mockRestore();read?.mockRestore();localStorage.clear();}
-  });
-
-  it('背包称号缺少首页快照时显式读取，失败可重试且不伪造当前称号',async()=>{
-    const server=installServer(true),original=server.getMockImplementation()!;
-    let mode:'pending'|'failure'|'success'='pending';
-    server.mockImplementation(async(input,init)=>{
-      if(String(input).endsWith('/camp')){
-        if(mode==='pending')return new Promise<Response>(()=>{});
-        if(mode==='failure')throw new TypeError('读取失败');
-        return Response.json(campFixture);
-      }
-      return original(input,init);
-    });
-    render(<IslandApp/>);fireEvent.click(await screen.findByRole('button',{name:content.navigation.shop}));
-    await screen.findByRole('heading',{name:shopContent.title});fireEvent.click(screen.getByRole('button',{name:shopContent.backpack}));
-    await screen.findByRole('heading',{name:shopContent.backpack});mode='failure';fireEvent.click(screen.getByRole('button',{name:shopContent.manageTitles}));
-    await screen.findByRole('button',{name:titleContent.retry});expect(screen.queryByRole('dialog',{name:titleContent.title})).not.toBeInTheDocument();
-    mode='success';fireEvent.click(screen.getByRole('button',{name:titleContent.retry}));await screen.findByRole('dialog',{name:titleContent.title});
-    expect(server.mock.calls.some(([path])=>String(path).endsWith('/equipment'))).toBe(false);
-  });
-  it.each(['navigation','appearance'] as const)('切换%s会取消称号预读，迟到响应不能打开另一弹窗',async(target)=>{
-    const server=installServer(true),original=server.getMockImplementation()!;
-    let titleRead=false,complete:((response:Response)=>void)|undefined;
-    server.mockImplementation(async(input,init)=>String(input).endsWith('/camp')?new Promise<Response>(resolve=>{if(titleRead)complete=resolve;}):original(input,init));
-    render(<IslandApp/>);fireEvent.click(await screen.findByRole('button',{name:content.navigation.shop}));
-    await screen.findByRole('heading',{name:shopContent.title});fireEvent.click(screen.getByRole('button',{name:shopContent.backpack}));
-    await screen.findByRole('heading',{name:shopContent.backpack});titleRead=true;fireEvent.click(screen.getByRole('button',{name:shopContent.manageTitles}));
-    await waitFor(()=>expect(complete).toBeDefined());
-    const request=server.mock.calls.filter(([path])=>String(path).endsWith('/camp')).at(-1);
-    fireEvent.click(screen.getByRole('button',{name:target==='navigation'?content.navigation.shop:shopContent.wardrobeTitle}));expect(request?.[1]?.signal?.aborted).toBe(true);
-    await act(async()=>complete?.(Response.json(campFixture)));
-    expect(screen.queryByRole('dialog',{name:titleContent.title})).not.toBeInTheDocument();
-  });
-
-  it('关闭形象弹窗保留留言，背包通过独立入口打开',async()=>{
-    installServer(true);render(<IslandApp/>);
-    const opener=await screen.findByRole('button',{name:characterContent.appearance});
-    fireEvent.change(screen.getByLabelText(familyContent.input),{target:{value:'保留这份留言'}});opener.focus();fireEvent.click(opener);
-    const dialog=await screen.findByRole('dialog',{name:appearanceContent.title});
-    fireEvent.click(within(dialog).getByRole('button',{name:content.common.close}));
-    expect(screen.getByLabelText(familyContent.input)).toHaveValue('保留这份留言');expect(opener).toHaveFocus();
-    fireEvent.click(screen.getByRole('button',{name:shopContent.backpack}));await screen.findByRole('heading',{name:shopContent.backpack});
+describe('打卡与装扮入口', () => {
+  it('标题栏和人物区只显示登录用户名，人物区用图标进入成就', async () => {
+    installServer(true);
+    render(<IslandApp />);
+    const navigation = await screen.findByRole('navigation', { name: content.navigation.label });
+    expect(screen.getByRole('banner')).toContainElement(navigation);
+    expect(within(navigation).getAllByRole('button').map((item) => item.textContent)).toEqual(['打卡', '营地', '统计', '商店', '装扮']);
+    const character = await screen.findByRole('region', { name: characterContent.label });
+    expect(within(character).getByRole('heading', { name: testSession.account.username })).toBeInTheDocument();
+    expect(screen.queryByText(testSession.account.display_name)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: shopContent.backpack })).not.toBeInTheDocument();
+    const achievement = within(character).getByRole('button', { name: content.navigation.achievements });
+    expect(achievement).toHaveTextContent(/^$/);
+    fireEvent.click(achievement);
+    await screen.findByRole('heading', { name: achievementContent.title });
+    fireEvent.click(within(navigation).getByRole('button', { name: '装扮' }));
+    await screen.findByRole('heading', { name: appearanceContent.pageTitle });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
-  it('外观保存直接发布共享快照，任务、留言DOM和读取次数保持不变',async()=>{
-    const server=installServer(true),original=server.getMockImplementation()!;
-    server.mockImplementation(async(input,init)=>String(input).endsWith('/appearance')&&init?.method==='PUT'?Response.json({...appearanceFixture(2),head_purchase_id:'head-purchase'}):original(input,init));
-    render(<IslandApp/>);fireEvent.change(await screen.findByLabelText(familyContent.input),{target:{value:'换装前的留言'}});
-    const message=screen.getByLabelText(familyContent.input),task=screen.getByRole('button',{name:/阅读/});
-    const reads=server.mock.calls.filter(([path])=>String(path).endsWith('/camp')).length;
-    fireEvent.click(screen.getByRole('button',{name:characterContent.appearance}));const dialog=await screen.findByRole('dialog',{name:appearanceContent.title});
-    fireEvent.click(await within(dialog).findByRole('radio',{name:'头部新款'}));fireEvent.click(within(dialog).getByRole('button',{name:appearanceContent.save}));
-    await within(dialog).findByText(appearanceContent.saved);fireEvent.click(within(dialog).getByRole('button',{name:content.common.close}));
-    expect(within(screen.getByRole('region',{name:characterContent.label})).getByTestId('app-character-preview')).toHaveTextContent('head-purchase');
-    expect(screen.getByLabelText(familyContent.input)).toBe(message);expect(message).toHaveValue('换装前的留言');expect(screen.getByRole('button',{name:/阅读/})).toBe(task);
-    expect(server.mock.calls.filter(([path])=>String(path).endsWith('/camp'))).toHaveLength(reads);
-  });
-  it('称号保存只回写equipment，不重挂任务留言或修改外观版本',async()=>{
-    const server=installServer(true),original=server.getMockImplementation()!;
-    server.mockImplementation(async(input,init)=>{
-      const path=String(input);
-      if(path.endsWith('/equipment/title'))return Response.json({title:titlePurchase});
-      if(path.includes('/purchases')&&path.includes('type=title'))return Response.json({items:[titlePurchase],next_cursor:null});
-      return original(input,init);
+
+  it('从营地场景选择打开已购买场景', async () => {
+    localStorage.clear();
+    const server = installServer(true), original = server.getMockImplementation()!;
+    server.mockImplementation(async (input, init) => {
+      const path = String(input);
+      if (path.endsWith('/island/scenes')) return Response.json({ items: [
+        { scene_key: 'seaside-v1', name: '海边营地', thumbnail_url: '/sea.png', free: true, owned: true },
+        { scene_key: 'forest-courtyard-v1', name: '林间草地庭院', thumbnail_url: '/forest.png', free: false, owned: true },
+      ] });
+      if (path.includes('/island/layout?scene_key=forest-courtyard-v1')) return Response.json({
+        version: 1, scene_key: 'forest-courtyard-v1', environment_key: 'day',
+        scene: { ...spatialConfiguration.scene, scene_key: 'forest-courtyard-v1', house: null },
+        catalog: spatialConfiguration.catalog, placements: [], inventory: [],
+      });
+      return original(input, init);
     });
-    render(<IslandApp/>);fireEvent.change(await screen.findByLabelText(familyContent.input),{target:{value:'保留称号前留言'}});
-    const message=screen.getByLabelText(familyContent.input),task=screen.getByRole('button',{name:/阅读/});
-    const reads=server.mock.calls.filter(([path])=>String(path).endsWith('/camp')).length;
-    fireEvent.click(screen.getByRole('button',{name:characterContent.title}));const dialog=await screen.findByRole('dialog',{name:titleContent.title});
-    fireEvent.click(await within(dialog).findByRole('button',{name:`${titleContent.equip} ${titlePurchase.name_snapshot}`}));await within(dialog).findByText(titleContent.saved);
-    fireEvent.click(within(dialog).getByRole('button',{name:content.common.close}));
-    expect(within(screen.getByRole('region',{name:characterContent.label})).getByText(titlePurchase.name_snapshot)).toBeInTheDocument();
-    expect(screen.getByLabelText(familyContent.input)).toBe(message);expect(screen.getByRole('button',{name:/阅读/})).toBe(task);
-    expect(server.mock.calls.filter(([path])=>String(path).endsWith('/camp'))).toHaveLength(reads);
-    expect(server.mock.calls.filter(([path,init])=>String(path).endsWith('/appearance')&&init?.method==='PUT')).toHaveLength(0);
+    try {
+      render(<IslandApp />);
+      fireEvent.click(await screen.findByRole('button', { name: content.navigation.island }));
+      await screen.findByRole('heading', { name: '海边营地' });
+      fireEvent.click(screen.getByRole('button', { name: sceneContent.open }));
+      fireEvent.click(await screen.findByRole('button', { name: sceneContent.go.replace('{name}', '林间草地庭院') }));
+      await screen.findByRole('heading', { name: '林间草地庭院' });
+    } finally { localStorage.clear(); }
   });
 });
 
@@ -492,17 +440,15 @@ it('普通页面与管理界面共用全局钱包，营地隐藏，返回后保�
   expect(wallet).toHaveClass('global-wallet');
   expect(document.querySelector('.checkin-wallet')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: content.navigation.shop }));
-  await screen.findByRole('heading', { name: shopContent.title });
+  await screen.findByRole('tablist', { name: shopContent.categoryGroupLabel });
   expect(screen.getByRole('region', { name: shopContent.balance })).toBe(wallet);
   expect(document.querySelector('.shop-wallet')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: shopContent.backpack }));
-  await screen.findByRole('heading', { name: shopContent.backpack });
   expect(screen.getByRole('region', { name: shopContent.balance })).toBe(wallet);
   fireEvent.click(screen.getByRole('button', { name: content.navigation.island }));
   await screen.findByRole('heading', { name: islandContent.title });
   expect(document.querySelector('.global-wallet')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: islandContent.back }));
-  await screen.findByRole('heading', { name: shopContent.backpack });
+  await screen.findByRole('tablist', { name: shopContent.categoryGroupLabel });
   expect(document.querySelectorAll('.global-wallet')).toHaveLength(1);
   await unlock();
   expect(document.querySelectorAll('.global-wallet')).toHaveLength(1);

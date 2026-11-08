@@ -122,12 +122,31 @@ func (s *Service) List(ctx context.Context, p account.Principal, management bool
 	if err != nil {
 		return result, err
 	}
+	result.Title, err = ReadTitle(ctx, tx, p.AccountID)
+	if err != nil {
+		return result, err
+	}
 	return result, tx.Commit()
 }
 
-// ReadEquipped shares the camp transaction so qualification and badge display cannot disagree.
-func ReadEquipped(ctx context.Context, tx *sql.Tx, accountID int64) ([]Achievement, error) {
-	return readAchievements(ctx, tx, accountID, "AND qualified=1 AND equipped=1")
+// ReadEarned returns every currently qualified badge from the caller's snapshot.
+func ReadEarned(ctx context.Context, tx *sql.Tx, accountID int64) ([]Achievement, error) {
+	return readAchievements(ctx, tx, accountID, "AND qualified=1")
+}
+
+// ReadTitle uses the current name and qualification in the caller's snapshot.
+func ReadTitle(ctx context.Context, tx *sql.Tx, accountID int64) (*Title, error) {
+	var title Title
+	err := tx.QueryRowContext(ctx, `SELECT a.id,a.name FROM accounts owner
+		JOIN achievements a ON a.id=owner.achievement_title_id AND a.account_id=owner.id
+		WHERE owner.id=? AND a.qualified=1`, accountID).Scan(&title.ID, &title.Name)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &title, nil
 }
 
 // Options lists retained selection identities under current management authorization.

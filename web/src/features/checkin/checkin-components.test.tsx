@@ -93,12 +93,9 @@ describe('打卡与记录界面', () => {
     await screen.findByText(content.allDone);
   });
 
-  it('浏览历史仍使用今天的任务日期，任务卡不显示次数和描述', async () => {
+  it('打卡弹窗使用服务端今天的日期，任务卡不显示次数和描述', async () => {
     const request = vi.fn().mockImplementation(async (path: string) => path === '/camp' ? campFixture : { items: [], next_cursor: null });
     render(<CampPage client={{ request }} session={session} />);
-    await screen.findByRole('button', { name: /阅读/ });
-    fireEvent.click(screen.getByRole('button', { name: content.previousDay }));
-    await waitFor(() => expect(request).toHaveBeenCalledWith(expect.stringContaining('start_date=2026-10-28')));
     const task = await screen.findByRole('button', { name: /阅读/ });
     await waitFor(() => expect(task).toBeEnabled());
     fireEvent.click(task);
@@ -161,21 +158,31 @@ describe('提交恢复与读取竞争边界', () => {
     expect(request.mock.calls[3]?.[1].idempotencyKey).not.toBe(request.mock.calls[0]?.[1].idempotencyKey);
   });
 
-  it('晚到的旧日期响应不能覆盖新日期记录', async () => {
+  it('台北跨日刷新只读新的一天，迟到的旧记录不能覆盖', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-29T15:59:59Z'));
     let finishOld: (value: unknown) => void = () => {};
     const oldPage = new Promise((resolve) => { finishOld = resolve; });
+    const midnight = Date.parse('2026-10-29T16:00:00Z');
     const request = vi.fn().mockImplementation(async (path: string) => {
-      if (path === '/camp') return campFixture;
+      if (path === '/camp') return {
+        ...campFixture,
+        today: Date.now() < midnight ? '2026-10-29' : '2026-10-30',
+        server_now: new Date().toISOString(),
+      };
       if (path.includes('2026-10-29')) return oldPage;
       return { items: [], next_cursor: null };
     });
-    render(<CampPage client={{ request }} session={session} />);
-    await waitFor(() => expect(request).toHaveBeenCalledWith(expect.stringContaining('start_date=2026-10-29')));
-    fireEvent.click(screen.getByRole('button', { name: content.previousDay }));
-    await screen.findByText(content.noRecords);
-    await act(async () => { finishOld({ items: [{ ...recordFixture, task_name_snapshot: '迟到的旧记录' }], next_cursor: null }); await oldPage; });
-    expect(screen.queryByText('迟到的旧记录')).not.toBeInTheDocument();
-    expect(screen.getByText('2026-10-28')).toBeInTheDocument();
+    const view = render(<CampPage client={{ request, now: () => new Date() }} session={session} />);
+    try {
+      await act(async () => {});
+      expect(request).toHaveBeenCalledWith('/checkins?start_date=2026-10-29&end_date=2026-10-29');
+      await act(async () => vi.advanceTimersByTime(1051));
+      expect(request).toHaveBeenCalledWith('/checkins?start_date=2026-10-30&end_date=2026-10-30');
+      expect(screen.getByText(content.noRecords)).toBeInTheDocument();
+      await act(async () => { finishOld({ items: [{ ...recordFixture, task_name_snapshot: '迟到的旧记录' }], next_cursor: null }); await oldPage; });
+      expect(screen.queryByText('迟到的旧记录')).not.toBeInTheDocument();
+    } finally { view.unmount(); vi.useRealTimers(); }
   });
 
   it('关闭未提交的文字先确认放弃，不发起任何写请求', () => {

@@ -36,10 +36,10 @@ function setup(failure?:ApiFailure,prepare?:(state:SpatialIslandState)=>void,ini
     }
     throw new Error(path);
   });
-  const onBack=vi.fn(),onShop=vi.fn(),onCamp=vi.fn();
+  const onBack=vi.fn(),onShop=vi.fn(),onCamp=vi.fn(),onNavigate=vi.fn();
   const client={request:request as never};
-  const result=render(<IslandPage3D client={client} session={{...testSession,timezone:'Asia/Taipei'}} {...(initialSceneKey?{initialSceneKey}:{})} onBack={onBack} onShop={onShop} onCamp={onCamp}/>);
-  return {...result,client,request,onBack,onShop,onCamp,setLatest:(next:SpatialIslandState)=>{state=next;}};
+  const result=render(<IslandPage3D client={client} session={{...testSession,timezone:'Asia/Taipei'}} {...(initialSceneKey?{initialSceneKey}:{})} onBack={onBack} onShop={onShop} onCamp={onCamp} onNavigate={onNavigate}/>);
+  return {...result,client,request,onBack,onShop,onCamp,onNavigate,setLatest:(next:SpatialIslandState)=>{state=next;}};
 }
 const deskStart=initial.placements.find(item=>item.instance_id==='base:reading3d')!;
 const movedPosition=`${content.position} ${deskStart.x_cm+10}, ${deskStart.z_cm}`;
@@ -258,10 +258,20 @@ describe('三维营地页面业务交互',()=>{
     const test=setup();await editDesk();
     fireEvent.click(screen.getByRole('button',{name:content.shop}));
     const dialog=screen.getByRole('dialog',{name:content.leaveTitle});
-    expect(test.onShop).not.toHaveBeenCalled();
+    expect(test.onNavigate).not.toHaveBeenCalled();
     fireEvent.click(within(dialog).getByRole('button',{name:content.saveLeave}));
-    await waitFor(()=>expect(test.onShop).toHaveBeenCalledOnce());
+    await waitFor(()=>expect(test.onNavigate).toHaveBeenCalledWith('shop'));
     expect(test.request.mock.calls.find(call=>call[1]?.method==='PUT')?.[1]?.body).toMatchObject({expected_version:1,placements:expect.arrayContaining([expect.objectContaining({instance_id:'base:reading3d',x_cm:deskStart.x_cm+10})])});
+  });
+  it('标题栏离开营地也必须确认未保存的布置', async () => {
+    const test = setup();
+    await editDesk();
+    const nav = screen.getByRole('navigation', { name: '主要导航' });
+    fireEvent.click(within(nav).getByRole('button', { name: '装扮' }));
+    const dialog = screen.getByRole('dialog', { name: content.leaveTitle });
+    expect(test.onNavigate).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole('button', { name: content.discardLeave }));
+    expect(test.onNavigate).toHaveBeenCalledWith('appearance');
   });
   it('保存失败保留草稿且不离开，未知结果不能放弃后误当取消',async()=>{
     const test=setup(new ApiFailure(0,{code:'NETWORK_ERROR',field_errors:{},request_id:''}));await editDesk();

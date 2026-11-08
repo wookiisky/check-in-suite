@@ -14,7 +14,7 @@ import '../../styles/island.css';
 import './character-verification.css';
 
 // 独立页面沿用真实登录与已保存快照，供全站接入前验证完整外观流程。
-function SavedAppearance({ client, reduced }: { client: ApiClient; reduced: boolean }) {
+function SavedAppearance({ client, accountID, reduced }: { client: ApiClient; accountID: number; reduced: boolean }) {
   const { snapshot, error, refresh, publishSaved } = useAppearance();
   const [editing, setEditing] = useState(false);
   const [action, setAction] = useState('idle');
@@ -29,7 +29,7 @@ function SavedAppearance({ client, reduced }: { client: ApiClient; reduced: bool
       <p data-testid="character-saved-version">{content.version} {snapshot.version}</p>
       <div className="button-row"><CharacterActionPicker characterKey={character.character_key} animations={character.animations} previewAnimations={characterPreviewAnimations(snapshot)} value={previewSelection.action === '_preview' ? action : previewSelection.action} onChange={setAction} /><button onClick={() => setEditing(true)}>{content.edit}</button></div>
     </section>
-    {editing && <AppearanceDialog client={client} reduceMotion={reduced} onClose={() => setEditing(false)} onSaved={publishSaved} />}
+    {editing && <AppearanceDialog client={client} accountID={accountID} reduceMotion={reduced} onClose={() => setEditing(false)} onSaved={publishSaved} />}
   </>;
 }
 
@@ -49,7 +49,7 @@ function CharacterVerification() {
   }, [client, attempt]);
   return <main className="character-verification">
     <header><h1>{content.title}</h1><a href="/">{content.back}</a></header><p>{content.description}</p>
-    {loading ? <p role="status">{content.loading}</p> : error ? <section className="panel"><p role="alert">{errorMessage(error)}</p><button onClick={() => setAttempt((value) => value + 1)}>{content.reload}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <AppearanceProvider key={session.csrf_token} client={client} active><SavedAppearance client={client} reduced={session.account.preferences.reduce_motion} /></AppearanceProvider>}
+    {loading ? <p role="status">{content.loading}</p> : error ? <section className="panel"><p role="alert">{errorMessage(error)}</p><button onClick={() => setAttempt((value) => value + 1)}>{content.reload}</button></section> : !session ? <LoginForm client={client} onLogin={acceptSession} /> : <AppearanceProvider key={session.csrf_token} client={client} active><SavedAppearance client={client} accountID={session.account.id} reduced={session.account.preferences.reduce_motion} /></AppearanceProvider>}
   </main>;
 }
 

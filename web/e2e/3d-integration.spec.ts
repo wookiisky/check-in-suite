@@ -7,11 +7,10 @@ import family from '../src/features/family/content.json' with { type: 'json' };
 import shop from '../src/features/shop/content.json' with { type: 'json' };
 import appearance from '../src/features/shop/appearance-content.json' with { type: 'json' };
 import character from '../src/features/character/character-panel-content.json' with { type: 'json' };
-import titles from '../src/features/character/title-picker-content.json' with { type: 'json' };
 import spatial from '../src/features/island/three/spatial-content.json' with { type: 'json' };
 import { appearanceRequest } from './appearance-flow-fixtures';
 import { readSpatial, spatialRequest } from './island-3d-fixtures';
-import { loginMain, shopAPI, selectShopCategory, purchaseProduct, openBackpack, goHome, closeAppearance } from './shop-navigation';
+import { loginMain, shopAPI, selectShopCategory, purchaseProduct, openAppearance, goHome } from './shop-navigation';
 
 type Product = components['schemas']['Product'];
 type Appearance = components['schemas']['AppearanceState'];
@@ -43,7 +42,7 @@ async function clearFunding(page: Page, funding: Funding | null) {
 }
 
 // 服装报价用稳定目录身份，购买后保留分类，只有整套外观保存才改变人物。
-test('真实购买服装不自动换装，背包与首页共享外观且保留任务和留言DOM', async ({ page }, testInfo) => {
+test('真实购买服装不自动换装，独立装扮页保存后打卡页显示新外观', async ({ page }, testInfo) => {
   await loginMain(page);
   const original = await shopAPI<Appearance>(page, '/appearance');
   let funding: Funding | null = null;
@@ -67,15 +66,14 @@ test('真实购买服装不自动换装，背包与首页共享外观且保留�
     expect(camp.wallet.coins).toBe(before.wallet.coins - product.coin_price);
     expect(camp.wallet.diamonds).toBe(before.wallet.diamonds - product.diamond_price);
     const owned = purchased.inventory.find((item) => item.wearable_key === wearable.wearable_key)!;
-    await openBackpack(page);
-    await page.getByRole('button', { name: shop.wardrobeTitle, exact: true }).click();
-    const dialog = page.getByRole('dialog', { name: appearance.title, exact: true });
-    await dialog.getByRole('group', { name: appearance.slots[wearable.slot], exact: true }).getByRole('radio', { name: wearable.name, exact: true }).check();
-    await dialog.getByRole('button', { name: appearance.save, exact: true }).click();
-    await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
+    await openAppearance(page);
+    const wardrobe = page.locator('.appearance-page');
+    await wardrobe.getByRole('tab', { name: appearance.slots[wearable.slot], exact: true }).click();
+    await wardrobe.getByRole('radio', { name: wearable.name, exact: true }).check();
+    await wardrobe.getByRole('button', { name: appearance.save, exact: true }).click();
+    await expect(wardrobe.getByText(appearance.saved, { exact: true })).toBeVisible();
     const saved = await shopAPI<Appearance>(page, '/appearance');
     expect(saved[`${wearable.slot}_purchase_id`]).toBe(owned.purchase_id);
-    await closeAppearance(page);
     await goHome(page);
     const panel = page.getByRole('region', { name: character.label, exact: true });
     const preview = panel.locator('.character3d-preview');
@@ -83,22 +81,17 @@ test('真实购买服装不自动换装，背包与首页共享外观且保留�
     await expect(preview).toHaveAttribute('data-character-status', 'ready');
     const message = page.getByLabel(family.input, { exact: true });
     await message.fill('换装期间保留的家庭留言草稿');
-    const messageNode = await message.elementHandle();
     const task = page.locator('.checkin-task').filter({ hasText: funding.task.name });
     await expect(task).toBeVisible();
-    const taskNode = await task.elementHandle();
-    const reads: string[] = [];
-    page.on('request', (request) => { if (request.method() === 'GET' && new URL(request.url()).pathname === '/api/v1/camp') reads.push(request.url()); });
-    await panel.getByRole('button', { name: character.appearance, exact: true }).click();
+    await openAppearance(page);
+    await wardrobe.getByRole('tab', { name: appearance.slots[wearable.slot], exact: true }).click();
     const defaultWearable = saved.wearables.find((item) => item.wearable_key === body.defaults[wearable.slot])!;
-    await dialog.getByRole('group', { name: appearance.slots[wearable.slot], exact: true }).getByRole('radio', { name: appearance.defaultOption.replace('{name}', defaultWearable.name), exact: true }).check();
-    await dialog.getByRole('button', { name: appearance.save, exact: true }).click();
-    await expect(dialog.getByText(appearance.saved, { exact: true })).toBeVisible();
-    await closeAppearance(page);
+    await wardrobe.getByRole('radio', { name: appearance.defaultOption.replace('{name}', defaultWearable.name), exact: true }).check();
+    await wardrobe.getByRole('button', { name: appearance.save, exact: true }).click();
+    await expect(wardrobe.getByText(appearance.saved, { exact: true })).toBeVisible();
+    await goHome(page);
     await expect(message).toHaveValue('换装期间保留的家庭留言草稿');
-    expect(await messageNode!.evaluate((node) => node.isConnected)).toBe(true);
-    expect(await taskNode!.evaluate((node) => node.isConnected)).toBe(true);
-    expect(reads).toEqual([]);
+    await expect(task).toBeVisible();
     await expect(preview).toHaveAttribute('data-appearance-version', String(saved.version + 1));
     await expect(preview).toHaveAttribute('data-character-status', 'ready');
     await message.fill('');
@@ -110,55 +103,16 @@ test('真实购买服装不自动换装，背包与首页共享外观且保留�
   }
 });
 
-// 称号只更新独立装备关系，不改人物六槽、账户版本或任务草稿。
-test('真实称号购买后独立佩戴与卸下且不改三维外观版本', async ({ page }, testInfo) => {
-  await loginMain(page);
-  const original = await shopAPI<Camp>(page, '/camp');
-  const before = await shopAPI<Appearance>(page, '/appearance');
-  let product: Product | null = null;
-  let funding: Funding | null = null;
-  try {
-    await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
-    const assets = await shopAPI<components['schemas']['AssetList']>(page, '/assets');
-    product = await shopAPI<Product>(page, '/management/products', 'POST', { type: 'title', name: `三维独立称号-${testInfo.project.name}`, asset_key: assets.items.find((item) => item.kind === 'title')!.key, description: '', coin_price: 0, diamond_price: 0, stock: null, enabled: true });
-    await shopAPI(page, '/management/lock', 'POST');
-    funding = await fundPurchase(page, product, `称号购买准备-${testInfo.project.name}`);
-    await selectShopCategory(page, 'appearance', shop.types.title);
-    await purchaseProduct(page, product);
-    expect((await shopAPI<Camp>(page, '/camp')).equipment.title).toEqual(original.equipment.title);
-    await goHome(page);
-    const panel = page.getByRole('region', { name: character.label, exact: true });
-    await panel.getByRole('button', { name: character.title, exact: true }).click();
-    const picker = page.getByRole('dialog', { name: titles.title, exact: true });
-    await picker.getByRole('button', { name: `${titles.equip} ${product.name}`, exact: true }).click();
-    await expect(picker.getByRole('button', { name: `${titles.unequip} ${product.name}`, exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await expect(panel.getByText(product.name, { exact: true })).toBeVisible();
-    await picker.getByRole('button', { name: `${titles.unequip} ${product.name}`, exact: true }).click();
-    await expect(picker.getByRole('button', { name: `${titles.equip} ${product.name}`, exact: true })).toHaveAttribute('aria-pressed', 'false');
-    await picker.getByRole('button', { name: content.common.close, exact: true }).click();
-    expect(appearanceRequest(await shopAPI<Appearance>(page, '/appearance'))).toEqual(appearanceRequest(before));
-    const after = await shopAPI<Camp>(page, '/camp');
-    expect(after.equipment.title).toBeNull();
-    expect(after.account.version).toBe(original.account.version);
-    expect((await shopAPI<components['schemas']['SessionResponse']>(page, '/session')).management_expires_at).toBeNull();
-  } finally {
-    await shopAPI(page, '/equipment/title', 'PUT', { purchase_id: original.equipment.title?.id ?? null });
-    await clearFunding(page, funding);
-    if (product) {
-      await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
-      await shopAPI(page, `/management/products/${product.id}`, 'DELETE', { expected_version: product.version });
-      await shopAPI(page, '/management/lock', 'POST');
-    }
-  }
-});
-
 // 新购家具从实际订单进入完整库存，浏览相机和进出全屏不进入保存数据。
-test('主入口真实购买家具后库存摆放保存刷新并返回来源背包', async ({ page }, testInfo) => {
+test('主入口真实购买家具后在营地摆放保存并返回商店', async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await loginMain(page);
   const original = await readSpatial(page);
   let funding: Funding | null = null;
   try {
-    const definition = original.catalog.find((item) => item.item_key === 'camp-dining-chair-v1')!;
+    // 两个浏览器项目共用测试账户，分别购买可摆入屋内的不同物件。
+    const itemKey = testInfo.project.name === 'desktop-chromium' ? 'camp-dining-chair-v1' : 'camp-coffee-table-v1';
+    const definition = original.catalog.find((item) => item.item_key === itemKey)!;
     const product = (await shopAPI<components['schemas']['ProductList']>(page, '/products?type=island')).items.find((item) => item.island_item_key === definition.item_key)!;
     funding = await fundPurchase(page, product, `家具购买准备-${testInfo.project.name}`);
     await selectShopCategory(page, 'island');
@@ -166,8 +120,7 @@ test('主入口真实购买家具后库存摆放保存刷新并返回来源背�
     const inventory = await readSpatial(page);
     const owned = inventory.inventory.find((item) => item.item_key === definition.item_key && !original.inventory.some((old) => old.instance_id === item.instance_id))!;
     expect(inventory.version).toBe(original.version);
-    await openBackpack(page);
-    await page.getByRole('button', { name: shop.goToIsland, exact: true }).click();
+    await page.getByRole('navigation', { name: content.navigation.label }).getByRole('button', { name: content.navigation.island, exact: true }).click();
     const island = page.getByRole('main', { name: spatial.title, exact: true });
     await expect(island).toBeVisible();
     await expect(page.locator('body')).toHaveClass(/island-immersive/);
@@ -197,7 +150,7 @@ test('主入口真实购买家具后库存摆放保存刷新并返回来源背�
     expect(saved.version).toBe(original.version + 1);
     expect(saved.placements.some((item) => item.instance_id === owned.instance_id && item.space === 'indoor')).toBe(true);
     await island.getByRole('button', { name: spatial.back, exact: true }).click();
-    await expect(page.getByRole('heading', { name: shop.backpack, exact: true })).toBeVisible();
+    await expect(page.getByRole('tablist', { name: shop.categoryGroupLabel, exact: true })).toBeVisible();
     await expect(page.locator('body')).not.toHaveClass(/island-immersive/);
     await page.reload();
     await page.getByRole('button', { name: content.navigation.island, exact: true }).click();
@@ -239,54 +192,5 @@ test('全屏营地离开时版本冲突保留草稿且取消后可以干净返�
   } finally {
     const current = await readSpatial(page);
     await shopAPI(page, '/island/layout', 'PUT', { ...spatialRequest(original), expected_version: current.version });
-  }
-});
-
-// 实际PUT提交后断回执，关闭重开只读取事实，不再提交一次称号写入。
-test('称号未知保存关闭重开后读取真实佩戴事实且PUT仅一次', async ({ page }, testInfo) => {
-  await loginMain(page);
-  const original = await shopAPI<Camp>(page, '/camp');
-  let product: Product | null = null;
-  let funding: Funding | null = null;
-  try {
-    await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
-    const assets = await shopAPI<components['schemas']['AssetList']>(page, '/assets');
-    product = await shopAPI<Product>(page, '/management/products', 'POST', { type: 'title', name: `未知恢复称号-${testInfo.project.name}`, asset_key: assets.items.find((item) => item.kind === 'title')!.key, description: '', coin_price: 0, diamond_price: 0, stock: null, enabled: true });
-    await shopAPI(page, '/management/lock', 'POST');
-    funding = await fundPurchase(page, product, `称号恢复准备-${testInfo.project.name}`);
-    await selectShopCategory(page, 'appearance', shop.types.title);
-    await purchaseProduct(page, product);
-    await goHome(page);
-    const opener = page.getByRole('region', { name: character.label, exact: true }).getByRole('button', { name: character.title, exact: true });
-    await opener.click();
-    const picker = page.getByRole('dialog', { name: titles.title, exact: true });
-    let writes = 0;
-    await page.route('**/api/v1/equipment/title', async (route) => {
-      if (route.request().method() === 'PUT') {
-        writes++;
-        expect((await route.fetch()).ok()).toBe(true);
-        await route.abort('failed');
-      } else await route.continue();
-    });
-    await picker.getByRole('button', { name: `${titles.equip} ${product.name}`, exact: true }).click();
-    await expect(picker.getByText(titles.unknown, { exact: true })).toBeVisible();
-    await picker.getByRole('button', { name: content.common.close, exact: true }).click();
-    await expect(picker).toHaveCount(0);
-    const factRead = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/v1/camp' && response.request().method() === 'GET' && response.ok());
-    await opener.click();
-    await factRead;
-    await expect(picker.getByRole('button', { name: `${titles.unequip} ${product.name}`, exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await expect(picker.getByText(titles.unknown, { exact: true })).toHaveCount(0);
-    expect((await shopAPI<Camp>(page, '/camp')).equipment.title?.product_id).toBe(product.id);
-    expect(writes).toBe(1);
-  } finally {
-    await page.unroute('**/api/v1/equipment/title');
-    await shopAPI(page, '/equipment/title', 'PUT', { purchase_id: original.equipment.title?.id ?? null });
-    await clearFunding(page, funding);
-    if (product) {
-      await shopAPI(page, '/management/unlock', 'POST', { password: 'Manage-Test-2026' });
-      await shopAPI(page, `/management/products/${product.id}`, 'DELETE', { expected_version: product.version });
-      await shopAPI(page, '/management/lock', 'POST');
-    }
   }
 });

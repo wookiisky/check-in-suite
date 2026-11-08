@@ -100,7 +100,21 @@ export function CalendarPage({ client, session, accountID = session.account.id, 
     {calendar && <><div className="calendar-weekdays" aria-hidden="true">{content.weekdays.map((day) => <span key={day}>{day}</span>)}</div><div className="calendar-weeks">{weeks.map((week, index) => <div className="calendar-week" key={`${month}-${index}`}>{week.map((day, dayIndex) => {
       if (!day) return <span className="calendar-blank" key={`blank-${dayIndex}`} aria-hidden="true" />;
       const item = summary.get(day);
-      return <button className="calendar-day" data-today={day === today} key={day} aria-label={`${day} ${content.weekdays[dayIndex]} ${item?.count ?? 0} ${content.count}${day === today ? ` ${content.today}` : ''}`} onClick={(event) => { event.currentTarget.focus(); setRecords([]); setNextCursor(null); setRecordsError(null); setSelectedDate(day); }}><time dateTime={day}>{Number(day.slice(-2))}</time>{day === today && <span className="calendar-day-today">{content.today}</span>}<span className="calendar-icons" aria-hidden="true">{item?.icons.map((icon, position) => <img key={`${icon}-${position}`} src={`/api/v1/assets/${encodeURIComponent(icon)}`} alt="" />)}{(item?.more_count ?? 0) > 0 && <span>+{item?.more_count}</span>}</span></button>;
+      const moreCount = item?.more_count ?? 0;
+      const label = [
+        day,
+        content.weekdays[dayIndex],
+        `${item?.count ?? 0} ${content.count}`,
+        day === today ? content.today : '',
+        moreCount > 0 ? content.moreIcons.replace('{count}', String(moreCount)) : '',
+      ].filter(Boolean).join(' ');
+      return <button className="calendar-day" data-today={day === today} key={day} aria-label={label} onClick={(event) => { event.currentTarget.focus(); setRecords([]); setNextCursor(null); setRecordsError(null); setSelectedDate(day); }}>
+        <time dateTime={day}>{Number(day.slice(-2))}</time>
+        <span className="calendar-icons" aria-hidden="true">
+          {item?.icons.map((icon, position) => <img key={`${icon}-${position}`} src={`/api/v1/assets/${encodeURIComponent(icon)}`} alt="" />)}
+          {moreCount > 0 && <svg viewBox="0 0 24 24" focusable="false"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>}
+        </span>
+      </button>;
     })}</div>)}</div></>}
     {selectedDate && !record && <Modal title={`${selectedDate} · ${content.dateDetail}`} onClose={() => setSelectedDate(null)}><div className="calendar-detail">
       <FormFeedback error={recordsError} />{recordsError !== null && <button className="secondary" onClick={() => void loadRecords(selectedDate, nextCursor)}>{content.retry}</button>}

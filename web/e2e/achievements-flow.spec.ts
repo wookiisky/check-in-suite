@@ -3,6 +3,8 @@ import type { Page } from '@playwright/test';
 import content from '../src/content/zh-CN.json' with { type: 'json' };
 import checkin from '../src/features/checkin/content.json' with { type: 'json' };
 import achievement from '../src/features/achievements/content.json' with { type: 'json' };
+import character from '../src/features/character/character-panel-content.json' with { type: 'json' };
+import preview from '../src/features/character/character3d-content.json' with { type: 'json' };
 import type { components } from '../src/api/schema';
 
 type Achievement = components['schemas']['Achievement'];
@@ -39,6 +41,7 @@ async function createAchievementInPage(page: Page, name: string, taskName: strin
 // 从管理配置到真实打卡、佩戴、删除任务保留、删除记录撤回均经过页面与服务。
 test('成就管理、按计划完成、佩戴持久化与删除后的资格重算', async ({ page }, testInfo) => {
   test.setTimeout(90_000);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   const suffix = `${testInfo.project.name}-${Date.now()}`;
   const taskName = `成就任务-${suffix}`;
   const countName = `坚持徽章-${suffix}`;
@@ -47,7 +50,13 @@ test('成就管理、按计划完成、佩戴持久化与删除后的资格重�
   await page.getByLabel(content.account.username).fill('island-e2e');
   await page.getByLabel(content.account.loginPassword).fill('Island-Test-2026');
   await page.getByRole('button', { name: content.account.login, exact: true }).click();
-  await page.getByRole('button', { name: content.navigation.management, exact: true }).click();
+  const header = page.getByRole('banner');
+  const settings = header.getByRole('button', { name: content.navigation.management, exact: true });
+  const logout = header.getByRole('button', { name: content.account.logout, exact: true });
+  await expect(settings).toHaveText('');
+  await expect(logout).toHaveText('');
+  expect((await logout.boundingBox())!.x).toBeGreaterThan((await settings.boundingBox())!.x);
+  await settings.click();
   await page.getByLabel(content.account.managementPassword, { exact: true }).fill('Manage-Test-2026');
   await page.getByRole('button', { name: content.account.unlock, exact: true }).click();
   await expect(page.getByRole('heading', { name: content.account.settingsTitle, exact: true })).toBeVisible();
@@ -68,28 +77,49 @@ test('成就管理、按计划完成、佩戴持久化与删除后的资格重�
   await page.locator('.checkin-task').filter({ hasText: taskName }).click();
   await page.getByRole('dialog').getByRole('button', { name: checkin.checkin, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.getByRole('button', { name: achievement.viewAll, exact: true }).click();
-  for (const name of [countName, streakName]) {
-    const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
-    await expect(card.getByRole('button', { name: achievement.equip, exact: true })).toBeEnabled();
-    await card.getByRole('button', { name: achievement.equip, exact: true }).click();
-    await expect(card.getByRole('button', { name: achievement.unequip, exact: true })).toBeEnabled();
-  }
+  await page.getByRole('button', { name: character.achievements, exact: true }).click();
+  await page.getByRole('button', { name: achievement.chooseTitle, exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: countName, exact: true }).click();
+  await expect(page.getByRole('button', { name: countName, exact: true })).toBeVisible();
+  await page.getByRole('button', { name: countName, exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: streakName, exact: true }).click();
+  await expect(page.getByRole('button', { name: streakName, exact: true })).toBeVisible();
   await page.getByRole('button', { name: `${achievement.details} ${countName}`, exact: true }).click();
   await expect(page.getByRole('dialog').getByRole('listitem')).toHaveText(taskName);
   await page.getByRole('dialog').getByRole('button', { name: content.common.close, exact: true }).click();
   await page.getByRole('button', { name: content.navigation.camp, exact: true }).click();
   await page.reload();
-  const strip = page.getByRole('region', { name: achievement.equippedTitle, exact: true });
+  const characterPanel = page.getByRole('region', { name: character.label, exact: true });
+  const wornTitle = characterPanel.getByText(streakName, { exact: true });
+  await expect(wornTitle).toHaveCSS('font-weight', '700');
+  await expect(wornTitle).toHaveCSS('font-family', /KaiTi|Kaiti SC/);
+  await expect(characterPanel.getByRole('button', { name: streakName, exact: true })).toHaveCount(0);
+  const model = characterPanel.getByRole('region', { name: preview.label, exact: true });
+  for (const name of [preview.rotation.left, preview.rotation.right, preview.rotation.reset]) {
+    await expect(model.getByRole('button', { name, exact: true })).toHaveCount(0);
+  }
+  const strip = page.getByRole('region', { name: achievement.badgeTitle, exact: true });
   for (const name of [countName, streakName]) {
     const badgeButton = strip.getByRole('button', { name: `${achievement.details} ${name}`, exact: true });
     await expect(badgeButton).toBeVisible();
     expect(await badgeButton.innerText()).toBe('');
+    await expect(badgeButton).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(badgeButton).toHaveCSS('box-shadow', 'none');
     const size = await badgeButton.boundingBox();
     expect(size?.width).toBeGreaterThanOrEqual(56);
     expect(size?.height).toBeGreaterThanOrEqual(56);
   }
   await expect.poll(() => strip.locator('img').evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
+  const toggle = characterPanel.getByRole('button', { name: achievement.badgeTitle, exact: true });
+  const modelBox = (await model.boundingBox())!;
+  const toggleBox = (await toggle.boundingBox())!;
+  expect(modelBox.x + modelBox.width - toggleBox.x - toggleBox.width).toBeCloseTo(12);
+  expect(modelBox.y + modelBox.height - toggleBox.y - toggleBox.height).toBeCloseTo(12);
+  await toggle.click();
+  await page.reload();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(strip.getByRole('button', { name: `${achievement.details} ${countName}`, exact: true })).toHaveCount(0);
+  await toggle.click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await strip.getByRole('button', { name: `${achievement.details} ${countName}`, exact: true }).click();
   await expect(page.getByRole('dialog', { name: countName, exact: true })).toContainText(achievement.earnedAt);
@@ -101,8 +131,9 @@ test('成就管理、按计划完成、佩戴持久化与删除后的资格重�
   await achievementAPI(page, `/management/tasks/${task.id}`, 'DELETE', { expected_version: task.version });
   await page.reload();
   for (const name of [countName, streakName]) await expect(strip.getByRole('button', { name: `${achievement.details} ${name}`, exact: true })).toBeVisible();
-  const preserved = (await achievementAPI(page, '/camp') as Camp).achievements;
-  expect(mine.every((item) => preserved.some((entry) => entry.id === item.id))).toBe(true);
+  const preserved = await achievementAPI(page, '/camp') as Camp;
+  expect(mine.every((item) => preserved.earned_achievements?.some((entry) => entry.id === item.id))).toBe(true);
+  expect(preserved.achievement_title?.name).toBe(streakName);
   await strip.getByRole('button', { name: `${achievement.details} ${countName}`, exact: true }).click();
   await expect(page.getByRole('dialog').getByRole('listitem')).toContainText(taskName);
   await expect(page.getByRole('dialog').getByRole('listitem')).toContainText(achievement.deleted);
@@ -114,14 +145,17 @@ test('成就管理、按计划完成、佩戴持久化与删除后的资格重�
   await page.getByRole('dialog').getByRole('button', { name: checkin.confirmDelete, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   for (const name of [countName, streakName]) await expect(strip.getByRole('button', { name: `${achievement.details} ${name}`, exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: achievement.viewAll, exact: true }).click();
+  await expect(wornTitle).toHaveCount(0);
+  await page.getByRole('button', { name: character.achievements, exact: true }).click();
+  await page.getByRole('button', { name: achievement.unowned, exact: true }).click();
   for (const name of [countName, streakName]) {
     const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
-    await expect(card.getByText(achievement.unowned, { exact: true })).toBeVisible();
-    await expect(card.getByRole('button', { name: achievement.equip, exact: true })).toHaveCount(0);
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('button')).toHaveCount(1);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  const final = await achievementAPI(page, '/achievements') as { items: Achievement[] };
+  const final = await achievementAPI(page, '/achievements') as components['schemas']['AchievementList'];
+  expect(final.title).toBeNull();
   expect(final.items.filter((item) => mine.some((entry) => entry.id === item.id)).every((item) => !item.qualified && !item.equipped && item.progress === 0)).toBe(true);
 });
 
@@ -157,7 +191,7 @@ test('成就冲突采用新建类别后仍可保存，普通详情显示类别�
   const result = await achievementAPI(page, '/management/achievements') as { items: Achievement[] };
   expect(result.items.find((item) => item.id === created.id)).toMatchObject({ target: 12, category_id: category.id, version: 3 });
   await page.getByRole('button', { name: content.account.leaveManagement, exact: true }).click();
-  await page.getByRole('button', { name: achievement.viewAll, exact: true }).click();
+  await page.getByRole('button', { name: character.achievements, exact: true }).click();
   await page.getByRole('button', { name: `${achievement.details} ${name}`, exact: true }).click();
   await expect(page.getByRole('dialog').getByRole('region', { name: achievement.scope })).toContainText(categoryName);
 });

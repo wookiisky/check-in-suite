@@ -375,6 +375,27 @@ paths:
       parameters: [{"name": "id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}, {"$ref": "#/components/parameters/CSRF"}]
       requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/VersionRequest"}}}}
       responses: {"204": {"description": "成功，无响应体"}, "default": {"$ref": "#/components/responses/Error"}}
+  "/api/v1/shop/products":
+    get:
+      operationId: "browseShopProducts"
+      summary: "按页码浏览尚未购买的商品"
+      parameters:
+        - {"name": "group", "in": "query", "required": true, "schema": {"type": "string", "enum": ["appearance", "camp"]}}
+        - {"name": "category", "in": "query", "required": false, "schema": {"type": "string", "maxLength": 64}, "description": "省略表示该组的全部商品。装扮按人物及部位分类，营地按物件目录及场景分类。"}
+        - {"name": "page", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1, "default": 1}}
+        - {"name": "limit", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 24}}
+      responses:
+        "200": {"description": "成功", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ShopPage"}}}}
+        default: {"$ref": "#/components/responses/Error"}
+  "/api/v1/shop/development/buy-all":
+    post:
+      operationId: "developmentBuyAllShopProducts"
+      summary: "在开发环境取得所有尚未拥有的上架商店商品"
+      description: "只对当前账户生效，保持余额和库存数量。同款只发一份，重复调用可补齐新上架的商品。服务端未启用开发环境时返回 404。"
+      parameters: [{"$ref": "#/components/parameters/CSRF"}]
+      responses:
+        "200": {"description": "成功，返回当前钱包", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Wallet"}}}}
+        default: {"$ref": "#/components/responses/Error"}
   "/api/v1/products":
     get:
       operationId: "listProducts"
@@ -639,6 +660,33 @@ paths:
             schema: {"$ref": "#/components/schemas/VersionRequest"}
       responses:
         "204": {"description": "成功，无响应体"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/api/v1/achievements/title":
+    put:
+      operationId: "selectAchievementTitle"
+      summary: "选择一个已获得成就作为显示文本，或卸下当前文本"
+      parameters: [{"$ref": "#/components/parameters/CSRF"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              additionalProperties: false
+              required: ["achievement_id"]
+              properties:
+                achievement_id: {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                additionalProperties: false
+                required: ["title"]
+                properties:
+                  title: {"anyOf": [{"$ref": "#/components/schemas/AchievementTitle"}, {"type": "null"}]}
         default: {"$ref": "#/components/responses/Error"}
   "/api/v1/achievements/{id}/equipment":
     put:
@@ -1426,6 +1474,17 @@ components:
         items: {"type": "array", "items": {"$ref": "#/components/schemas/Product"}}
         next_cursor: {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "分页读取时的下一页边界；null 表示没有后续商品。"}
         facets: {"$ref": "#/components/schemas/ProductFacets", "description": "全部可见商品的来源与包选项，不受当前页限制。"}
+    ShopPage:
+      type: "object"
+      additionalProperties: false
+      required: ["items", "camp_categories", "page", "total", "wallet"]
+      properties:
+        items: {"type": "array", "items": {"$ref": "#/components/schemas/Product"}}
+        camp_categories: {"type": "array", "items": {"type": "string"}, "description": "营地的稳定分类键，与当前页和所有权无关。角色装扮查询时为空。"}
+        page: {"type": "integer", "minimum": 1, "description": "超过最后一页时返回最后可用页，空目录返回第一页。"}
+        total: {"type": "integer", "minimum": 0, "description": "分类及所有权过滤后的商品数。"}
+        wallet: {"$ref": "#/components/schemas/Wallet"}
+        development_buy_all: {"type": "boolean", "description": "服务端启用开发环境时为 true，否则省略。"}
     Purchase:
       type: "object"
       additionalProperties: false
@@ -1470,6 +1529,7 @@ components:
         product_id: {"type": "string", "minLength": 1}
         expected_product_version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
         expected_wallet_version: {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+        require_unowned: {"type": "boolean", "description": "为 true 时在扣款事务内确认尚未拥有同一稳定物品，含原本可重复购买的物品。"}
     PurchaseResult:
       type: "object"
       additionalProperties: false
@@ -1630,6 +1690,8 @@ components:
         has_scheduled_tasks: {"type": "boolean"}
         equipment: {"$ref": "#/components/schemas/Equipment"}
         achievements: {"type": "array", "items": {"$ref": "#/components/schemas/Achievement"}}
+        earned_achievements: {"type": "array", "items": {"$ref": "#/components/schemas/Achievement"}, "description": "所有当前已获得成就。"}
+        achievement_title: {"anyOf": [{"$ref": "#/components/schemas/AchievementTitle"}, {"type": "null"}]}
     Asset:
       type: "object"
       additionalProperties: false
@@ -1809,6 +1871,14 @@ components:
         items:
           type: "array"
           items: {"$ref": "#/components/schemas/Achievement"}
+        title: {"anyOf": [{"$ref": "#/components/schemas/AchievementTitle"}, {"type": "null"}]}
+    AchievementTitle:
+      type: "object"
+      additionalProperties: false
+      required: ["id", "name"]
+      properties:
+        id: {"type": "string", "minLength": 1}
+        name: {"type": "string", "minLength": 1}
     AchievementOptions:
       type: "object"
       additionalProperties: false

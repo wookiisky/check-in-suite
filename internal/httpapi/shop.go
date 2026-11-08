@@ -11,6 +11,53 @@ import (
 // RegisterShop keeps management authority fixed by the route and delegates economic writes to the service.
 func (app *App) RegisterShop(service *shop.Service) {
 	app.registerAppearance(service)
+	app.Mux.HandleFunc("GET /api/v1/shop/products", func(w http.ResponseWriter, r *http.Request) {
+		p, err := app.Authenticate(r)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		query := r.URL.Query()
+		input := shop.ShopQuery{Group: query.Get("group"), Category: query.Get("category"), Page: 1, Limit: 24}
+		if query.Has("page") {
+			input.Page, err = strconv.Atoi(query.Get("page"))
+			if err != nil {
+				WriteError(w, r, core.Invalid("page", "INVALID_VALUE"))
+				return
+			}
+		}
+		if query.Has("limit") {
+			input.Limit, err = strconv.Atoi(query.Get("limit"))
+			if err != nil {
+				WriteError(w, r, core.Invalid("limit", "INVALID_VALUE"))
+				return
+			}
+		}
+		result, err := service.BrowseShop(r.Context(), p, input)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		result.DevelopmentBuyAll = app.Config.Development
+		WriteJSON(w, 200, result)
+	})
+	app.Mux.HandleFunc("POST /api/v1/shop/development/buy-all", func(w http.ResponseWriter, r *http.Request) {
+		if !app.Config.Development {
+			WriteError(w, r, core.Fail(404, "NOT_FOUND"))
+			return
+		}
+		p, err := app.authenticatedWrite(r)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		balance, err := service.DevelopmentBuyAll(r.Context(), p)
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		WriteJSON(w, 200, balance)
+	})
 	app.Mux.HandleFunc("GET /api/v1/products", func(w http.ResponseWriter, r *http.Request) {
 		p, err := app.Authenticate(r)
 		if err != nil {
