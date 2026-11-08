@@ -2550,7 +2550,7 @@
     "none_back": "不背物品",
     "none_upper": "不穿上装",
     "none_shoes": "不穿鞋子",
-    "arrow": "青色尾羽插箭"
+    "arrow": "青羽箭"
   },
   "prices": {
     "face": 25,
@@ -2565,170 +2565,170 @@
       "head",
       "hair_rogue",
       "hair-rogue-v1",
-      "棕色及肩发"
+      "棕色中长发"
     ],
     [
       "head",
       "hair_barbarian",
       "hair-barbarian-v1",
-      "灰色眉毛与胡须"
+      "灰胡须"
     ],
     [
       "upper",
       "upper_rogue",
       "upper-rogue-v1",
-      "绿色短袖上衣与棕色手套"
+      "绿短袖"
     ],
     [
       "lower",
       "lower_rogue",
       "lower-rogue-v1",
-      "绿色短裤与棕色腰带"
+      "绿短裤"
     ],
     [
       "shoes",
       "shoes_rogue",
       "shoes-rogue-v1",
-      "棕色翻边皮靴"
+      "翻边皮靴"
     ],
     [
       "upper",
       "upper_barbarian",
       "upper-barbarian-v1",
-      "蓝色毛边上衣与灰色手套"
+      "蓝色毛边衣"
     ],
     [
       "lower",
       "lower_barbarian",
       "lower-barbarian-v1",
-      "棕色铆钉腰带与毛边短裤"
+      "毛边短裤"
     ],
     [
       "shoes",
       "shoes_barbarian",
       "shoes-barbarian-v1",
-      "灰色毛边靴"
+      "灰毛靴"
     ]
   ],
   "names": {
     "kaykit-adventurers-knight": {
       "face": "圆脸与微笑嘴",
-      "head": "银灰色封闭头盔",
-      "upper": "银灰色胸甲、护臂和手套",
-      "lower": "灰色腰甲与棕色腰带",
-      "shoes": "银灰色铁靴",
+      "head": "封闭头盔",
+      "upper": "骑士胸甲",
+      "lower": "骑士腰甲",
+      "shoes": "骑士铁靴",
       "back": {
-        "cape": "红色披风"
+        "cape": "红披风"
       }
     },
     "kaykit-adventurers-barbarian": {
       "face": "宽鼻圆脸",
       "head": "棕色熊帽",
-      "upper": "棕色毛边背带与灰色手套",
-      "lower": "棕色毛边皮裙与黑色短裤",
-      "shoes": "棕色绑带靴",
+      "upper": "毛边背带",
+      "lower": "毛边皮裙",
+      "shoes": "绑带靴",
       "back": {}
     },
     "kaykit-adventurers-mage": {
       "face": "圆脸与细长嘴",
-      "head": "紫色尖帽与黑色长发",
-      "upper": "紫色纽扣长袖上衣与灰色袖口",
-      "lower": "紫色衣摆与挂袋腰带",
-      "shoes": "棕色翻边靴",
+      "head": "紫尖帽",
+      "upper": "紫色长衫",
+      "lower": "紫色衣摆",
+      "shoes": "棕翻边靴",
       "back": {
-        "cape": "紫红色披风"
+        "cape": "紫红披风"
       }
     },
     "kaykit-adventurers-rogue": {
       "face": "圆脸与银色耳环",
-      "head": "棕色长发与眉毛",
-      "upper": "绿色披肩上衣与棕色露指手套",
-      "lower": "绿色腰带短裤",
-      "shoes": "浅棕色皮靴",
+      "head": "棕色长发",
+      "upper": "绿披肩上衣",
+      "lower": "盗贼短裤",
+      "shoes": "浅棕皮靴",
       "back": {
-        "cape": "绿色披风"
+        "cape": "绿披风"
       }
     },
     "kaykit-adventurers-rogue-hooded": {
       "face": "圆脸与上扬眉眼",
-      "head": "绿色兜帽与面巾",
-      "upper": "浅绿色披肩上衣与棕色露指手套",
-      "lower": "深绿色腰带短裤",
-      "shoes": "浅棕色翻边靴",
+      "head": "绿兜帽",
+      "upper": "浅绿披肩上衣",
+      "lower": "深绿短裤",
+      "shoes": "浅棕翻边靴",
       "back": {
         "cape": "深绿色披风"
       }
     },
     "kaykit-adventurers-ranger": {
       "face": "微笑脸",
-      "head": "棕色短发与山羊胡",
-      "upper": "白色上衣、蓝色领巾与棕色露指手套",
-      "lower": "米色短裤与挂袋腰带",
-      "shoes": "深棕色皮靴",
+      "head": "棕色短发",
+      "upper": "蓝领巾上衣",
+      "lower": "米色短裤",
+      "shoes": "深棕皮靴",
       "back": {
-        "cape": "蓝色披风",
-        "quiver": "棕色箭袋与蓝羽箭"
+        "cape": "蓝披风",
+        "quiver": "蓝羽箭袋"
       }
     },
     "kaykit-skeletons-minion": {
       "face": "裂纹骷髅",
       "head": "无头饰",
       "upper": "金属护腕",
-      "lower": "棕色短裤与银扣腰带",
+      "lower": "棕短裤",
       "shoes": "无鞋",
       "back": {
-        "cloak": "棕色围巾与披肩"
+        "cloak": "棕披肩"
       }
     },
     "kaykit-skeletons-mage": {
       "face": "红纹骷髅",
-      "head": "红色尖顶帽",
-      "upper": "红色立领上衣与肩甲",
-      "lower": "红色衣摆与药水腰带",
+      "head": "红尖帽",
+      "upper": "红色立领衣",
+      "lower": "红色衣摆",
       "shoes": "无鞋",
       "back": {}
     },
     "kaykit-skeletons-rogue": {
       "face": "皱眉黄眼骷髅脸",
-      "head": "紫红色兜帽",
-      "upper": "灰色交叉胸带与金属护手",
-      "lower": "紫红色短裤与棕色腰带",
-      "shoes": "银灰色折边铁靴",
+      "head": "紫红兜帽",
+      "upper": "交叉胸带",
+      "lower": "紫红短裤",
+      "shoes": "折边铁靴",
       "back": {
-        "cape": "紫红色短披风"
+        "cape": "紫红短披风"
       }
     },
     "kaykit-skeletons-warrior": {
       "face": "尖颌黄眼骷髅脸",
-      "head": "银灰色牛角盔",
-      "upper": "银灰色胸甲与金属护手",
-      "lower": "银灰色腰甲与棕色腰带",
+      "head": "牛角盔",
+      "upper": "骷髅胸甲",
+      "lower": "骷髅腰甲",
       "shoes": "银灰色护甲靴",
       "back": {
-        "cloak": "紫红色围巾与披肩"
+        "cloak": "紫红披肩"
       }
     },
     "kaykit-legacy-skeleton-minion": {
       "face": "骷髅",
       "head": "无头饰",
-      "upper": "成对银灰色臂环",
-      "lower": "棕色腰带与金属扣",
+      "upper": "银臂环",
+      "lower": "金属扣束腰",
       "shoes": "无鞋",
       "back": {}
     },
     "kaykit-legacy-skeleton-archer": {
       "face": "绿眼圆头骷髅脸",
-      "head": "紫色兜帽与面巾",
-      "upper": "灰色胸甲、金属护臂与棕色手套",
-      "lower": "棕色腰带与侧腰包",
+      "head": "紫兜帽",
+      "upper": "弓手胸甲",
+      "lower": "侧腰包",
       "shoes": "无鞋",
       "back": {}
     },
     "kaykit-legacy-skeleton-mage": {
       "face": "绿眼圆头骷髅脸",
       "head": "紫色围领",
-      "upper": "棕色开襟衣与紫色衣袖",
-      "lower": "棕色宽腰带",
+      "upper": "棕色开襟衣",
+      "lower": "宽皮束腰",
       "shoes": "无鞋",
       "back": {
         "cloak": "紫色披肩"
@@ -2736,9 +2736,9 @@
     },
     "kaykit-legacy-skeleton-warrior": {
       "face": "绿眼圆头骷髅脸",
-      "head": "棕顶牛角铁盔",
-      "upper": "灰色胸甲、棕色臂环与银灰色护臂",
-      "lower": "棕色腰带与银色方扣",
+      "head": "棕顶牛角盔",
+      "upper": "战士胸甲",
+      "lower": "银方扣束腰",
       "shoes": "无鞋",
       "back": {}
     }
@@ -2859,6 +2859,22 @@
         "Barbarian_ArmRight"
       ],
       "wrist_abs_x": 0.76
+    }
+  },
+  "human_default_wearables": {
+    "upper": {
+      "key": "upper-human-tank-v1",
+      "name": "米白背心",
+      "color": [0.80, 0.74, 0.62, 1],
+      "clearance": 0.014,
+      "cuts": [[0.82, 0, 1], [1.28, 0, -1], [1.105, 0.89, -1], [2.10, -4, -1]]
+    },
+    "lower": {
+      "key": "lower-human-briefs-v1",
+      "name": "深灰内裤",
+      "color": [0.055, 0.059, 0.068, 1],
+      "clearance": 0.016,
+      "cuts": [[0.80, 0, -1], [0.48, -0.32, 1]]
     }
   },
   "human_body_shape": {
@@ -3149,6 +3165,7 @@
       "sections": [[0.66, 0.66, 1], [0.72, 0.733, 1.04]]
     },
     "items": {
+      "lower-human-briefs-v1": false,
       "kaykit-skeletons-rogue-lower": null,
       "skeleton-minion-lower-v1": {
         "sections": [

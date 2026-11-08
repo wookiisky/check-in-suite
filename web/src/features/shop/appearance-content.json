@@ -15,8 +15,6 @@
   "previewFailed": "人物暂时无法显示，已保留之前的外观。请重新加载模型后再保存。",
   "previewLoading": "正在准备所选外观…",
   "previewLabel": "当前草稿的人物预览",
-  "defaultOption": "{name}（默认）",
-  "initialFreeOption": "{name}（基础款）",
   "additionalInstance": "{name} · {number}",
   "emptyOwned": "还没有这个部位的其他装扮，默认款仍可使用。",
   "unavailableCharacter": "这个人物定义暂时不可用，请重新读取外观。",

@@ -32,9 +32,9 @@
       "defaults": {
         "face": "face-kaykit-adventurers-ranger",
         "head": "head-none-v1",
-        "upper": "upper-rogue-v1",
-        "lower": "lower-rogue-v1",
-        "shoes": "shoes-rogue-v1",
+        "upper": "upper-human-tank-v1",
+        "lower": "lower-human-briefs-v1",
+        "shoes": "shoes-none-v1",
         "back": "back-none-v1"
       },
       "animations": {
@@ -165,8 +165,8 @@
           "url": "/api/v1/assets/pa-58011619c8ae5da95c8d1f96"
         }
       ],
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571"
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d09cb4f10097",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d09cb4f10097"
     },
     {
       "character_key": "kaykit-skeleton-v1",
@@ -461,8 +461,8 @@
       "pack_key": "adventurers",
       "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
       "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d09cb4f10097",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d09cb4f10097",
       "nodes": [],
       "covers": [],
       "empty": true
@@ -478,8 +478,8 @@
       "pack_key": "adventurers",
       "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
       "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d09cb4f10097",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d09cb4f10097",
       "nodes": [],
       "covers": [],
       "empty": true
@@ -495,8 +495,8 @@
       "pack_key": "adventurers",
       "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
       "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d09cb4f10097",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d09cb4f10097",
       "nodes": [],
       "covers": [],
       "empty": true
@@ -512,15 +512,15 @@
       "pack_key": "adventurers",
       "model_asset_key": "modular-human-body-v1-f1c3cb86fde5",
       "model_url": "/api/v1/assets/modular-human-body-v1-f1c3cb86fde5",
-      "thumbnail_asset_key": "modular-human-thumbnail-v1-d872c016d571",
-      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
+      "thumbnail_asset_key": "modular-human-thumbnail-v1-d09cb4f10097",
+      "thumbnail_url": "/api/v1/assets/modular-human-thumbnail-v1-d09cb4f10097",
       "nodes": [],
       "covers": [],
       "empty": true
     },
     {
       "wearable_key": "hair-rogue-v1",
-      "name": "棕色及肩发",
+      "name": "棕色中长发",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -541,7 +541,7 @@
     },
     {
       "wearable_key": "hair-barbarian-v1",
-      "name": "灰色眉毛与胡须",
+      "name": "灰胡须",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -561,7 +561,7 @@
     },
     {
       "wearable_key": "upper-rogue-v1",
-      "name": "绿色短袖上衣与棕色手套",
+      "name": "绿短袖",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -580,7 +580,7 @@
     },
     {
       "wearable_key": "lower-rogue-v1",
-      "name": "绿色短裤与棕色腰带",
+      "name": "绿短裤",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -598,7 +598,7 @@
     },
     {
       "wearable_key": "shoes-rogue-v1",
-      "name": "棕色翻边皮靴",
+      "name": "翻边皮靴",
       "slot": "shoes",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -618,7 +618,7 @@
     },
     {
       "wearable_key": "upper-barbarian-v1",
-      "name": "蓝色毛边上衣与灰色手套",
+      "name": "蓝色毛边衣",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -637,7 +637,7 @@
     },
     {
       "wearable_key": "lower-barbarian-v1",
-      "name": "棕色铆钉腰带与毛边短裤",
+      "name": "毛边短裤",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -655,7 +655,7 @@
     },
     {
       "wearable_key": "shoes-barbarian-v1",
-      "name": "灰色毛边靴",
+      "name": "灰毛靴",
       "slot": "shoes",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -675,7 +675,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-knight-head",
-      "name": "银灰色封闭头盔",
+      "name": "封闭头盔",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -696,7 +696,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-knight-back-cape",
-      "name": "红色披风",
+      "name": "红披风",
       "slot": "back",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -714,7 +714,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-knight-upper",
-      "name": "银灰色胸甲、护臂和手套",
+      "name": "骑士胸甲",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -733,7 +733,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-knight-lower",
-      "name": "灰色腰甲与棕色腰带",
+      "name": "骑士腰甲",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -751,7 +751,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-knight-shoes",
-      "name": "银灰色铁靴",
+      "name": "骑士铁靴",
       "slot": "shoes",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -792,7 +792,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-barbarian-upper",
-      "name": "棕色毛边背带与灰色手套",
+      "name": "毛边背带",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -811,7 +811,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-barbarian-lower",
-      "name": "棕色毛边皮裙与黑色短裤",
+      "name": "毛边皮裙",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -829,7 +829,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-barbarian-shoes",
-      "name": "棕色绑带靴",
+      "name": "绑带靴",
       "slot": "shoes",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -849,7 +849,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-mage-head",
-      "name": "紫色尖帽与黑色长发",
+      "name": "紫尖帽",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -870,7 +870,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-mage-back-cape",
-      "name": "紫红色披风",
+      "name": "紫红披风",
       "slot": "back",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -888,7 +888,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-mage-upper",
-      "name": "紫色纽扣长袖上衣与灰色袖口",
+      "name": "紫色长衫",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -907,7 +907,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-mage-lower",
-      "name": "紫色衣摆与挂袋腰带",
+      "name": "紫色衣摆",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -925,7 +925,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-mage-shoes",
-      "name": "棕色翻边靴",
+      "name": "棕翻边靴",
       "slot": "shoes",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -945,7 +945,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-head",
-      "name": "棕色长发与眉毛",
+      "name": "棕色长发",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -966,7 +966,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-back-cape",
-      "name": "绿色披风",
+      "name": "绿披风",
       "slot": "back",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -984,7 +984,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-upper",
-      "name": "绿色披肩上衣与棕色露指手套",
+      "name": "绿披肩上衣",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1003,7 +1003,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-lower",
-      "name": "绿色腰带短裤",
+      "name": "盗贼短裤",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1021,7 +1021,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-shoes",
-      "name": "浅棕色皮靴",
+      "name": "浅棕皮靴",
       "slot": "shoes",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1041,7 +1041,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-hooded-head",
-      "name": "绿色兜帽与面巾",
+      "name": "绿兜帽",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1062,7 +1062,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-hooded-upper",
-      "name": "浅绿色披肩上衣与棕色露指手套",
+      "name": "浅绿披肩上衣",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1081,7 +1081,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-hooded-lower",
-      "name": "深绿色腰带短裤",
+      "name": "深绿短裤",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1099,7 +1099,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-rogue-hooded-shoes",
-      "name": "浅棕色翻边靴",
+      "name": "浅棕翻边靴",
       "slot": "shoes",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1119,7 +1119,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-ranger-head",
-      "name": "棕色短发与山羊胡",
+      "name": "棕色短发",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1147,7 +1147,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-ranger-back-cape",
-      "name": "蓝色披风",
+      "name": "蓝披风",
       "slot": "back",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1165,7 +1165,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-ranger-back-quiver",
-      "name": "棕色箭袋与蓝羽箭",
+      "name": "蓝羽箭袋",
       "slot": "back",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1183,7 +1183,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-ranger-upper",
-      "name": "白色上衣、蓝色领巾与棕色露指手套",
+      "name": "蓝领巾上衣",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1202,7 +1202,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-ranger-lower",
-      "name": "米色短裤与挂袋腰带",
+      "name": "米色短裤",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1220,7 +1220,7 @@
     },
     {
       "wearable_key": "kaykit-adventurers-ranger-shoes",
-      "name": "深棕色皮靴",
+      "name": "深棕皮靴",
       "slot": "shoes",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1240,7 +1240,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-minion-back-cloak",
-      "name": "棕色围巾与披肩",
+      "name": "棕披肩",
       "slot": "back",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1258,7 +1258,7 @@
     },
     {
       "wearable_key": "skeleton-minion-lower-v1",
-      "name": "棕色短裤与银扣腰带",
+      "name": "棕短裤",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1276,7 +1276,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-mage-head",
-      "name": "红色尖顶帽",
+      "name": "红尖帽",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1296,7 +1296,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-mage-upper",
-      "name": "红色立领上衣与肩甲",
+      "name": "红色立领衣",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1314,7 +1314,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-mage-lower",
-      "name": "红色衣摆与药水腰带",
+      "name": "红色衣摆",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1332,7 +1332,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-rogue-head",
-      "name": "紫红色兜帽",
+      "name": "紫红兜帽",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1352,7 +1352,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-rogue-back-cape",
-      "name": "紫红色短披风",
+      "name": "紫红短披风",
       "slot": "back",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1370,7 +1370,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-rogue-upper",
-      "name": "灰色交叉胸带与金属护手",
+      "name": "交叉胸带",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1389,7 +1389,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-rogue-lower",
-      "name": "紫红色短裤与棕色腰带",
+      "name": "紫红短裤",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1407,7 +1407,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-rogue-shoes",
-      "name": "银灰色折边铁靴",
+      "name": "折边铁靴",
       "slot": "shoes",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1427,7 +1427,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-warrior-head",
-      "name": "银灰色牛角盔",
+      "name": "牛角盔",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1447,7 +1447,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-warrior-back-cloak",
-      "name": "紫红色围巾与披肩",
+      "name": "紫红披肩",
       "slot": "back",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1465,7 +1465,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-warrior-upper",
-      "name": "银灰色胸甲与金属护手",
+      "name": "骷髅胸甲",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1484,7 +1484,7 @@
     },
     {
       "wearable_key": "kaykit-skeletons-warrior-lower",
-      "name": "银灰色腰甲与棕色腰带",
+      "name": "骷髅腰甲",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1502,7 +1502,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-minion-upper",
-      "name": "成对银灰色臂环",
+      "name": "银臂环",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1520,7 +1520,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-minion-lower",
-      "name": "棕色腰带与金属扣",
+      "name": "金属扣束腰",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1538,7 +1538,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-archer-head",
-      "name": "紫色兜帽与面巾",
+      "name": "紫兜帽",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1558,7 +1558,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-archer-upper",
-      "name": "灰色胸甲、金属护臂与棕色手套",
+      "name": "弓手胸甲",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1576,7 +1576,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-archer-lower",
-      "name": "棕色腰带与侧腰包",
+      "name": "侧腰包",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1630,7 +1630,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-mage-upper",
-      "name": "棕色开襟衣与紫色衣袖",
+      "name": "棕色开襟衣",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1648,7 +1648,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-mage-lower",
-      "name": "棕色宽腰带",
+      "name": "宽皮束腰",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1666,7 +1666,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-warrior-head",
-      "name": "棕顶牛角铁盔",
+      "name": "棕顶牛角盔",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1687,7 +1687,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-warrior-upper",
-      "name": "灰色胸甲、棕色臂环与银灰色护臂",
+      "name": "战士胸甲",
       "slot": "upper",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1705,7 +1705,7 @@
     },
     {
       "wearable_key": "kaykit-legacy-skeleton-warrior-lower",
-      "name": "棕色腰带与银色方扣",
+      "name": "银方扣束腰",
       "slot": "lower",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1723,7 +1723,7 @@
     },
     {
       "wearable_key": "head-arrow-v1",
-      "name": "青色尾羽插箭",
+      "name": "青羽箭",
       "slot": "head",
       "character_key": "kaykit-medium-v1",
       "body_key": "kaykit-medium-body-v1",
@@ -1738,6 +1738,42 @@
       "model_url": "/api/v1/assets/modular-head-arrow-v1-b2d23cb3c2c6",
       "thumbnail_asset_key": "modular-head-arrow-v1-efcba75390a5",
       "thumbnail_url": "/api/v1/assets/modular-head-arrow-v1-efcba75390a5"
+    },
+    {
+      "wearable_key": "upper-human-tank-v1",
+      "name": "米白背心",
+      "slot": "upper",
+      "character_key": "kaykit-medium-v1",
+      "body_key": "kaykit-medium-body-v1",
+      "rig_key": "kaykit-adventurers-medium-v1",
+      "provider": "kaykit",
+      "pack_key": "adventurers",
+      "nodes": [
+        "upper_human_tank"
+      ],
+      "covers": [],
+      "model_asset_key": "modular-human-underwear-v1-05948b3d0cc6",
+      "model_url": "/api/v1/assets/modular-human-underwear-v1-05948b3d0cc6",
+      "thumbnail_asset_key": "modular-upper-human-tank-v1-66cb5243e531",
+      "thumbnail_url": "/api/v1/assets/modular-upper-human-tank-v1-66cb5243e531"
+    },
+    {
+      "wearable_key": "lower-human-briefs-v1",
+      "name": "深灰内裤",
+      "slot": "lower",
+      "character_key": "kaykit-medium-v1",
+      "body_key": "kaykit-medium-body-v1",
+      "rig_key": "kaykit-adventurers-medium-v1",
+      "provider": "kaykit",
+      "pack_key": "adventurers",
+      "nodes": [
+        "lower_human_briefs"
+      ],
+      "covers": [],
+      "model_asset_key": "modular-human-underwear-v1-05948b3d0cc6",
+      "model_url": "/api/v1/assets/modular-human-underwear-v1-05948b3d0cc6",
+      "thumbnail_asset_key": "modular-lower-human-briefs-v1-7b5b0b4930cb",
+      "thumbnail_url": "/api/v1/assets/modular-lower-human-briefs-v1-7b5b0b4930cb"
     }
   ]
 }

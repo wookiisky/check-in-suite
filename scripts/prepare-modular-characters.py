@@ -547,7 +547,7 @@ def prepare(options):
                 hand_parts.append(hands)
             evidence.append({'wearable_key': key, 'slot': slot, 'native': False, 'removed_body_faces': removed_body_faces, 'remaining_body_faces': len(anatomical(part, 'canonical', True, '_body_check').data.polygons), 'hand_faces': len(hands.data.polygons) if hands is not None else 0})
         items.append(item(key, name, slot, pieces, 'canonical', meta, config['wearable_covers'][key] if slot in ['head', 'shoes'] else [], hand_objects=hand_parts))
-    # 默认衣物先复制旧手套，再用平滑裸身替换衣物式支撑身体。
+    # 先提取原款衣物及手套，再用平滑裸身替换衣物式支撑身体。
     if config.get('human_body_shape'):
         body_module_spec = importlib.util.spec_from_file_location('modular_body_shaping', ROOT / 'scripts/modular-character-body-shaping.py')
         body_module = importlib.util.module_from_spec(body_module_spec)
@@ -568,6 +568,23 @@ def prepare(options):
         if name.startswith('body_'):
             obj.name = name
     body_model = finish(items, body_parts, 'human-body-v1', meta)
+    defaults = config['human_default_wearables']
+    underwear_spec = importlib.util.spec_from_file_location(
+        'modular_underwear', ROOT / 'scripts/modular-character-underwear.py',
+    )
+    underwear = importlib.util.module_from_spec(underwear_spec)
+    underwear_spec.loader.exec_module(underwear)
+    torso = objects['body_torso']
+    tank = underwear.garment('upper_human_tank', rig, [torso, objects['body_arms']], defaults['upper'])
+    briefs = underwear.garment(
+        'lower_human_briefs', rig, [torso, objects['body_legs']], defaults['lower'],
+        seam=config['human_waist_fit']['seam_height'],
+    )
+    default_clothes = [
+        item(defaults[slot]['key'], defaults[slot]['name'], slot, [mesh], 'canonical', meta)
+        for slot, mesh in [('upper', tank), ('lower', briefs)]
+    ]
+    finish(default_clothes, [], 'human-underwear-v1', meta)
     human = copy.deepcopy(base)
     human.update(name=config['labels']['human'], model_asset_key=body_model, model_url='/api/v1/assets/' + body_model, fixed_nodes=['body_hands'], body_regions={region: ['body_' + region] for region in ['head', 'scalp', 'torso', 'arms', 'legs', 'feet']})
     human_face_key = 'face-human-default-v1'
@@ -590,9 +607,9 @@ def prepare(options):
         face_meta = {field: declaration['asset'][field] for field in ['source_url', 'license', 'provider', 'pack_key']}
         smile = item(human_face_key, config['names'][smile_source]['face'], 'face', [face_head, face_scalp, brows], smile_source, face_meta, ['head', 'scalp', 'ranger_original_features'], regions={'brows': [brows], 'smile_scalp': [face_scalp]})
         finish([smile], [], 'smile-head-v1', face_meta)
-    human['defaults'] = dict(face=human_face_key, head='head-none-v1', upper='upper-rogue-v1', lower='lower-rogue-v1', shoes='shoes-rogue-v1', back='back-none-v1')
+    human['defaults'] = dict(face=human_face_key, head='head-none-v1', upper=defaults['upper']['key'], lower=defaults['lower']['key'], shoes='shoes-none-v1', back='back-none-v1')
     default_head = smile['_objects'] if smile_source else [face_head, face_scalp]
-    thumb = render([objects['body_hands'], objects['body_torso'], objects['body_arms'], objects['body_legs'], objects['body_feet'], *default_head, *[obj for entry in items if entry and entry['wearable_key'] in ['upper-rogue-v1', 'lower-rogue-v1', 'shoes-rogue-v1'] for obj in entry['_objects']]], 'human-thumbnail-v1', meta, human['name'], 'character')
+    thumb = render([objects['body_hands'], objects['body_torso'], objects['body_arms'], objects['body_legs'], objects['body_feet'], *default_head, tank, briefs], 'human-thumbnail-v1', meta, human['name'], 'character')
     human.update(thumbnail_asset_key=thumb, thumbnail_url='/api/v1/assets/' + thumb)
     assets.append({**meta, 'key': thumb, 'name': human['name'], 'kind': 'character', 'url': human['thumbnail_url'], 'format': 'png'})
     body_definitions.append(human)

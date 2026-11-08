@@ -86,7 +86,7 @@ test('真实购买服装不自动换装，独立装扮页保存后打卡页显�
     await openAppearance(page);
     await wardrobe.getByRole('tab', { name: appearance.slots[wearable.slot], exact: true }).click();
     const defaultWearable = saved.wearables.find((item) => item.wearable_key === body.defaults[wearable.slot])!;
-    await wardrobe.getByRole('radio', { name: appearance.defaultOption.replace('{name}', defaultWearable.name), exact: true }).check();
+    await wardrobe.getByRole('radio', { name: defaultWearable.name, exact: true }).check();
     await wardrobe.getByRole('button', { name: appearance.save, exact: true }).click();
     await expect(wardrobe.getByText(appearance.saved, { exact: true })).toBeVisible();
     await goHome(page);

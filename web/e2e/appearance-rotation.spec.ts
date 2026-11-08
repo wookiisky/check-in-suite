@@ -60,7 +60,7 @@ test('装扮可绕一周查看且换装保存保留朝向', async ({ page }, tes
   const desired = before.upper_purchase_id === item.purchase_id ? null : item.purchase_id;
   const body = before.characters.find((value) => value.character_key === before.character_key)!;
   const defaultUpper = before.wearables.find((value) => value.wearable_key === body.defaults.upper)!;
-  const option = desired ? item.wearable.name : appearance.defaultOption.replace('{name}', defaultUpper.name);
+  const option = desired ? item.wearable.name : defaultUpper.name;
   await dialog.getByRole('group', { name: appearance.slots.upper, exact: true }).getByRole('radio', { name: option, exact: true }).check();
   await expect(model).toHaveAttribute('data-character-status', 'ready');
   await expect.poll(() => rotationOf(model)).toBeCloseTo(Math.PI);

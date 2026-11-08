@@ -7634,17 +7634,6 @@
     "format": "png"
   },
   {
-    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
-    "license": "CC0-1.0",
-    "provider": "kaykit",
-    "pack_key": "adventurers",
-    "key": "modular-human-thumbnail-v1-d872c016d571",
-    "name": "基础人形",
-    "kind": "character",
-    "url": "/api/v1/assets/modular-human-thumbnail-v1-d872c016d571",
-    "format": "png"
-  },
-  {
     "source_url": "https://kaylousberg.itch.io/kaykit-adventurers",
     "license": "CC0-1.0",
     "provider": "kaykit",
@@ -8467,6 +8456,50 @@
     "name": "青色尾羽插箭",
     "kind": "wearable",
     "url": "/api/v1/assets/modular-head-arrow-v1-efcba75390a5",
+    "format": "png"
+  },
+  {
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "adventurers",
+    "key": "modular-human-underwear-v1-05948b3d0cc6",
+    "name": "human-underwear-v1",
+    "kind": "model",
+    "url": "/api/v1/assets/modular-human-underwear-v1-05948b3d0cc6",
+    "format": "glb"
+  },
+  {
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "adventurers",
+    "key": "modular-upper-human-tank-v1-66cb5243e531",
+    "name": "米白背心",
+    "kind": "wearable",
+    "url": "/api/v1/assets/modular-upper-human-tank-v1-66cb5243e531",
+    "format": "png"
+  },
+  {
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "adventurers",
+    "key": "modular-lower-human-briefs-v1-7b5b0b4930cb",
+    "name": "深灰内裤",
+    "kind": "wearable",
+    "url": "/api/v1/assets/modular-lower-human-briefs-v1-7b5b0b4930cb",
+    "format": "png"
+  },
+  {
+    "source_url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/tree/672074b73ba276876a19e8816ecdc5241817ab47",
+    "license": "CC0-1.0",
+    "provider": "kaykit",
+    "pack_key": "adventurers",
+    "key": "modular-human-thumbnail-v1-d09cb4f10097",
+    "name": "基础人形",
+    "kind": "character",
+    "url": "/api/v1/assets/modular-human-thumbnail-v1-d09cb4f10097",
     "format": "png"
   }
 ]

@@ -59,7 +59,7 @@ describe('三维外观编辑弹窗', () => {
   it('明确保存当前默认部件身份后重开仍显示默认选中', async () => {
     const state = { ...appearanceFixture(), face_free_wearable_key: 'face-default' };
     await loadedDialog(async () => state);
-    expect(screen.getByRole('radio', { name: '形象默认款（默认）' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: '形象默认款' })).toBeChecked();
   });
 
   it('形象按目录顺序展示默认款、基础款和已购款', async () => {
@@ -73,9 +73,9 @@ describe('三维外观编辑弹窗', () => {
     await loadedDialog(async () => state);
     const faces = within(screen.getByRole('group', { name: '形象' }));
     expect(faces.getAllByRole('radio').map((radio) => radio.getAttribute('aria-label'))).toEqual([
-      '形象默认款（默认）', '形象新款', '另一身体的形象（基础款）', '另购形象',
+      '形象默认款', '形象新款', '另一身体的形象', '另购形象',
     ]);
-    expect(faces.getByRole('radio', { name: '形象默认款（默认）' })).toBeChecked();
+    expect(faces.getByRole('radio', { name: '形象默认款' })).toBeChecked();
   });
 
   it('形象、头部与背部分别选择和卸下，保存不改变其他部位', async () => {
@@ -88,8 +88,8 @@ describe('三维外观编辑弹窗', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
     expect(request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1]?.body).toMatchObject({ face_purchase_id: 'face-purchase', head_purchase_id: 'head-purchase', back_purchase_id: 'back-purchase', upper_purchase_id: null });
-    fireEvent.click(screen.getByRole('radio', { name: '头部默认款（默认）' }));
-    fireEvent.click(screen.getByRole('radio', { name: '背部默认款（默认）' }));
+    fireEvent.click(screen.getByRole('radio', { name: '头部默认款' }));
+    fireEvent.click(screen.getByRole('radio', { name: '背部默认款' }));
     expect(screen.getByRole('radio', { name: '形象新款' })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(2));
@@ -169,11 +169,11 @@ describe('三维外观编辑弹窗', () => {
       if (options.method === 'PUT') throw new ApiFailure(422, { code: 'INVALID_EQUIPMENT', field_errors: {}, request_id: '' });
       return original;
     });
-    fireEvent.click(screen.getByRole('radio', { name: '头部默认款（默认）' }));
+    fireEvent.click(screen.getByRole('radio', { name: '头部默认款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(screen.getByRole('button', { name: '保存外观' })).toBeEnabled());
     expect(request.mock.calls.find(([, options]) => options?.method === 'PUT')?.[1]?.body).toMatchObject({ head_purchase_id: null });
-    expect(screen.getByRole('radio', { name: '头部默认款（默认）' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: '头部默认款' })).toBeChecked();
     expect(screen.queryByRole('button', { name: '核对保存结果' })).not.toBeInTheDocument();
   });
 
@@ -228,10 +228,10 @@ describe('三维外观编辑弹窗', () => {
     fireEvent.click(await screen.findByRole('radio', { name: '头部新款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     view.rerender(<AppearanceDialog client={next.client} onClose={() => {}} onSaved={onSaved} />);
-    await screen.findByRole('radio', { name: '头部默认款（默认）' });
+    await screen.findByRole('radio', { name: '头部默认款' });
     await act(async () => delayed.resolve({ ...appearanceFixture(2), head_purchase_id: 'head-purchase' }));
     expect(onSaved).not.toHaveBeenCalled();
-    expect(screen.getByRole('radio', { name: '头部默认款（默认）' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: '头部默认款' })).toBeChecked();
   });
 
   it('冲突核对的GET也在卸载时取消', async () => {

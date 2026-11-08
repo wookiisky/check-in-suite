@@ -106,14 +106,15 @@ test('只提供人形与骷髅，职业部件独立混穿，中箭与帽子互�
     await editor.getByRole('radio', { name: human.name, exact: true }).check();
     await editor.getByRole('tab', { name: appearance.slots.face, exact: true }).click();
     const faceOptions = editor.getByRole('group', { name: appearance.slots.face, exact: true }).getByRole('radio');
-    const faceOptionNames = faces.map((item) => {
-      if (item.wearable_key === human.defaults.face) return appearance.defaultOption.replace('{name}', item.name);
-      if (item.wearable_key === skeleton.defaults.face) return appearance.initialFreeOption.replace('{name}', item.name);
-      return item.name;
-    });
+    const faceOptionNames = faces.map((item) => item.name);
     await expect(faceOptions).toHaveCount(faceOptionNames.length);
     expect(await faceOptions.evaluateAll((options) => options.map((item) => item.getAttribute('aria-label')))).toEqual(faceOptionNames);
     await expect(faceOptions.first()).toBeChecked();
+    await editor.getByRole('tab', { name: appearance.slots.upper, exact: true }).click();
+    const upperOptions = editor.getByRole('group', { name: appearance.slots.upper, exact: true });
+    const emptyUpper = owned.wearables.find((item) => item.wearable_key === skeleton.defaults.upper && item.empty)!;
+    await expect(upperOptions.getByRole('radio').first()).toHaveAccessibleName(emptyUpper.name);
+    await expect(upperOptions.locator('label').first().locator('svg[aria-hidden="true"]')).toBeVisible();
     for (const [index, slot] of characterSlots.entries()) if (slot !== 'head' && slot !== 'face') await (await ownedOption(editor, slot, purchase(selections[index]!))).check();
     await (await ownedOption(editor, 'face', purchase(greenFace))).check();
     await expect(save).toBeEnabled();

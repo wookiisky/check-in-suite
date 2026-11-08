@@ -53,6 +53,7 @@ interface EditorOption {
   key: string; // 当前部位内稳定的 React 标识。
   name: string; // 展示名，重复实例包含序号。
   thumbnailUrl: string | undefined; // 身体可能没有缩略图。
+  wearable?: Wearable; // 部位定义提供空穿戴标记。
   value: string; // 原生选择控件的值。
   selected: boolean; // 对应当前草稿的选择。
   onChoose: () => void; // 应用到草稿的操作。
@@ -273,7 +274,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
       const options: (EditorOption & { wearable: Wearable })[] = [
         ...(defaultWearable ? [{
           key: 'default',
-          name: content.defaultOption.replace('{name}', defaultWearable.name),
+          name: defaultWearable.name,
           thumbnailUrl: defaultWearable.thumbnail_url,
           wearable: defaultWearable,
           value: '',
@@ -282,7 +283,7 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
         }] : []),
         ...freeWearables.map((wearable) => ({
           key: wearable.wearable_key,
-          name: content.initialFreeOption.replace('{name}', wearable.name),
+          name: wearable.name,
           thumbnailUrl: wearable.thumbnail_url,
           wearable,
           value: wearable.wearable_key,
@@ -307,6 +308,9 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
       // 形象按目录顺序排列，不随默认款或购买顺序移动。
       if (slot === 'face') {
         options.sort((first, second) => snapshot.wearables.indexOf(first.wearable) - snapshot.wearables.indexOf(second.wearable));
+      } else {
+        // 空穿戴可能来自另一已解锁的身体，仍排在当前身体的默认衣物前。
+        options.sort((first, second) => Number(second.wearable.empty ?? false) - Number(first.wearable.empty ?? false));
       }
       categories.push({ key: slot, field, label: content.slots[slot], disabled: disabled || !character, emptyOwned: !owned.length, options });
     }
@@ -384,6 +388,13 @@ export function AppearanceEditor({ client, accountID, onClose, onSaved, reduceMo
 }
 
 // 预览图只是目录缩略图；人物 Canvas 在旁边统一创建，不为每张卡另建。
-function AppearanceOption({ name, thumbnailUrl, selected, group, value, onChoose }: Omit<EditorOption, 'key'> & { group: string }) {
-  return <label className={`appearance-option ${selected ? 'appearance-selected' : ''}`}><input type="radio" name={group} value={value} aria-label={name} checked={selected} onChange={onChoose} />{thumbnailUrl && <img src={thumbnailUrl} alt="" loading="lazy" decoding="async" />}<span>{name}</span></label>;
+function AppearanceOption({ name, thumbnailUrl, wearable, selected, group, value, onChoose }: Omit<EditorOption, 'key'> & { group: string }) {
+  return <label className={`appearance-option ${selected ? 'appearance-selected' : ''}`}>
+    <input type="radio" name={group} value={value} aria-label={name} checked={selected} onChange={onChoose} />
+    {wearable?.empty ? <svg className="appearance-empty-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <circle cx="16" cy="16" r="9" />
+      <path d="m9.64 9.64 12.72 12.72" />
+    </svg> : thumbnailUrl && <img src={thumbnailUrl} alt="" loading="lazy" decoding="async" />}
+    <span>{name}</span>
+  </label>;
 }

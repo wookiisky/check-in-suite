@@ -45,7 +45,7 @@ func seedDefinitions(ctx context.Context, tx *sql.Tx, items []assets.Asset, cont
 			result.Achievements++
 		case assets.KindTitle, assets.KindReward, assets.KindIsland, assets.KindWearable:
 			coins, diamonds := content.CoinPrice, content.DiamondPrice
-			id, wearableKey := "demo-product-"+item.Key, ""
+			id, wearableKey, name := "demo-product-"+item.Key, "", item.Name
 			if item.Kind == assets.KindIsland {
 				definition, ok := island.SpatialForThumbnail(item.Key)
 				if !ok || definition.Free {
@@ -60,8 +60,9 @@ func seedDefinitions(ctx context.Context, tx *sql.Tx, items []assets.Asset, cont
 					continue
 				}
 				wearableKey, id = wearable.Key, "wearable-offer-"+wearable.Key
+				name = wearable.Name
 			}
-			_, err := tx.ExecContext(ctx, `INSERT INTO products(id,type,name,asset_key,wearable_key,description,coin_price,diamond_price,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,1,?,?)`, id, string(item.Kind), item.Name, item.Key, wearableKey, content.ProductDescription, coins, diamonds, createdAt, now.UnixMilli())
+			_, err := tx.ExecContext(ctx, `INSERT INTO products(id,type,name,asset_key,wearable_key,description,coin_price,diamond_price,enabled,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,1,?,?)`, id, string(item.Kind), name, item.Key, wearableKey, content.ProductDescription, coins, diamonds, createdAt, now.UnixMilli())
 			if err != nil {
 				return err
 			}

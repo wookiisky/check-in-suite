@@ -1,53 +1,41 @@
 # 成长营地 Spec
 
-这里维护成长营地当前的行为、设计原因和修改约束。先按任务找到负责该规则的专题，再读其中的源码与测试入口；通常不需要通读全部文档。项目启动见 [README](../README.md)。
+Spec 帮助 Coding Agent 找到完成任务所需的上下文，也帮助工程师理解系统行为和设计原因。源码、类型、OpenAPI、迁移和配置定义可执行的结构。专题解释业务规则、模块协作和取舍，测试验证具体行为。
 
-## 从任务开始
+初次了解项目，先读[系统概览](SYSTEM/OVERVIEW.md)。处理具体任务时，直接找相关专题。启动项目见 [README](../README.md)。
 
-| 要做什么 | 从哪里读 | 何时继续阅读 |
+## 找到相关专题
+
+- **已知任务**：从下表打开负责该规则的专题，按需要继续阅读相关专题。
+- **已知文件或目录**：用仓库相对路径查专题开头的 `source` 和 `tests`。按完整路径段匹配文件和它的上级目录声明。查目录时，也看指向目录内文件的声明。多个专题命中时，结合 `summary`、`owns` 和实际调用关系，判断哪些规则受影响。路径没有命中或提供的上下文不足时，回到下表按任务查找。
+
+| 要做什么 | 先读 | 涉及时再读 |
 | --- | --- | --- |
-| 理解系统、判断需求边界 | [系统概览](SYSTEM/OVERVIEW.md) | 涉及数据一致性时读存储；涉及浏览器调用时读 HTTP |
-| 修改登录、姓名、密码或管理授权 | [账户与授权](FEATURES/ACCOUNT.md) | HTTP 约束、事务内权限复核分别见 HTTP、存储 |
-| 修改任务、打卡、余额回收、日周月记录或统计 | [打卡与查询](FEATURES/CHECKIN.md) | 发奖和回收读存储；附件读媒体；连动资格读成就、营地 |
-| 修改购买、装扮或奖励兑现 | [商店与装扮](FEATURES/SHOP.md) | 账务读存储，摆放和物品互动读营地 |
-| 修改成就计算、徽章展示或成就文本佩戴 | [成就](FEATURES/ACHIEVEMENTS.md) | 记录、排期和删除规则读打卡 |
-| 修改营地布置、活动资格或动画 | [营地](FEATURES/ISLAND.md) | 所有权读商店，任务解锁读打卡 |
-| 修改上传、录音或文件清理 | [媒体](FEATURES/MEDIA.md) | 鉴权读 HTTP，记录关联读打卡 |
-| 修改通用页面交互、家庭留言或声音 | [界面与家庭互动](FEATURES/INTERFACE.md) | 具体业务交互继续读对应功能专题 |
-| 修改接口、错误或重试 | [HTTP 协议](SYSTEM/HTTP_API.md) | 参数结构查 OpenAPI，业务拒绝条件查功能专题 |
-| 修改事务、钱包、日期或迁移 | [存储与一致性](SYSTEM/STORAGE.md) | 实际安装和故障处置读运行手册 |
-| 构建、安装、升级或排障 | [运行手册](ENGINEERING/OPERATIONS.md) | 验证范围和环境限制读测试指南 |
-| 选择测试、了解证据边界 | [测试指南](ENGINEERING/TESTING.md) | 用专题的 tests 定位候选，按改动选择实际验证 |
+| 理解模块协作、运行结构和需求边界 | [系统概览](SYSTEM/OVERVIEW.md) | 浏览器调用读[HTTP 协议](SYSTEM/HTTP_API.md)，持久化读[存储](SYSTEM/STORAGE.md) |
+| 修改登录、姓名、密码、组关系或管理授权 | [账户与授权](FEATURES/ACCOUNT.md) | 请求权限读[HTTP 协议](SYSTEM/HTTP_API.md)，事务内复核读[存储](SYSTEM/STORAGE.md) |
+| 修改任务、打卡、余额回收、日周月记录或统计 | [打卡与查询](FEATURES/CHECKIN.md) | 附件读[媒体](FEATURES/MEDIA.md)，发奖和回收读[存储](SYSTEM/STORAGE.md)，联动资格读[成就](FEATURES/ACHIEVEMENTS.md)和[营地](FEATURES/ISLAND.md) |
+| 修改商品、购买、已购权益或奖励接口 | [商店](FEATURES/SHOP.md) | 账务读[存储](SYSTEM/STORAGE.md)，物品摆放读[营地](FEATURES/ISLAND.md) |
+| 修改成就计算、徽章展示或成就文本佩戴 | [成就](FEATURES/ACHIEVEMENTS.md) | 记录、排期和删除读[打卡](FEATURES/CHECKIN.md) |
+| 修改营地布置、活动资格或人物动作 | [营地](FEATURES/ISLAND.md) | 物品所有权读[商店](FEATURES/SHOP.md)，解锁条件读[打卡](FEATURES/CHECKIN.md) |
+| 修改三维外观、素材或相关验证 | [三维外观](FEATURES/SHOP.md#三维外观保存)、[营地动效](FEATURES/ISLAND.md#动效资源与验证边界) | 素材制作和安装读[运行手册](ENGINEERING/OPERATIONS.md#三维资源制作与安装)，测试选择读[测试指南](ENGINEERING/TESTING.md) |
+| 修改上传、录音或文件清理 | [媒体](FEATURES/MEDIA.md) | 鉴权读[HTTP 协议](SYSTEM/HTTP_API.md)，记录关联读[打卡](FEATURES/CHECKIN.md) |
+| 修改通用页面交互、家庭留言或声音 | [界面与家庭互动](FEATURES/INTERFACE.md) | 具体交互规则读对应功能专题 |
+| 修改接口、错误或重试 | [HTTP 协议](SYSTEM/HTTP_API.md) | 参数结构查 [OpenAPI](../api/openapi.yaml)，业务拒绝条件查对应功能专题 |
+| 修改事务、钱包、日期或迁移 | [存储与一致性](SYSTEM/STORAGE.md) | 数据库升级和故障处置读[运行手册](ENGINEERING/OPERATIONS.md#数据库迁移与不兼容处理) |
+| 构建、安装、发布或排障 | [运行手册](ENGINEERING/OPERATIONS.md) | 验证范围和环境限制读[测试指南](ENGINEERING/TESTING.md) |
+| 选择测试或核对验证范围 | [测试指南](ENGINEERING/TESTING.md) | 结合受影响专题的 `tests` 选择实际要跑的测试 |
 
-## 从文件开始
+## 更新和验证
 
-| 已知路径 | 对应专题 |
-| --- | --- |
-| `cmd/island/`、`internal/config/`、`scripts/`、`deploy/` | 系统概览、运行手册、测试指南；文档校验脚本见本页 |
-| `api/openapi.yaml`、`internal/httpapi/`、`web/src/api/` | HTTP 协议及端点对应功能 |
-| `internal/storage/`、`internal/core/`、`internal/wallet/`、`internal/idempotency/`、`migrations/` | 存储与一致性、HTTP 协议 |
-| `internal/account/`、`web/src/features/account/` | 账户与授权 |
-| `internal/checkin/`、`web/src/features/checkin/`、`web/src/features/reports/` | 打卡与查询；成就和活动资格按改动扩展 |
-| `internal/shop/`、`internal/assets/`、`web/src/features/shop/`、`web/src/features/character/` | 商店与装扮；营地使用同一所有权及素材 |
-| `internal/achievement/`、`web/src/features/achievements/` | 成就 |
-| `internal/island/`、`web/src/features/island/` | 营地 |
-| `internal/media/`、`web/src/features/media/` | 媒体 |
-| `internal/message/`、`web/src/features/family/`、`web/src/components/`、`web/src/feedback/` | 界面与家庭互动 |
-| `internal/demo/` | 运行手册中的测试数据初始化 |
+1. **修改前**，判断哪些稳定规则受影响，定位负责的专题，并核对事实源。已有契约与实现冲突时，先记录差异并确认预期。只移动源码或测试时，检查专题的路径引用。
+2. **修改时**，同一规则只在负责的专题完整说明。把概念、正常流程、约束及失败恢复放在一起，交代设计原因。其他专题按需概括并链接，系统概览只在模块关系或整体描述变化时更新。完整字段表、私有实现、普通文案和配置值留在各自的事实源。出现独立职责才新增专题。移动或删除前，先安置独有内容并修复引用，历史过程由 Git 保留。
+3. **修改后**，运行 `npm run check:spec`。改动[校验器](../scripts/check-spec.mjs)时，再运行 `npm run test:spec`。行为变更按受影响规则选择测试，并记录实际验证的结果和范围。
 
-一个文件可能参与多个规则。先看相关专题的 `summary` 和 `owns` 确定归属；索引未列出的文件使用目录和符号搜索，不需要维护第二份注册表。
+校验器一次汇报发现的元数据、归属和文件名重复、路径、一级标题、本地链接及索引导航问题。规则是否与实现一致、测试是否足以证明规则，需要结合源码和实际验证判断。
 
-## 写作和维护
+## 专题格式
 
-1. 先核对源码、类型、OpenAPI、迁移、配置和测试，再修改文档。已确认契约与实现冲突时，记录差异并确认处理方向，不能把当前实现自动当作正确契约。
-2. 同一稳定规则只在一个专题完整维护，其他专题概括并链接。概念、正常流程、例外和恢复条件放在一起，说明为什么这样设计。
-3. 行为变化时同步负责该规则的专题；只在协作关系或概括变化时更新系统概览。私有实现、普通文案和配置值优先留在可执行来源，不复制完整字段表。
-4. 新专题只为已有事实建立，加入本页导航。移动或删除前确认独有内容已有归属，并修复引用；历史过程由 Git 保留。
-5. 运行 `npm run check:spec`；本次修改了校验器时再运行 `npm run test:spec`。说明本次实际检查和未验证项，不把元数据中的候选测试当作已经通过。
-
-专题放在 `spec/<职责目录>/<专题>.md`，当前使用 SYSTEM、FEATURES、ENGINEERING。文件名在专题间忽略大小写后唯一，每篇只有一个一级标题。暂不增加目录索引、Context 文件或独立治理文档；素材预览放在 `spec/assets/`，不属于专题。
-
-每篇专题使用以下四个字段。为便于维护，采用单行摘要、普通列表或空列表 `[]`，列表项不加引号，不使用复杂 YAML 写法：
+专题按职责放在 `spec/<职责目录>/<专题>.md`，当前分为 `SYSTEM`、`FEATURES` 和 `ENGINEERING`。每篇只有一个一级标题，文件名忽略大小写后全局唯一。每篇专题都从本页直接链接，素材预览若需保存，放在 `spec/assets/`。
 
 ```yaml
 ---
@@ -60,14 +48,4 @@ tests: []
 ---
 ```
 
-`owns` 是全局唯一的规则名称；只为有实际维护价值的事实命名，不另设分类白名单。`source` 和 `tests` 使用仓库根目录相对路径，指向直接相关的真实文件或模块目录，没有准确入口时用空列表。共享源码可以出现在不同专题；目录级引用适用于专题确实负责整个模块的情况。
-
-校验器检查元数据、归属与文件名唯一性、路径、一级标题、本地文件及标题链接，以及根索引是否包含每篇专题。它一次报告发现的错误，不生成导航，也不判断文字是否正确或业务测试是否充分。本地链接采用常规 Markdown 内联链接和标题锚点。
-
-## 迁移后的内容归属
-
-原产品和技术方案按能力合并为以上专题，旧任务清单中的有效决定归入对应规则，历史验收的限制保存在测试指南。旧静态原型、原型截图及阶段计划已退出当前文档系统，历史可从 Git 查阅。
-
-人物与场景使用真实三维资源验证入口，路径和验证边界见 [营地](FEATURES/ISLAND.md#动效资源与验证边界) 和 [商店](FEATURES/SHOP.md#三维外观保存)。旧二维素材预览随对应实现退出，历史截图从 Git 查阅；当前能力和素材身份以源码目录为准。
-
-本系统参考 Cortex 的 Spec 维护方法，保留唯一入口、规则归属和事实源映射；运行不依赖其他仓库。
+`summary` 写成一行，`owns` 中的规则名全局唯一。`source` 和 `tests` 只列直接相关的仓库相对路径，可以引用与专题职责一致的模块目录。列表项直接填写，没有准确入口时用 `[]`。`tests` 列出可选的验证入口，结果以实际执行为准。

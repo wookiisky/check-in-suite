@@ -61,7 +61,7 @@ test('真实外观冲突保留六槽草稿并允许核对当前版本', async ({
   const desired = before.upper_purchase_id === item.purchase_id ? null : item.purchase_id;
   const body = before.characters.find((value) => value.character_key === before.character_key)!;
   const defaultUpper = before.wearables.find((value) => value.wearable_key === body.defaults.upper)!;
-  const optionName = desired ? item.wearable.name : appearance.defaultOption.replace('{name}', defaultUpper.name);
+  const optionName = desired ? item.wearable.name : defaultUpper.name;
   await page.getByRole('button', { name: preview.edit, exact: true }).click();
   const dialog = page.getByRole('dialog');
   const radio = dialog.getByRole('group', { name: appearance.slots.upper, exact: true }).getByRole('radio', { name: optionName, exact: true });
@@ -90,7 +90,7 @@ test('保存响应丢失后核实真实结果并只发布已确认外观', async
   const desired = before.upper_purchase_id === item.purchase_id ? null : item.purchase_id;
   const body = before.characters.find((value) => value.character_key === before.character_key)!;
   const defaultUpper = before.wearables.find((value) => value.wearable_key === body.defaults.upper)!;
-  const optionName = desired ? item.wearable.name : appearance.defaultOption.replace('{name}', defaultUpper.name);
+  const optionName = desired ? item.wearable.name : defaultUpper.name;
   await page.getByRole('button', { name: preview.edit, exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('group', { name: appearance.slots.upper, exact: true }).getByRole('radio', { name: optionName, exact: true }).check();

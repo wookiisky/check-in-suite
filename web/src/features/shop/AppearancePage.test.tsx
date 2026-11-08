@@ -46,11 +46,11 @@ it('分类筛选后能直接跳页，切换分类后仍保留所选装扮', asyn
   const { client } = appearanceClient(async () => state);
   render(<AppearancePage client={client} onSaved={vi.fn()} leaveGuardRef={null} />);
   fireEvent.click(await screen.findByRole('tab', { name: '上装' }));
-  expect(screen.getByRole('radio', { name: '上装默认款（默认）' })).toBeChecked();
+  expect(screen.getByRole('radio', { name: '上装默认款' })).toBeChecked();
   const pager = screen.getByRole('navigation', { name: '分页' });
   fireEvent.change(within(pager).getByRole('spinbutton', { name: '页码' }), { target: { value: '3' } });
   fireEvent.click(within(pager).getByRole('button', { name: '跳转' }));
-  expect(screen.queryByRole('radio', { name: '上装默认款（默认）' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('radio', { name: '上装默认款' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('radio', { name: '额外上装 27' }));
   fireEvent.click(screen.getByRole('tab', { name: '鞋子' }));
   expect(screen.getByRole('radio', { name: '鞋子新款' })).toBeInTheDocument();
@@ -72,7 +72,7 @@ it('复用请求客户端时隔离不同账号的未知保存', async () => {
 
   render(<AppearancePage client={client} accountID={2} onSaved={vi.fn()} leaveGuardRef={null} />);
   fireEvent.click(await screen.findByRole('tab', { name: '上装' }));
-  expect(screen.getByRole('radio', { name: '上装默认款（默认）' })).toBeChecked();
+  expect(screen.getByRole('radio', { name: '上装默认款' })).toBeChecked();
   expect(screen.getByRole('radio', { name: '上装新款' })).toBeEnabled();
   expect(request.mock.calls.filter(([, options]) => options?.method === 'PUT')).toHaveLength(1);
 });

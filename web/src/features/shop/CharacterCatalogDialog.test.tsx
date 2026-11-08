@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { AppearanceDialog } from './AppearanceDialog';
 import { appearanceClient, appearanceFixture } from './appearance-test-fixtures';
@@ -64,7 +64,7 @@ describe('完整人物与共享服装', () => {
     const fake = appearanceClient(async (_path, options) => options.method === 'PUT' ? { ...state, ...options.body as object, version: 2 } : state);
     const onSaved = vi.fn();
     render(<AppearanceDialog client={fake.client} onClose={vi.fn()} onSaved={onSaved} />);
-    fireEvent.click(await screen.findByRole('radio', { name: '形象新款（基础款）' }));
+    fireEvent.click(await screen.findByRole('radio', { name: '形象新款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
     expect(fake.request).toHaveBeenCalledWith('/appearance', expect.objectContaining({ method: 'PUT', body: expect.objectContaining({ character_key: 'body-fixture', face_purchase_id: null, face_free_wearable_key: 'face-owned' }) }));
@@ -72,12 +72,14 @@ describe('完整人物与共享服装', () => {
 
   it('初始免费服装可用于购买人物，重新选择购买服装会清除免费选择', async () => {
     const state = characterCatalogFixture();
-    state.characters[1]!.defaults = { face: 'face-default', back: 'back-default', head: 'head-owned', upper: 'upper-owned', lower: 'lower-owned', shoes: 'shoes-owned' };
+    const upper = state.wearables.find((item) => item.wearable_key === 'upper-default')!;
+    state.wearables.push({ ...upper, wearable_key: 'knight-upper', name: '骑士上装' });
+    state.characters[1]!.defaults = { ...state.characters[1]!.defaults, upper: 'knight-upper' };
     const fake = appearanceClient(async (_path, options) => options.method === 'PUT' ? { ...state, ...options.body as object, version: 2 } : state);
     const onSaved = vi.fn();
     render(<AppearanceDialog client={fake.client} onClose={vi.fn()} onSaved={onSaved} />);
     fireEvent.click(await screen.findByRole('radio', { name: '已购骑士' }));
-    fireEvent.click(screen.getByRole('radio', { name: '上装默认款（基础款）' }));
+    fireEvent.click(screen.getByRole('radio', { name: '上装默认款' }));
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
     expect(fake.request).toHaveBeenCalledWith('/appearance', expect.objectContaining({ method: 'PUT', body: expect.objectContaining({ character_key: 'owned-knight', upper_purchase_id: null, upper_free_wearable_key: 'upper-default' }) }));
@@ -88,6 +90,30 @@ describe('完整人物与共享服装', () => {
     const secondWrite = writes[1]![1]!;
     expect(secondWrite.body).toMatchObject({ upper_purchase_id: 'upper-purchase' });
     expect((secondWrite.body as Record<string, unknown>).upper_free_wearable_key ?? null).toBeNull();
+  });
+
+  it('可用的空穿戴排在默认衣服前，显示通用图标并保留免费选择身份', async () => {
+    const state = characterCatalogFixture();
+    const upper = state.wearables.find((item) => item.wearable_key === 'upper-default')!;
+    state.wearables.push({ ...upper, wearable_key: 'upper-none', name: '不穿上装', nodes: [], covers: [], empty: true });
+    state.characters[1]!.defaults = { ...state.characters[1]!.defaults, upper: 'upper-none' };
+    const fake = appearanceClient(async (_path, options) => options.method === 'PUT' ? { ...state, ...options.body as object, version: 2 } : state);
+    render(<AppearanceDialog client={fake.client} onClose={vi.fn()} onSaved={vi.fn()} />);
+
+    const empty = await screen.findByRole('radio', { name: '不穿上装' });
+    const group = within(screen.getByRole('group', { name: '上装' }));
+    expect(group.getAllByRole('radio')[0]).toBe(empty);
+    expect(empty.closest('label')?.querySelector('svg[aria-hidden="true"]')).toBeInTheDocument();
+    expect(empty.closest('label')?.querySelector('img')).toBeNull();
+    expect(group.getByRole('radio', { name: '上装默认款' })).toBeChecked();
+
+    fireEvent.click(empty);
+    expect(empty).toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
+    await screen.findByText('外观已保存。');
+    expect(fake.request).toHaveBeenCalledWith('/appearance', expect.objectContaining({
+      method: 'PUT', body: expect.objectContaining({ upper_purchase_id: null, upper_free_wearable_key: 'upper-none' }),
+    }));
   });
 
   it('免费衣服选择遇到版本冲突仍保留，核对后按新版本保存同一件衣服', async () => {
@@ -103,7 +129,7 @@ describe('完整人物与共享服装', () => {
       return { ...state, version: ++reads === 1 ? 1 : 2 };
     });
     render(<AppearanceDialog client={fake.client} onClose={vi.fn()} onSaved={vi.fn()} />);
-    const freeOption = await screen.findByRole('radio', { name: '上装默认款（基础款）' });
+    const freeOption = await screen.findByRole('radio', { name: '上装默认款' });
     fireEvent.click(freeOption);
     fireEvent.click(screen.getByRole('button', { name: '保存外观' }));
     fireEvent.click(await screen.findByRole('button', { name: '读取当前外观' }));
