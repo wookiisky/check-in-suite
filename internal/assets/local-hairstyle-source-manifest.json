@@ -1,0 +1,1244 @@
+{
+  "provider": "local",
+  "pack_key": "local-hairstyles",
+  "pack_name": "本地发型素材",
+  "license": "第三方开发素材，项目方已确认授权",
+  "wearables": [
+    {
+      "wearable_key": "hair-local-00",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair00",
+      "sources": [
+        {
+          "path": "PlayerHair00.Nin_NX_NVN/PlayerHair00.dae",
+          "sha256": "61e48df34dc0ceb91c6fc355b04fee2e6873f5fc2e58ae4424531e45077d5bc6"
+        },
+        {
+          "path": "PlayerHair00.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "bbb893b19e1cf0e3106c2744617104c5697f608df90fa6d2707025591f993234"
+        },
+        {
+          "path": "PlayerHair00.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "7ebf416a1fb6a5a061658beb2f73a4d05d47883b3c8bf7bacf3630a957954a20"
+        },
+        {
+          "path": "PlayerHair00.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "011b084e6000d58a3c11f169aaec4ab24e7bb87522ca4568a8867539b2106ab6"
+        }
+      ],
+      "model_asset_key": "hair-local-00-55bee8a0e40f",
+      "thumbnail_asset_key": "hair-local-00-thumbnail-ca5ef2170595"
+    },
+    {
+      "wearable_key": "hair-local-01",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair01",
+      "sources": [
+        {
+          "path": "PlayerHair01.Nin_NX_NVN/PlayerHair01.dae",
+          "sha256": "d8d60d3f7fa64eb14337f77bc99aee59e9214a07baff09ecb56703ecc6be71ac"
+        },
+        {
+          "path": "PlayerHair01.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "0f00a1ef6b9ee1601861cd4d8afcc1fab087b2bee7deebfdbcede4a290152252"
+        },
+        {
+          "path": "PlayerHair01.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "d0231b0a92314a3092025e76241ed6ca0ed0e6d7de0dfcdaaa8f42c022e4291a"
+        },
+        {
+          "path": "PlayerHair01.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "e46f9fdd6894781a1513fecfc4d640261eb59895ee89a7dc3f254fc4ec7ec04f"
+        }
+      ],
+      "model_asset_key": "hair-local-01-f483391a2eb6",
+      "thumbnail_asset_key": "hair-local-01-thumbnail-17af6d964a3a"
+    },
+    {
+      "wearable_key": "hair-local-02",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair02",
+      "sources": [
+        {
+          "path": "PlayerHair02.Nin_NX_NVN/PlayerHair02.dae",
+          "sha256": "a09e4f1b5b197af1f878d4880b55eac56a8bed80cf0bc25dafe8f0834734e218"
+        },
+        {
+          "path": "PlayerHair02.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "0ac6a618a84e4be70f3bd86f6cb76f257460dc7ebbd8af4c038c677e3dd27a7b"
+        },
+        {
+          "path": "PlayerHair02.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "1dbfd24ff974827a05bd781dfd5a11471859d4ba087c0ad4573eb19549d37fda"
+        },
+        {
+          "path": "PlayerHair02.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "181cc5de913a9ce026a37ddff74891850dd2d7cf89a72d630388286fd4accb23"
+        }
+      ],
+      "model_asset_key": "hair-local-02-dc3c1e5b261a",
+      "thumbnail_asset_key": "hair-local-02-thumbnail-14b9a7b8244a"
+    },
+    {
+      "wearable_key": "hair-local-03",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair03",
+      "sources": [
+        {
+          "path": "PlayerHair03.Nin_NX_NVN/PlayerHair03.dae",
+          "sha256": "3811f92f9ae508f148fe608cc4fdadb24225abd1f39ed434741e5c08a8c7cf9c"
+        },
+        {
+          "path": "PlayerHair03.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "146c2a6883f2fb7a3ac230095db5ba02b6873a97b9faf2b34867b3a74f12328d"
+        },
+        {
+          "path": "PlayerHair03.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "22fac1cbcc23cf53dd766b2deaa9c97651d4e5d0cb1943fd1f263119e2a16337"
+        },
+        {
+          "path": "PlayerHair03.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "8a91dd6c1d0e01f7ecadce0949f36ce36ba6299074349e3406355162d35ce79e"
+        }
+      ],
+      "model_asset_key": "hair-local-03-f071d2c5e12d",
+      "thumbnail_asset_key": "hair-local-03-thumbnail-d122ee7f7494"
+    },
+    {
+      "wearable_key": "hair-local-04",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair04",
+      "sources": [
+        {
+          "path": "PlayerHair04.Nin_NX_NVN/PlayerHair04.dae",
+          "sha256": "8eb721a8c784979f06704a36a637c43ac805e282c94aaee1a211eb651aa54ccb"
+        },
+        {
+          "path": "PlayerHair04.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "4012bd93f2229d9d13992d1cafed2c454a71d6f8c8af4379b9a7247d50b3b414"
+        },
+        {
+          "path": "PlayerHair04.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "a77ca0005bc88d738c30f79e7c244b6045c9281de630c27a3814e350ee337572"
+        },
+        {
+          "path": "PlayerHair04.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "a59d73b243157e464e323ca0a3b23bb69c1f1c43c6c5b8ed4711a584df8aad62"
+        }
+      ],
+      "model_asset_key": "hair-local-04-482a73efbc89",
+      "thumbnail_asset_key": "hair-local-04-thumbnail-55e964502cfc"
+    },
+    {
+      "wearable_key": "hair-local-05",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair05",
+      "sources": [
+        {
+          "path": "PlayerHair05.Nin_NX_NVN/PlayerHair05.dae",
+          "sha256": "d9027544ee207de521acdbe161730ec898d49a291527577c92b20ef906e7268b"
+        },
+        {
+          "path": "PlayerHair05.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "04c70a84b4d72bf68f41bbcaf5fdbab177b0b242c89fe94ce1bfdda48bcc80b3"
+        },
+        {
+          "path": "PlayerHair05.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "bfe84f198b0f6927bc4ffa47f7cdd4cd663e9158becb5d81e704bf4ca0ef1eb9"
+        },
+        {
+          "path": "PlayerHair05.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "16293b60f90bd7b9aaeb20efbaca9a4f74ed54a9f8ddd5c0e6db32826bdbf771"
+        }
+      ],
+      "model_asset_key": "hair-local-05-cf2e1f55a244",
+      "thumbnail_asset_key": "hair-local-05-thumbnail-c355e29a6efe"
+    },
+    {
+      "wearable_key": "hair-local-06",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair06",
+      "sources": [
+        {
+          "path": "PlayerHair06.Nin_NX_NVN/PlayerHair06.dae",
+          "sha256": "8d4fc5dbd75ad6b8bee124331e989b2cf8c8c91968f3679d6ffa1e743861f6c3"
+        },
+        {
+          "path": "PlayerHair06.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "d08f5e2d9b66a91c844474b074ca735bfaee437d082b20d07f69ce84b9b52221"
+        },
+        {
+          "path": "PlayerHair06.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "6af7dcdca47a4df7eeb426e310e42a0744d099a4c8704c3451daa5e0bd045207"
+        },
+        {
+          "path": "PlayerHair06.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "bbd02425d15ba5a7ea58d63d945d19bf337b837d96b9c210377e9b0984df908b"
+        }
+      ],
+      "model_asset_key": "hair-local-06-3f9a663eafa2",
+      "thumbnail_asset_key": "hair-local-06-thumbnail-2a7dc20a03e3"
+    },
+    {
+      "wearable_key": "hair-local-07",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair07",
+      "sources": [
+        {
+          "path": "PlayerHair07.Nin_NX_NVN/PlayerHair07.dae",
+          "sha256": "4c9a0fc07e354e6f352cce5767096aa30928a490f76160946c31cb94a08b590d"
+        },
+        {
+          "path": "PlayerHair07.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "6d1df7dc0b6ecacff781e7eacd9ede7db6351faddcbb3cb5609f71f5264d52b6"
+        },
+        {
+          "path": "PlayerHair07.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "9e4d589dce1b0292e7c0e7e847151e621099964be2feb1ff6b7d9b414de807c2"
+        },
+        {
+          "path": "PlayerHair07.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "bdd6f63bfb6e8c93b66cd21c178effda3f232fb30e3703c328dc78ae57cac7d5"
+        }
+      ],
+      "model_asset_key": "hair-local-07-432fc3ecb893",
+      "thumbnail_asset_key": "hair-local-07-thumbnail-4518ace65eff"
+    },
+    {
+      "wearable_key": "hair-local-08",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair08",
+      "sources": [
+        {
+          "path": "PlayerHair08.Nin_NX_NVN/PlayerHair08.dae",
+          "sha256": "e98d529a71c5bafb02036c5784ea86ce34bd1c268d119c94b781fd450b37c707"
+        },
+        {
+          "path": "PlayerHair08.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "90941b5a601d9e699cd9be76d8bff074804742a56ae374375fec3a99e3e87e8e"
+        },
+        {
+          "path": "PlayerHair08.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "843158ab40f03129fc365c5bbd4a04c2a9c87abfacdb9ba4314694be926ba565"
+        },
+        {
+          "path": "PlayerHair08.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "ee4ed75e935e1d5d5f5a06e5c99af67c1c9b9bcaee72f0833c0550b9d255874a"
+        }
+      ],
+      "model_asset_key": "hair-local-08-9860c7aa67f4",
+      "thumbnail_asset_key": "hair-local-08-thumbnail-a89c80b08a02"
+    },
+    {
+      "wearable_key": "hair-local-09",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair09",
+      "sources": [
+        {
+          "path": "PlayerHair09.Nin_NX_NVN/PlayerHair09.dae",
+          "sha256": "a6edc19c6e099641702797b5d1cfe199f775297e514d87d553aacf6bf28a1cbf"
+        },
+        {
+          "path": "PlayerHair09.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "f6dfbd539375fa0ed87d01a8a93e04825662ff4357aec711cf83e506bed21cf7"
+        },
+        {
+          "path": "PlayerHair09.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "d8b2557b9016f9c7be31fa751c2998317ef3addfd6eed61e2a51cc9dc14c6a51"
+        },
+        {
+          "path": "PlayerHair09.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "07b2ec11c4106a161a0dee42a30c596437bd3b44c4ef0c2dd0dba94ab2961f35"
+        }
+      ],
+      "model_asset_key": "hair-local-09-5e6ddc958cb1",
+      "thumbnail_asset_key": "hair-local-09-thumbnail-bf5c32c4441f"
+    },
+    {
+      "wearable_key": "hair-local-10",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair10",
+      "sources": [
+        {
+          "path": "PlayerHair10.Nin_NX_NVN/PlayerHair10.dae",
+          "sha256": "3a6f2971c4e69700d91dcd4561eb5330b744759da5c1a75137f4959a5453f883"
+        },
+        {
+          "path": "PlayerHair10.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "0e135f3c59faa824166a9528cd68a2a935d85faec51b5a936956f8eec0a5424a"
+        },
+        {
+          "path": "PlayerHair10.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "eb419fe69d06f1aa29e5ba4b7c9139eb1304aa4c3c1d9b3dc12885f80cd12f26"
+        },
+        {
+          "path": "PlayerHair10.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "08a11d0b18d03f8898c8e657c773734350a3972c0fe10b9b5af98b122531f193"
+        }
+      ],
+      "model_asset_key": "hair-local-10-d440e6f2902e",
+      "thumbnail_asset_key": "hair-local-10-thumbnail-05b83c53ed9f"
+    },
+    {
+      "wearable_key": "hair-local-11",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair11",
+      "sources": [
+        {
+          "path": "PlayerHair11.Nin_NX_NVN/PlayerHair11.dae",
+          "sha256": "73673e80192796afb904c996081e81e62727525443fee7fe7f3a3045270b2f61"
+        },
+        {
+          "path": "PlayerHair11.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "afc1892914f8ef322ef4bd6f6b9cf8ee46ecd9af2049ca5af9d0c83e05587acd"
+        },
+        {
+          "path": "PlayerHair11.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "7e189c21fea5bbbbf89097b8e05b756f631536df23034a8df31d5e99e1403f60"
+        },
+        {
+          "path": "PlayerHair11.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "6104f4d4855eb541e084989cdfc543a8c8aa11eeca7782afd30eadec02968d18"
+        }
+      ],
+      "model_asset_key": "hair-local-11-f831bf7238ff",
+      "thumbnail_asset_key": "hair-local-11-thumbnail-8241c926ed7a"
+    },
+    {
+      "wearable_key": "hair-local-12",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair12",
+      "sources": [
+        {
+          "path": "PlayerHair12.Nin_NX_NVN/PlayerHair12.dae",
+          "sha256": "43aac240f88eee8e3a5ffeddeaea4eca235775b4f7884bd6efc62e7bce34372d"
+        },
+        {
+          "path": "PlayerHair12.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "47985497a00b9d35799aba3300f54d7277eb12976ea4224e9f8302f29c76be50"
+        },
+        {
+          "path": "PlayerHair12.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "91294012956db66b22be8286e0662532126bbef24c34b11bb834c5a4d0fa7bcb"
+        },
+        {
+          "path": "PlayerHair12.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "7eae3c4d7011b36f01bd4ae430e465663e7da10c9c77dbb9898cd9bc7933a42a"
+        }
+      ],
+      "model_asset_key": "hair-local-12-bf4424f41619",
+      "thumbnail_asset_key": "hair-local-12-thumbnail-700a7b5279af"
+    },
+    {
+      "wearable_key": "hair-local-13",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair13",
+      "sources": [
+        {
+          "path": "PlayerHair13.Nin_NX_NVN/PlayerHair13.dae",
+          "sha256": "fa5b4fae18e16871f4b25deb540a38c64c7113f9119e5a20be292e2e97f91621"
+        },
+        {
+          "path": "PlayerHair13.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "bc58b11d3fce850695f667e25f25b01b8588b7bc32fee9cdcc57327a50af4df1"
+        },
+        {
+          "path": "PlayerHair13.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "ca9dc0f74304cb6fed7829e08b91b162c10edde5f5e0b244958bfb924a58ab5a"
+        },
+        {
+          "path": "PlayerHair13.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "d685cc842d3e967857743fe6b31a72c4f33ddbb9e5c00b3e9aead7bc67fbaf92"
+        }
+      ],
+      "model_asset_key": "hair-local-13-49b4e9224c03",
+      "thumbnail_asset_key": "hair-local-13-thumbnail-f1ee4fcc99de"
+    },
+    {
+      "wearable_key": "hair-local-14",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair14",
+      "sources": [
+        {
+          "path": "PlayerHair14.Nin_NX_NVN/PlayerHair14.dae",
+          "sha256": "f4e23b6fa80aef277eec30abb598a88e9406e46783a03c32f31c156cb8a4a2e4"
+        },
+        {
+          "path": "PlayerHair14.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "a8f239c423db59d9de307a2396efd99c0ed61c3073e26439f31493a9d4f484ba"
+        },
+        {
+          "path": "PlayerHair14.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "6e603b8a21babf30702c390dbea1d19db98c406721e7fee4b08c209c388b7b6e"
+        },
+        {
+          "path": "PlayerHair14.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "49d446a5dd5d5467dc321e6fee3084be2f117de8174471807c54cc6494719dc4"
+        }
+      ],
+      "model_asset_key": "hair-local-14-452fccf395c4",
+      "thumbnail_asset_key": "hair-local-14-thumbnail-db8f54258667"
+    },
+    {
+      "wearable_key": "hair-local-15",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair15",
+      "sources": [
+        {
+          "path": "PlayerHair15.Nin_NX_NVN/PlayerHair15.dae",
+          "sha256": "126492a0f9c97c8dee3b3496e376bbc239ff7c8f690af591f5f820ed3e547ed3"
+        },
+        {
+          "path": "PlayerHair15.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "ae5fab500623699d65532f2971b90f9156d9e401ef3eda128dfd28911f7b46ba"
+        },
+        {
+          "path": "PlayerHair15.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "8ad0298a629c4d85cd78b1ee80be3f1e5d3b6a113ed34a277474ec148d272fa0"
+        },
+        {
+          "path": "PlayerHair15.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "68540def40a9b23988bbaedb602aa8c7f5010affd3863be6b999f407c28d1259"
+        }
+      ],
+      "model_asset_key": "hair-local-15-58570825acde",
+      "thumbnail_asset_key": "hair-local-15-thumbnail-9f9f4efe9c87"
+    },
+    {
+      "wearable_key": "hair-local-16",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair16",
+      "sources": [
+        {
+          "path": "PlayerHair16.Nin_NX_NVN/PlayerHair16.dae",
+          "sha256": "f351d79870e85bf3ecb988cd79e6c18dfecbd95648f91761baa827e699da4aa5"
+        },
+        {
+          "path": "PlayerHair16.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "cd09e1750f66b7da319897219ef6d287744bcb0789f3b07f1b6cbe33634a86dd"
+        },
+        {
+          "path": "PlayerHair16.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "c1354e8223cedab5d799563d5567538102aa63e5c4700c108429c0a8d96d3976"
+        },
+        {
+          "path": "PlayerHair16.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "4e7061c5315d10fadb85894f7606d862b3d695f8c619bfadb252c6967d3d3aea"
+        }
+      ],
+      "model_asset_key": "hair-local-16-31e0b2497cec",
+      "thumbnail_asset_key": "hair-local-16-thumbnail-98db443fef65"
+    },
+    {
+      "wearable_key": "hair-local-17",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair17",
+      "sources": [
+        {
+          "path": "PlayerHair17.Nin_NX_NVN/PlayerHair17.dae",
+          "sha256": "c3c70b79a300c5229696de9dc8214cfea6323909ee182a2b7d3c3bced7d33858"
+        },
+        {
+          "path": "PlayerHair17.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "34ceffce5d4367813234862983886ff44399826e6bb0d68d2b340250853801dc"
+        },
+        {
+          "path": "PlayerHair17.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "1caff15358274078110522d51d038caf832920412fdd89ac0021b4eb40a4248b"
+        },
+        {
+          "path": "PlayerHair17.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "16293b60f90bd7b9aaeb20efbaca9a4f74ed54a9f8ddd5c0e6db32826bdbf771"
+        }
+      ],
+      "model_asset_key": "hair-local-17-91c0b61e59e6",
+      "thumbnail_asset_key": "hair-local-17-thumbnail-60cf31a57f0f"
+    },
+    {
+      "wearable_key": "hair-local-18",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair18",
+      "sources": [
+        {
+          "path": "PlayerHair18.Nin_NX_NVN/PlayerHair18.dae",
+          "sha256": "46dbf97ff89bac63bf33d6cf9e3dac6936c7a5ac3ffdabd0c25cc475727aa866"
+        },
+        {
+          "path": "PlayerHair18.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "54e4381f0a389016acf03b2fda54e42bc20d82e791383c2f59bc1cabf487cef8"
+        },
+        {
+          "path": "PlayerHair18.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "18f374fd2eae568c1020a3ab728873238850cab43a2b69baa3bb5571e81a1d1e"
+        },
+        {
+          "path": "PlayerHair18.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "17f6cb997d9dc75d087a7bdd998bb40e419a2c29f468da9dba73a9c11632974e"
+        }
+      ],
+      "model_asset_key": "hair-local-18-1965ed064c3d",
+      "thumbnail_asset_key": "hair-local-18-thumbnail-d218908228f0"
+    },
+    {
+      "wearable_key": "hair-local-19",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair19",
+      "sources": [
+        {
+          "path": "PlayerHair19.Nin_NX_NVN/PlayerHair19.dae",
+          "sha256": "3fece41584e39afe21a9931bc423a2d7fd73a3135bef90f68c15187d1e10cd87"
+        },
+        {
+          "path": "PlayerHair19.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "efe3837ca51ae6860b4af71e3dacc99148b7b33e3efea540cd77edc93bbdb759"
+        },
+        {
+          "path": "PlayerHair19.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "616d1475cd8d7818ea822b312814f86e8beac3a426df4a4d1b1e3f2351b3a167"
+        },
+        {
+          "path": "PlayerHair19.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "bff805e5895369de73080ff17c688d9652efac88b6283c80dbdbc8b7f30bf656"
+        }
+      ],
+      "model_asset_key": "hair-local-19-ab89d85305d7",
+      "thumbnail_asset_key": "hair-local-19-thumbnail-85e377e3a376"
+    },
+    {
+      "wearable_key": "hair-local-20",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair20",
+      "sources": [
+        {
+          "path": "PlayerHair20.Nin_NX_NVN/PlayerHair20.dae",
+          "sha256": "8468d13934971192afba63f00ea9c84f74952877e9f5174f52f4a4a3f08c3258"
+        },
+        {
+          "path": "PlayerHair20.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "c84c298eea6446948d8b51e895809fa5c4b3bec77947922158e591a655567fe2"
+        },
+        {
+          "path": "PlayerHair20.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "6dae5a601e9bacff14f2756d9cd478bf07ab110f15978fcfb19c8211b2a35ee4"
+        },
+        {
+          "path": "PlayerHair20.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "16293b60f90bd7b9aaeb20efbaca9a4f74ed54a9f8ddd5c0e6db32826bdbf771"
+        }
+      ],
+      "model_asset_key": "hair-local-20-514b4cdebb26",
+      "thumbnail_asset_key": "hair-local-20-thumbnail-734981302cbb"
+    },
+    {
+      "wearable_key": "hair-local-21",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair21",
+      "sources": [
+        {
+          "path": "PlayerHair21.Nin_NX_NVN/PlayerHair21.dae",
+          "sha256": "e3f483ca1cf207485d8ffb1afe4b3f4ca8f5491bebc9ab83b760e4ef602aa9e1"
+        },
+        {
+          "path": "PlayerHair21.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "d3e0a781b45a76e59623072c6fb869d779ff5dc5df874473f3f610011e1742a0"
+        },
+        {
+          "path": "PlayerHair21.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "1786cde25964222b3964851473ef33078dca66885adcd2c7d465251f328bd66f"
+        },
+        {
+          "path": "PlayerHair21.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "40656d59f792e21eba271434ce61ff9d6a536ffb78ce745450ed3759eabc3709"
+        }
+      ],
+      "model_asset_key": "hair-local-21-ebd38bc1fece",
+      "thumbnail_asset_key": "hair-local-21-thumbnail-e36aa9bb96fd"
+    },
+    {
+      "wearable_key": "hair-local-22",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair22",
+      "sources": [
+        {
+          "path": "PlayerHair22.Nin_NX_NVN/PlayerHair22.dae",
+          "sha256": "ad0f953cb9aaeaf1da3368ea78448a815a996253c69d8073d4076985d449ac1f"
+        },
+        {
+          "path": "PlayerHair22.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "092a8ef031948d3282a80574a3f154db688b636a6c03856922b9304b0689fc91"
+        },
+        {
+          "path": "PlayerHair22.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "90c69737fb4a95acb2a9125c31b8d9011440566f8c8552ea8ef5fbb4c1fc4595"
+        },
+        {
+          "path": "PlayerHair22.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "a1ab9ae60a46954cb26134b188a8bd78a720fd42cafe800134b0ece0629b9145"
+        }
+      ],
+      "model_asset_key": "hair-local-22-93bf6d386956",
+      "thumbnail_asset_key": "hair-local-22-thumbnail-e93a0493156d"
+    },
+    {
+      "wearable_key": "hair-local-23",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair23",
+      "sources": [
+        {
+          "path": "PlayerHair23.Nin_NX_NVN/PlayerHair23.dae",
+          "sha256": "90d448a58cacffc7a39fbb3e17b4817e1f5b4fa480314ebbe413b74cacdbe020"
+        },
+        {
+          "path": "PlayerHair23.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "6cd412fb997b48b72e9aad08340326f554e14c7d6e7d33fee227ce160cab0720"
+        },
+        {
+          "path": "PlayerHair23.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "8df24fdbfc8786853512f061cb708c6677f3b60974431c6b028598e356a16e57"
+        },
+        {
+          "path": "PlayerHair23.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "4880905705024b00d002b6a70e28a3724e2cfce21cea803c49d8294acf3e3e16"
+        },
+        {
+          "path": "PlayerHair23.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "36507d151385fca9671398e7f299435cd21f89cccf50ccff1d3da8976dd14437"
+        },
+        {
+          "path": "PlayerHair23.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "5fd1b767253703527a7c3abf4a81fd66cf08c00863bd5ec33baf312f989d0c79"
+        },
+        {
+          "path": "PlayerHair23.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "32e90ae04bd92ff3af8671f55caaafa288cb3ba5b177d38ebc33c93c169809f3"
+        }
+      ],
+      "model_asset_key": "hair-local-23-9ac899fa053e",
+      "thumbnail_asset_key": "hair-local-23-thumbnail-2380f0507f5b"
+    },
+    {
+      "wearable_key": "hair-local-24",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair24",
+      "sources": [
+        {
+          "path": "PlayerHair24.Nin_NX_NVN/PlayerHair24.dae",
+          "sha256": "a2c923a5689a78ef5ac3cca0844f68d8cdb8238ae21179337be0c23a11db7e17"
+        },
+        {
+          "path": "PlayerHair24.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "cec6abfe3ba1b4a92164a18bd2333dee39162ee47ccd6a1ca8a31181c643f0d8"
+        },
+        {
+          "path": "PlayerHair24.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "98fb46e4618766df7c6fe80db977249208bc45cbf6d66d01f7df9bd2405e16be"
+        },
+        {
+          "path": "PlayerHair24.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "f9e1f20c7af5b2c8742fb82f01109b6a4a285435e34c33db4332881dc3c5a820"
+        },
+        {
+          "path": "PlayerHair24.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "c6e499a781a852990ee1c5558bb2a5d7a88a9151d2a472dccca38bff8b73193a"
+        },
+        {
+          "path": "PlayerHair24.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "ea3a37f615db46947c0aa2209352dcc9f0a899d0b3ef92d1604f949d9992eb2c"
+        },
+        {
+          "path": "PlayerHair24.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "ef7c9f06a942d75c45241a4b92fb9792e526470d9b804f268a8d4eb7610b484c"
+        }
+      ],
+      "model_asset_key": "hair-local-24-afc7251d4bae",
+      "thumbnail_asset_key": "hair-local-24-thumbnail-1de960ed03c8"
+    },
+    {
+      "wearable_key": "hair-local-25",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair25",
+      "sources": [
+        {
+          "path": "PlayerHair25.Nin_NX_NVN/PlayerHair25.dae",
+          "sha256": "c3b6ee553a27b09db70456e2d8bfbc0a52cd93902222ab062d9aa710494edd6a"
+        },
+        {
+          "path": "PlayerHair25.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "71d2ed0528918b403c256b22af80355aee12d14fb5ae86fa8acf9abf13de71b4"
+        },
+        {
+          "path": "PlayerHair25.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "98fb46e4618766df7c6fe80db977249208bc45cbf6d66d01f7df9bd2405e16be"
+        },
+        {
+          "path": "PlayerHair25.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "f9e1f20c7af5b2c8742fb82f01109b6a4a285435e34c33db4332881dc3c5a820"
+        },
+        {
+          "path": "PlayerHair25.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "d5c8a31cb5759c27c90747b2c4161dad4eef7fde248a6dbe1db74e417f341dd9"
+        },
+        {
+          "path": "PlayerHair25.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "88057894eadc17aad5c0263776df335756b20a212c942302c1300b7495d090a7"
+        },
+        {
+          "path": "PlayerHair25.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "0b6333605154d36d913b2bb1c459de9a2cf8f98c3882d9212fe498c6e2ada3eb"
+        }
+      ],
+      "model_asset_key": "hair-local-25-f6c26460cad3",
+      "thumbnail_asset_key": "hair-local-25-thumbnail-c7eb9547d67a"
+    },
+    {
+      "wearable_key": "hair-local-26",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair26",
+      "sources": [
+        {
+          "path": "PlayerHair26.Nin_NX_NVN/PlayerHair26.dae",
+          "sha256": "be3a30c8d262203a75b33171179a01622b4eeb1b57d3d211c0cf06cf9fb33c42"
+        },
+        {
+          "path": "PlayerHair26.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "f0ad5ed56d218ddfebba04b671bf22607932cb63f58855b35ac1df7e62fdcde3"
+        },
+        {
+          "path": "PlayerHair26.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "9275f9d6587ed08d2ca3ad5f2ce749c9a7c7722eb7eb02ad5a4f1f2cda14a1d5"
+        },
+        {
+          "path": "PlayerHair26.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "ceb049024d13b9d1eddb5c41e755ee354718e8d1102c9376e1dd6808e0bdbd7b"
+        },
+        {
+          "path": "PlayerHair26.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "a5fefa8291ba090c8d0bb8702a14c63c26590b6e85111ba90c307f21234c87e8"
+        },
+        {
+          "path": "PlayerHair26.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "646c5916ca5b2cbc8ee10886a21e33a9e1d2126173071d1b089e0b190023b8b8"
+        },
+        {
+          "path": "PlayerHair26.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "5a0a8194d712e1454c1b4b6a44840d43853ea23977025d1430ae4d5e1740d8bf"
+        }
+      ],
+      "model_asset_key": "hair-local-26-97d73470c7e4",
+      "thumbnail_asset_key": "hair-local-26-thumbnail-d23e76de5991"
+    },
+    {
+      "wearable_key": "hair-local-27",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair27",
+      "sources": [
+        {
+          "path": "PlayerHair27.Nin_NX_NVN/PlayerHair27.dae",
+          "sha256": "b3500c0b9f013907e41017d5fd58359bad3ebcb0ba7f3111e19aed0789ea1c5e"
+        },
+        {
+          "path": "PlayerHair27.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "d676adf60d29473182e49b578a12313a64398da0a86d91f2bdfcdfdc3567852f"
+        },
+        {
+          "path": "PlayerHair27.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "8df24fdbfc8786853512f061cb708c6677f3b60974431c6b028598e356a16e57"
+        },
+        {
+          "path": "PlayerHair27.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "ceb049024d13b9d1eddb5c41e755ee354718e8d1102c9376e1dd6808e0bdbd7b"
+        },
+        {
+          "path": "PlayerHair27.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "9d77a02cb5ce204422b4939e94fa797e7c157d7fb975d6fec4cd89d7f41cc53d"
+        },
+        {
+          "path": "PlayerHair27.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "b017d914c511ba99d3a51f4d25a6e2155dac5bb224d039919802459371552b5c"
+        },
+        {
+          "path": "PlayerHair27.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "19b28595ce3f453f8ec140efddc05e3005a1e20465be5b3b4ef7c56be67d7692"
+        }
+      ],
+      "model_asset_key": "hair-local-27-8eb7f3b460f2",
+      "thumbnail_asset_key": "hair-local-27-thumbnail-ddfce8a28ead"
+    },
+    {
+      "wearable_key": "hair-local-28",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair28",
+      "sources": [
+        {
+          "path": "PlayerHair28.Nin_NX_NVN/PlayerHair28.dae",
+          "sha256": "cfd4db2d27c4217bb3be4573d6e8ef2e329bd0df005706a9e99a05eed5720f66"
+        },
+        {
+          "path": "PlayerHair28.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "6d5e2012130f5242ea6972b5bc062e0172b834f47538d625168da2693a97cb7c"
+        },
+        {
+          "path": "PlayerHair28.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "8df24fdbfc8786853512f061cb708c6677f3b60974431c6b028598e356a16e57"
+        },
+        {
+          "path": "PlayerHair28.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "c94084485050168385e9c357e955c52f91c6befe34a48d548a0cd88c1eae360f"
+        },
+        {
+          "path": "PlayerHair28.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "f42af5abd174535aa68d623adc01e44aa706a705e0b20f7eb5941cba92c82330"
+        },
+        {
+          "path": "PlayerHair28.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "98b04623ff8b5a35c724940eda111fe4490021dc6753e2ff7cc3dd93b3a98941"
+        },
+        {
+          "path": "PlayerHair28.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "61ff94c38b3ef7338a889743b516814bcb4ee1c7ca4dba402b64ffeaf1cb9306"
+        }
+      ],
+      "model_asset_key": "hair-local-28-327d3aa38c9d",
+      "thumbnail_asset_key": "hair-local-28-thumbnail-1e9525768b0e"
+    },
+    {
+      "wearable_key": "hair-local-29",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair29",
+      "sources": [
+        {
+          "path": "PlayerHair29.Nin_NX_NVN/PlayerHair29.dae",
+          "sha256": "f072aae45e69df7941003bf2899381eaef5ab448209c0bb6aa775d68bf08c216"
+        },
+        {
+          "path": "PlayerHair29.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "eedb17c3f2cc85b85d13d0f8487c4bacf2f8df2ed13249c2e78adbcbf8d33d94"
+        },
+        {
+          "path": "PlayerHair29.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "270e63799c5dc1c65a0f61c24a0e12ae9ad283c2085779347be07d6a93209865"
+        },
+        {
+          "path": "PlayerHair29.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "d35682dc78de4b7a61954d15b2488fac8f35fe3431bf127d81f0b6b864b5fe34"
+        }
+      ],
+      "model_asset_key": "hair-local-29-d9602d119c20",
+      "thumbnail_asset_key": "hair-local-29-thumbnail-93fe3d8d3515"
+    },
+    {
+      "wearable_key": "hair-local-30",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair30",
+      "sources": [
+        {
+          "path": "PlayerHair30.Nin_NX_NVN/PlayerHair30.dae",
+          "sha256": "14479922ed792418f04a8cbeb55b2c997c37d370897a987c57d2675a8dd4249f"
+        },
+        {
+          "path": "PlayerHair30.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "3579b0d7f57c5ee8cd798b1e59cd9b7c9dfe1b84537b78e0fc05804bb40fd648"
+        },
+        {
+          "path": "PlayerHair30.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "dfddf265953ef0343e20fc650dac298a812a6bc4c9f08f18986d72b402f9fcb5"
+        },
+        {
+          "path": "PlayerHair30.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "e34d525206a1430e959c83d9be80e56a465bb2edcb4dd12ea5c930b5dd026a74"
+        }
+      ],
+      "model_asset_key": "hair-local-30-2c17daca8a13",
+      "thumbnail_asset_key": "hair-local-30-thumbnail-cd368fb62f6a"
+    },
+    {
+      "wearable_key": "hair-local-31",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair31",
+      "sources": [
+        {
+          "path": "PlayerHair31.Nin_NX_NVN/PlayerHair31.dae",
+          "sha256": "26bf0bd0ad33fc3158ae5a4ecdd31293d9753a6c85dc653ba345419588e55aa8"
+        },
+        {
+          "path": "PlayerHair31.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "fc796c1a76d3204cd04136b0bbdfc22af78745d822d777e2cb6c3706c3d00261"
+        },
+        {
+          "path": "PlayerHair31.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "a8c8843d81f716979dcc15c1234856a3bd284e7ac60d97c4f33fd6c3539875e4"
+        },
+        {
+          "path": "PlayerHair31.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "16293b60f90bd7b9aaeb20efbaca9a4f74ed54a9f8ddd5c0e6db32826bdbf771"
+        }
+      ],
+      "model_asset_key": "hair-local-31-278e5db977f6",
+      "thumbnail_asset_key": "hair-local-31-thumbnail-6775407400be"
+    },
+    {
+      "wearable_key": "hair-local-32",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair32",
+      "sources": [
+        {
+          "path": "PlayerHair32.Nin_NX_NVN/PlayerHair32.dae",
+          "sha256": "3dad468215d4a8c3ad4ac24bc902ef197a6b173b8da2352d8ee68f5de0d2bff1"
+        },
+        {
+          "path": "PlayerHair32.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "de5046f91b95b093d81f07d67cec568bfefa503d3ec90a48836cb4e204fa7b9e"
+        },
+        {
+          "path": "PlayerHair32.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "f6a7f3cd06093a8f447ddb3d1fde88da66bbf77e2df611130bb9140ec3017583"
+        },
+        {
+          "path": "PlayerHair32.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "4880905705024b00d002b6a70e28a3724e2cfce21cea803c49d8294acf3e3e16"
+        },
+        {
+          "path": "PlayerHair32.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "ddce575f41c8c8619f9352a035f45bb3ee0cf485b8f8a6d616d91d52a696ee45"
+        },
+        {
+          "path": "PlayerHair32.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "eb04136d252cbc2c0e144eedf6d8b3f708e41921a8c6d3fd3830bb88ef9366c2"
+        },
+        {
+          "path": "PlayerHair32.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "33fedf5b08f31e46574f73ebb6eb37d82c7aabf48e0a687165a9ba061186b5a6"
+        }
+      ],
+      "model_asset_key": "hair-local-32-df7ed2d68d93",
+      "thumbnail_asset_key": "hair-local-32-thumbnail-4cc9d48598fd"
+    },
+    {
+      "wearable_key": "hair-local-33",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair33",
+      "sources": [
+        {
+          "path": "PlayerHair33.Nin_NX_NVN/PlayerHair33.dae",
+          "sha256": "a272d8ebf78f38199ee2d1c6c3af0f6d57392d4656f747682b37293c4b4f0c3b"
+        },
+        {
+          "path": "PlayerHair33.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "185ea6c467b945896b85d2b82af1b6dee8fdcd9b156be1b4e297bb947ce4b929"
+        },
+        {
+          "path": "PlayerHair33.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "8eadfd29165c5a4901c98ed5cb6a7f2d5e1b593c11f749407165f8cba19f9e82"
+        },
+        {
+          "path": "PlayerHair33.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "b002e780bff4d5c6919be228eff9d34c7191789924dd846dd2455e335f2662fc"
+        }
+      ],
+      "model_asset_key": "hair-local-33-6775d1243079",
+      "thumbnail_asset_key": "hair-local-33-thumbnail-615d26212622"
+    },
+    {
+      "wearable_key": "hair-local-34",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair34",
+      "sources": [
+        {
+          "path": "PlayerHair34.Nin_NX_NVN/PlayerHair34.dae",
+          "sha256": "605fe180373d157b194187f51d1444cc5feefffa84ec3e9c64a16ce29177bd52"
+        },
+        {
+          "path": "PlayerHair34.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "5c681da25ca898b4a5ff04c0654a2fa33b2300ab774c351d1afa3e70ba0a4c48"
+        },
+        {
+          "path": "PlayerHair34.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "01840019dbcdbf2ad28af364b1d9f7106bc517dc3c7dc2bbbde7f260298c6e70"
+        },
+        {
+          "path": "PlayerHair34.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "36b8fc4f0aa32a3c80d366f8269ddaa6eb269eadedb53c3a9739b045521d3378"
+        }
+      ],
+      "model_asset_key": "hair-local-34-63f8c11680bb",
+      "thumbnail_asset_key": "hair-local-34-thumbnail-b0e1fd47e5b7"
+    },
+    {
+      "wearable_key": "hair-local-35",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair35",
+      "sources": [
+        {
+          "path": "PlayerHair35.Nin_NX_NVN/PlayerHair35.dae",
+          "sha256": "2cf580feccda95e76cb0f7c5cc479130b9373eebf70c701c4b5e7c6641941459"
+        },
+        {
+          "path": "PlayerHair35.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "4a934d1740517ce5d75a4c7ef3096f3bb909c4af045202d685b14e3780133833"
+        },
+        {
+          "path": "PlayerHair35.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "baa92cdc23961a96a605d4dba6313f2d96f3afc4316823679ad33976b1ce96f2"
+        },
+        {
+          "path": "PlayerHair35.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "c252685a83a3004469d4a6000a18665d5b62c97564ac2a546200f7f1a6f9cc06"
+        }
+      ],
+      "model_asset_key": "hair-local-35-021710178735",
+      "thumbnail_asset_key": "hair-local-35-thumbnail-aecb5806a27b"
+    },
+    {
+      "wearable_key": "hair-local-36",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair36",
+      "sources": [
+        {
+          "path": "PlayerHair36.Nin_NX_NVN/PlayerHair36.dae",
+          "sha256": "8cdbe901a55b1e72fd0621a9dcab9af91bdd00d58ca574ba610c6feef07e0ad5"
+        },
+        {
+          "path": "PlayerHair36.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "e6382bc66b47bcb5016403b7131c8b02f31054e5c4ba88b92c30a4f99b3a24b8"
+        },
+        {
+          "path": "PlayerHair36.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "5380c67c90ec2654d9fe62fdee298ceaada4992da1ca2ba07c439c3188c975d0"
+        },
+        {
+          "path": "PlayerHair36.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "de3ee75bb20743622699aff4399b259ad58a847e5dae717a259b8fbdeb347723"
+        }
+      ],
+      "model_asset_key": "hair-local-36-af8960516edd",
+      "thumbnail_asset_key": "hair-local-36-thumbnail-b5621fc45f73"
+    },
+    {
+      "wearable_key": "hair-local-37",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair37",
+      "sources": [
+        {
+          "path": "PlayerHair37.Nin_NX_NVN/PlayerHair37.dae",
+          "sha256": "c0533d431d22a31db7a63b61bb525caa9671737d0c24191c52445240518b6b8d"
+        },
+        {
+          "path": "PlayerHair37.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "7da7f0abfc34733bdf6a067282a58a35f377d8c4d58ea2cc561c4c5328d82d18"
+        },
+        {
+          "path": "PlayerHair37.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "53df4ad7bf0927acb0366cd94aa7bfc1b53a6de8690f55aadc291d56b9fe8102"
+        },
+        {
+          "path": "PlayerHair37.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "81be885ef82760b65c1e7decd98046db0b719fda419f5af7a80df3184906da96"
+        }
+      ],
+      "model_asset_key": "hair-local-37-64c67eed6117",
+      "thumbnail_asset_key": "hair-local-37-thumbnail-fb63c4ab3d70"
+    },
+    {
+      "wearable_key": "hair-local-38",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair38",
+      "sources": [
+        {
+          "path": "PlayerHair38.Nin_NX_NVN/PlayerHair38.dae",
+          "sha256": "65a200d9751a09a21ca44df3943bd68c7fcdbb38bd424dd35e9c349bb7d65473"
+        },
+        {
+          "path": "PlayerHair38.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "4ef1cfb712facb3a60d7895320d1abc91a93a4813d6ee272ffc15f3f498b2c5c"
+        },
+        {
+          "path": "PlayerHair38.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "ebc5168522471cf4ad9342550d9944a62340909ff1bdadb50344ddd0570a1e2d"
+        },
+        {
+          "path": "PlayerHair38.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "f7158176ee8f5adf636dadad5131a5e5693a8ca46ff3e6c0acaacb01e5059925"
+        }
+      ],
+      "model_asset_key": "hair-local-38-2c0e57a8c4e7",
+      "thumbnail_asset_key": "hair-local-38-thumbnail-3f0ab41defc6"
+    },
+    {
+      "wearable_key": "hair-local-39",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair39",
+      "sources": [
+        {
+          "path": "PlayerHair39.Nin_NX_NVN/PlayerHair39.dae",
+          "sha256": "8ca13eaf3aa315835291bf72c8fb79369571a3108aa012b8603a1c37fce2c44e"
+        },
+        {
+          "path": "PlayerHair39.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "45f0d2d545f5a38584c67032fd2c9601bff1dc3e25e75ffd83137aacc13a86be"
+        },
+        {
+          "path": "PlayerHair39.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "73a9986bdb3284db182bc5fbb05c03022fb709e1dc365d2254b5790af8900596"
+        },
+        {
+          "path": "PlayerHair39.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "58f8b3b8b383e1b0e797eb7e29d1a6dd15286f444910a5746475d185496adfc1"
+        }
+      ],
+      "model_asset_key": "hair-local-39-610101f3a2b6",
+      "thumbnail_asset_key": "hair-local-39-thumbnail-c9dd614f2bee"
+    },
+    {
+      "wearable_key": "hair-local-40",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair40",
+      "sources": [
+        {
+          "path": "PlayerHair40.Nin_NX_NVN/PlayerHair40.dae",
+          "sha256": "cc8be1e43bef4c1831750375bd21ef6116130162a629a709f734faab6ba1254b"
+        },
+        {
+          "path": "PlayerHair40.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "32946a1dac857f073aabccd9d6154955c343fc58f02329551f071afe3798dca1"
+        },
+        {
+          "path": "PlayerHair40.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "92205d98760cb2b4f9c2c5a9eef44749d9cb43da4919d2dc48fbda470678d232"
+        },
+        {
+          "path": "PlayerHair40.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "16293b60f90bd7b9aaeb20efbaca9a4f74ed54a9f8ddd5c0e6db32826bdbf771"
+        }
+      ],
+      "model_asset_key": "hair-local-40-e30b4e8b093a",
+      "thumbnail_asset_key": "hair-local-40-thumbnail-9754509b6333"
+    },
+    {
+      "wearable_key": "hair-local-41",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair41",
+      "sources": [
+        {
+          "path": "PlayerHair41.Nin_NX_NVN/PlayerHair41.dae",
+          "sha256": "2fb5c22a7b591b149d06f2cc236536b0a99accc97bb74481fff8e8b76ff4e9be"
+        },
+        {
+          "path": "PlayerHair41.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "6a9656aeba65a83c0d215b21039d534c7f48ee74f4e4fbb813b8d9ee0fa7b5b2"
+        },
+        {
+          "path": "PlayerHair41.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "fea2228fb407e5fc866ff3358b366e56dba4233241b2f8546a4e10e31f2ee4dc"
+        },
+        {
+          "path": "PlayerHair41.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "a47453d4a309241c40ccac0f2e778571e4d68aa678fe952559ebb582b4d96120"
+        }
+      ],
+      "model_asset_key": "hair-local-41-1adc54b57dc3",
+      "thumbnail_asset_key": "hair-local-41-thumbnail-9429cf9e0f7d"
+    },
+    {
+      "wearable_key": "hair-local-42",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair42",
+      "sources": [
+        {
+          "path": "PlayerHair42.Nin_NX_NVN/PlayerHair42.dae",
+          "sha256": "fa9e93b537e38c30cf5d0258b0b8f6c9023fd6cd6e1d75f2fd70492cdd5fc47a"
+        },
+        {
+          "path": "PlayerHair42.Nin_NX_NVN/mHairSkin_Alb.png",
+          "sha256": "43d4bae38d142ffb50caf740e16b048df0ed18e27ce565224c594d0b88cc801b"
+        },
+        {
+          "path": "PlayerHair42.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "35a18aeaf73e548048b7fbe1ee571df6359e619c9a1a960d4c4f6b999736f5e9"
+        },
+        {
+          "path": "PlayerHair42.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "c4b8c726fab1ee959b5ab6011ba317ab9f7465a504a32c98003833aeec4df885"
+        }
+      ],
+      "model_asset_key": "hair-local-42-9d614dc58f79",
+      "thumbnail_asset_key": "hair-local-42-thumbnail-7686ad7de554"
+    },
+    {
+      "wearable_key": "hair-local-43",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair43",
+      "sources": [
+        {
+          "path": "PlayerHair43.Nin_NX_NVN/PlayerHair43.dae",
+          "sha256": "fa3a036ae7700e633ac11be9eba7d755d1fb369044d4260d26dbcf87a206f7ae"
+        },
+        {
+          "path": "PlayerHair43.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "00f5a4cfc2c08df37b06e95f567c07f437b7332627ca705bd6ab7fab24d6a6dc"
+        },
+        {
+          "path": "PlayerHair43.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "9d5df7704f7da77145d280f8322687d0b731b2fe189b86ec12b1a122fd26e8ff"
+        },
+        {
+          "path": "PlayerHair43.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "d90e3d70fcd7e928ad60ec7dcb26a73d1d21391da55ca7ecc7f5895ec7cd97bc"
+        }
+      ],
+      "model_asset_key": "hair-local-43-d798a879192c",
+      "thumbnail_asset_key": "hair-local-43-thumbnail-4cb04dddd653"
+    },
+    {
+      "wearable_key": "hair-local-44",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair44",
+      "sources": [
+        {
+          "path": "PlayerHair44.Nin_NX_NVN/PlayerHair44.dae",
+          "sha256": "dab84fbad780631c4e4feecd3908e36112e9d80e68aa89bd3c9de96234d14f16"
+        },
+        {
+          "path": "PlayerHair44.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "23b0672859c6fea9959cb81cbad272f718aa65eef3a13bf5849294d56c573fb9"
+        },
+        {
+          "path": "PlayerHair44.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "8c25ba696edf342dc21d145fe3807f492cce67de0d25d550a5b3cabaffab6633"
+        },
+        {
+          "path": "PlayerHair44.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "bda5145254524dfebea2391d5d9ef4a8cb044564ca17f6a58b76d6c81bece179"
+        }
+      ],
+      "model_asset_key": "hair-local-44-52ae3c9e9a9e",
+      "thumbnail_asset_key": "hair-local-44-thumbnail-6ad796157bc9"
+    },
+    {
+      "wearable_key": "hair-local-45",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair45",
+      "sources": [
+        {
+          "path": "PlayerHair45.Nin_NX_NVN/PlayerHair45.dae",
+          "sha256": "68b2873136773c348bc51e8fbc390f697b4285b6d4e58c126ae81d1118452b2f"
+        },
+        {
+          "path": "PlayerHair45.Nin_NX_NVN/mHairSkin_AlbGry.png",
+          "sha256": "68f7a92ce76e5df41b61c65c65bac48261188846d0fbd23dac32d13d9b4a8e24"
+        },
+        {
+          "path": "PlayerHair45.Nin_NX_NVN/mHairSkin_Mix.png",
+          "sha256": "a99e9e4d6a4ba7c1fbeb2fab4a13fa13d4b6ab295d3031337b8e5fc49bb6485e"
+        },
+        {
+          "path": "PlayerHair45.Nin_NX_NVN/mHairSkin_Nrm.png",
+          "sha256": "87d1e56683739fcf9a15674cafbd73af40d26e9ebb7b92e9e7a84892cf753647"
+        }
+      ],
+      "model_asset_key": "hair-local-45-ae1f13216ba3",
+      "thumbnail_asset_key": "hair-local-45-thumbnail-7cd5987a6d3a"
+    },
+    {
+      "wearable_key": "hair-local-46",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair46",
+      "sources": [
+        {
+          "path": "PlayerHair46.Nin_NX_NVN/PlayerHair46.dae",
+          "sha256": "ecd7833c8de207d9bd967a3ec54a6ec675879de6e3de8afbe7e50a2379145b69"
+        },
+        {
+          "path": "PlayerHair46.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "3ce61db454d50b98a36b54731c0e55e26bc696edc3aa17572cb2f85c8da8950f"
+        },
+        {
+          "path": "PlayerHair46.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "0cd3601caa262c894ae3faa5de64fb5ca0b3d9351e7437f2607c032484eed702"
+        },
+        {
+          "path": "PlayerHair46.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "2f1b27ea69022d5dad434ff1fa8979a7e895dde1e80725027a6b68c948b02576"
+        }
+      ],
+      "model_asset_key": "hair-local-46-ed9e98693a12",
+      "thumbnail_asset_key": "hair-local-46-thumbnail-f7ad8b1a1925"
+    },
+    {
+      "wearable_key": "hair-local-47",
+      "source_url": "urn:check-in-suite:asset-source:local-hairstyles/PlayerHair47",
+      "sources": [
+        {
+          "path": "PlayerHair47.Nin_NX_NVN/PlayerHair47.dae",
+          "sha256": "c5b3421c90e9d5fafee45f64564fd82bb8fab4787cd015b1e1fb59e25cd99b3b"
+        },
+        {
+          "path": "PlayerHair47.Nin_NX_NVN/mHair_AlbGry.png",
+          "sha256": "06c709f1faeeeb70955cb5ea5b48ddad41c966a2c00d983f7b38c9a4c097a11c"
+        },
+        {
+          "path": "PlayerHair47.Nin_NX_NVN/mHair_Mix.png",
+          "sha256": "e4513289544e22903717988a4a0dde9006dc4661630d36ed3990cb0a413345b1"
+        },
+        {
+          "path": "PlayerHair47.Nin_NX_NVN/mHair_Nrm.png",
+          "sha256": "62ec1f6f7743cefc5e90860451c7eff7b73fbd4ce6818492512f76257fd6551f"
+        }
+      ],
+      "model_asset_key": "hair-local-47-008b11668cde",
+      "thumbnail_asset_key": "hair-local-47-thumbnail-991e62a97c3a"
+    }
+  ]
+}

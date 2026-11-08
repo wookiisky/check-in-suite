@@ -298,5 +298,293 @@
     "name": "翻边皮靴",
     "coin_price": 15,
     "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-00",
+    "name": "刘海单马尾",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-01",
+    "name": "双扎短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-02",
+    "name": "中分自然发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-03",
+    "name": "顺滑短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-04",
+    "name": "双马尾长辫",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-05",
+    "name": "侧马尾微卷发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-06",
+    "name": "层次及肩发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-07",
+    "name": "经典及肩长发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-08",
+    "name": "斜分短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-09",
+    "name": "随性短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-10",
+    "name": "垂肩长发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-11",
+    "name": "齐刘海中长发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-12",
+    "name": "高马尾发型",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-13",
+    "name": "清爽短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-14",
+    "name": "波浪短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-15",
+    "name": "双丸子短马尾",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-16",
+    "name": "蓬松双马尾",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-17",
+    "name": "圆寸短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-18",
+    "name": "前翘短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-19",
+    "name": "尖刺短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-20",
+    "name": "侧梳短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-21",
+    "name": "极简短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-22",
+    "name": "层次碎短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-23",
+    "name": "铲青短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-24",
+    "name": "渐变平头",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-25",
+    "name": "渐变短碎发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-26",
+    "name": "铲青短卷发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-27",
+    "name": "短碎发双材质",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-28",
+    "name": "铲青蓬松短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-29",
+    "name": "双麻花长辫",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-30",
+    "name": "侧卷自然发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-31",
+    "name": "微寸发茬",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-32",
+    "name": "渐变极短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-33",
+    "name": "顶束小短辫",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-34",
+    "name": "侧分发茬短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-35",
+    "name": "寸头贴皮发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-36",
+    "name": "蓬松卷发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-37",
+    "name": "微翘双短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-38",
+    "name": "齐刘海长直发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-39",
+    "name": "斜刘海短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-40",
+    "name": "波浪及肩卷发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-41",
+    "name": "微卷层次短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-42",
+    "name": "经典寸头发茬",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-43",
+    "name": "束发小马尾",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-44",
+    "name": "精致编发长辫",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-45",
+    "name": "顶束短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-46",
+    "name": "偏分层次短发",
+    "coin_price": 20,
+    "diamond_price": 0
+  },
+  {
+    "wearable_key": "hair-local-47",
+    "name": "齐耳波波头",
+    "coin_price": 20,
+    "diamond_price": 0
   }
 ]

@@ -120,6 +120,15 @@ npm run test:assets
 
 可换色穿戴的制作配方指定独立材质与默认色，预设色来自 `internal/character/wearable-colors.json`。原有纯色布料直接指定底色。带贴图的部件在 Blender 导出后按 `scripts/modular-character-dye-regions.json` 分配三角面，通过 `uv` 锁定的 Pillow 环境生成保留明暗的中性贴图。加工保留顶点属性、蒙皮及固定部件的原贴图，默认颜色以原素材渲染为参考，缩略图显示原配色。退役背部部件仍从原套装的上衣网格分离，以免披风或披肩重新混入上装。
 
+项目方授权的本地发型通过独立管线加工。选款及名称见 `scripts/local-hairstyle-sources.json`，来源和输入摘要见 `internal/assets/local-hairstyle-source-manifest.json`。源文件留在项目方提供的目录，GLB 使用原灰度贴图和单独的染色材质，发型绑定到现有头骨。重建 KayKit 身体和服装时沿用已发布的本地发型。头型或绑定姿势变化时，按实际脸型重新检查发型贴合。
+
+```sh
+npm run assets:pipeline -- build --pipeline local-hairstyles --output .local/asset-pipeline/local-hairstyles -- --source-root /path/to/Model
+npm run assets:pipeline -- check --output .local/asset-pipeline/local-hairstyles
+```
+
+该候选的贴合检查覆盖新发型与兼容脸型的组合。复核头皮露出、发际线、耳缘和后颈，以及走路和低头时的穿戴。把已审查的图像和专项结果作为证据导入后，再应用候选。
+
 默认背心沿实际身体表面裁出圆领。领口沿左右对称的圆弧分段，切出的顶点沿原网格插值蒙皮权重。
 
 原有 `scripts/prepare-3d-resources.py` 不再负责生成正式人物，避免重新引入旧四槽目录。模型与动作的来源和权利分别登记，原始 FBX 与加工工程仍留在 `.local/3d-sources/`。

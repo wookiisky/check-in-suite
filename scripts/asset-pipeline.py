@@ -134,6 +134,52 @@ def asset_registry(root, output):
     return result
 
 
+# 根据来源记录和槽位识别本地发型，稳定身份不能被其他来源复用。
+def is_local_hairstyle(item):
+    return item['slot'] == 'head' and item.get('provider') == 'local' and item.get('pack_key') == 'local-hairstyles'
+
+
+# 发型只改变头部穿戴；几何检查覆盖每个兼容脸型，而非重复共用同一规格的身体。
+def local_hairstyle_cases(root, output, generated):
+    relative = 'internal/character/character-catalog.json'
+    if relative not in generated or not (root/relative).is_file():
+        raise ValueError('local hairstyle candidate requires both character catalogs')
+    original = json.loads((root/relative).read_text())
+    catalog = json.loads((output/relative).read_text())
+    previous = {item['wearable_key']: item for item in original.pop('wearables')}
+    wearables = catalog.pop('wearables')
+    current = {item['wearable_key']: item for item in wearables}
+    if len(current) != len(wearables):
+        raise ValueError('duplicate wearable identity')
+    if original != catalog or previous.keys() - current.keys():
+        raise ValueError('local hairstyle candidate changes existing character definitions')
+    generated_models = {name for name in generated if name.endswith('.glb')}
+    model_keys = {Path(name).stem for name in generated_models}
+    changed = [item for key, item in current.items()
+               if previous.get(key) != item or item.get('model_asset_key') in model_keys]
+    if not changed:
+        raise ValueError('local hairstyle candidate has no changes')
+    faces = [item for item in current.values() if item['slot'] == 'face']
+    bodies = {(body['body_key'], body['rig_key']) for body in catalog['characters']}
+    cases, models = {}, set()
+    for item in changed:
+        key = item['wearable_key']
+        if not is_local_hairstyle(item) or item.get('empty') or not item.get('dye_material'):
+            raise ValueError('not a local hairstyle: ' + key)
+        if key in previous and not is_local_hairstyle(previous[key]):
+            raise ValueError('local hairstyle replaces unrelated wearable: ' + key)
+        standard = item['body_key'], item['rig_key']
+        compatible = [face for face in faces if (face['body_key'], face['rig_key']) == standard]
+        if standard not in bodies or not compatible:
+            raise ValueError('local hairstyle has no compatible body and face: ' + key)
+        models.add(f"internal/assets/builtin/{item['model_asset_key']}.glb")
+        for face in compatible:
+            cases[f"{face['wearable_key']}:head:{key}"] = {'type': 'wearable', 'slot': 'head'}
+    if models != generated_models:
+        raise ValueError('missing or unassigned local hairstyle model')
+    return cases
+
+
 # 每个案例有实际加工类型，混合管线不能把所有检查套给全部文件。
 def coverage_plan(root, output, manifest, rules):
     pipeline = manifest['pipeline']
@@ -141,14 +187,17 @@ def coverage_plan(root, output, manifest, rules):
         raise ValueError('unknown candidate pipeline: ' + pipeline)
     kinds = rules['pipelines'][pipeline]['types']
     registry = asset_registry(root, output)
-    cases = {}
     generated = {entry['path'] for entry in manifest['generated']}
+    local_hairstyles = pipeline == 'local-hairstyles'
+    cases = local_hairstyle_cases(root, output, generated) if local_hairstyles else {}
     houses_path = output/'internal/assets/tiny-treats-manifest.json'
     houses = json.loads(houses_path.read_text()).get('houses', []) if houses_path.exists() else []
     house_models = {entry['model_url'].rsplit('/', 1)[1] for entry in houses}
     for path in sorted(generated):
         name = Path(path)
         if name.suffix == '.glb':
+            if local_hairstyles:
+                continue  # 已由发型及兼容脸型组合覆盖。
             asset = registry.get(name.stem, {})
             kind = asset.get('processing_type') or rules['asset_kind_types'].get(asset.get('kind'))
             if name.stem in house_models:
@@ -209,6 +258,11 @@ def coverage_plan(root, output, manifest, rules):
         for rule in rules['types'][kind]['required']:
             if rule != 'visual':
                 plan.setdefault(rule, []).append(case)
+                continue
+            if local_hairstyles and kind == 'wearable':
+                for pose in rules['sampling']['local_hairstyles']:
+                    time = 'frame:' + str(pose['frame']) if 'frame' in pose else 'time:' + str(pose['normalized_time'])
+                    plan.setdefault('visual', []).extend(f"{case}@{view}@{pose['motion']}@{time}" for view in pose['views'])
                 continue
             views = ['image'] if kind == 'image' else rules['sampling']['views'] + rules['sampling']['local_views'].get(slot, [])
             poses = [{'motion': 'rest', 'frame': 0}]

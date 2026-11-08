@@ -111,6 +111,97 @@ class ClassificationCoverageTest(unittest.TestCase):
                 MODULE.coverage_plan(root, output, {'pipeline':'characters','generated':[]}, json.loads(MODULE.RULES.read_text()))
 
 
+class LocalHairstyleCoverageTest(unittest.TestCase):
+    # 两个身体共用同一绑定姿势，候选按兼容脸型检查头皮。
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.output = self.root/'.local/candidate'
+        self.catalog_path = Path('internal/character/character-catalog.json')
+        standard = {'body_key': 'shared', 'rig_key': 'rig'}
+        self.original = {
+            'characters': [{'character_key': key, **standard} for key in ['human', 'skeleton']],
+            'wearables': [
+                {'wearable_key': 'smile', 'slot': 'face', **standard},
+                {'wearable_key': 'skull', 'slot': 'face', **standard},
+                {'wearable_key': 'other-shape', 'slot': 'face', 'body_key': 'other', 'rig_key': 'rig'},
+                {'wearable_key': 'existing-upper', 'slot': 'upper', **standard},
+            ],
+            'animation_sets': {'rig': {}},
+        }
+        self.hair = {'wearable_key': 'sample-hair', 'slot': 'head', **standard,
+                     'provider': 'local', 'pack_key': 'local-hairstyles',
+                     'model_asset_key': 'sample-hair-model', 'dye_material': 'hair-dye',
+                     'thumbnail_asset_key': 'sample-hair-thumb', 'default_color_key': 'brown'}
+        self.model_path = 'internal/assets/builtin/sample-hair-model.glb'
+        self.thumb_path = 'internal/assets/builtin/sample-hair-thumb.png'
+        self.paths = [self.catalog_path.as_posix(), self.model_path, self.thumb_path]
+        self.write_catalog(self.root, self.original)
+
+    # 测试覆盖计划只需要候选和正式目录，二进制检查由流程测试负责。
+    def write_catalog(self, root, catalog):
+        path = root/self.catalog_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(catalog))
+
+    # 使用指定的生成文件计算实际验收案例。
+    def plan(self, paths, catalog=None):
+        if catalog is None:
+            catalog = {**self.original, 'wearables': [*self.original['wearables'], self.hair]}
+        self.write_catalog(self.output, catalog)
+        manifest = {'pipeline': 'local-hairstyles', 'generated': [{'path': path} for path in paths]}
+        return MODULE.coverage_plan(self.root, self.output, manifest, json.loads(MODULE.RULES.read_text()))
+
+    # 仅新增发型参与脸型组合，动作与静态视角的覆盖分别明确。
+    def test_review_compatible_faces_only(self):
+        plan = self.plan(self.paths)
+        cases = ['skull:head:sample-hair', 'smile:head:sample-hair']
+        for rule in ['source-components', 'rig', 'coverage', 'gltf']:
+            self.assertEqual(cases, plan[rule])
+        self.assertEqual(19, len(plan['visual']))
+        self.assertIn('smile:head:sample-hair@scalp@rest@frame:0', plan['visual'])
+        self.assertIn('skull:head:sample-hair@right@read@frame:48', plan['visual'])
+        self.assertIn('skull:head:sample-hair@front@walk@time:0.35', plan['visual'])
+        self.assertIn(self.thumb_path+'@image@rest@frame:0', plan['visual'])
+
+    # 重新制作同一发型的模型也需要覆盖验收，即使正式目录的引用没有改变。
+    def test_rebuilt_unchanged_hairstyle_requires_review(self):
+        self.original['wearables'].append(self.hair)
+        self.write_catalog(self.root, self.original)
+        plan = self.plan(self.paths, self.original)
+        self.assertEqual(['skull:head:sample-hair', 'smile:head:sample-hair'], plan['coverage'])
+
+    # 模型必须来自本次候选，额外模型不能跳过人物专项验证。
+    def test_missing_and_unassigned_models_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'hairstyle model'):
+            self.plan([self.catalog_path.as_posix(), self.thumb_path])
+        with self.assertRaisesRegex(ValueError, 'hairstyle model'):
+            self.plan([*self.paths, 'internal/assets/builtin/other.glb'])
+
+    # 发型入口不能借机发布其他槽位或修改正式脸型。
+    def test_non_hairstyle_changes_are_rejected(self):
+        self.hair['slot'] = 'upper'
+        with self.assertRaisesRegex(ValueError, 'local hairstyle'):
+            self.plan(self.paths)
+        self.hair['slot'] = 'head'
+        changed_face = {**self.original['wearables'][0], 'covers': ['scalp']}
+        catalog = {**self.original, 'wearables': [changed_face, *self.original['wearables'][1:], self.hair]}
+        with self.assertRaisesRegex(ValueError, 'local hairstyle'):
+            self.plan(self.paths, catalog)
+
+    # 正式穿戴的稳定身份不得被发型替代，候选内也不能重复使用一个身份。
+    def test_existing_identity_and_duplicate_are_rejected(self):
+        unrelated = self.original['wearables'][-1]
+        replacement = {**self.hair, 'wearable_key': unrelated['wearable_key']}
+        catalog = {**self.original, 'wearables': [*self.original['wearables'][:-1], replacement]}
+        with self.assertRaisesRegex(ValueError, 'local hairstyle'):
+            self.plan(self.paths, catalog)
+        catalog['wearables'] = [*self.original['wearables'], self.hair, self.hair]
+        with self.assertRaisesRegex(ValueError, 'duplicate wearable'):
+            self.plan(self.paths, catalog)
+
+
 class CandidateLifecycleTest(unittest.TestCase):
     # 每个测试使用独立仓库和JSON夹具，永远不访问项目GLB。
     def setUp(self):

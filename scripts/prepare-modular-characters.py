@@ -961,12 +961,20 @@ def prepare(options):
         wearables = faces + [entry for entry in wearables if entry['slot'] != 'face']
     for definition in body_definitions:
         definition['defaults'] = {slot: aliases.get(key, key) for slot, key in definition['defaults'].items()}
+    # 本地发型单独加工。重建 KayKit 人物时继续引用已发布的发型及其素材。
+    local_hair = [entry for entry in previous_catalog['wearables']
+                  if entry.get('provider') == 'local' and entry.get('pack_key') == 'local-hairstyles']
+    local_hair_assets = {entry[field] for entry in local_hair
+                         for field in ('model_asset_key', 'thumbnail_asset_key')}
+    wearables.extend(local_hair)
     catalog = assemble_catalog(previous_catalog, body_definitions, wearables)
     previous_assets = json.loads((BUILTIN / 'catalog.json').read_text())
     previous_manifest_path = ROOT / 'internal/assets/provider-character-manifest.json'
     old_manifest = json.loads(previous_manifest_path.read_text())
     old_character_asset_keys = {entry['key'] for entry in old_manifest.get('assets', [])}
-    retained = [entry for entry in previous_assets if entry['key'] not in old_character_asset_keys and not (entry.get('provider') == 'kenney' and entry['kind'] in ['character', 'wearable']) and not (entry.get('kind') == 'wearable')]
+    retained = [entry for entry in previous_assets if entry['key'] in local_hair_assets or
+                (entry['key'] not in old_character_asset_keys and entry['kind'] != 'wearable' and
+                 not (entry.get('provider') == 'kenney' and entry['kind'] == 'character'))]
     dedup_assets = {entry['key']: entry for entry in retained + assets}
     geometry_definitions = [{key: value for key, value in entry.items() if key != 'sellable'} for entry in body_definitions]
     manifest = {'recipe': config['recipe'], 'body_key': config['body_key'], 'characters': [{'definition': entry, 'provider': 'kaykit', 'status': 'imported'} for entry in geometry_definitions], 'sources': [{key: value for key, value in entry.items() if key not in ['asset', 'spec']} for entry in config['sources']], 'assets': assets, 'wearable_evidence': evidence, 'face_completions': face_completions, 'human_body': human_body_evidence, 'clothing_fit_evidence': clothing_fit_evidence, 'back_fit_evidence': back_fit_evidence, 'neck_support_evidence': neck_support_evidence, 'head_fit_evidence': head_fit_evidence, 'human_waist_evidence': human_waist_evidence, 'skeleton_body': skeleton_report, 'aliases': aliases, 'processing_complete': True, 'validation_status': 'not_run', 'failures': [], 'verified_inputs': verified_inputs, 'archive_verification': 'Archive checksums are retained source records; archive bytes were not rehashed in this run.'}

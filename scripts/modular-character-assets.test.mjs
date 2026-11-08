@@ -227,7 +227,7 @@ test('背心、披风和披肩以独立的无贴图材质提供预设换色', as
 test('贴图换色只覆盖配方声明的网格和 UV 区域', async () => {
   const { wearables } = await readJSON('internal/character/character-catalog.json');
   const recipes = await readJSON('scripts/modular-character-dye-regions.json');
-  const textured = wearables.filter((item) => item.dye_material?.startsWith('dye_'));
+  const textured = wearables.filter((item) => item.pack_key !== 'local-hairstyles' && item.dye_material?.startsWith('dye_'));
   assert.deepEqual(textured.map((item) => item.wearable_key).sort(), Object.keys(recipes).sort());
 
   for (const item of textured) {
@@ -260,6 +260,50 @@ test('贴图换色只覆盖配方声明的网格和 UV 区域', async () => {
       }
     }
     assert.deepEqual([...dyedNodes].sort(), Object.keys(nodes).sort(), item.wearable_key);
+  }
+});
+
+// 本地发型使用整张中性贴图，只蒙皮到现有头骨。
+test('本地发型交付为可染色且独立的头部网格', async () => {
+  const { wearables } = await readJSON('internal/character/character-catalog.json');
+  const recipe = await readJSON('scripts/local-hairstyle-sources.json');
+  const palette = await readJSON('internal/character/wearable-colors.json');
+  const { wearables: sources } = await readJSON('internal/assets/local-hairstyle-source-manifest.json');
+  const { hex } = palette.find((color) => color.key === recipe.default_color_key);
+  const defaultColor = hex.slice(1).match(/../g).map((channel) => {
+    const srgb = parseInt(channel, 16) / 255;
+    return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+  });
+  const expected = Object.keys(recipe.styles).map((number) => 'hair-local-' + number).sort();
+  const items = wearables.filter((item) => item.pack_key === recipe.pack_key);
+  assert.deepEqual(items.map((item) => item.wearable_key).sort(), expected);
+  assert.deepEqual(sources.map((item) => item.wearable_key).sort(), expected);
+  for (const item of items) {
+    const source = sources.find((entry) => entry.wearable_key === item.wearable_key);
+    assert.equal(item.slot, 'head');
+    assert.equal(item.sellable, true);
+    assert.equal(item.default_color_key, recipe.default_color_key);
+    assert.equal(source.model_asset_key, item.model_asset_key);
+    assert.equal(source.thumbnail_asset_key, item.thumbnail_asset_key);
+    const { document, primitives, scalars } = await readWearableMesh(item);
+    const meshes = document.nodes.filter((node) => node.mesh !== undefined);
+    assert.deepEqual(meshes.map((node) => node.name), item.nodes);
+    const skin = document.skins[meshes[0].skin];
+    for (const primitive of primitives) {
+      const material = document.materials[primitive.material];
+      assert.equal(material.name, item.dye_material);
+      const { baseColorTexture, baseColorFactor } = material.pbrMetallicRoughness;
+      const texture = document.textures[baseColorTexture.index];
+      assert.ok(document.images[texture.source].bufferView !== undefined);
+      assert.ok(defaultColor.every((channel, index) => Math.abs(channel - baseColorFactor[index]) < 1e-6), item.wearable_key);
+      assert.equal(primitive.attributes.COLOR_0, undefined);
+      const joints = scalars(primitive.attributes.JOINTS_0, 4);
+      const weights = scalars(primitive.attributes.WEIGHTS_0, 4);
+      for (const [index, row] of weights.entries()) {
+        assert.ok(row.some((weight, column) => weight === 1
+          && document.nodes[skin.joints[joints[index][column]]].name === 'head'), item.wearable_key);
+      }
+    }
   }
 });
 

@@ -130,6 +130,14 @@
         "wearable"
       ]
     },
+    "local-hairstyles": {
+      "script": "prepare-local-hairstyles.py",
+      "runtime": "python",
+      "types": [
+        "wearable"
+      ],
+      "forward_blender": true
+    },
     "animations": {
       "script": "import-provider-animations.py",
       "runtime": "python",
@@ -200,6 +208,23 @@
       "walk",
       "cheer",
       "read"
+    ],
+    "local_hairstyles": [
+      {
+        "motion": "rest",
+        "frame": 0,
+        "views": ["front", "back", "left", "right", "scalp"]
+      },
+      {
+        "motion": "read",
+        "frame": 48,
+        "views": ["front", "right"]
+      },
+      {
+        "motion": "walk",
+        "normalized_time": 0.35,
+        "views": ["front", "right"]
+      }
     ],
     "local_views": {
       "body": [

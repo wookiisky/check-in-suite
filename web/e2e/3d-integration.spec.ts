@@ -8,12 +8,15 @@ import appearance from '../src/features/shop/appearance-content.json' with { typ
 import character from '../src/features/character/character-panel-content.json' with { type: 'json' };
 import spatial from '../src/features/island/three/spatial-content.json' with { type: 'json' };
 import { appearanceRequest } from './appearance-flow-fixtures';
+import { closeConfigurationSettings, openManagement } from './configuration-navigation';
 import { readSpatial, spatialRequest } from './island-3d-fixtures';
 import { loginMain, shopAPI, selectShopCategory, purchaseProduct, openAppearance, goHome, fundPurchase, clearFunding } from './shop-navigation';
 
 type Appearance = components['schemas']['AppearanceState'];
 type Camp = components['schemas']['CampResponse'];
 type Funding = Awaited<ReturnType<typeof fundPurchase>>;
+
+const localHairKeys = ['hair-local-08', 'hair-local-18', 'hair-local-19', 'hair-local-22', 'hair-local-36'];
 
 test.setTimeout(120_000);
 test.use({ actionTimeout: 15_000 });
@@ -32,6 +35,7 @@ test('背心换色可放弃，保存后同步首页和营地', async ({ page }, 
     expect(state.wearable_colors?.map((item) => item.key).sort()).toEqual(['black', 'blue', 'brown', 'gray', 'green', 'ivory', 'orange', 'purple', 'red', 'yellow']);
     expect(state.wearables.filter((item) => item.dye_material).map((item) => item.wearable_key).sort()).toEqual([
       'hair-barbarian-v1',
+      ...localHairKeys,
       'hair-rogue-v1',
       'kaykit-adventurers-barbarian-shoes',
       'kaykit-adventurers-knight-back-cape',
@@ -133,6 +137,97 @@ test('背心换色可放弃，保存后同步首页和营地', async ({ page }, 
   } finally {
     const current = await shopAPI<Appearance>(page, '/appearance');
     await shopAPI(page, '/appearance', 'PUT', { ...appearanceRequest(original), expected_version: current.version });
+  }
+});
+
+// 本地发型的素材、报价和染色共用一个穿戴身份，购买和换色保存经过正式页面。
+test('本地发型在素材库和商店展示，购买换色后同步到营地', async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await loginMain(page);
+  const original = await shopAPI<Appearance>(page, '/appearance');
+  const products = (await shopAPI<components['schemas']['ProductList']>(page, '/products?type=wearable&slot=head&limit=100')).items;
+  await openManagement(page);
+  await page.getByRole('tablist', { name: content.navigation.management, exact: true })
+    .getByRole('tab', { name: content.navigation.products, exact: true }).click();
+  await page.getByRole('tab', { name: shop.materialLibrary, exact: true }).click();
+  const search = page.getByLabel(shop.assetSearchLabel, { exact: true });
+  const materials = await shopAPI<components['schemas']['ManagementMaterials']>(page, '/management/materials');
+  for (const key of localHairKeys) {
+    const wearable = original.wearables.find((item) => item.wearable_key === key);
+    expect(wearable, key).toMatchObject({ slot: 'head', dye_material: expect.any(String), default_color_key: expect.any(String) });
+    expect(products.find((item) => item.wearable_key === key), key).toMatchObject({
+      asset_key: wearable!.thumbnail_asset_key, enabled: true, coin_price: 20, diamond_price: 0,
+    });
+    expect(materials.items.find((item) => item.asset.key === wearable!.thumbnail_asset_key), key).toMatchObject({
+      group: 'appearance', category: 'head', saleable: true, asset: { key: wearable!.thumbnail_asset_key },
+    });
+    await search.fill(wearable!.thumbnail_asset_key);
+    const artwork = page.locator('.shop-material-card img');
+    await expect(artwork).toHaveAttribute('src', wearable!.thumbnail_url);
+    await artwork.scrollIntoViewIfNeeded();
+    await expect.poll(() => artwork.evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  }
+  await closeConfigurationSettings(page);
+  // 两个项目共用测试账户，各自购买一个独立发型。
+  const key = testInfo.project.name === 'desktop-chromium' ? 'hair-local-08' : 'hair-local-18';
+  const wearable = original.wearables.find((item) => item.wearable_key === key)!;
+  const product = products.find((item) => item.wearable_key === key)!;
+  const islandButton = page.getByRole('navigation', { name: content.navigation.label }).getByRole('button', { name: content.navigation.island, exact: true });
+  const leaveIsland = page.getByRole('button', { name: spatial.back, exact: true });
+  const stage = page.getByRole('region', { name: spatial.scene, exact: true });
+  let funding: Funding | null = null;
+  try {
+    await islandButton.click();
+    await expect(stage).toHaveAttribute('data-character-status', 'ready', { timeout: 20_000 });
+    const islandBefore = await stage.locator('canvas').screenshot();
+    await leaveIsland.click();
+    funding = await fundPurchase(page, product, `发型购买准备-${testInfo.project.name}`);
+    await selectShopCategory(page, 'appearance', shop.wearableSlots.head);
+    await purchaseProduct(page, product);
+    expect((await shopAPI<Appearance>(page, '/appearance')).inventory).toContainEqual(expect.objectContaining({ wearable_key: key }));
+    await openAppearance(page);
+    const wardrobe = page.locator('.appearance-page');
+    const head = wardrobe.getByRole('tab', { name: appearance.slots.head, exact: true });
+    const hair = wardrobe.getByRole('radio', { name: wearable.name, exact: true });
+    const color = wardrobe.getByRole('radio', { name: '蓝', exact: true });
+    const model = wardrobe.locator('.character3d-preview');
+    const canvas = model.locator('canvas');
+    await head.click();
+    await expect(model).toHaveAttribute('data-character-status', 'ready');
+    await canvas.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    const previousHair = await canvas.screenshot();
+    await hair.check();
+    await expect(model).toHaveAttribute('data-character-status', 'ready');
+    await canvas.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    await expect.poll(async () => (await canvas.screenshot()).equals(previousHair)).toBe(false);
+    const beforeDye = await canvas.screenshot();
+    await color.check();
+    await expect(color).toBeChecked();
+    await expect(model).toHaveAttribute('data-character-status', 'ready');
+    await canvas.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    await expect.poll(async () => (await canvas.screenshot()).equals(beforeDye)).toBe(false);
+    await wardrobe.getByRole('button', { name: appearance.save, exact: true }).click();
+    await expect(wardrobe.getByText(appearance.saved, { exact: true })).toBeVisible();
+    const saved = await shopAPI<Appearance>(page, '/appearance');
+    expect(saved).toMatchObject({ head_wearable_key: key, head_color_key: 'blue' });
+
+    await goHome(page);
+    const home = page.getByRole('region', { name: character.label, exact: true }).locator('.character3d-preview');
+    await expect(home).toHaveAttribute('data-appearance-version', String(saved.version));
+    await expect(home).toHaveAttribute('data-character-status', 'ready');
+    await islandButton.click();
+    await expect(stage).toHaveAttribute('data-character-status', 'ready', { timeout: 20_000 });
+    const islandAfter = await stage.locator('canvas').screenshot({ path: testInfo.outputPath('local-hair-island.png') });
+    expect(islandAfter.equals(islandBefore)).toBe(false);
+    await leaveIsland.click();
+    await openAppearance(page);
+    await head.click();
+    await expect(hair).toBeChecked();
+    await expect(color).toBeChecked();
+  } finally {
+    const current = await shopAPI<Appearance>(page, '/appearance');
+    await shopAPI(page, '/appearance', 'PUT', { ...appearanceRequest(original), expected_version: current.version });
+    await clearFunding(page, funding);
   }
 });
 
